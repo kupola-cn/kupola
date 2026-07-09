@@ -314,10 +314,4 @@ Kupola is released under the [MIT License](LICENSE).
 
 ---
 
-## 🙏 Acknowledgments
-
-Kupola was previously known as **Nimbus Design System**. It has been renamed with significant architectural improvements.
-
----
-
 **Built with ❤️ by the Kupola team**

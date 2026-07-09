@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **State Management**: Added `KupolaStore` state sharing (similar to Pinia/Vuex) with state, getters, mutations, actions
+- **State Management**: Added `KupolaStore` state sharing with state, getters, mutations, actions
 - **State Management**: Added state snapshot and rollback functionality (`snapshot()`, `rollback()`)
 - **State Management**: Added async state management support for Promise/async-await
 - **State Management**: Added deep state watching with `observe()` method
@@ -79,14 +79,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Components**: Added Tag (`ds-tag`) with closable functionality
 - **File Upload**: Added file size limit (`data-max-size`), multi-file limit (`data-max-count`), error handling, image preview, and upload progress
 - **Form Validation**: Enhanced validation to support DatePicker, Dropdown, and FileUpload components; added success state icons; added duplicate submission prevention
-- **Heatmap**: Fixed color display issue with green gradient; added horizontal scroll layout; fixed mock data generation
 
 ### Changed
 
 - **Heatmap**: Changed from vertical to horizontal column layout for better visual alignment
 - **Virtual List**: Fixed mouse wheel scrolling support for both vertical and horizontal modes
 - **File Upload**: Enhanced disabled state with distinct visual styling
-- **Components CSS**: Renamed `components-new.css` to `components-ext.css`
 
 ### Fixed
 
@@ -101,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Components**: Added 26+ new components including Heatmap, Virtual List, Slide Captcha, Countdown, Carousel, Drawer, Color Picker, Image Preview, Notification, Message, Collapse, Dynamic Tags, Timepicker, Number Input, Progress Circle, Slider, Checkbox, Radio, Switch, Badge, Timeline, Divider, Empty, Spin, etc.
 - **Heatmap Color Customization**: Added `data-color` attribute support for custom heatmap colors
-- **Brand Picker Auto-create**: Added automatic brand picker popup creation in theme.js, eliminating duplicate inline code
+- **Brand Picker Auto-create**: Added automatic brand picker popup creation in theme.js
 - **Form Validation**: Added comprehensive form validation system with multiple rules (required, email, phone, url, min, max, pattern)
 - **Tooltip System**: Added custom tooltip system with `data-title` attribute and mouse-follow positioning
 - **Data Binding**: Added two-way data binding system with event bus
@@ -110,18 +108,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Default Brand Color**: Changed default brand color from 翠绿 (#32F08C) to 曾青 (#535164)
 - **Brand Color API**: Renamed `setBrandColor()` to `setBrand()` for consistency
-- **Heatmap**: Fixed date range mismatch issue, updated mock data generation logic
 - **Dashboard Layout**: Fixed header display issues, improved scroll container handling
-- **Input Components**: Removed inner input borders for Date Picker, Time Picker, and Number Input
 
 ### Fixed
 
-- **Event Listener Duplication**: Added execution flags (`window.__nimbus*Initialized`) to prevent duplicate event binding in theme.js, validation.js, and tooltip.js
+- **Event Listener Duplication**: Added execution flags to prevent duplicate event binding
 - **Form Validation**: Fixed `.ds-dropdown` class name error in getValue(), changed to `.ds-select`
-- **Heatmap Colors**: Fixed cell color display issue by adding `!important` to CSS styles
 - **Brand Picker**: Fixed popup not showing on page load by checking `document.readyState`
 - **Accessibility**: Improved icon visibility in both dark and light themes using CSS filter
-- **Tooltip Positioning**: Fixed tooltip being blocked by mouse cursor, positioned at bottom-right
 
 ## [1.0.0] - 2026-07-03
 
@@ -129,26 +123,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Components**: Added 14 components (buttons, cards, forms, tables, dialogs, pagination, stat cards, nav lists, file trees, alerts, tags, tabs, modals, avatars)
 - **Themes**: Added dark and light themes with CSS variables
-- **Brand Colors**: Added 11 brand colors (翠绿, 雄黄, 姜黄, 蓝绿, 孔雀蓝, 玫瑰紫, 柿红, 紫云, 山茶红, 曾青, 柔蓝)
+- **Brand Colors**: Added 11 brand colors (曾青, 翠绿, 雄黄, 姜黄, 蓝绿, 孔雀蓝, 玫瑰紫, 柿红, 山茶红, 紫云, 柔蓝)
 - **Dashboard**: Added complete dashboard layout framework
 - **Templates**: Added Flask base templates (base.html, base_dashboard.html)
-- **Python Utilities**: Added nimbus.py with component generation functions
+- **Python Utilities**: Added kupola.py with component generation functions
 - **SVG Sprite**: Added icons.svg sprite file for optimized icon loading
 - **Documentation**: Added comprehensive README with usage examples
 
 ### Changed
 
-- **Icons**: Updated icon colors to match Nimbus design system
-- **CSS**: Refactored CSS into modular files (nimbus.css, brand-themes.css, states.css, utilities.css)
-
-### Removed
-
-- N/A
-
-## [0.1.0] - 2026-06-01
-
-### Added
-
-- Initial project setup
-- Core CSS variables (colors_and_type.css)
-- Basic components (buttons, cards, forms)
+- **Icons**: Updated icon colors to match Kupola design system
+- **CSS**: Refactored CSS into modular files (kupola.css, brand-themes.css, states.css, utilities.css)
