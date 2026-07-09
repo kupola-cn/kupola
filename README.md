@@ -1,12 +1,21 @@
 # Kupola
 
-A lightweight UI toolkit for any web project. No heavy frontend frameworks required. Works seamlessly with Flask, Django, Gin, Spring Boot, ASP.NET Core, Express, Ruby on Rails, and any backend framework that outputs HTML.
+> A lightweight, dependency-free UI toolkit for server-side rendered web applications
 
-## Features
+[![License](https://img.shields.io/github/license/kupola-cn/kupola)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
+[![npm](https://img.shields.io/npm/v/@kupola/kupola)](https://www.npmjs.com/package/@kupola/kupola)
+[![GitHub stars](https://img.shields.io/github/stars/kupola-cn/kupola)](https://github.com/kupola-cn/kupola/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/kupola-cn/kupola)](https://github.com/kupola-cn/kupola/issues)
 
-- **50+ Components**: Buttons, inputs, cards, modals, datepickers, timepickers, heatmap, virtual list, stat cards, image components, and more
+Kupola is a modern design system built for server-side rendered applications. It works seamlessly with Flask, Django, Gin, Spring Boot, ASP.NET Core, Express, Ruby on Rails, and any backend framework that outputs HTML.
+
+---
+
+## ✨ Features
+
+- **50+ UI Components**: Buttons, inputs, cards, modals, datepickers, timepickers, heatmap, virtual list, stat cards, image components, and more
 - **Dual Themes**: Dark-first design with light theme support
-- **11 Brand Colors**: Switchable brand colors
+- **11 Brand Colors**: Switchable brand colors based on Chinese traditional colors (曾青, 翠绿, 雄黄, 姜黄, 蓝绿, 孔雀蓝, 玫瑰紫, 柿红, 山茶红, 紫云, 柔蓝)
 - **Responsive Design**: Works on PC, Pad, and Phone
 - **Accessibility**: WCAG AA compliant
 - **Form Validation**: Built-in validation with custom rules
@@ -14,22 +23,31 @@ A lightweight UI toolkit for any web project. No heavy frontend frameworks requi
 - **No Dependencies**: Pure HTML/CSS/JavaScript
 - **Multi-language Support**: Helper functions for Python, Go, Java, C#, Node.js, Ruby
 
-## Quick Start
+---
 
-### 1. Install via npm
+## 🚀 Quick Start
+
+### Install via npm
 
 ```bash
 npm install @kupola/kupola
 ```
 
-### 2. Import CSS and JavaScript
+### Import CSS and JavaScript
 
 ```html
 <link rel="stylesheet" href="node_modules/@kupola/kupola/dist/css/kupola.css">
 <script src="node_modules/@kupola/kupola/dist/kupola.esm.js" type="module"></script>
 ```
 
-### 3. Or Copy Files
+### Or Use CDN
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/css/kupola.css">
+<script src="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola.esm.js" type="module"></script>
+```
+
+### Or Copy Files
 
 Copy the `kupola` directory to your project:
 
@@ -42,32 +60,87 @@ your-project/
 └── index.html
 ```
 
-### 2. Include CSS
-
 ```html
 <link rel="stylesheet" href="kupola/css/kupola.css">
-```
-
-### 3. Include JavaScript
-
-```html
 <script src="kupola/js/kupola-core.js"></script>
 ```
 
-### 4. Start Using Components
+---
+
+## 📦 Usage
+
+### Basic Components
 
 ```html
-<button class="ds-btn ds-btn--brand">Click Me</button>
-<input type="text" class="ds-input" placeholder="Enter text">
+<button class="ds-btn ds-btn--brand">Primary</button>
+<button class="ds-btn ds-btn--secondary">Secondary</button>
+<button class="ds-btn ds-btn--outline">Outline</button>
+<button class="ds-btn ds-btn--ghost">Ghost</button>
+<button class="ds-btn ds-btn--danger">Danger</button>
+```
+
+### Inputs
+
+```html
+<input type="text" class="ds-input" placeholder="Text input">
+<input type="password" class="ds-input" placeholder="Password">
+<input type="email" class="ds-input" placeholder="Email">
+<textarea class="ds-textarea" placeholder="Textarea"></textarea>
+```
+
+### Cards
+
+```html
 <div class="ds-card">
     <div class="ds-card__header">
         <h3 class="ds-card__title">Card Title</h3>
+        <p class="ds-card__subtitle">Subtitle</p>
     </div>
-    <div class="ds-card__body">Card content</div>
+    <div class="ds-card__body">Card content goes here</div>
+    <div class="ds-card__footer">Footer actions</div>
 </div>
 ```
 
-## Framework Integration
+### Forms with Validation
+
+```html
+<form class="ds-form">
+    <div class="ds-form-item">
+        <label class="ds-form-item__label">Name</label>
+        <input type="text" class="ds-input" placeholder="Enter name">
+    </div>
+    <div class="ds-form-item">
+        <label class="ds-form-item__label">Email</label>
+        <input type="email" class="ds-input" data-validate="email" placeholder="Enter email">
+    </div>
+    <button type="submit" class="ds-btn ds-btn--brand">Submit</button>
+</form>
+```
+
+### Data Binding
+
+```html
+<input type="text" data-bind="user.name:value" placeholder="Name">
+<span data-bind="user.name:text"></span>
+<input type="checkbox" data-bind="user.active:checked">
+```
+
+```javascript
+kupolaData.data.user = { name: 'John', active: true };
+kupolaData.data.user.name = 'Jane';  // Auto updates all bound elements
+```
+
+### Theme Switching
+
+```javascript
+setTheme('light');   // Switch to light theme
+setTheme('dark');    // Switch to dark theme
+setBrand('zengqing'); // Set brand color to 曾青
+```
+
+---
+
+## 🔧 Framework Integration
 
 ### Python (Flask/Django)
 
@@ -117,78 +190,9 @@ require './utils/kupola.rb'
 html = Kupola.card('Welcome', 'Hello Kupola!', '') + Kupola.button('Submit', 'brand', 'md')
 ```
 
-## Basic Usage Examples
+---
 
-### Buttons
-
-```html
-<button class="ds-btn ds-btn--brand">Primary</button>
-<button class="ds-btn ds-btn--secondary">Secondary</button>
-<button class="ds-btn ds-btn--outline">Outline</button>
-<button class="ds-btn ds-btn--ghost">Ghost</button>
-<button class="ds-btn ds-btn--danger">Danger</button>
-```
-
-### Inputs
-
-```html
-<input type="text" class="ds-input" placeholder="Text input">
-<input type="password" class="ds-input" placeholder="Password">
-<input type="email" class="ds-input" placeholder="Email">
-<textarea class="ds-textarea" placeholder="Textarea"></textarea>
-```
-
-### Cards
-
-```html
-<div class="ds-card">
-    <div class="ds-card__header">
-        <h3 class="ds-card__title">Card Title</h3>
-        <p class="ds-card__subtitle">Subtitle</p>
-    </div>
-    <div class="ds-card__body">Card content goes here</div>
-    <div class="ds-card__footer">Footer actions</div>
-</div>
-```
-
-### Forms
-
-```html
-<form class="ds-form">
-    <div class="ds-form-item">
-        <label class="ds-form-item__label">Name</label>
-        <input type="text" class="ds-input" placeholder="Enter name">
-    </div>
-    <div class="ds-form-item">
-        <label class="ds-form-item__label">Email</label>
-        <input type="email" class="ds-input" data-validate="email" placeholder="Enter email">
-    </div>
-    <button type="submit" class="ds-btn ds-btn--brand">Submit</button>
-</form>
-```
-
-### Data Binding
-
-```html
-<input type="text" data-bind="user.name:value" placeholder="Name">
-<span data-bind="user.name:text"></span>
-<input type="checkbox" data-bind="user.active:checked">
-```
-
-```javascript
-kupolaData.data.user = { name: 'John', active: true };
-kupolaData.data.user.name = 'Jane';  // Auto updates all bound elements
-```
-
-### Theme Switching
-
-```javascript
-setTheme('light');   // Switch to light theme
-setTheme('dark');    // Switch to dark theme
-setBrand('zengqing'); // Set brand color to 曾青
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 kupola/
@@ -225,75 +229,95 @@ kupola/
 │   ├── kupola.js           # Node.js component generation
 │   └── kupola.rb           # Ruby component generation
 ├── templates/              # HTML templates
-│   ├── base.html           # Base template
-│   └── base_dashboard.html # Dashboard base template
 ├── dashboard/              # Dashboard template
 ├── casepages/              # Component showcase pages
 ├── test/                   # Test files
 ├── examples/               # Usage examples
 ├── docs/                   # Documentation
-├── INTEGRATION.md          # Integration guide
 └── package.json            # Build scripts
 ```
 
-## Build
+---
+
+## 🛠️ Build & Development
 
 ```bash
-cd kupola
+# Install dependencies
 npm install
-npm run build    # Production build (Vite)
-npm run build:rollup  # Alternative build (Rollup)
-npm run dev      # Development server
+
+# Development server (Vite)
+npm run dev
+
+# Production build (Vite)
+npm run build
+
+# Alternative build (Rollup)
+npm run build:rollup
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+
+# Run tests
+npm run test
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
-## Documentation
+---
 
-- [Integration Guide](INTEGRATION.md) - Framework integration examples
-- [API Documentation](docs/api.md) - API reference
-- [showcase.html](dashboard/showcase.html) - Interactive component showcase
-- [Case Pages](casepages/) - Component usage examples
+## 📖 Documentation
 
-## Browser Support
+- **API Documentation**: [docs/api.md](docs/api.md) - Complete API reference
+- **Integration Guide**: [INTEGRATION.md](INTEGRATION.md) - Framework integration examples
+- **Interactive Showcase**: [showcase.html](dashboard/showcase.html) - Component showcase
+- **Architecture Comparison**: [docs/kupola-vs-vue-react.md](docs/kupola-vs-vue-react.md) - Kupola vs Vue vs React
 
-Chrome, Firefox, Safari, Edge (latest versions)
+---
 
-## License
+## 🌐 Browser Support
 
-MIT License
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
 
-## Migration Notice
+---
 
-This project was previously known as **Nimbus Design System**. It has been renamed to **Kupola** with the following changes:
+## 🤝 Contributing
 
-### Name Changes
+Contributions are welcome! Please follow these guidelines:
 
-| Old Name | New Name |
-|----------|----------|
-| `NimbusComponent` | `KupolaComponent` |
-| `NimbusHttp` | `KupolaHttp` |
-| `NimbusRouter` | `KupolaRouter` |
-| `NimbusLifecycle` | `KupolaLifecycle` |
-| `window.nimbusData` | `window.kupolaData` |
-| `window.nimbusRegistry` | `window.kupolaRegistry` |
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Make your changes
+4. Run tests (`npm run test`)
+5. Lint code (`npm run lint`)
+6. Commit your changes (`git commit -m 'feat: add your feature'`)
+7. Push to the branch (`git push origin feature/your-feature`)
+8. Open a Pull Request
 
-### File Changes
+---
 
-| Old Path | New Path |
-|----------|----------|
-| `js/nimbus-core.js` | `js/kupola-core.js` |
-| `js/nimbus-lifecycle.js` | `js/kupola-lifecycle.js` |
-| `js/nimbus-devtools.js` | `js/kupola-devtools.js` |
-| `css/nimbus.css` | `css/kupola.css` |
-| `types/nimbus.d.ts` | `types/kupola.d.ts` |
-| `dist/nimbus.esm.js` | `dist/kupola.esm.js` |
-| `dist/nimbus.cjs.js` | `dist/kupola.cjs.js` |
-| `dist/nimbus.umd.js` | `dist/kupola.umd.js` |
+## 📝 Changelog
 
-### Removed Files
+See [CHANGELOG.md](CHANGELOG.md) for the complete changelog.
 
-- `build.js` / `watch.js` - Legacy build scripts (replaced by Vite)
-- `dev-server.js` - Unused development server
-- `DOCS.md` - Outdated documentation
-- `components/` - Legacy HTML components
-- `common/` - Empty directory
-- Temporary scripts: `rename-project.cjs`, `fix-remaining.cjs`, etc.
+---
+
+## 📄 License
+
+Kupola is released under the [MIT License](LICENSE).
+
+---
+
+## 🙏 Acknowledgments
+
+Kupola was previously known as **Nimbus Design System**. It has been renamed with significant architectural improvements.
+
+---
+
+**Built with ❤️ by the Kupola team**
