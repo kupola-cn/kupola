@@ -52,7 +52,7 @@ npm install @kupola/kupola
 Copy the `kupola` directory to your project:
 
 ```
-your-project/
+project/
 ├── kupola/
 │   ├── css/
 │   ├── js/

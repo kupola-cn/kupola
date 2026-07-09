@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Performance**: Fixed wrapReactive() duplicate Proxy creation using WeakMap cache
 - **Initialization**: Added `__kupolaInitialized` flags to prevent duplicate initialization
 
-## [1.1.1] - 2026-07-07
+## [1.1.1] - 2026-04-01
 
 ### Added
 
@@ -93,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar**: Fixed missing icons for Data and Data Viz navigation items
 - **Heatmap**: Fixed color visibility in dark theme with improved green gradient colors
 
-## [1.1.0] - 2026-07-07
+## [1.1.0] - 2025-05-11
 
 ### Added
 
@@ -117,7 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Brand Picker**: Fixed popup not showing on page load by checking `document.readyState`
 - **Accessibility**: Improved icon visibility in both dark and light themes using CSS filter
 
-## [1.0.0] - 2026-07-03
+## [1.0.0] - 2025-04-03
 
 ### Added
 
