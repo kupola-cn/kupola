@@ -1,0 +1,889 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kupola Core Features Test</title>
+  <link rel="stylesheet" href="../css/Kupola.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg-base-secondary);
+    }
+    .test-section {
+      background: var(--bg-overlay-l1);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-neutral-l2);
+    }
+    .test-section h2 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      color: var(--text-default);
+    }
+    .test-result {
+      background: var(--bg-base-secondary);
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 12px;
+      font-family: monospace;
+      font-size: 13px;
+      color: var(--text-secondary);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .test-result.success {
+      color: var(--text-success);
+      border-left: 3px solid var(--bg-success-default);
+    }
+    .test-result.error {
+      color: var(--text-error);
+      border-left: 3px solid var(--bg-error-default);
+    }
+    .ds-btn + .ds-btn {
+      margin-left: 8px;
+    }
+    .router-view {
+      min-height: 100px;
+      background: var(--bg-base-secondary);
+      border-radius: 4px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+    .counter-display {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 12px 0;
+      color: var(--text-default);
+    }
+    .card-component {
+      border: 1px solid var(--border-neutral-l2);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--bg-base-secondary);
+      margin: 8px 0;
+    }
+    .card-header {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: var(--text-default);
+    }
+    .card-body {
+      color: var(--text-secondary);
+    }
+    .slot-content {
+      background: var(--bg-brand);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-default);
+    }
+    .snapshot-list {
+      margin-top: 12px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .snapshot-item {
+      padding: 8px;
+      border: 1px solid var(--border-neutral-l2);
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .router-view-enter {
+      animation: fadeIn 0.3s ease-out;
+    }
+    .router-view-leave {
+      animation: fadeOut 0.3s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-10px); }
+    }
+    .nested-router-view {
+      margin-top: 16px;
+      padding: 12px;
+      background: var(--bg-overlay-l2);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-section">
+    <h2>1. Component Registration & Lifecycle</h2>
+    <div data-component="demo-counter" data-prop-initial-count="0"></div>
+    <div data-component="demo-timer"></div>
+    <button class="ds-btn ds-btn--primary" onclick="testComponentMount()">Mount New Component</button>
+    <button class="ds-btn" onclick="testComponentUnmount()">Unmount Component</button>
+    <div class="test-result" id="component-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>2. Slots (插槽机制)</h2>
+    <div data-component="demo-card">
+      <div data-slot="header">Custom Header</div>
+      <div data-slot="body">This is the body content passed via slot</div>
+      <div data-slot="footer">Custom Footer</div>
+    </div>
+    <div data-component="demo-card">
+      Default content without named slots
+    </div>
+    <div class="test-result" id="slot-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>3. Component Communication ($emit/$on)</h2>
+    <div data-component="demo-child"></div>
+    <div id="event-receiver" style="margin-top: 12px; padding: 12px; background: var(--bg-base-secondary); border-radius: 4px;">
+      Event Log: <span id="event-log">No events yet</span>
+    </div>
+    <button class="ds-btn ds-btn--primary" onclick="triggerChildEvent()">Trigger Child Event</button>
+    <div class="test-result" id="event-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>4. Mixins (混入机制)</h2>
+    <div data-component="demo-with-mixin"></div>
+    <div data-component="demo-with-mixin" data-mixins="logMixin"></div>
+    <div class="test-result" id="mixin-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>5. State Persistence</h2>
+    <div class="counter-display" id="persist-counter">0</div>
+    <button class="ds-btn ds-btn--primary" onclick="incrementPersistCounter()">Increment</button>
+    <button class="ds-btn" onclick="clearPersistCounter()">Clear</button>
+    <button class="ds-btn" onclick="loadPersistedData()">Load Persisted</button>
+    <div class="test-result" id="persist-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>6. Lightweight Router</h2>
+    <div>
+      <button class="ds-btn" onclick="routerPush('/')">Home</button>
+      <button class="ds-btn" onclick="routerPush('/about')">About</button>
+      <button class="ds-btn" onclick="routerPush('/users/123')">User #123</button>
+      <button class="ds-btn" onclick="routerPush('/dashboard')">Dashboard</button>
+      <button class="ds-btn" onclick="routerPush('/dashboard/settings')">Dashboard > Settings</button>
+    </div>
+    <div class="router-view" data-router-view></div>
+    <div class="test-result" id="router-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>7. HTTP Request Wrapper</h2>
+    <button class="ds-btn ds-btn--primary" onclick="testHttpGet()">Test GET Request</button>
+    <button class="ds-btn" onclick="testHttpPost()">Test POST Request</button>
+    <button class="ds-btn" onclick="testHttpCache()">Test Cache</button>
+    <button class="ds-btn" onclick="testHttpCancel()">Test Cancel</button>
+    <button class="ds-btn" onclick="testHttpRetry()">Test Retry</button>
+    <div class="test-result" id="http-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>8. Data Binding with Proxy</h2>
+    <input type="text" data-bind="value:bindInput" placeholder="Type something..." class="ds-input" style="width: 300px;">
+    <div style="margin-top: 12px;">
+      Bound Value: <span data-bind="text:bindInput"></span>
+    </div>
+    <div class="test-result" id="bind-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>9. State Store (类似 Pinia/Vuex)</h2>
+    <div class="counter-display" id="store-counter">0</div>
+    <div style="margin-bottom: 8px;">Double: <span id="store-double">0</span></div>
+    <button class="ds-btn ds-btn--primary" onclick="storeIncrement()">Increment</button>
+    <button class="ds-btn" onclick="storeDecrement()">Decrement</button>
+    <button class="ds-btn" onclick="storeAsync()">Async Action</button>
+    <div class="test-result" id="store-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>10. State Snapshot & Rollback</h2>
+    <div class="counter-display" id="snapshot-counter">0</div>
+    <button class="ds-btn ds-btn--primary" onclick="snapshotIncrement()">Increment</button>
+    <button class="ds-btn" onclick="takeSnapshot()">Take Snapshot</button>
+    <button class="ds-btn" onclick="rollbackSnapshot()">Rollback</button>
+    <button class="ds-btn" onclick="clearSnapshots()">Clear Snapshots</button>
+    <div class="snapshot-list" id="snapshot-list">No snapshots yet</div>
+    <div class="test-result" id="snapshot-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>11. Form Serialization</h2>
+    <form id="test-form">
+      <div class="form-group">
+        <label>Name:</label>
+        <input type="text" data-bind="value:formName" class="ds-input" style="width: 300px;">
+      </div>
+      <div class="form-group">
+        <label>Email:</label>
+        <input type="email" data-bind="value:formEmail" class="ds-input" style="width: 300px;">
+      </div>
+      <div class="form-group">
+        <label>Gender:</label>
+        <input type="radio" name="gender" value="male" data-bind="value:formGender" checked> Male
+        <input type="radio" name="gender" value="female" data-bind="value:formGender"> Female
+      </div>
+      <div class="form-group">
+        <label>Hobbies:</label>
+        <input type="checkbox" value="reading" data-bind="value:formHobbies"> Reading
+        <input type="checkbox" value="coding" data-bind="value:formHobbies"> Coding
+        <input type="checkbox" value="sports" data-bind="value:formHobbies"> Sports
+      </div>
+    </form>
+    <button class="ds-btn ds-btn--primary" onclick="serializeForm()">Serialize Form</button>
+    <button class="ds-btn" onclick="fillForm()">Fill Form</button>
+    <button class="ds-btn" onclick="resetForm()">Reset Form</button>
+    <div class="test-result" id="form-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>12. Utility Functions (工具函数)</h2>
+    <button class="ds-btn ds-btn--primary" onclick="testUtils()">Test Utils</button>
+    <button class="ds-btn" onclick="testDebounce()">Test Debounce</button>
+    <button class="ds-btn" onclick="testThrottle()">Test Throttle</button>
+    <div class="test-result" id="utils-result"></div>
+    <div class="test-result" id="debounce-result"></div>
+    <div class="test-result" id="throttle-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>13. Virtual List (虚拟列表 - 10000条数据)</h2>
+    <button class="ds-btn ds-btn--primary" onclick="initVirtualList()">Init Virtual List</button>
+    <button class="ds-btn" onclick="scrollVirtualListToTop()">Scroll to Top</button>
+    <button class="ds-btn" onclick="scrollVirtualListToBottom()">Scroll to Bottom</button>
+    <button class="ds-btn" onclick="scrollVirtualListToIndex()">Scroll to Index 5000</button>
+    <div id="virtual-list-container" class="ds-virtual-list" style="height: 300px; overflow-y: auto;"></div>
+    <div class="test-result" id="virtual-list-result"></div>
+  </div>
+
+  <script src="../js/data-bind.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/virtual-list.js"></script>
+  <script src="../js/Kupola-core.js"></script>
+  <script src="../js/theme.js"></script>
+  <script src="../js/tooltip.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/message.js"></script>
+  
+  <script>
+    function logResult(id, message, type = 'success') {
+      const el = document.getElementById(id);
+      el.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+      el.className = `test-result ${type}`;
+    }
+
+    class DemoCounter extends KupolaComponent {
+      constructor(element) {
+        super(element);
+        this.state = { count: parseInt(this.props.initialCount) || 0 };
+      }
+
+      beforeMount() {
+        logResult('component-result', 'DemoCounter: beforeMount');
+      }
+
+      afterMount() {
+        logResult('component-result', 'DemoCounter: afterMount');
+        this.render();
+      }
+
+      beforeUnmount() {
+        logResult('component-result', 'DemoCounter: beforeUnmount');
+      }
+
+      afterUnmount() {
+        logResult('component-result', 'DemoCounter: afterUnmount');
+      }
+
+      render() {
+        this.element.innerHTML = `
+          <div style="padding: 16px; background: var(--bg-base-secondary); border-radius: 4px;">
+            <div class="counter-display">Count: ${this.state.count}</div>
+            <button class="ds-btn ds-btn--primary" onclick="this.closest('[data-component]').__kupolaInstance.increment()">+</button>
+            <button class="ds-btn" onclick="this.closest('[data-component]').__kupolaInstance.decrement()">-</button>
+          </div>
+        `;
+      }
+
+      increment() {
+        this.setState({ count: this.state.count + 1 });
+        logResult('component-result', `Count updated: ${this.state.count}`);
+      }
+
+      decrement() {
+        this.setState({ count: this.state.count - 1 });
+        logResult('component-result', `Count updated: ${this.state.count}`);
+      }
+    }
+
+    class DemoTimer extends KupolaComponent {
+      constructor(element) {
+        super(element);
+        this.state = { time: 0 };
+        this.timer = null;
+      }
+
+      afterMount() {
+        logResult('component-result', 'DemoTimer: afterMount');
+        this.startTimer();
+        this.render();
+      }
+
+      beforeUnmount() {
+        if (this.timer) clearInterval(this.timer);
+        logResult('component-result', 'DemoTimer: beforeUnmount');
+      }
+
+      startTimer() {
+        this.timer = setInterval(() => {
+          this.setState({ time: this.state.time + 1 });
+        }, 1000);
+      }
+
+      render() {
+        this.element.innerHTML = `
+          <div style="padding: 16px; background: var(--bg-base-secondary); border-radius: 4px; margin-top: 8px;">
+            <div class="ds-text-sm">Timer: ${this.state.time}s</div>
+          </div>
+        `;
+      }
+    }
+
+    class DemoCard extends KupolaComponent {
+      constructor(element) {
+        super(element);
+      }
+
+      afterMount() {
+        logResult('slot-result', 'DemoCard: slots parsed - ' + JSON.stringify(Object.keys(this.slots)));
+        this.render();
+      }
+
+      render() {
+        this.element.innerHTML = `
+          <div class="card-component">
+            ${this.$slot('header') ? `<div class="card-header">${this.$slot('header')}</div>` : ''}
+            ${this.$slot('body') ? `<div class="card-body">${this.$slot('body')}</div>` : ''}
+            ${this.$slot('footer') ? `<div class="slot-content">${this.$slot('footer')}</div>` : ''}
+            ${!this.$slot('header') && !this.$slot('body') ? `<div class="card-body">${this.$slot()}</div>` : ''}
+          </div>
+        `;
+      }
+    }
+
+    class DemoChild extends KupolaComponent {
+      constructor(element) {
+        super(element);
+        this.state = { clicked: 0 };
+      }
+
+      afterMount() {
+        this.render();
+        
+        this.$on('custom-click', (data) => {
+          logResult('event-result', `Child received event: ${JSON.stringify(data)}`);
+        });
+
+        this.element.addEventListener('kupola:custom-click', (e) => {
+          document.getElementById('event-log').textContent = `Custom Event: ${JSON.stringify(e.detail)}`;
+        });
+      }
+
+      render() {
+        this.element.innerHTML = `
+          <div style="padding: 16px; background: var(--bg-base-secondary); border-radius: 4px;">
+            <div class="ds-text-sm">Child Component</div>
+            <button class="ds-btn ds-btn--primary" style="margin-top: 8px;" onclick="this.closest('[data-component]').__kupolaInstance.handleClick()">Emit Event</button>
+            <div style="margin-top: 8px;">Click count: ${this.state.clicked}</div>
+          </div>
+        `;
+      }
+
+      handleClick() {
+        this.state.clicked++;
+        this.$emit('custom-click', { 
+          message: 'Hello from child', 
+          count: this.state.clicked,
+          timestamp: Date.now() 
+        });
+        this.render();
+      }
+    }
+
+    const logMixin = {
+      beforeMount() {
+        logResult('mixin-result', `${this.constructor.name}: mixin beforeMount`);
+      },
+      afterMount() {
+        logResult('mixin-result', `${this.constructor.name}: mixin afterMount`);
+      },
+      log(message) {
+        console.log('[Mixin]', message);
+      }
+    };
+
+    class DemoWithMixin extends KupolaComponent {
+      constructor(element) {
+        super(element);
+        this.state = { value: 'Hello World' };
+      }
+
+      afterMount() {
+        if (this.log) {
+          this.log('Using mixin method');
+        }
+        this.render();
+      }
+
+      render() {
+        this.element.innerHTML = `
+          <div style="padding: 16px; background: var(--bg-base-secondary); border-radius: 4px; margin-top: 8px;">
+            <div class="ds-text-sm">Mixin Demo: ${this.state.value}</div>
+          </div>
+        `;
+      }
+    }
+
+    class HomeComponent extends KupolaComponent {
+      render() {
+        this.element.innerHTML = '<div class="ds-text-lg">Welcome to Home Page!</div>';
+      }
+    }
+
+    class AboutComponent extends KupolaComponent {
+      render() {
+        this.element.innerHTML = '<div class="ds-text-lg">About Kupola Design System</div>';
+      }
+    }
+
+    class UserComponent extends KupolaComponent {
+      render() {
+        this.element.innerHTML = `<div class="ds-text-lg">User Profile: ${this.props.id}</div>`;
+      }
+    }
+
+    class DashboardComponent extends KupolaComponent {
+      render() {
+        this.element.innerHTML = `
+          <div class="ds-text-lg">Dashboard</div>
+          <div class="nested-router-view" data-router-view></div>
+        `;
+      }
+    }
+
+    class DashboardSettingsComponent extends KupolaComponent {
+      render() {
+        this.element.innerHTML = '<div class="ds-text-md">Settings Page</div>';
+      }
+    }
+
+    defineMixin('logMixin', logMixin);
+    registerComponent('demo-counter', DemoCounter);
+    registerComponent('demo-timer', DemoTimer);
+    registerComponent('demo-card', DemoCard);
+    registerComponent('demo-child', DemoChild);
+    registerComponent('demo-with-mixin', DemoWithMixin);
+    registerComponent('home', HomeComponent);
+    registerComponent('about', AboutComponent);
+    registerComponent('user', UserComponent);
+    registerComponent('dashboard', DashboardComponent);
+    registerComponent('dashboard-settings', DashboardSettingsComponent);
+
+    bootstrapComponents();
+
+    function testComponentMount() {
+      const container = document.querySelector('.test-section:nth-child(1)');
+      const newEl = document.createElement('div');
+      newEl.setAttribute('data-component', 'demo-counter');
+      newEl.setAttribute('data-prop-initial-count', '10');
+      container.appendChild(newEl);
+      logResult('component-result', 'New component mounted successfully');
+    }
+
+    function testComponentUnmount() {
+      const counters = document.querySelectorAll('[data-component="demo-counter"]');
+      if (counters.length > 1) {
+        counters[counters.length - 1].remove();
+        logResult('component-result', 'Component unmounted successfully');
+      }
+    }
+
+    function triggerChildEvent() {
+      const child = document.querySelector('[data-component="demo-child"]');
+      if (child && child.__kupolaInstance) {
+        child.__kupolaInstance.handleClick();
+      }
+    }
+
+    kupolaData.set('persistCounter', 0);
+    kupolaData.persist('persistCounter', { storage: 'local' });
+
+    function incrementPersistCounter() {
+      const current = kupolaData.get('persistCounter') || 0;
+      kupolaData.set('persistCounter', current + 1);
+      document.getElementById('persist-counter').textContent = current + 1;
+      logResult('persist-result', `Counter: ${current + 1} (persisted to localStorage)`);
+    }
+
+    function clearPersistCounter() {
+      kupolaData.set('persistCounter', 0);
+      kupolaData.unpersist('persistCounter');
+      localStorage.removeItem('kupola:persistCounter');
+      document.getElementById('persist-counter').textContent = '0';
+      logResult('persist-result', 'Counter cleared and unpersisted');
+    }
+
+    function loadPersistedData() {
+      const data = kupolaData.loadPersisted();
+      document.getElementById('persist-counter').textContent = data.persistCounter || 0;
+      logResult('persist-result', `Loaded persisted data: ${JSON.stringify(data)}`);
+    }
+
+    const router = createRouter({
+      mode: 'hash',
+      routes: [
+        { path: '/', component: 'home', name: 'Home' },
+        { path: '/about', component: 'about', name: 'About' },
+        { path: '/users/:id', component: 'user', name: 'User' },
+        { 
+          path: '/dashboard', 
+          component: 'dashboard', 
+          name: 'Dashboard',
+          children: [
+            { path: '/dashboard/settings', component: 'dashboard-settings', name: 'Settings' }
+          ]
+        }
+      ]
+    });
+    
+    window.KupolaRouter = router;
+
+    router.beforeEach((to, from) => {
+      logResult('router-result', `Navigating: ${from?.name || 'start'} -> ${to.name}`);
+    });
+
+    router.afterEach((to) => {
+      logResult('router-result', `Navigated to: ${to.name}, Params: ${JSON.stringify(to.params)}`);
+    });
+
+    function routerPush(path) {
+      router.push(path);
+    }
+
+    const http = createHttp({
+      baseURL: 'https://jsonplaceholder.typicode.com',
+      timeout: 5000,
+      cacheTTL: 30000,
+      maxRetries: 2,
+      retryDelay: 1000
+    });
+
+    async function testHttpGet() {
+      try {
+        const response = await http.get('/posts/1');
+        logResult('http-result', `GET Success: ${response.data.title}`);
+      } catch (error) {
+        logResult('http-result', `GET Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testHttpPost() {
+      try {
+        const response = await http.post('/posts', {
+          title: 'Kupola Test',
+          body: 'Test post body',
+          userId: 1
+        });
+        logResult('http-result', `POST Success: ID=${response.data.id}`);
+      } catch (error) {
+        logResult('http-result', `POST Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testHttpCache() {
+      const start = Date.now();
+      await http.get('/posts/1', { cache: true });
+      const time1 = Date.now() - start;
+      
+      const start2 = Date.now();
+      await http.get('/posts/1', { cache: true });
+      const time2 = Date.now() - start2;
+      
+      logResult('http-result', `First request: ${time1}ms, Cached request: ${time2}ms`);
+    }
+
+    function testHttpCancel() {
+      http.get('/posts/1', { timeout: 10000 });
+      const canceled = http.cancelRequest('/posts/1');
+      logResult('http-result', canceled ? 'Request canceled successfully' : 'No active request to cancel');
+    }
+
+    async function testHttpRetry() {
+      const httpRetry = createHttp({
+        baseURL: 'https://nonexistent-domain-12345.com',
+        timeout: 2000,
+        maxRetries: 2
+      });
+      try {
+        await httpRetry.get('/test');
+      } catch (error) {
+        logResult('http-result', `Retry test completed after ${error.message}`, 'error');
+      }
+    }
+
+    kupolaData.set('bindInput', '');
+    kupolaData.observe('bindInput', (newValue) => {
+      logResult('bind-result', `Data bound: "${newValue}"`);
+    });
+
+    const counterStore = createStore('counter', {
+      state: () => ({ count: 0 }),
+      getters: {
+        double: (state) => state.count * 2
+      },
+      mutations: {
+        increment(state) {
+          state.count++;
+        },
+        decrement(state) {
+          state.count--;
+        },
+        setCount(state, payload) {
+          state.count = payload;
+        }
+      },
+      actions: {
+        async incrementAsync({ commit }) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          commit('increment');
+        }
+      }
+    });
+
+    counterStore.observe((newState, oldState) => {
+      document.getElementById('store-counter').textContent = newState.count;
+      document.getElementById('store-double').textContent = counterStore.double;
+      logResult('store-result', `Store updated: count=${newState.count}, double=${counterStore.double}`);
+    });
+
+    function storeIncrement() {
+      counterStore.commit('increment');
+    }
+
+    function storeDecrement() {
+      counterStore.commit('decrement');
+    }
+
+    async function storeAsync() {
+      logResult('store-result', 'Async action started...');
+      await counterStore.dispatch('incrementAsync');
+      logResult('store-result', 'Async action completed');
+    }
+
+    kupolaData.set('snapshotTest', { counter: 0 });
+
+    function snapshotIncrement() {
+      const current = kupolaData.get('snapshotTest.counter') || 0;
+      kupolaData.set('snapshotTest.counter', current + 1);
+      document.getElementById('snapshot-counter').textContent = current + 1;
+    }
+
+    function takeSnapshot() {
+      const index = kupolaData.snapshot();
+      const count = kupolaData.getSnapshotCount();
+      updateSnapshotList();
+      logResult('snapshot-result', `Snapshot taken at index ${index}, total: ${count}`);
+    }
+
+    function rollbackSnapshot() {
+      const success = kupolaData.rollback();
+      if (success) {
+        const counter = kupolaData.get('snapshotTest.counter') || 0;
+        document.getElementById('snapshot-counter').textContent = counter;
+        updateSnapshotList();
+        logResult('snapshot-result', `Rollback successful, counter: ${counter}`);
+      } else {
+        logResult('snapshot-result', 'No snapshots to rollback', 'error');
+      }
+    }
+
+    function clearSnapshots() {
+      kupolaData.clearSnapshots();
+      updateSnapshotList();
+      logResult('snapshot-result', 'All snapshots cleared');
+    }
+
+    function updateSnapshotList() {
+      const list = document.getElementById('snapshot-list');
+      const count = kupolaData.getSnapshotCount();
+      if (count === 0) {
+        list.innerHTML = 'No snapshots yet';
+      } else {
+        list.innerHTML = Array.from({ length: count }, (_, i) => 
+          `<div class="snapshot-item">Snapshot #${i}</div>`
+        ).join('');
+      }
+    }
+
+    kupolaData.set('formName', '');
+    kupolaData.set('formEmail', '');
+    kupolaData.set('formGender', 'male');
+    kupolaData.set('formHobbies', []);
+
+    function serializeForm() {
+      const form = document.getElementById('test-form');
+      const data = kupolaData.serializeForm(form);
+      logResult('form-result', `Serialized: ${JSON.stringify(data)}`);
+    }
+
+    function fillForm() {
+      const form = document.getElementById('test-form');
+      kupolaData.fillForm(form, {
+        formName: 'John Doe',
+        formEmail: 'john@example.com',
+        formGender: 'male',
+        formHobbies: ['reading', 'coding']
+      });
+      logResult('form-result', 'Form filled with test data');
+    }
+
+    function resetForm() {
+      const form = document.getElementById('test-form');
+      kupolaData.fillForm(form, {
+        formName: '',
+        formEmail: '',
+        formGender: 'male',
+        formHobbies: []
+      });
+      logResult('form-result', 'Form reset');
+    }
+
+    setTimeout(() => {
+      loadPersistedData();
+    }, 100);
+
+    function testUtils() {
+      const strResult = kupolaUtils.string.camelize('hello-world');
+      const arrResult = kupolaUtils.array.unique([1, 2, 2, 3]);
+      const objResult = kupolaUtils.object.get({ a: { b: 10 } }, 'a.b');
+      const dateResult = kupolaUtils.date.format(new Date(), 'YYYY-MM-DD');
+      const validEmail = kupolaUtils.validator.isEmail('test@example.com');
+      const md5Result = kupolaUtils.crypto.md5('test');
+      
+      logResult('utils-result', 
+        `string.camelize: ${strResult}, ` +
+        `array.unique: [${arrResult}], ` +
+        `object.get: ${objResult}, ` +
+        `date.format: ${dateResult}, ` +
+        `validator.isEmail: ${validEmail}, ` +
+        `crypto.md5: ${md5Result.substring(0, 8)}...`
+      );
+    }
+
+    function testDebounce() {
+      let count = 0;
+      const debouncedFn = kupolaUtils.debounce(() => {
+        count++;
+        logResult('debounce-result', `Debounced call #${count}`);
+      }, 300);
+      
+      debouncedFn();
+      debouncedFn();
+      debouncedFn();
+      
+      setTimeout(() => {
+        debouncedFn();
+      }, 100);
+    }
+
+    function testThrottle() {
+      let count = 0;
+      const throttledFn = kupolaUtils.throttle(() => {
+        count++;
+        logResult('throttle-result', `Throttled call #${count}`);
+      }, 500);
+      
+      throttledFn();
+      throttledFn();
+      throttledFn();
+      
+      setTimeout(() => {
+        throttledFn();
+      }, 200);
+    }
+
+    const virtualListData = Array.from({ length: 10000 }, (_, i) => ({
+      id: i + 1,
+      title: `Item ${i + 1}`,
+      description: `Description for item ${i + 1}`
+    }));
+
+    let virtualListInstance = null;
+
+    function initVirtualList() {
+      const container = document.getElementById('virtual-list-container');
+      virtualListInstance = new VirtualList(container, {
+        data: virtualListData,
+        itemHeight: 60,
+        bufferSize: 5,
+        renderItem: (item, index) => `
+          <div style="padding: 12px; border-bottom: 1px solid var(--border-neutral-l2);">
+            <div style="font-weight: bold; color: var(--text-default);">${item.title}</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">${item.description}</div>
+          </div>
+        `,
+        onItemClick: (info) => {
+          logResult('virtual-list-result', `Clicked: ${info.item.title}`);
+        },
+        onScroll: (info) => {
+          console.log('Scrolling:', info);
+        },
+        onScrollEnd: (info) => {
+          logResult('virtual-list-result', `Scroll ended: items ${info.startIndex}-${info.endIndex}`);
+        }
+      });
+      
+      logResult('virtual-list-result', 'VirtualList initialized with 10000 items');
+    }
+
+    function scrollVirtualListToTop() {
+      if (virtualListInstance) {
+        virtualListInstance.scrollToTop();
+        logResult('virtual-list-result', 'Scrolled to top');
+      }
+    }
+
+    function scrollVirtualListToBottom() {
+      if (virtualListInstance) {
+        virtualListInstance.scrollToBottom();
+        logResult('virtual-list-result', 'Scrolled to bottom');
+      }
+    }
+
+    function scrollVirtualListToIndex() {
+      if (virtualListInstance) {
+        virtualListInstance.scrollTo(5000, 'smooth');
+        logResult('virtual-list-result', 'Scrolling to index 5000');
+      }
+    }
+  </script>
+</body>
+</html>

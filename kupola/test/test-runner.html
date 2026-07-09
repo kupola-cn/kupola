@@ -1,0 +1,282 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kupola Design System - Test Suite</title>
+    <link rel="stylesheet" href="../css/Kupola.css">
+    <link rel="stylesheet" href="../css/components-ext.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .test-section {
+            margin-bottom: 32px;
+            padding: 20px;
+            background-color: var(--bg-base-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-neutral-l1);
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-default);
+            margin-bottom: 16px;
+        }
+        .test-result {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .test-result.pass {
+            background-color: var(--status-success-l2);
+            color: var(--status-success-default);
+        }
+        .test-result.fail {
+            background-color: var(--status-error-l2);
+            color: var(--status-error-default);
+        }
+        .test-summary {
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-summary.pass {
+            background-color: var(--status-success-l2);
+            color: var(--status-success-default);
+        }
+        .test-summary.fail {
+            background-color: var(--status-error-l2);
+            color: var(--status-error-default);
+        }
+        .test-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .test-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+            <div class="ds-dashboard__logo-icon"></div>
+            <h1 style="font-size: 24px; font-weight: 700; color: var(--text-default);">Kupola Design System - Test Suite</h1>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">Theme Switching Test</div>
+            <div class="test-actions">
+                <button class="ds-btn ds-btn--brand" id="test-theme-dark">Switch to Dark</button>
+                <button class="ds-btn ds-btn--brand" id="test-theme-light">Switch to Light</button>
+            </div>
+            <div id="theme-results"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">Brand Color Test</div>
+            <div class="test-actions">
+                <button class="ds-btn ds-btn--ghost" id="test-brand-green">翠绿</button>
+                <button class="ds-btn ds-btn--ghost" id="test-brand-xionghuang">雄黄</button>
+                <button class="ds-btn ds-btn--ghost" id="test-brand-kongquelan">孔雀蓝</button>
+                <button class="ds-btn ds-btn--ghost" id="test-brand-meiguizi">玫瑰紫</button>
+            </div>
+            <div id="brand-results"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">Form Validation Test</div>
+            <form class="test-form" id="test-form" data-validation>
+                <div>
+                    <label class="ds-form__label" for="test-email">Email (required, email)</label>
+                    <input type="text" class="ds-input" id="test-email" name="email" data-validate="required|email" placeholder="test@example.com">
+                </div>
+                <div>
+                    <label class="ds-form__label" for="test-name">Name (required, minLength:3)</label>
+                    <input type="text" class="ds-input" id="test-name" name="name" data-validate="required|minLength:3" placeholder="At least 3 chars">
+                </div>
+                <div>
+                    <label class="ds-form__label" for="test-phone">Phone (phone)</label>
+                    <input type="text" class="ds-input" id="test-phone" name="phone" data-validate="phone" placeholder="1234567890">
+                </div>
+                <div>
+                    <label class="ds-form__label" for="test-url">URL (url)</label>
+                    <input type="text" class="ds-input" id="test-url" name="url" data-validate="url" placeholder="https://example.com">
+                </div>
+                <button type="submit" class="ds-btn ds-btn--brand">Submit</button>
+            </form>
+            <div id="validation-results"></div>
+            <div class="ds-alert ds-alert--success" id="form-success" style="display: none; margin-top: 16px;">
+                Form validation passed!
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">Unit Tests</div>
+            <div id="unit-test-results"></div>
+        </div>
+
+        <div class="test-summary" id="test-summary">
+            <span id="summary-text">Running tests...</span>
+            <span id="summary-stats">0/0 passed</span>
+        </div>
+    </div>
+
+    <script src="../js/theme.js"></script>
+    <script src="../js/validation.js"></script>
+    <script>
+        let passedTests = 0;
+        let totalTests = 0;
+
+        function addTestResult(containerId, testName, passed) {
+            totalTests++;
+            if (passed) passedTests++;
+            
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            result.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            result.innerHTML = `
+                <span>${passed ? '✓' : '✗'}</span>
+                <span>${testName}</span>
+            `;
+            container.appendChild(result);
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('test-summary');
+            const text = document.getElementById('summary-text');
+            const stats = document.getElementById('summary-stats');
+            
+            stats.textContent = `${passedTests}/${totalTests} passed`;
+            
+            if (totalTests > 0 && passedTests === totalTests) {
+                summary.className = 'test-summary pass';
+                text.textContent = 'All tests passed!';
+            } else if (totalTests > 0 && passedTests < totalTests) {
+                summary.className = 'test-summary fail';
+                text.textContent = `${totalTests - passedTests} tests failed`;
+            }
+        }
+
+        document.getElementById('test-theme-dark').addEventListener('click', () => {
+            setTheme('dark');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const savedTheme = localStorage.getItem('kupola-theme') === 'dark';
+            addTestResult('theme-results', 'Switch to dark theme', isDark && savedTheme);
+        });
+
+        document.getElementById('test-theme-light').addEventListener('click', () => {
+            setTheme('light');
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const savedTheme = localStorage.getItem('kupola-theme') === 'light';
+            addTestResult('theme-results', 'Switch to light theme', isLight && savedTheme);
+        });
+
+        document.getElementById('test-brand-green').addEventListener('click', () => {
+            setBrand('green');
+            const isGreen = document.documentElement.getAttribute('data-brand') === 'green';
+            addTestResult('brand-results', 'Switch to green brand', isGreen);
+        });
+
+        document.getElementById('test-brand-xionghuang').addEventListener('click', () => {
+            setBrand('xionghuang');
+            const isXionghuang = document.documentElement.getAttribute('data-brand') === 'xionghuang';
+            addTestResult('brand-results', 'Switch to xionghuang brand', isXionghuang);
+        });
+
+        document.getElementById('test-brand-kongquelan').addEventListener('click', () => {
+            setBrand('kongquelan');
+            const isKongquelan = document.documentElement.getAttribute('data-brand') === 'kongquelan';
+            addTestResult('brand-results', 'Switch to kongquelan brand', isKongquelan);
+        });
+
+        document.getElementById('test-brand-meiguizi').addEventListener('click', () => {
+            setBrand('meiguizi');
+            const isMeiguizi = document.documentElement.getAttribute('data-brand') === 'meiguizi';
+            addTestResult('brand-results', 'Switch to meiguizi brand', isMeiguizi);
+        });
+
+        document.getElementById('test-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const emailInput = document.getElementById('test-email');
+            const nameInput = document.getElementById('test-name');
+            const phoneInput = document.getElementById('test-phone');
+            const urlInput = document.getElementById('test-url');
+
+            emailInput.value = 'test@example.com';
+            nameInput.value = 'John';
+            phoneInput.value = '1234567890';
+            urlInput.value = 'https://example.com';
+
+            const isValid = kupolaValidator.validate(document.getElementById('test-form'));
+            
+            addTestResult('validation-results', 'Form validation with valid inputs', isValid);
+            
+            if (isValid) {
+                document.getElementById('form-success').style.display = 'block';
+            }
+        });
+
+        function runUnitTests() {
+            const results = [];
+            
+            results.push({ name: 'getTheme returns dark by default', passed: getTheme() === 'dark' });
+            
+            localStorage.setItem('kupola-theme', 'light');
+            results.push({ name: 'getTheme returns saved theme', passed: getTheme() === 'light' });
+            
+            setTheme('dark');
+            results.push({ name: 'setTheme sets data-theme attribute', passed: document.documentElement.getAttribute('data-theme') === 'dark' });
+            
+            setTheme('invalid');
+            results.push({ name: 'setTheme ignores invalid theme', passed: document.documentElement.getAttribute('data-theme') === 'dark' });
+            
+            results.push({ name: 'getBrand returns green by default', passed: getBrand() === 'green' });
+            
+            setBrand('xionghuang');
+            results.push({ name: 'setBrand sets data-brand attribute', passed: document.documentElement.getAttribute('data-brand') === 'xionghuang' });
+            
+            setBrand('invalid');
+            results.push({ name: 'setBrand ignores invalid brand', passed: document.documentElement.getAttribute('data-brand') === 'xionghuang' });
+            
+            results.push({ name: 'BRAND_OPTIONS has 11 items', passed: BRAND_OPTIONS.length === 11 });
+
+            const validator = new KupolaValidator();
+            results.push({ name: 'validateRequired rejects empty', passed: validator.validators.required('') === false });
+            results.push({ name: 'validateRequired accepts non-empty', passed: validator.validators.required('test') === true });
+            results.push({ name: 'validateEmail accepts valid email', passed: validator.validators.email('test@example.com') === true });
+            results.push({ name: 'validateEmail rejects invalid email', passed: validator.validators.email('invalid') === false });
+            results.push({ name: 'validateMinLength accepts valid length', passed: validator.validators.minLength('test', [3]) === true });
+            results.push({ name: 'validateMinLength rejects short text', passed: validator.validators.minLength('te', [3]) === false });
+            results.push({ name: 'parseRules parses simple rules', passed: JSON.stringify(validator.parseRules('required')) === JSON.stringify({ required: [] }) });
+            results.push({ name: 'parseRules parses rules with params', passed: JSON.stringify(validator.parseRules('required|minLength:6')) === JSON.stringify({ required: [], minLength: ['6'] }) });
+
+            results.forEach(test => {
+                addTestResult('unit-test-results', test.name, test.passed);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            runUnitTests();
+        });
+    </script>
+</body>
+</html>

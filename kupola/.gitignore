@@ -1,0 +1,7 @@
+.agents/
+.vscode/
+his/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

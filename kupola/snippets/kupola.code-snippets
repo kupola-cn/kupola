@@ -1,0 +1,246 @@
+{
+  "Kupola Button": {
+    "prefix": "nimbus-btn",
+    "body": [
+      "<button class=\"ds-btn ds-btn--${1:brand}\">${2:Button}</button>"
+    ],
+    "description": "Create a Kupola button"
+  },
+  "Kupola Button with Icon": {
+    "prefix": "nimbus-btn-icon",
+    "body": [
+      "<button class=\"ds-btn ds-btn--${1:brand} ds-btn--sm ds-btn--icon\">",
+      "    <img src=\"${2:/path/to/icon.svg}\" width=\"16\" height=\"16\" alt=\"${3:icon}\" class=\"icon\">",
+      "</button>"
+    ],
+    "description": "Create a Kupola button with icon"
+  },
+  "Kupola Card": {
+    "prefix": "nimbus-card",
+    "body": [
+      "<div class=\"ds-card\">",
+      "    <div class=\"ds-card__title\">${1:Card Title}</div>",
+      "    ${2:Card content}",
+      "</div>"
+    ],
+    "description": "Create a Kupola card"
+  },
+  "Kupola Input": {
+    "prefix": "nimbus-input",
+    "body": [
+      "<div>",
+      "    <label class=\"ds-input__label\">${1:Label}</label>",
+      "    <input type=\"${2:text}\" class=\"ds-input\" placeholder=\"${3:Enter placeholder}\">",
+      "</div>"
+    ],
+    "description": "Create a Kupola input field"
+  },
+  "Kupola Input with Error": {
+    "prefix": "nimbus-input-error",
+    "body": [
+      "<div>",
+      "    <label class=\"ds-input__label\">${1:Label}</label>",
+      "    <input type=\"${2:text}\" class=\"ds-input ds-input--error\" placeholder=\"${3:Enter placeholder}\">",
+      "    <span class=\"ds-input__error\">${4:Error message}</span>",
+      "</div>"
+    ],
+    "description": "Create a Kupola input with error state"
+  },
+  "Kupola Table": {
+    "prefix": "nimbus-table",
+    "body": [
+      "<table class=\"ds-table\">",
+      "    <thead>",
+      "        <tr>",
+      "            <th>${1:Column 1}</th>",
+      "            <th>${2:Column 2}</th>",
+      "            <th>${3:Column 3}</th>",
+      "        </tr>",
+      "    </thead>",
+      "    <tbody>",
+      "        <tr>",
+      "            <td>${4:Row 1 Col 1}</td>",
+      "            <td>${5:Row 1 Col 2}</td>",
+      "            <td>${6:Row 1 Col 3}</td>",
+      "        </tr>",
+      "    </tbody>",
+      "</table>"
+    ],
+    "description": "Create a Kupola table"
+  },
+  "Kupola Tag": {
+    "prefix": "nimbus-tag",
+    "body": [
+      "<span class=\"ds-tag ds-tag--${1:primary}\">${2:Tag}</span>"
+    ],
+    "description": "Create a Kupola tag"
+  },
+  "Kupola Alert": {
+    "prefix": "nimbus-alert",
+    "body": [
+      "<div class=\"ds-alert ds-alert--${1:success}\">",
+      "    <img src=\"${2:/path/to/icon.svg}\" width=\"16\" height=\"16\" alt=\"${3:icon}\" class=\"icon\">",
+      "    ${4:Alert message}",
+      "</div>"
+    ],
+    "description": "Create a Kupola alert"
+  },
+  "Kupola Stat Card": {
+    "prefix": "nimbus-statcard",
+    "body": [
+      "<div class=\"ds-statcard\">",
+      "    <span class=\"ds-statcard__label\">${1:Label}</span>",
+      "    <span class=\"ds-statcard__value\">${2:Value}</span>",
+      "    <span class=\"ds-statcard__delta is-${3:up}\">",
+      "        <img src=\"${4:/path/to/trending-up.svg}\" width=\"16\" height=\"16\" alt=\"trending-up\" class=\"icon\" />",
+      "        ${5:+12%}",
+      "    </span>",
+      "</div>"
+    ],
+    "description": "Create a Kupola stat card"
+  },
+  "Kupola Flex Container": {
+    "prefix": "nimbus-flex",
+    "body": [
+      "<div class=\"flex ${1:flex-col} ${2:items-center} ${3:gap-12}\">",
+      "    ${4:Content}",
+      "</div>"
+    ],
+    "description": "Create a flex container with utility classes"
+  },
+  "Kupola Grid Container": {
+    "prefix": "nimbus-grid",
+    "body": [
+      "<div class=\"grid grid-cols-${1:4} gap-${2:16}\">",
+      "    ${3:Content}",
+      "</div>"
+    ],
+    "description": "Create a grid container"
+  },
+  "Flask Template Extends Base": {
+    "prefix": "flask-extend-base",
+    "body": [
+      "{% extends \"base.html\" %}",
+      "",
+      "{% block title %}${1:Page Title}{% endblock %}",
+      "",
+      "{% block content %}",
+      "${2:Content here}",
+      "{% endblock %}"
+    ],
+    "description": "Extend Flask base template"
+  },
+  "Flask Template Extends Dashboard": {
+    "prefix": "flask-extend-dashboard",
+    "body": [
+      "{% extends \"base_dashboard.html\" %}",
+      "",
+      "{% block title %}${1:Page Title}{% endblock %}",
+      "",
+      "{% block content %}",
+      "${2:Content here}",
+      "{% endblock %}"
+    ],
+    "description": "Extend Flask dashboard base template"
+  },
+  "Kupola Progress Circle": {
+    "prefix": "nimbus-progress-circle",
+    "body": [
+      "<div class=\"ds-progress-circle\" role=\"progressbar\" aria-valuenow=\"${1:75}\" aria-valuemin=\"0\" aria-valuemax=\"100\">",
+      "    <svg class=\"ds-progress-circle__svg\" viewBox=\"0 0 100 100\">",
+      "        <circle class=\"ds-progress-circle__track\" cx=\"50\" cy=\"50\" r=\"45\" fill=\"none\" stroke-width=\"8\" />",
+      "        <circle class=\"ds-progress-circle__bar\" cx=\"50\" cy=\"50\" r=\"45\" fill=\"none\" stroke-width=\"8\" stroke-linecap=\"round\" />",
+      "    </svg>",
+      "    <span class=\"ds-progress-circle__value\">${1:75}%</span>",
+      "    <span class=\"ds-progress-circle__label\">${2:Progress}</span>",
+      "</div>"
+    ],
+    "description": "Create a Kupola progress circle"
+  },
+  "Kupola Slider": {
+    "prefix": "nimbus-slider",
+    "body": [
+      "<div class=\"ds-slider\" role=\"slider\" aria-valuenow=\"${1:50}\" aria-valuemin=\"${2:0}\" aria-valuemax=\"${3:100}\">",
+      "    <span class=\"ds-slider__label\">${4:Volume}</span>",
+      "    <div class=\"ds-slider__track\">",
+      "        <div class=\"ds-slider__fill\"></div>",
+      "        <input type=\"range\" class=\"ds-slider__input\" min=\"${2:0}\" max=\"${3:100}\" value=\"${1:50}\" />",
+      "    </div>",
+      "    <span class=\"ds-slider__value\">${1:50}</span>",
+      "</div>"
+    ],
+    "description": "Create a Kupola slider"
+  },
+  "Kupola Date Picker": {
+    "prefix": "nimbus-datepicker",
+    "body": [
+      "<div class=\"ds-datepicker\" role=\"combobox\" aria-haspopup=\"dialog\" aria-expanded=\"false\">",
+      "    <div class=\"ds-datepicker__input-wrap\">",
+      "        <input type=\"text\" class=\"ds-datepicker__input\" placeholder=\"Select date\" aria-label=\"Select date\" readonly />",
+      "        <button class=\"ds-datepicker__icon\" aria-label=\"Open calendar\">",
+      "            <img src=\"${1:/path/to/calendar.svg}\" width=\"16\" height=\"16\" alt=\"calendar\" class=\"icon\" />",
+      "        </button>",
+      "    </div>",
+      "    <div class=\"ds-datepicker__calendar\" hidden>",
+      "        <div class=\"ds-datepicker__header\">",
+      "            <button class=\"ds-datepicker__nav ds-datepicker__nav--prev\" aria-label=\"Previous month\">",
+      "                <img src=\"${2:/path/to/chevron-left.svg}\" width=\"14\" height=\"14\" alt=\"previous\" class=\"icon\" />",
+      "            </button>",
+      "            <span class=\"ds-datepicker__title\"></span>",
+      "            <button class=\"ds-datepicker__nav ds-datepicker__nav--next\" aria-label=\"Next month\">",
+      "                <img src=\"${3:/path/to/chevron-right.svg}\" width=\"14\" height=\"14\" alt=\"next\" class=\"icon\" />",
+      "            </button>",
+      "        </div>",
+      "        <div class=\"ds-datepicker__weekdays\">",
+      "            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>",
+      "        </div>",
+      "        <div class=\"ds-datepicker__days\"></div>",
+      "    </div>",
+      "</div>"
+    ],
+    "description": "Create a Kupola date picker"
+  },
+  "Kupola File Upload": {
+    "prefix": "nimbus-fileupload",
+    "body": [
+      "<div class=\"ds-fileupload\" role=\"region\" aria-label=\"File upload\">",
+      "    <div class=\"ds-fileupload__dropzone\">",
+      "        <div class=\"ds-fileupload__icon\">",
+      "            <img src=\"${1:/path/to/upload.svg}\" width=\"32\" height=\"32\" alt=\"upload\" class=\"icon\" />",
+      "        </div>",
+      "        <div class=\"ds-fileupload__text\">",
+      "            <span class=\"ds-fileupload__title\">Drag and drop files here</span>",
+      "            <span class=\"ds-fileupload__subtitle\">or click to browse</span>",
+      "        </div>",
+      "        <input type=\"file\" class=\"ds-fileupload__input\" multiple />",
+      "    </div>",
+      "    <div class=\"ds-fileupload__list\" hidden></div>",
+      "</div>"
+    ],
+    "description": "Create a Kupola file upload"
+  },
+  "Kupola Timeline": {
+    "prefix": "nimbus-timeline",
+    "body": [
+      "<div class=\"ds-timeline\" role=\"list\">",
+      "    <div class=\"ds-timeline__item\" role=\"listitem\">",
+      "        <div class=\"ds-timeline__marker\"></div>",
+      "        <div class=\"ds-timeline__content\">",
+      "            <span class=\"ds-timeline__time\">${1:2 hours ago}</span>",
+      "            <span class=\"ds-timeline__title\">${2:Task completed}</span>",
+      "            <span class=\"ds-timeline__description\">${3:Description here}</span>",
+      "        </div>",
+      "    </div>",
+      "    <div class=\"ds-timeline__item\" role=\"listitem\">",
+      "        <div class=\"ds-timeline__marker\"></div>",
+      "        <div class=\"ds-timeline__content\">",
+      "            <span class=\"ds-timeline__time\">${4:5 hours ago}</span>",
+      "            <span class=\"ds-timeline__title\">${5:Project created}</span>",
+      "            <span class=\"ds-timeline__description\">${6:Description here}</span>",
+      "        </div>",
+      "    </div>",
+      "</div>"
+    ],
+    "description": "Create a Kupola timeline"
+  }
+}

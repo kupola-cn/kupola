@@ -1,0 +1,99 @@
+﻿{% extends "base.html" %}
+
+{% block head_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='Kupola/dashboard/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="ds-dashboard">
+    <header class="ds-dashboard__header">
+        <div class="ds-dashboard__header-left">
+            <div class="ds-dashboard__logo">
+                <div class="ds-dashboard__logo-icon"></div>
+                <span>{{ logo|default('Kupola') }}</span>
+            </div>
+        </div>
+        
+        <div class="ds-dashboard__header-center">
+            {% block header_center %}{% endblock %}
+        </div>
+        
+        <div class="ds-dashboard__header-right">
+            {% block header_right %}
+            <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" title="Search">
+                <img src="{{ url_for('static', filename='Kupola/icons/search.svg') }}" width="16" height="16" alt="search" class="icon">
+            </button>
+            <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" title="Notifications">
+                <img src="{{ url_for('static', filename='Kupola/icons/bell.svg') }}" width="16" height="16" alt="bell" class="icon">
+            </button>
+            <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" title="Theme" data-theme-toggle>
+                <img class="theme-icon" src="{{ url_for('static', filename='Kupola/icons/sun.svg') }}" width="16" height="16" alt="theme" class="icon">
+            </button>
+            <button class="ds-btn ds-btn--ghost ds-btn--sm" data-brand-toggle title="Brand Color" style="display: flex; align-items: center; gap: 4px;">
+                <span class="brand-icon" style="width: 10px; height: 10px; border-radius: 50%; background-color: #535164;"></span>
+                <span class="brand-name" style="font-size: 10px;">曾青</span>
+            </button>
+            <div class="ds-avatar" title="User">
+                <img src="{{ url_for('static', filename='Kupola/icons/user.svg') }}" width="14" height="14" alt="user" class="icon">
+            </div>
+            {% endblock %}
+        </div>
+    </header>
+    
+    <div class="ds-dashboard__main">
+        <aside class="ds-dashboard__sidebar">
+            {% block sidebar %}
+            <nav class="ds-dashboard__sidebar-nav">
+                <div class="ds-dashboard__sidebar-item is-active" data-title="Dashboard">
+                    <img src="{{ url_for('static', filename='Kupola/icons/layout-grid.svg') }}" width="18" height="18" alt="layout-grid" class="icon">
+                </div>
+                <div class="ds-dashboard__sidebar-item" data-title="Projects">
+                    <img src="{{ url_for('static', filename='Kupola/icons/layers.svg') }}" width="18" height="18" alt="layers" class="icon">
+                </div>
+                <div class="ds-dashboard__sidebar-item" data-title="Tasks">
+                    <img src="{{ url_for('static', filename='Kupola/icons/check-square.svg') }}" width="18" height="18" alt="check-square" class="icon">
+                </div>
+                <div class="ds-dashboard__sidebar-item" data-title="Files">
+                    <img src="{{ url_for('static', filename='Kupola/icons/folder-open.svg') }}" width="18" height="18" alt="folder-open" class="icon">
+                </div>
+            </nav>
+            {% endblock %}
+        </aside>
+        
+        <main class="ds-dashboard__content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    <footer class="ds-dashboard__footer">
+        <div class="ds-dashboard__footer-left">
+            {% block footer_left %}
+            <div class="ds-dashboard__status-item">
+                <span class="ds-dashboard__status-dot"></span>
+                <span>Connected</span>
+            </div>
+            <div class="ds-dashboard__status-item">
+                <span>v1.0.0</span>
+            </div>
+            {% endblock %}
+        </div>
+        <div class="ds-dashboard__footer-right">
+            {% block footer_right %}
+            <div class="ds-dashboard__status-item">
+                <span>Last sync: 2 min ago</span>
+            </div>
+            {% endblock %}
+        </div>
+    </footer>
+</div>
+
+{% endblock %}
+
+{% block body_js %}
+{{ super() }}
+<script src="{{ url_for('static', filename='Kupola/dashboard/dashboard.js') }}"></script>
+<script>
+    initTheme();
+</script>
+{% endblock %}

@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kupola Composition API - 示例</title>
+    <link rel="stylesheet" href="../css/Kupola.css">
+    <script src="../js/Kupola-core.js"></script>
+    <script src="../js/Kupola-lifecycle.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/theme.js"></script>
+    <script src="../js/message.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/composition-api.js"></script>
+    <script src="../js/form.js"></script>
+</head>
+<body class="ds-body">
+    <div class="ds-container" style="max-width: 600px; margin: 40px auto;">
+        <h1 class="ds-heading--xl">Kupola Composition API 示例</h1>
+        <p class="ds-text--body">使用 <code>setup()</code> 和 <code>useForm()</code> 简化表单处理</p>
+        
+        <div class="ds-card" style="padding: 24px; margin-top: 24px;">
+            <form id="exampleForm" class="ds-form" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="ds-form-group">
+                    <label class="ds-label">用户名</label>
+                    <input type="text" name="username" class="ds-input" placeholder="请输入用户名">
+                </div>
+                
+                <div class="ds-form-group">
+                    <label class="ds-label">邮箱</label>
+                    <input type="text" name="email" class="ds-input" placeholder="请输入邮箱">
+                </div>
+                
+                <div class="ds-form-group">
+                    <label class="ds-label">密码</label>
+                    <input type="password" name="password" class="ds-input" placeholder="请输入密码">
+                </div>
+                
+                <div class="ds-form-group">
+                    <label class="ds-label">确认密码</label>
+                    <input type="password" name="confirmPassword" class="ds-input" placeholder="请再次输入密码">
+                </div>
+                
+                <div class="ds-form-group">
+                    <label class="ds-label">年龄</label>
+                    <input type="number" name="age" class="ds-input" placeholder="请输入年龄">
+                </div>
+                
+                <button type="submit" class="ds-btn ds-btn--primary" style="margin-top: 8px;">提交表单</button>
+            </form>
+        </div>
+        
+        <div class="ds-card" style="padding: 24px; margin-top: 24px;">
+            <h2 class="ds-heading--md">响应式数据示例</h2>
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <input type="text" id="reactiveInput" class="ds-input" placeholder="输入文字..." style="flex: 1;">
+                <span class="ds-text--body" id="reactiveOutput">输入的文字会显示在这里</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        setup(() => {
+            onMounted(() => {
+                const form = useForm('#exampleForm', {
+                    validateOnSubmit: true,
+                    validateOnBlur: true
+                });
+
+                form.setRules({
+                    username: { 
+                        required: true, 
+                        minLength: 3,
+                        message: '用户名至少需要3个字符' 
+                    },
+                    email: { 
+                        required: true, 
+                        email: true,
+                        message: '请输入有效的邮箱地址'
+                    },
+                    password: { 
+                        required: true, 
+                        minLength: 6,
+                        message: '密码至少需要6个字符'
+                    },
+                    confirmPassword: { 
+                        equalTo: 'password',
+                        message: '两次输入的密码不一致'
+                    },
+                    age: { 
+                        min: 18, 
+                        max: 100,
+                        message: '年龄必须在18-100之间'
+                    }
+                });
+
+                form.submit(async () => {
+                    const values = form.getValues();
+                    console.log('表单数据:', values);
+                    Message.success('表单验证通过！');
+                });
+
+                const inputRef = ref('');
+                const inputElement = document.getElementById('reactiveInput');
+                const outputElement = document.getElementById('reactiveOutput');
+
+                inputElement.addEventListener('input', (e) => {
+                    inputRef.value = e.target.value;
+                    outputElement.textContent = inputRef.value || '输入的文字会显示在这里';
+                });
+
+                watch(() => inputRef.value, (newValue) => {
+                    console.log('输入变化:', newValue);
+                });
+            });
+
+            onUnmounted(() => {
+                console.log('页面卸载');
+            });
+        });
+    </script>
+</body>
+</html>

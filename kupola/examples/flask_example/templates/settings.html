@@ -1,0 +1,90 @@
+﻿{% extends "base_dashboard.html" %}
+
+{% block title %}Settings - Kupola Example{% endblock %}
+
+{% block content %}
+<div class="mb-16">
+    <h1 class="h1">Settings</h1>
+    <p class="text-secondary">Configure your account settings</p>
+</div>
+
+<div class="grid grid-cols-3 gap-16">
+    <div class="grid-cols-2">
+        <div class="ds-card mb-16">
+            <div class="ds-card__title">Profile</div>
+            <form class="flex flex-col gap-12">
+                <div>
+                    <label class="ds-input__label">Name</label>
+                    <input type="text" class="ds-input" value="John Doe" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label class="ds-input__label">Email</label>
+                    <input type="email" class="ds-input" value="john@example.com" placeholder="Enter your email">
+                </div>
+                <div>
+                    <label class="ds-input__label">Password</label>
+                    <input type="password" class="ds-input" placeholder="Enter your password">
+                </div>
+                <div class="flex gap-8 pt-4">
+                    <button type="button" class="ds-btn ds-btn--secondary ds-btn--sm">Cancel</button>
+                    <button type="button" class="ds-btn ds-btn--brand ds-btn--sm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="ds-card">
+            <div class="ds-card__title">Notifications</div>
+            <div class="flex flex-col gap-12">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm">Email notifications</span>
+                    <label class="ds-toggle">
+                        <input type="checkbox" checked>
+                        <span class="ds-toggle__track"></span>
+                    </label>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm">Push notifications</span>
+                    <label class="ds-toggle">
+                        <input type="checkbox">
+                        <span class="ds-toggle__track"></span>
+                    </label>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm">Weekly digest</span>
+                    <label class="ds-toggle">
+                        <input type="checkbox" checked>
+                        <span class="ds-toggle__track"></span>
+                    </label>
+                </div>
+                <button type="button" class="ds-btn ds-btn--secondary ds-btn--sm mt-4">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="ds-card">
+        <div class="ds-card__title">Theme</div>
+        <div class="flex flex-col gap-12">
+            <div class="flex items-center justify-between">
+                <span class="text-sm">Dark Mode</span>
+                <label class="ds-toggle">
+                    <input type="checkbox" checked>
+                    <span class="ds-toggle__track"></span>
+                </label>
+            </div>
+            
+            <div class="pt-8">
+                <span class="text-sm mb-8 block">Brand Color</span>
+                <div class="grid grid-cols-5 gap-6">
+                    <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" style="background-color: #535164;" title="曾青"></button>
+                    <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" style="background-color: #FF9900;" title="雄黄"></button>
+                    <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" style="background-color: #12A182;" title="蓝绿"></button>
+                    <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" style="background-color: #BA2F7B;" title="玫瑰紫"></button>
+                    <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" style="background-color: #B1A6CC;" title="紫云"></button>
+                </div>
+            </div>
+            
+            <button type="button" class="ds-btn ds-btn--secondary ds-btn--sm mt-4">Reset to Default</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

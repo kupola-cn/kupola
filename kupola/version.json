@@ -1,0 +1,10 @@
+{
+  "version": "1.2.0",
+  "name": "Kupola Core",
+  "description": "Lightweight design system for Python web projects",
+  "author": "Kupola Team",
+  "license": "MIT",
+  "homepage": "https://github.com/nimbus/nimbus-core",
+  "repository": "https://github.com/nimbus/nimbus-core",
+  "changelog": "CHANGELOG.md"
+}

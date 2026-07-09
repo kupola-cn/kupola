@@ -1,0 +1,16 @@
+src/
+test/
+casepages/
+dashboard/
+examples/
+snippets/
+node_modules/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.vscode/
+.agents/
+his/
+*.map
+sync-to-his.ps1

@@ -1,0 +1,96 @@
+﻿{% extends "base_dashboard.html" %}
+
+{% block title %}Dashboard - Kupola Example{% endblock %}
+
+{% block content %}
+<div class="mb-16">
+    <h1 class="h1">Dashboard</h1>
+    <p class="text-secondary">Welcome to the Kupola Flask example!</p>
+</div>
+
+<div class="grid grid-cols-4 gap-16 mb-32">
+    {% for stat in stats %}
+    <div class="ds-statcard">
+        <span class="ds-statcard__label">{{ stat.label }}</span>
+        <span class="ds-statcard__value">{{ stat.value }}</span>
+        <span class="ds-statcard__delta is-up">
+            <img src="{{ url_for('static', filename='Kupola/icons/trending-up.svg') }}" width="16" height="16" alt="trending-up" class="icon" />
+            {{ stat.delta }}
+        </span>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="grid grid-cols-3 gap-16">
+    <div class="grid-cols-2">
+        <div class="ds-card mb-16">
+            <div class="ds-card__title">Recent Activity</div>
+            <div class="flex flex-col gap-12">
+                {% for activity in activities %}
+                <div class="flex items-center gap-8">
+                    <div class="ds-avatar" style="width: 28px; height: 28px;">
+                        <img src="{{ url_for('static', filename='Kupola/icons/user.svg') }}" width="12" height="12" alt="user" class="icon">
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium">{{ activity.user }}</div>
+                        <div class="text-xs text-secondary">{{ activity.action }}</div>
+                    </div>
+                    <div class="text-xs text-tertiary">{{ activity.time }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="ds-card">
+            <div class="ds-card__title">Quick Actions</div>
+            <div class="flex flex-col gap-8">
+                <button class="ds-btn ds-btn--secondary ds-btn--sm">New Project</button>
+                <button class="ds-btn ds-btn--secondary ds-btn--sm">Invite Team Member</button>
+                <button class="ds-btn ds-btn--secondary ds-btn--sm">Generate Report</button>
+                <button class="ds-btn ds-btn--secondary ds-btn--sm">Export Data</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="ds-card">
+        <div class="ds-card__title">Project Status</div>
+        <div class="flex flex-col gap-16">
+            {% for project in projects %}
+            <div>
+                <div class="flex justify-between mb-4">
+                    <span class="text-sm">{{ project.name }}</span>
+                    <span class="text-sm text-tertiary">{{ project.percentage }}%</span>
+                </div>
+                <div class="h-2 bg-overlay-l2 rounded-full overflow-hidden">
+                    <div class="h-full bg-brand rounded-full" style="width: {{ project.percentage }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+{{ super() }}
+
+{% set stats = [
+    {'label': 'Total Projects', 'value': '24', 'delta': '+12%'},
+    {'label': 'Active Tasks', 'value': '156', 'delta': '+8%'},
+    {'label': 'Completed', 'value': '84%', 'delta': '+2%'},
+    {'label': 'Team Members', 'value': '12', 'delta': '+1'}
+] %}
+
+{% set activities = [
+    {'user': 'John Doe', 'action': 'Completed task "Design Review"', 'time': '2h ago'},
+    {'user': 'Jane Smith', 'action': 'Created project "New Website"', 'time': '5h ago'},
+    {'user': 'Bob Wilson', 'action': 'Updated "API Integration"', 'time': '1d ago'}
+] %}
+
+{% set projects = [
+    {'name': 'Web App', 'percentage': 75},
+    {'name': 'Mobile App', 'percentage': 45},
+    {'name': 'API Service', 'percentage': 90},
+    {'name': 'Documentation', 'percentage': 30}
+] %}
+{% endblock %}
