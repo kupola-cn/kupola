@@ -69,7 +69,7 @@ your-project/
 
 ## 📦 Usage
 
-### Basic Components
+### Buttons
 
 ```html
 <button class="ds-btn ds-btn--brand">Primary</button>
@@ -77,15 +77,6 @@ your-project/
 <button class="ds-btn ds-btn--outline">Outline</button>
 <button class="ds-btn ds-btn--ghost">Ghost</button>
 <button class="ds-btn ds-btn--danger">Danger</button>
-```
-
-### Inputs
-
-```html
-<input type="text" class="ds-input" placeholder="Text input">
-<input type="password" class="ds-input" placeholder="Password">
-<input type="email" class="ds-input" placeholder="Email">
-<textarea class="ds-textarea" placeholder="Textarea"></textarea>
 ```
 
 ### Cards
@@ -101,41 +92,16 @@ your-project/
 </div>
 ```
 
-### Forms with Validation
-
-```html
-<form class="ds-form">
-    <div class="ds-form-item">
-        <label class="ds-form-item__label">Name</label>
-        <input type="text" class="ds-input" placeholder="Enter name">
-    </div>
-    <div class="ds-form-item">
-        <label class="ds-form-item__label">Email</label>
-        <input type="email" class="ds-input" data-validate="email" placeholder="Enter email">
-    </div>
-    <button type="submit" class="ds-btn ds-btn--brand">Submit</button>
-</form>
-```
-
 ### Data Binding
 
 ```html
 <input type="text" data-bind="user.name:value" placeholder="Name">
 <span data-bind="user.name:text"></span>
-<input type="checkbox" data-bind="user.active:checked">
 ```
 
 ```javascript
-kupolaData.data.user = { name: 'John', active: true };
+kupolaData.data.user = { name: 'John' };
 kupolaData.data.user.name = 'Jane';  // Auto updates all bound elements
-```
-
-### Theme Switching
-
-```javascript
-setTheme('light');   // Switch to light theme
-setTheme('dark');    // Switch to dark theme
-setBrand('zengqing'); // Set brand color to 曾青
 ```
 
 ---
@@ -188,53 +154,6 @@ const html = card('Welcome', 'Hello Kupola!', '') + button('Submit', 'brand', 'm
 require './utils/kupola.rb'
 
 html = Kupola.card('Welcome', 'Hello Kupola!', '') + Kupola.button('Submit', 'brand', 'md')
-```
-
----
-
-## 📁 Project Structure
-
-```
-kupola/
-├── css/                    # CSS stylesheets
-│   ├── kupola.css          # Main CSS bundle
-│   ├── components.css      # Component styles
-│   ├── components-ext.css  # Extended component styles
-│   ├── theme-dark.css      # Dark theme tokens
-│   ├── theme-light.css     # Light theme tokens
-│   └── ...                 # Other stylesheets
-├── js/                     # JavaScript modules (40+)
-│   ├── kupola-core.js      # Core framework
-│   ├── kupola-lifecycle.js # Lifecycle management
-│   ├── kupola-devtools.js  # Development tools
-│   ├── component.js        # Base component class
-│   ├── router.js           # Client-side router
-│   ├── http.js             # HTTP client
-│   ├── data-bind.js        # Data binding
-│   ├── validation.js       # Form validation
-│   ├── theme.js            # Theme/brand switching
-│   └── ...                 # UI components
-├── icons/                  # 120+ SVG icons
-├── dist/                   # Build output
-│   ├── kupola.esm.js       # ES Module format
-│   ├── kupola.cjs.js       # CommonJS format
-│   ├── kupola.umd.js       # UMD format
-│   └── types/kupola.d.ts   # TypeScript types
-├── src/                    # Build entry points
-├── utils/                  # Multi-language utility functions
-│   ├── kupola.py           # Python component generation
-│   ├── kupola.go           # Go component generation
-│   ├── Kupola.java         # Java component generation
-│   ├── Kupola.cs           # C# component generation
-│   ├── kupola.js           # Node.js component generation
-│   └── kupola.rb           # Ruby component generation
-├── templates/              # HTML templates
-├── dashboard/              # Dashboard template
-├── casepages/              # Component showcase pages
-├── test/                   # Test files
-├── examples/               # Usage examples
-├── docs/                   # Documentation
-└── package.json            # Build scripts
 ```
 
 ---
