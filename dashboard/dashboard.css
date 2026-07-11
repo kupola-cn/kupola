@@ -67,7 +67,8 @@ body.ds-dashboard-page {
 .ds-dashboard__main {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
 }
 
 /* Sidebar */
@@ -79,6 +80,9 @@ body.ds-dashboard-page {
   flex-direction: column;
   flex-shrink: 0;
   padding: var(--spacer-8) 0;
+  position: relative;
+  z-index: 10;
+  overflow: visible;
 }
 
 .ds-dashboard__sidebar-nav {
@@ -129,6 +133,33 @@ body.ds-dashboard-page {
   height: 18px;
   opacity: 1;
   filter: var(--icon-filter, none);
+}
+
+/* BUG-004 fix: sidebar tooltip via ::after + data-title */
+.ds-dashboard__sidebar-item::after {
+  content: attr(data-title);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 10px;
+  background: var(--bg-tooltip, var(--bg-base-secondary));
+  border: 1px solid var(--border-neutral-l2);
+  border-radius: var(--radius-4);
+  color: var(--text-default);
+  font-size: var(--body-xs-font-size, 11px);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ds-dashboard__sidebar-item:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .ds-dashboard .icon {

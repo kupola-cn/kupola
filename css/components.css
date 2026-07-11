@@ -540,6 +540,24 @@
     .ds-input.is-error { border-color: var(--bg-error-default); }
     .ds-input.is-success { border-color: var(--bg-success-default); }
     
+        /* BUG-003 fix: ensure <select class="ds-input"> matches <input> height/padding */
+        select.ds-input,
+        .ds-input select {
+          height: 28px;
+          padding: 0 var(--spacer-24) 0 var(--spacer-12);
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239599A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+          background-repeat: no-repeat;
+          background-position: right 8px center;
+          background-size: 12px;
+          cursor: pointer;
+          font: inherit;
+          color: var(--text-default);
+        }
+        select.ds-input::-ms-expand { display: none; }
+    
     .ds-input__status-icon {
       position: absolute;
       right: 12px;
@@ -980,6 +998,18 @@
     }
     .ds-table__pagination { display: flex; align-items: center; gap: var(--spacer-8); }
 
+    /* Table variants (IMP-001) */
+    .ds-table--striped tbody tr:nth-child(even) { background: var(--bg-base-secondary); }
+    .ds-table--hover tbody tr:hover { background: var(--bg-overlay-l1); cursor: default; }
+    .ds-table--compact th,
+    .ds-table--compact td { padding: var(--spacer-6) var(--spacer-8); font-size: var(--body-xs-font-size); }
+
+    /* Table cell utilities */
+    .ds-td--strong { font-weight: 500; color: var(--text-default); }
+    .ds-td--actions { display: flex; gap: var(--spacer-4); align-items: center; }
+    .ds-td--mono { font-family: var(--code-editor-font-family); font-variant-numeric: tabular-nums; }
+    .ds-td--truncate { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* ── Tabs ──────────────────────────────────────────────────── */
 /* ===== Tabs ===== */
     .ds-tabs { display: flex; gap: var(--spacer-24); border-bottom: 1px solid var(--border-neutral-l1); }
@@ -1309,6 +1339,45 @@
   justify-content: flex-end;
   gap: var(--spacer-8);
   margin-top: var(--spacer-16);
+}
+
+/* IMP-004: Flat aliases — use these without BEM __ nesting */
+.ds-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacer-6);
+  margin-bottom: var(--spacer-12);
+}
+
+.ds-form-label {
+  display: block;
+  font-size: var(--body-sm-font-size);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-default);
+  margin-bottom: var(--spacer-4);
+}
+
+.ds-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacer-12);
+}
+
+.ds-form-row--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.ds-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacer-8);
+  margin-top: var(--spacer-16);
+}
+
+.ds-form-hint {
+  font-size: var(--body-xs-font-size);
+  color: var(--text-tertiary);
+  margin-top: var(--spacer-2);
 }
 
 .ds-radio-group {

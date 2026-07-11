@@ -18,11 +18,11 @@
   --text-default: #D1D3DB;
   --text-default-hover: #FFFFFF;
   --text-default-active: #FFFFFF;
-  --text-secondary: #9599A6;
+  --text-secondary: #A0A5B2;
   --text-secondary-hover: #D1D3DB;
   --text-secondary-active: #D1D3DB;
-  --text-tertiary: #6B7280;
-  --text-disabled: #6F7482;
+  --text-tertiary: #7D8493;
+  --text-disabled: #7D8493;
   --text-onbrand: #FFFFFF;
   --text-onaccent: #FFFFFF;
 
@@ -32,8 +32,8 @@
   --icon-secondary: #9599A6;
   --icon-secondary-hover: #D1D3DB;
   --icon-secondary-active: #D1D3DB;
-  --icon-tertiary: #6B7280;
-  --icon-disabled: #6F7482;
+  --icon-tertiary: #7D8493;
+  --icon-disabled: #7D8493;
   --icon-onbrand: #FFFFFF;
   --icon-onaccent: #FFFFFF;
 

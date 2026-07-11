@@ -169,3 +169,121 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
+
+/* ===== ds- prefixed utility classes (IMP-002) =====
+ * Canonical ds-* aliases for all utility classes.
+ * Both prefixed and unprefixed versions are supported.
+ */
+
+/* Flexbox */
+.ds-flex { display: flex; }
+.ds-flex-col { display: flex; flex-direction: column; }
+.ds-flex--col { flex-direction: column; }
+.ds-flex--wrap { flex-wrap: wrap; }
+.ds-flex-1 { flex: 1; }
+.ds-flex-none { flex: none; }
+.ds-items-center { align-items: center; }
+.ds-items-start { align-items: flex-start; }
+.ds-items-end { align-items: flex-end; }
+.ds-items-stretch { align-items: stretch; }
+.ds-justify-center { justify-content: center; }
+.ds-justify-between { justify-content: space-between; }
+.ds-justify-end { justify-content: flex-end; }
+.ds-justify-start { justify-content: flex-start; }
+
+/* Gap */
+.ds-gap-2 { gap: var(--spacer-2); }
+.ds-gap-4 { gap: var(--spacer-4); }
+.ds-gap-6 { gap: var(--spacer-6); }
+.ds-gap-8 { gap: var(--spacer-8); }
+.ds-gap-12 { gap: var(--spacer-12); }
+.ds-gap-16 { gap: var(--spacer-16); }
+.ds-gap-24 { gap: var(--spacer-24); }
+.ds-gap-32 { gap: var(--spacer-32); }
+
+/* Grid */
+.ds-grid { display: grid; }
+.ds-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.ds-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.ds-grid--4 { grid-template-columns: repeat(4, 1fr); }
+.ds-grid--5 { grid-template-columns: repeat(5, 1fr); }
+.ds-grid--6 { grid-template-columns: repeat(6, 1fr); }
+.ds-grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.ds-grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.ds-grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Display */
+.ds-block { display: block; }
+.ds-inline-block { display: inline-block; }
+.ds-inline { display: inline; }
+.ds-hidden { display: none; }
+
+/* Text */
+.ds-text-left { text-align: left; }
+.ds-text-center { text-align: center; }
+.ds-text-right { text-align: right; }
+.ds-text-xs { font-size: var(--body-xs-font-size); }
+.ds-text-sm { font-size: var(--body-sm-font-size); }
+.ds-text-md { font-size: var(--body-md-font-size); }
+.ds-text-base { font-size: var(--body-base-font-size); }
+.ds-font-medium { font-weight: var(--font-weight-medium); }
+.ds-font-strong { font-weight: var(--font-weight-strong); }
+.ds-text-default { color: var(--text-default); }
+.ds-text-secondary { color: var(--text-secondary); }
+.ds-text-tertiary { color: var(--text-tertiary); }
+.ds-text-brand { color: var(--text-brand); }
+.ds-text-success { color: var(--status-success-default); }
+.ds-text-warning { color: var(--status-warning-default); }
+.ds-text-error { color: var(--status-error-default); }
+
+/* Width */
+.ds-w-full { width: 100%; }
+.ds-w-auto { width: auto; }
+.ds-max-w-md { max-width: 480px; }
+.ds-max-w-lg { max-width: 640px; }
+.ds-max-w-xl { max-width: 960px; }
+
+/* Spacing (ds- prefixed margin/padding) */
+.ds-m-0 { margin: var(--spacer-0); }
+.ds-m-4 { margin: var(--spacer-4); }
+.ds-m-8 { margin: var(--spacer-8); }
+.ds-m-12 { margin: var(--spacer-12); }
+.ds-m-16 { margin: var(--spacer-16); }
+.ds-m-auto { margin: auto; }
+.ds-mt-0 { margin-top: var(--spacer-0); }
+.ds-mt-4 { margin-top: var(--spacer-4); }
+.ds-mt-8 { margin-top: var(--spacer-8); }
+.ds-mt-12 { margin-top: var(--spacer-12); }
+.ds-mt-16 { margin-top: var(--spacer-16); }
+.ds-mb-0 { margin-bottom: var(--spacer-0); }
+.ds-mb-4 { margin-bottom: var(--spacer-4); }
+.ds-mb-8 { margin-bottom: var(--spacer-8); }
+.ds-mb-12 { margin-bottom: var(--spacer-12); }
+.ds-mb-16 { margin-bottom: var(--spacer-16); }
+.ds-p-0 { padding: var(--spacer-0); }
+.ds-p-4 { padding: var(--spacer-4); }
+.ds-p-8 { padding: var(--spacer-8); }
+.ds-p-12 { padding: var(--spacer-12); }
+.ds-p-16 { padding: var(--spacer-16); }
+.ds-p-24 { padding: var(--spacer-24); }
+
+/* Rounded */
+.ds-rounded-2 { border-radius: var(--radius-2); }
+.ds-rounded-4 { border-radius: var(--radius-4); }
+.ds-rounded-6 { border-radius: var(--radius-6); }
+.ds-rounded-8 { border-radius: var(--radius-8); }
+.ds-rounded-full { border-radius: var(--radius-full); }
+
+/* Position */
+.ds-relative { position: relative; }
+.ds-absolute { position: absolute; }
+.ds-fixed { position: fixed; }
+.ds-sticky { position: sticky; }
+
+/* Overflow */
+.ds-overflow-hidden { overflow: hidden; }
+.ds-overflow-auto { overflow: auto; }
+
+/* Cursor */
+.ds-cursor-pointer { cursor: pointer; }
+.ds-cursor-not-allowed { cursor: not-allowed; }

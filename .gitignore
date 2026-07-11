@@ -3,6 +3,9 @@
 .vscode/
 .qoder/
 
+# Internal
+his-sys/
+
 # Dependencies / build
 node_modules/
 dist/
