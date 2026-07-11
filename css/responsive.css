@@ -1,0 +1,697 @@
+/* Responsive Design */
+/* Breakpoints: Phone < 768px, Pad 768px - 1024px, PC > 1024px */
+
+/* Phone (< 768px) */
+@media (max-width: 767px) {
+  .ds-dashboard {
+    flex-direction: column;
+  }
+  
+  .ds-dashboard__header {
+    height: 44px;
+    padding: 0 8px;
+  }
+  
+  .ds-dashboard__header-center {
+    display: none;
+  }
+  
+  .ds-dashboard__header-right {
+    gap: 4px;
+  }
+  
+  .ds-dashboard__sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    height: 56px;
+    width: 100%;
+    border-right: none;
+    border-top: 1px solid var(--border-neutral-l1);
+    z-index: 100;
+  }
+  
+  .ds-dashboard__sidebar-nav {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+  
+  .ds-dashboard__sidebar-item {
+    width: auto;
+    flex: 1;
+  }
+  
+  .ds-dashboard__content {
+    padding: 8px;
+    margin-bottom: 64px;
+  }
+  
+  .ds-dashboard__footer {
+    display: none;
+  }
+  
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .ds-card {
+    padding: 12px;
+  }
+  
+  .ds-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .ds-btn--sm {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .ds-btn--lg {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .ds-input {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .ds-table {
+    font-size: 11px;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  .ds-table thead,
+  .ds-table tbody,
+  .ds-table tr,
+  .ds-table th,
+  .ds-table td {
+    display: block;
+  }
+  
+  .ds-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  .ds-table tr {
+    border-bottom: 1px solid var(--border-neutral-l1);
+  }
+  
+  .ds-table td {
+    border: none;
+    position: relative;
+    padding-left: 50%;
+    white-space: normal;
+    text-align: left;
+  }
+  
+  .ds-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    font-weight: 500;
+    text-align: left;
+  }
+  
+  .ds-modal {
+    margin: 8px;
+    max-height: calc(100vh - 16px);
+  }
+  
+  .ds-statcard {
+    padding: 12px;
+  }
+  
+  .ds-statcard__value {
+    font-size: 24px;
+  }
+  
+  .ds-tabs__list {
+    flex-wrap: wrap;
+  }
+  
+  .ds-tabs__item {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .ds-navlist__item {
+    padding: 10px 12px;
+  }
+  
+  .ds-navlist__item-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .ds-navlist__item-label {
+    font-size: 12px;
+  }
+  
+  .ds-pagination__btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+  
+  .ds-tag {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+  
+  .ds-alert {
+    padding: 10px 12px;
+  }
+  
+  .ds-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .ds-avatar--sm {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .ds-avatar--lg {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .ds-titlebar {
+    height: 28px;
+    padding: 0 8px;
+  }
+  
+  .ds-editortabs {
+    padding: 0 8px;
+  }
+  
+  .ds-editortabs__tab {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  .ds-statusbar {
+    height: 20px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+  
+  .ds-pageheader {
+    padding: 12px 16px;
+  }
+  
+  .ds-pageheader__title h1 {
+    font-size: 16px;
+  }
+  
+  .ds-pageheader__subtitle {
+    font-size: 11px;
+  }
+  
+  .ds-settingrow {
+    padding: 10px 0;
+  }
+  
+  .ds-settingrow__title {
+    font-size: 12px;
+  }
+  
+  .ds-settingrow__description {
+    font-size: 11px;
+  }
+  
+  .ds-activityrail {
+    width: 40px;
+  }
+  
+  .ds-activityrail__item {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .ds-chatcomposer {
+    padding: 8px;
+  }
+  
+  .ds-chatcomposer__input-area {
+    padding: 4px 8px;
+  }
+  
+  .ds-chatcomposer__model {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  
+  .ds-chatcomposer__input {
+    font-size: 12px;
+  }
+  
+  .ds-tablepanel {
+    border-radius: 4px;
+  }
+  
+  .ds-tablepanel__toolbar {
+    padding: 8px;
+  }
+  
+  .ds-tablepanel__footer {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  .ds-kbd {
+    padding: 1px 4px;
+    font-size: 10px;
+  }
+}
+
+/* Pad (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .ds-dashboard__sidebar {
+    width: 56px;
+  }
+  
+  .ds-dashboard__header {
+    padding: 0 12px;
+  }
+  
+  .ds-dashboard__content {
+    padding: 12px;
+  }
+  
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .ds-card {
+    padding: 16px;
+  }
+  
+  .ds-statcard__value {
+    font-size: 28px;
+  }
+  
+  .ds-table {
+    font-size: 12px;
+  }
+  
+  .ds-btn {
+    padding: 7px 14px;
+  }
+  
+  .ds-input {
+    padding: 10px 14px;
+  }
+  
+  .ds-titlebar {
+    height: 30px;
+  }
+  
+  .ds-statusbar {
+    height: 22px;
+    font-size: 11px;
+  }
+  
+  .ds-pageheader {
+    padding: 14px 20px;
+  }
+  
+  .ds-pageheader__title h1 {
+    font-size: 17px;
+  }
+}
+
+/* PC (> 1024px) */
+@media (min-width: 1025px) {
+  .ds-dashboard__sidebar {
+    width: 48px;
+  }
+  
+  .ds-dashboard__header {
+    padding: 0 16px;
+  }
+  
+  .ds-dashboard__content {
+    padding: 16px;
+  }
+  
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .ds-btn:hover {
+    transform: none;
+  }
+  
+  .ds-card:hover {
+    border-color: var(--border-neutral-l1);
+  }
+  
+  .ds-navlist__item:hover {
+    background-color: transparent;
+  }
+  
+  .ds-navlist__item.is-active:hover {
+    background-color: var(--bg-brand);
+  }
+  
+  .ds-tab__item:hover {
+    background-color: transparent;
+  }
+  
+  .ds-editortabs__tab:hover {
+    background-color: transparent;
+  }
+  
+  .ds-activityrail__item:hover {
+    background-color: transparent;
+  }
+  
+  .ds-statusbar__item:hover {
+    color: var(--text-secondary);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border-neutral-l1: #000000;
+    --border-neutral-l2: #000000;
+    --border-neutral-l3: #000000;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Additional responsive improvements */
+
+/* Phone (< 768px) - Additional components */
+@media (max-width: 767px) {
+  .ds-progress-circle {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .ds-progress-circle__value {
+    font-size: 12px;
+  }
+  
+  .ds-progress-circle__label {
+    font-size: 10px;
+  }
+  
+  .ds-slider {
+    padding: 6px 0;
+  }
+  
+  .ds-slider__label {
+    font-size: 11px;
+  }
+  
+  .ds-slider__value {
+    font-size: 11px;
+  }
+  
+  .ds-datepicker {
+    width: 100%;
+  }
+  
+  .ds-datepicker__calendar {
+    width: 100%;
+    left: 0;
+  }
+  
+  .ds-fileupload__dropzone {
+    padding: 20px;
+  }
+  
+  .ds-fileupload__icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .ds-fileupload__title {
+    font-size: 12px;
+  }
+  
+  .ds-fileupload__subtitle {
+    font-size: 11px;
+  }
+  
+  .ds-timeline {
+    padding: 4px 0;
+  }
+  
+  .ds-timeline__item {
+    padding: 10px 0;
+    gap: 8px;
+    margin-left: 4px;
+  }
+  
+  .ds-timeline__marker {
+    width: 10px;
+    height: 10px;
+    margin-left: -6px;
+  }
+  
+  .ds-timeline__time {
+    font-size: 10px;
+  }
+  
+  .ds-timeline__title {
+    font-size: 12px;
+  }
+  
+  .ds-timeline__description {
+    font-size: 11px;
+  }
+  
+  .ds-tablepanel__filters {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
+
+/* Pad (768px - 1024px) - Additional components */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .ds-progress-circle {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .ds-progress-circle__value {
+    font-size: 13px;
+  }
+  
+  .ds-datepicker {
+    width: 220px;
+  }
+  
+  .ds-datepicker__calendar {
+    width: 260px;
+  }
+  
+  .ds-fileupload__dropzone {
+    padding: 24px;
+  }
+  
+  .ds-timeline__item {
+    padding: 10px 0;
+  }
+}
+
+/* Sidebar collapse toggle button */
+.ds-dashboard__sidebar-toggle {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .ds-dashboard__sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--icon-secondary);
+    border-radius: 4px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  
+  .ds-dashboard__sidebar-toggle:hover {
+    background-color: var(--bg-overlay-l1);
+    color: var(--icon-default);
+  }
+}
+
+/* Sidebar collapsed state */
+.ds-dashboard__sidebar.is-collapsed {
+  width: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.ds-dashboard__sidebar.is-collapsed + .ds-dashboard__content {
+  margin-left: 0;
+}
+
+/* Font size adjustments based on viewport width */
+@media (max-width: 767px) {
+  html {
+    font-size: 14px;
+  }
+  
+  .text-xs {
+    font-size: 10px;
+  }
+  
+  .text-sm {
+    font-size: 11px;
+  }
+  
+  .text-base {
+    font-size: 12px;
+  }
+  
+  .text-lg {
+    font-size: 14px;
+  }
+  
+  .text-xl {
+    font-size: 16px;
+  }
+  
+  .text-2xl {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+  
+  .text-xs {
+    font-size: 11px;
+  }
+  
+  .text-sm {
+    font-size: 12px;
+  }
+  
+  .text-base {
+    font-size: 13px;
+  }
+  
+  .text-lg {
+    font-size: 15px;
+  }
+  
+  .text-xl {
+    font-size: 17px;
+  }
+  
+  .text-2xl {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 1025px) {
+  html {
+    font-size: 16px;
+  }
+  
+  .text-xs {
+    font-size: 11px;
+  }
+  
+  .text-sm {
+    font-size: 13px;
+  }
+  
+  .text-base {
+    font-size: 14px;
+  }
+  
+  .text-lg {
+    font-size: 16px;
+  }
+  
+  .text-xl {
+    font-size: 18px;
+  }
+  
+  .text-2xl {
+    font-size: 20px;
+  }
+}
+
+/* Landscape orientation */
+@media (orientation: landscape) and (max-width: 1024px) {
+  .ds-dashboard__sidebar {
+    height: 48px;
+  }
+  
+  .ds-dashboard__content {
+    margin-bottom: 56px;
+  }
+  
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Very small screens */
+@media (max-width: 320px) {
+  .ds-dashboard__header-right {
+    gap: 2px;
+  }
+  
+  .ds-dashboard__logo span {
+    display: none;
+  }
+  
+  .ds-btn--sm {
+    padding: 2px 6px;
+  }
+}

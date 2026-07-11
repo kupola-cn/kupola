@@ -1,0 +1,41 @@
+# Source / dev files
+src/
+test/
+dashboard/
+examples/
+snippets/
+question/
+docs/
+node_modules/
+
+# Config files
+.eslintrc.cjs
+.prettierrc
+jest.config.cjs
+rollup.config.cjs
+vite.config.js
+tsconfig.json
+
+# IDE / tools
+.vscode/
+.agents/
+.qoder/
+
+# Internal / sync
+his/
+sync-to-his.ps1
+
+# Maps
+*.map
+
+# Misc
+showcase.html
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Internal docs (not for npm consumers)
+SKILL.md
+INTEGRATION.md
+CHANGELOG.md

@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-theme="{{ theme|default('dark') }}" data-brand="{{ brand|default('green') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title|default('Kupola') }}{% endblock %}</title>
+    
+    {% block head_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Kupola/css/Kupola.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Kupola/css/components-ext.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Kupola/css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Kupola/css/accessibility.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Kupola/css/animations.css') }}">
+    {% endblock %}
+    
+    {% block head_js %}
+    {% endblock %}
+</head>
+<body>
+    {% block body %}
+    {% endblock %}
+    
+    {% block body_js %}
+    <script src="{{ url_for('static', filename='Kupola/js/icons.js') }}"></script>
+    <script src="{{ url_for('static', filename='Kupola/js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='Kupola/js/validation.js') }}"></script>
+    <script src="{{ url_for('static', filename='Kupola/js/data-bind.js') }}"></script>
+    {% endblock %}
+</body>
+</html>

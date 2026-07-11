@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-brand="zengqing">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kupola + HTMX Integration</title>
+    <link rel="stylesheet" href="../css/kupola.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <style>
+        .demo-section { margin-bottom: 32px; padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius-3); }
+        .demo-section h2 { margin-bottom: 16px; }
+        .fragment-container { min-height: 60px; padding: 16px; border: 1px dashed var(--color-border); border-radius: var(--radius-2); margin-top: 12px; }
+        .loading-indicator { color: var(--color-text-muted); font-size: var(--text-sm); }
+    </style>
+</head>
+<body class="p-32 max-w-3xl mx-auto">
+    <h1 class="h1 mb-8">Kupola + HTMX</h1>
+    <p class="text-body mb-32" style="color: var(--color-text-muted);">
+        HTMX loads HTML fragments, Kupola's MutationObserver auto-initializes components inside them.
+    </p>
+
+    <!-- Demo 1: Load a Dropdown via HTMX -->
+    <section class="demo-section">
+        <h2 class="text-heading-sm">1. Dynamic Dropdown</h2>
+        <p class="text-body-sm mb-12" style="color: var(--color-text-muted);">
+            Click the button to load a dropdown component via HTMX. Kupola auto-initializes it.
+        </p>
+        <button class="ds-btn ds-btn--primary"
+                hx-on:click="loadFragment('dropdown-fragment')">
+            Load Dropdown
+        </button>
+        <div id="dropdown-target" class="fragment-container">
+            <span class="loading-indicator">Component will appear here...</span>
+        </div>
+    </section>
+
+    <!-- Demo 2: Load a Modal via HTMX -->
+    <section class="demo-section">
+        <h2 class="text-heading-sm">2. Dynamic Modal</h2>
+        <p class="text-body-sm mb-12" style="color: var(--color-text-muted);">
+            Click to load a modal dialog. Kupola detects the new element and initializes it.
+        </p>
+        <button class="ds-btn ds-btn--secondary"
+                hx-on:click="loadFragment('modal-fragment')">
+            Load Modal
+        </button>
+        <div id="modal-target" class="fragment-container">
+            <span class="loading-indicator">Modal will appear here...</span>
+        </div>
+    </section>
+
+    <!-- Demo 3: Load a Table via HTMX -->
+    <section class="demo-section">
+        <h2 class="text-heading-sm">3. Dynamic Table</h2>
+        <p class="text-body-sm mb-12" style="color: var(--color-text-muted);">
+            Simulates an async data load with auto-initialized Kupola table.
+        </p>
+        <button class="ds-btn ds-btn--brand"
+                hx-on:click="loadFragment('table-fragment')">
+            Load Table
+        </button>
+        <div id="table-target" class="fragment-container">
+            <span class="loading-indicator">Table will load here...</span>
+        </div>
+    </section>
+
+    <!-- Demo 4: Load Collapse via HTMX -->
+    <section class="demo-section">
+        <h2 class="text-heading-sm">4. Dynamic Collapse / Accordion</h2>
+        <p class="text-body-sm mb-12" style="color: var(--color-text-muted);">
+            Load an accordion component dynamically.
+        </p>
+        <button class="ds-btn ds-btn--ghost"
+                hx-on:click="loadFragment('collapse-fragment')">
+            Load Accordion
+        </button>
+        <div id="collapse-target" class="fragment-container">
+            <span class="loading-indicator">Accordion will load here...</span>
+        </div>
+    </section>
+
+    <!-- Hidden HTML Fragments (simulating server responses) -->
+    <template id="dropdown-fragment">
+        <div class="ds-dropdown" data-dropdown>
+            <button class="ds-dropdown__trigger ds-btn ds-btn--secondary">
+                Select Option
+                <img src="../icons/chevron-down.svg" width="14" height="14" alt="" class="icon">
+            </button>
+            <div class="ds-dropdown__menu">
+                <a class="ds-dropdown__item">Option A</a>
+                <a class="ds-dropdown__item">Option B</a>
+                <a class="ds-dropdown__item">Option C</a>
+            </div>
+        </div>
+    </template>
+
+    <template id="modal-fragment">
+        <div>
+            <button class="ds-btn ds-btn--primary" onclick="this.nextElementSibling.style.display='flex'">
+                Open Modal
+            </button>
+            <div class="ds-backdrop" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+                <div class="ds-dialog">
+                    <div class="ds-dialog__head">
+                        <span class="ds-dialog__title">Loaded via HTMX</span>
+                        <button class="ds-dialog__close" onclick="this.closest('.ds-backdrop').style.display='none'">
+                            <img src="../icons/x.svg" width="14" height="14" alt="close" class="icon">
+                        </button>
+                    </div>
+                    <div class="ds-dialog__body">
+                        <p>This modal was loaded dynamically via HTMX and auto-initialized by Kupola's MutationObserver.</p>
+                    </div>
+                    <div class="ds-dialog__foot">
+                        <button class="ds-btn ds-btn--ghost" onclick="this.closest('.ds-backdrop').style.display='none'">Close</button>
+                        <button class="ds-btn ds-btn--primary" onclick="this.closest('.ds-backdrop').style.display='none'">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="table-fragment">
+        <table class="ds-table ds-table--striped ds-table--hoverable" style="width:100%;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Alice Chen</td>
+                    <td>Engineer</td>
+                    <td><span class="ds-tag ds-tag--success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>Bob Wang</td>
+                    <td>Designer</td>
+                    <td><span class="ds-tag ds-tag--warning">Away</span></td>
+                </tr>
+                <tr>
+                    <td>Carol Li</td>
+                    <td>PM</td>
+                    <td><span class="ds-tag ds-tag--success">Active</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </template>
+
+    <template id="collapse-fragment">
+        <div class="ds-collapse" data-collapse>
+            <div class="ds-collapse__item">
+                <button class="ds-collapse__header">
+                    <span>What is Kupola?</span>
+                    <img src="../icons/chevron-down.svg" width="14" height="14" alt="" class="icon ds-collapse__chevron">
+                </button>
+                <div class="ds-collapse__body">
+                    <p>A zero-framework declarative UI component system. It provides ready-to-use interactive components for projects that don't want to introduce Vue or React.</p>
+                </div>
+            </div>
+            <div class="ds-collapse__item">
+                <button class="ds-collapse__header">
+                    <span>How does HTMX integration work?</span>
+                    <img src="../icons/chevron-down.svg" width="14" height="14" alt="" class="icon ds-collapse__chevron">
+                </button>
+                <div class="ds-collapse__body">
+                    <p>HTMX loads HTML fragments into the DOM. Kupola's MutationObserver detects new elements with data-component attributes and automatically initializes them. No manual setup needed.</p>
+                </div>
+            </div>
+            <div class="ds-collapse__item">
+                <button class="ds-collapse__header">
+                    <span>Is this production-ready?</span>
+                    <img src="../icons/chevron-down.svg" width="14" height="14" alt="" class="icon ds-collapse__chevron">
+                </button>
+                <div class="ds-collapse__body">
+                    <p>Kupola is designed for real-world use. The component system is lightweight, well-tested, and follows web standards.</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script type="module">
+        import { kupolaBootstrap, kupolaInitializer } from '../src/index.js';
+
+        // Bootstrap Kupola on page load
+        await kupolaBootstrap();
+
+        // Simulate HTMX-like fragment loading
+        // In a real app, this would be hx-get="/api/fragment" returning HTML from the server
+        window.loadFragment = function(templateId) {
+            const template = document.getElementById(templateId);
+            if (!template) return;
+
+            const targetMap = {
+                'dropdown-fragment': 'dropdown-target',
+                'modal-fragment': 'modal-target',
+                'table-fragment': 'table-target',
+                'collapse-fragment': 'collapse-target'
+            };
+
+            const targetId = targetMap[templateId];
+            const target = document.getElementById(targetId);
+            if (!target) return;
+
+            // Clone and insert the fragment content
+            const clone = template.content.cloneNode(true);
+            target.innerHTML = '';
+            target.appendChild(clone);
+
+            // Kupola's MutationObserver should auto-detect new elements,
+            // but we can also manually trigger initialization:
+            kupolaInitializer.initializeAll(target);
+        };
+    </script>
+</body>
+</html>

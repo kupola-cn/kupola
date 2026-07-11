@@ -1,0 +1,316 @@
+/* ===== Component States ===== */
+
+/* Loading State */
+.ds-loading {
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.ds-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(224, 226, 242, 0.1), transparent);
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  100% { left: 100%; }
+}
+
+.ds-btn--loading {
+  color: transparent !important;
+}
+
+.ds-btn--loading::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: loading-spin 0.8s linear infinite;
+}
+
+@keyframes loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Disabled State */
+.ds-btn[disabled],
+.ds-input[disabled],
+.ds-select__trigger[disabled],
+.ds-textarea[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Focus State */
+.ds-btn:focus-visible,
+.ds-input:focus-within,
+.ds-select__trigger:focus-visible,
+.ds-textarea:focus {
+  outline: 2px solid var(--border-brand);
+  outline-offset: 2px;
+}
+
+/* Error State */
+.ds-input--error {
+  border-color: var(--status-error-default) !important;
+}
+
+.ds-input--error:focus-within {
+  border-color: var(--status-error-default) !important;
+  background: var(--status-error-surface-l1) !important;
+}
+
+.ds-field__error {
+  font-size: var(--body-xs-font-size);
+  color: var(--status-error-default);
+  margin-top: var(--spacer-4);
+}
+
+/* Success State */
+.ds-input--success {
+  border-color: var(--status-success-default);
+}
+
+.ds-input--success:focus-within {
+  border-color: var(--status-success-default);
+  background: var(--status-success-surface-l1);
+}
+
+/* Warning State */
+.ds-input--warning {
+  border-color: var(--status-warning-default);
+}
+
+.ds-input--warning:focus-within {
+  border-color: var(--status-warning-default);
+  background: var(--status-warning-surface-l1);
+}
+
+/* Progress Circle States */
+.ds-progress-circle.ds-loading {
+  opacity: 0.6;
+}
+
+.ds-progress-circle.ds-loading .ds-progress-circle__bar {
+  animation: loading-spin 2s linear infinite;
+}
+
+/* Slider States */
+.ds-slider__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-slider__input:focus-visible {
+  outline: 2px solid var(--border-brand);
+  outline-offset: 4px;
+}
+
+.ds-slider.ds-loading .ds-slider__track {
+  opacity: 0.6;
+}
+
+/* Date Picker States */
+.ds-datepicker[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ds-datepicker__input-wrap[aria-invalid="true"] {
+  border-color: var(--status-error-default);
+}
+
+.ds-datepicker__nav[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* File Upload States */
+.ds-fileupload__dropzone[aria-disabled="true"],
+.ds-fileupload--disabled .ds-fileupload__dropzone {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-style: solid;
+  border-color: var(--border-neutral-l3);
+  background-color: var(--bg-overlay-l3);
+}
+
+.ds-fileupload__dropzone.is-error {
+  border-color: var(--status-error-default);
+  background-color: var(--status-error-surface-l1);
+}
+
+.ds-fileupload__dropzone.is-success {
+  border-color: var(--status-success-default);
+  background-color: var(--status-success-surface-l1);
+}
+
+/* Timeline States */
+.ds-timeline__item[aria-current="true"] .ds-timeline__marker {
+  box-shadow: 0 0 0 4px var(--bg-brand-popup);
+}
+
+.ds-timeline__item[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Activity Rail States */
+.ds-activityrail__item[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-activityrail__item:focus-visible {
+  outline: 2px solid var(--border-brand);
+  outline-offset: 2px;
+}
+
+/* Chat Composer States */
+.ds-chatcomposer__input[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Editor Tabs States */
+.ds-editortabs__tab[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-editortabs__close:focus-visible {
+  outline: 2px solid var(--border-brand);
+  outline-offset: 2px;
+}
+
+/* Setting Row States */
+.ds-settingrow[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Status Bar States */
+.ds-statusbar__item[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-statusbar__item:focus-visible {
+  outline: 2px solid var(--border-brand);
+  outline-offset: 2px;
+}
+
+/* Table Panel States */
+.ds-tablepanel.ds-loading {
+  opacity: 0.6;
+}
+
+.ds-tablepanel__table[aria-busy="true"] {
+  position: relative;
+}
+
+.ds-tablepanel__table[aria-busy="true"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+/* Workbench Titlebar States */
+.ds-titlebar__traffic-btn:focus-visible {
+  outline: 2px solid var(--border-brand);
+  outline-offset: 2px;
+}
+
+.ds-titlebar__project[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Button Active State */
+.ds-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.ds-btn--sm:active:not(:disabled) {
+  transform: translateY(0.5px);
+}
+
+.ds-btn--lg:active:not(:disabled) {
+  transform: translateY(1.5px);
+}
+
+/* Input Hover State */
+.ds-input:hover:not([disabled]) {
+  border-color: var(--border-neutral-l3);
+}
+
+/* Card Hover State */
+.ds-card:hover {
+  border-color: var(--border-neutral-l2);
+}
+
+/* Tag Hover State */
+.ds-tag:hover {
+  opacity: 0.8;
+}
+
+/* Alert Hover State */
+.ds-alert:hover {
+  background-color: var(--bg-overlay-l1);
+}
+
+/* Nav List Item Active State */
+.ds-navlist__item:active {
+  background-color: var(--bg-overlay-l2);
+}
+
+.ds-navlist__item.is-active:active {
+  background-color: var(--bg-brand);
+}
+
+/* File Tree Row Active State */
+.ds-filetree__row:active {
+  background-color: var(--bg-overlay-l2);
+}
+
+/* Pagination Item Active State */
+.ds-pagination__item:active:not(:disabled) {
+  background-color: var(--bg-overlay-l2);
+}
+
+/* Toggle Active State */
+.ds-toggle input:checked + .ds-toggle__track {
+  background-color: var(--bg-brand);
+}
+
+/* Badge Pulse State */
+.ds-badge--pulse {
+  animation: badge-pulse 2s infinite;
+}
+
+@keyframes badge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(50, 240, 140, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(50, 240, 140, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(50, 240, 140, 0);
+  }
+}

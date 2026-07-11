@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-brand="zengqing" class="ds-dashboard-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kupola Design System - Data</title>
+    <link rel="stylesheet" href="../dist/css/kupola.css">
+    <link rel="stylesheet" href="../dist/css/components-ext.css">
+    <link rel="stylesheet" href="../dist/css/responsive.css">
+    <link rel="stylesheet" href="../dist/css/accessibility.css">
+    <link rel="stylesheet" href="../dist/css/animations.css">
+    <link rel="stylesheet" href="../dashboard/dashboard.css">
+    <style>
+        .showcase-section { margin-bottom: 48px; }
+        .showcase-section__title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-default);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-neutral-l2);
+        }
+        .showcase-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+        .showcase-item { display: flex; flex-direction: column; gap: 8px; }
+        .showcase-item__label { font-size: 11px; color: var(--text-tertiary); }
+        .showcase-card {
+            padding: 24px;
+            background-color: var(--bg-overlay-l1);
+            border: 1px solid var(--border-neutral-l1);
+            border-radius: 8px;
+        }
+        .component-docs {
+            margin-top: 16px;
+            padding: 16px;
+            background-color: var(--bg-overlay-l1);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .component-docs h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: var(--text-default);
+        }
+        .component-docs table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        .component-docs th, .component-docs td {
+            text-align: left;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border-neutral-l1);
+            font-size: 12px;
+        }
+        .component-docs th {
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="ds-dashboard-page">
+    <div class="ds-dashboard">
+        <header class="ds-dashboard__header">
+            <div class="ds-dashboard__header-left">
+                <div class="ds-dashboard__logo">
+                    <div class="ds-dashboard__logo-icon"></div>
+                    <span>Kupola Design System</span>
+                </div>
+            </div>
+            <div class="ds-dashboard__header-center">
+                <span style="color: var(--text-secondary); font-size: 13px;">Data</span>
+            </div>
+            <div class="ds-dashboard__header-right">
+                <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" data-theme-toggle data-title="Theme">
+                    <img class="theme-icon" src="../dist/icons/icons/sun.svg" width="16" height="16" alt="theme" class="icon">
+                </button>
+                <button class="ds-btn ds-btn--ghost ds-btn--sm" data-brand-toggle data-title="Brand Color" style="display: flex; align-items: center; gap: 4px;">
+                    <span class="brand-icon" style="width: 10px; height: 10px; border-radius: 50%; background-color: #535164;"></span>
+                    <span class="brand-name" style="font-size: 10px;">曾青</span>
+                </button>
+            </div>
+        </header>
+        
+        <div class="ds-dashboard__main">
+            <aside class="ds-dashboard__sidebar">
+                <nav class="ds-dashboard__sidebar-nav">
+                    <a href="buttons.html" class="ds-dashboard__sidebar-item" data-title="Buttons">
+                        <img src="../dist/icons/icons/button.svg" width="18" height="18" alt="button" class="icon">
+                    </a>
+                    <a href="inputs.html" class="ds-dashboard__sidebar-item" data-title="Inputs">
+                        <img src="../dist/icons/icons/input.svg" width="18" height="18" alt="input" class="icon">
+                    </a>
+                    <a href="forms.html" class="ds-dashboard__sidebar-item" data-title="Forms">
+                        <img src="../dist/icons/icons/file-text.svg" width="18" height="18" alt="forms" class="icon">
+                    </a>
+                    <a href="fileupload.html" class="ds-dashboard__sidebar-item" data-title="File Upload">
+                        <img src="../dist/icons/icons/upload.svg" width="18" height="18" alt="file upload" class="icon">
+                    </a>
+                    <a href="images.html" class="ds-dashboard__sidebar-item" data-title="Images">
+                        <img src="../dist/icons/icons/image.svg" width="18" height="18" alt="images" class="icon">
+                    </a>
+                    <a href="cards.html" class="ds-dashboard__sidebar-item" data-title="Cards">
+                        <img src="../dist/icons/icons/layers.svg" width="18" height="18" alt="cards" class="icon">
+                    </a>
+                    <a href="progress.html" class="ds-dashboard__sidebar-item" data-title="Progress">
+                        <img src="../dist/icons/icons/trending-up.svg" width="18" height="18" alt="progress" class="icon">
+                    </a>
+                    <a href="navigation.html" class="ds-dashboard__sidebar-item" data-title="Navigation">
+                        <img src="../dist/icons/icons/layout-grid.svg" width="18" height="18" alt="navigation" class="icon">
+                    </a>
+                    <a href="feedback.html" class="ds-dashboard__sidebar-item" data-title="Feedback">
+                        <img src="../dist/icons/icons/alert-circle.svg" width="18" height="18" alt="feedback" class="icon">
+                    </a>
+                    <a href="data.html" class="ds-dashboard__sidebar-item is-active" data-title="Data">
+                        <img src="../dist/icons/icons/table.svg" width="18" height="18" alt="data" class="icon">
+                    </a>
+                    <a href="dataviz.html" class="ds-dashboard__sidebar-item" data-title="Data Viz">
+                        <img src="../dist/icons/icons/bar-chart-2.svg" width="18" height="18" alt="data viz" class="icon">
+                    </a>
+                    <a href="overlay.html" class="ds-dashboard__sidebar-item" data-title="Overlay">
+                        <img src="../dist/icons/icons/lock.svg" width="18" height="18" alt="overlay" class="icon">
+                    </a>
+                    <a href="other.html" class="ds-dashboard__sidebar-item" data-title="Other">
+                        <img src="../dist/icons/icons/more-h.svg" width="18" height="18" alt="other" class="icon">
+                    </a>
+                </nav>
+            </aside>
+            
+            <main class="ds-dashboard__content">
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Statistic Card</div>
+                    <div class="showcase-card" style="width: 100%;">
+                        <div class="showcase-row">
+                            <div class="ds-statcard" style="width: 280px;">
+                                <div class="ds-statcard__header">
+                                    <span class="ds-statcard__title">Total Users</span>
+                                    <div class="ds-statcard__icon ds-statcard__icon--brand">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__value">12,847<span class="ds-statcard__unit">users</span></div>
+                                <div class="ds-statcard__footer">
+                                    <span class="ds-statcard__trend ds-statcard__trend--up">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                        </svg>
+                                        +12.5%
+                                    </span>
+                                    <span class="ds-statcard__time">Last 7 days</span>
+                                </div>
+                            </div>
+
+                            <div class="ds-statcard ds-statcard--gradient" style="width: 280px;">
+                                <div class="ds-statcard__header">
+                                    <span class="ds-statcard__title">Revenue</span>
+                                    <div class="ds-statcard__icon ds-statcard__icon--success">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__value">$284.6K<span class="ds-statcard__unit">USD</span></div>
+                                <div class="ds-statcard__footer">
+                                    <span class="ds-statcard__trend ds-statcard__trend--up">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                        </svg>
+                                        +8.2%
+                                    </span>
+                                    <span class="ds-statcard__time">This month</span>
+                                </div>
+                            </div>
+
+                            <div class="ds-statcard" style="width: 280px;">
+                                <div class="ds-statcard__header">
+                                    <span class="ds-statcard__title">Conversion Rate</span>
+                                    <div class="ds-statcard__icon ds-statcard__icon--warning">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__value">24.6%</div>
+                                <div class="ds-statcard__footer">
+                                    <span class="ds-statcard__trend ds-statcard__trend--down">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="1 18 10.5 8.5 15.5 13.5 23 6"/>
+                                        </svg>
+                                        -2.1%
+                                    </span>
+                                    <span class="ds-statcard__time">Last week</span>
+                                </div>
+                            </div>
+
+                            <div class="ds-statcard" style="width: 280px;">
+                                <div class="ds-statcard__header">
+                                    <span class="ds-statcard__title">Active Sessions</span>
+                                    <div class="ds-statcard__icon ds-statcard__icon--info">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__value">3,842</div>
+                                <div class="ds-statcard__footer">
+                                    <span class="ds-statcard__trend ds-statcard__trend--neutral">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="12 19 18 13 12 7 6 13"/>
+                                        </svg>
+                                        0.0%
+                                    </span>
+                                    <span class="ds-statcard__time">Real-time</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="showcase-row" style="margin-top: 24px;">
+                            <div class="ds-statcard ds-statcard--compact" style="width: 200px;">
+                                <div class="ds-statcard__header">
+                                    <span class="ds-statcard__title">Page Views</span>
+                                    <div class="ds-statcard__icon ds-statcard__icon--brand">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__value">84.2K</div>
+                                <div class="ds-statcard__footer">
+                                    <span class="ds-statcard__trend ds-statcard__trend--up">+5.3%</span>
+                                </div>
+                            </div>
+
+                            <div class="ds-statcard" style="width: 320px;">
+                                <div class="ds-statcard__header">
+                                    <span class="ds-statcard__title">Storage Usage</span>
+                                    <div class="ds-statcard__icon ds-statcard__icon--error">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__value">12.8<span class="ds-statcard__unit">GB</span></div>
+                                <div class="ds-statcard__progress">
+                                    <div class="ds-statcard__progress-label">
+                                        <span>Used</span>
+                                        <span>64%</span>
+                                    </div>
+                                    <div class="ds-statcard__progress-bar">
+                                        <div class="ds-statcard__progress-fill ds-statcard__progress-fill--warning" data-width="64%"></div>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__footer">
+                                    <span class="ds-statcard__trend ds-statcard__trend--warning">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="1 18 10.5 8.5 15.5 13.5 23 6"/>
+                                        </svg>
+                                        High usage
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="ds-statcard" style="width: 320px;">
+                                <div class="ds-statcard__header">
+                                    <span class="ds-statcard__title">Goal Progress</span>
+                                    <div class="ds-statcard__icon ds-statcard__icon--success">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__value">85%</div>
+                                <div class="ds-statcard__progress">
+                                    <div class="ds-statcard__progress-label">
+                                        <span>Progress</span>
+                                        <span>$85K / $100K</span>
+                                    </div>
+                                    <div class="ds-statcard__progress-bar">
+                                        <div class="ds-statcard__progress-fill ds-statcard__progress-fill--success" data-width="85%"></div>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__footer">
+                                    <span class="ds-statcard__trend ds-statcard__trend--up">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                        </svg>
+                                        On track
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="ds-statcard" style="width: 280px;">
+                                <div class="ds-statcard__header">
+                                    <span class="ds-statcard__title">Traffic Sources</span>
+                                    <div class="ds-statcard__icon ds-statcard__icon--brand">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 20V10"/>
+                                            <path d="M18 20V4"/>
+                                            <path d="M6 20v-6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ds-statcard__value">100%</div>
+                                <div class="ds-statcard__sub-info">
+                                    <div class="ds-statcard__sub-item">
+                                        <span class="ds-statcard__sub-label">Organic</span>
+                                        <span class="ds-statcard__sub-value">45%</span>
+                                    </div>
+                                    <div class="ds-statcard__sub-item">
+                                        <span class="ds-statcard__sub-label">Direct</span>
+                                        <span class="ds-statcard__sub-value">30%</span>
+                                    </div>
+                                    <div class="ds-statcard__sub-item">
+                                        <span class="ds-statcard__sub-label">Social</span>
+                                        <span class="ds-statcard__sub-value">25%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 24px; padding: 16px; background: var(--bg-overlay-l1); border-radius: 8px;">
+                            <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text-default);">Props</div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                <thead>
+                                    <tr style="color: var(--text-tertiary);">
+                                        <th style="text-align: left; padding: 8px; border-bottom: 1px solid var(--border-neutral-l2);">Class</th>
+                                        <th style="text-align: left; padding: 8px; border-bottom: 1px solid var(--border-neutral-l2);">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td style="padding: 8px;">ds-statcard</td><td style="padding: 8px;">基础统计卡片</td></tr>
+                                    <tr><td style="padding: 8px;">ds-statcard--compact</td><td style="padding: 8px;">紧凑模式</td></tr>
+                                    <tr><td style="padding: 8px;">ds-statcard--gradient</td><td style="padding: 8px;">渐变背景</td></tr>
+                                    <tr><td style="padding: 8px;">ds-statcard--hover-lift</td><td style="padding: 8px;">悬停上移效果</td></tr>
+                                    <tr><td style="padding: 8px;">ds-statcard__icon--brand/success/warning/error/info</td><td style="padding: 8px;">图标背景色</td></tr>
+                                    <tr><td style="padding: 8px;">ds-statcard__trend--up/down/neutral/warning</td><td style="padding: 8px;">趋势方向</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Table Panel</div>
+                    <div class="showcase-card" style="width: 100%; max-height: 400px;">
+                        <div class="ds-tablepanel" style="height: 100%;">
+                            <div class="ds-tablepanel__toolbar">
+                                <div class="ds-tablepanel__filters">
+                                    <div class="ds-input ds-input--prefix" style="width: 200px;">
+                                        <input type="text" placeholder="Search..." style="padding-left: 32px;">
+                                    </div>
+                                </div>
+                                <div class="ds-tablepanel__actions">
+                                    <button class="ds-btn ds-btn--brand">New</button>
+                                </div>
+                            </div>
+                            <div class="ds-tablepanel__table">
+                                <div class="ds-tablepanel__scroll">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Role</th>
+                                                <th>Status</th>
+                                                <th class="num">Age</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>John Doe</td>
+                                                <td>john@example.com</td>
+                                                <td>Admin</td>
+                                                <td><span class="ds-status-dot"></span> Active</td>
+                                                <td class="num">32</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Jane Smith</td>
+                                                <td>jane@example.com</td>
+                                                <td>User</td>
+                                                <td><span class="ds-status-dot is-warning"></span> Pending</td>
+                                                <td class="num">28</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bob Johnson</td>
+                                                <td>bob@example.com</td>
+                                                <td>User</td>
+                                                <td><span class="ds-status-dot is-error"></span> Inactive</td>
+                                                <td class="num">45</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Alice Brown</td>
+                                                <td>alice@example.com</td>
+                                                <td>Editor</td>
+                                                <td><span class="ds-status-dot"></span> Active</td>
+                                                <td class="num">30</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Charlie Davis</td>
+                                                <td>charlie@example.com</td>
+                                                <td>User</td>
+                                                <td><span class="ds-status-dot"></span> Active</td>
+                                                <td class="num">35</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="ds-tablepanel__footer">
+                                <span>1-5 of 120 records</span>
+                                <div class="ds-pagination">
+                                    <button class="ds-pagination__item" aria-label="Previous">
+                                        <img src="../dist/icons/icons/chevron-right.svg" width="12" height="12" alt="prev" class="icon" style="transform: rotate(180deg);">
+                                    </button>
+                                    <button class="ds-pagination__item is-active num">1</button>
+                                    <button class="ds-pagination__item num">2</button>
+                                    <button class="ds-pagination__item num">3</button>
+                                    <button class="ds-pagination__item" disabled>…</button>
+                                    <button class="ds-pagination__item num">12</button>
+                                    <button class="ds-pagination__item" aria-label="Next">
+                                        <img src="../dist/icons/icons/chevron-right.svg" width="12" height="12" alt="next" class="icon">
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="component-docs">
+                        <h4>Props</h4>
+                        <table>
+                            <thead>
+                                <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>columns</td><td>array</td><td>[]</td><td>Table columns</td></tr>
+                                <tr><td>data</td><td>array</td><td>[]</td><td>Table data</td></tr>
+                                <tr><td>pagination</td><td>object</td><td>{}</td><td>Pagination config</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Empty</div>
+                    <div class="showcase-card">
+                        <div class="ds-empty">
+                            <div class="ds-empty__icon">
+                                <img src="../dist/icons/icons/box.svg" width="48" height="48" alt="empty" class="icon">
+                            </div>
+                            <div class="ds-empty__title">No Data</div>
+                            <div class="ds-empty__description">There is no data to display.</div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>title</td><td>string</td><td>'No Data'</td><td>Empty title</td></tr>
+                                    <tr><td>description</td><td>string</td><td>'There is no data to display.'</td><td>Empty description</td></tr>
+                                    <tr><td>icon</td><td>string</td><td>'box'</td><td>Icon name</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../dist/kupola.umd.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof initStatCards === 'function') initStatCards();
+        });
+    </script>
+</body>
+</html>

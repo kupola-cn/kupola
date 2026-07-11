@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-brand="green" class="ds-dashboard-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kupola Design System - Other</title>
+    <link rel="stylesheet" href="../dist/css/kupola.css">
+    <link rel="stylesheet" href="../dist/css/components-ext.css">
+    <link rel="stylesheet" href="../dist/css/responsive.css">
+    <link rel="stylesheet" href="../dist/css/accessibility.css">
+    <link rel="stylesheet" href="../dist/css/animations.css">
+    <link rel="stylesheet" href="../dashboard/dashboard.css">
+    <style>
+        .showcase-section { margin-bottom: 48px; }
+        .showcase-section__title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-default);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-neutral-l2);
+        }
+        .showcase-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+        .showcase-item { display: flex; flex-direction: column; gap: 8px; }
+        .showcase-item__label { font-size: 11px; color: var(--text-tertiary); }
+        .showcase-card {
+            padding: 24px;
+            background-color: var(--bg-base-secondary);
+            border: 1px solid var(--border-neutral-l1);
+            border-radius: 8px;
+        }
+        .component-docs {
+            margin-top: 16px;
+            padding: 16px;
+            background-color: var(--bg-overlay-l1);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .component-docs h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: var(--text-default);
+        }
+        .component-docs table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        .component-docs th, .component-docs td {
+            text-align: left;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border-neutral-l1);
+            font-size: 12px;
+        }
+        .component-docs th {
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="ds-dashboard-page">
+    <div class="ds-dashboard">
+        <header class="ds-dashboard__header">
+            <div class="ds-dashboard__header-left">
+                <div class="ds-dashboard__logo">
+                    <div class="ds-dashboard__logo-icon"></div>
+                    <span>Kupola Design System</span>
+                </div>
+            </div>
+            <div class="ds-dashboard__header-center">
+                <span style="color: var(--text-secondary); font-size: 13px;">Other</span>
+            </div>
+            <div class="ds-dashboard__header-right">
+                <button class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon" data-theme-toggle data-title="Theme">
+                    <img class="theme-icon" src="../dist/icons/icons/sun.svg" width="16" height="16" alt="theme" class="icon">
+                </button>
+                <button class="ds-btn ds-btn--ghost ds-btn--sm" data-brand-toggle data-title="Brand Color" style="display: flex; align-items: center; gap: 4px;">
+                    <span class="brand-icon" style="width: 10px; height: 10px; border-radius: 50%; background-color: #32F08C;"></span>
+                    <span class="brand-name" style="font-size: 10px;">翠绿</span>
+                </button>
+            </div>
+        </header>
+        
+        <div class="ds-dashboard__main">
+            <aside class="ds-dashboard__sidebar">
+                <nav class="ds-dashboard__sidebar-nav">
+                    <a href="buttons.html" class="ds-dashboard__sidebar-item" data-title="Buttons">
+                        <img src="../dist/icons/icons/button.svg" width="18" height="18" alt="button" class="icon">
+                    </a>
+                    <a href="inputs.html" class="ds-dashboard__sidebar-item" data-title="Inputs">
+                        <img src="../dist/icons/icons/input.svg" width="18" height="18" alt="input" class="icon">
+                    </a>
+                    <a href="forms.html" class="ds-dashboard__sidebar-item" data-title="Forms">
+                        <img src="../dist/icons/icons/file-text.svg" width="18" height="18" alt="forms" class="icon">
+                    </a>
+                    <a href="fileupload.html" class="ds-dashboard__sidebar-item" data-title="File Upload">
+                        <img src="../dist/icons/icons/upload.svg" width="18" height="18" alt="file upload" class="icon">
+                    </a>
+                    <a href="images.html" class="ds-dashboard__sidebar-item" data-title="Images">
+                        <img src="../dist/icons/icons/image.svg" width="18" height="18" alt="images" class="icon">
+                    </a>
+                    <a href="cards.html" class="ds-dashboard__sidebar-item" data-title="Cards">
+                        <img src="../dist/icons/icons/layers.svg" width="18" height="18" alt="cards" class="icon">
+                    </a>
+                    <a href="progress.html" class="ds-dashboard__sidebar-item" data-title="Progress">
+                        <img src="../dist/icons/icons/trending-up.svg" width="18" height="18" alt="progress" class="icon">
+                    </a>
+                    <a href="navigation.html" class="ds-dashboard__sidebar-item" data-title="Navigation">
+                        <img src="../dist/icons/icons/layout-grid.svg" width="18" height="18" alt="navigation" class="icon">
+                    </a>
+                    <a href="feedback.html" class="ds-dashboard__sidebar-item" data-title="Feedback">
+                        <img src="../dist/icons/icons/alert-circle.svg" width="18" height="18" alt="feedback" class="icon">
+                    </a>
+                    <a href="data.html" class="ds-dashboard__sidebar-item" data-title="Data">
+                        <img src="../dist/icons/icons/table.svg" width="18" height="18" alt="data" class="icon">
+                    </a>
+                    <a href="dataviz.html" class="ds-dashboard__sidebar-item" data-title="Data Viz">
+                        <img src="../dist/icons/icons/bar-chart-2.svg" width="18" height="18" alt="data viz" class="icon">
+                    </a>
+                    <a href="overlay.html" class="ds-dashboard__sidebar-item" data-title="Overlay">
+                        <img src="../dist/icons/icons/lock.svg" width="18" height="18" alt="overlay" class="icon">
+                    </a>
+                    <a href="other.html" class="ds-dashboard__sidebar-item is-active" data-title="Other">
+                        <img src="../dist/icons/icons/more-h.svg" width="18" height="18" alt="other" class="icon">
+                    </a>
+                </nav>
+            </aside>
+            
+            <main class="ds-dashboard__content">
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Carousel</div>
+                    <div class="showcase-card">
+                        <div class="ds-carousel">
+                            <div class="ds-carousel__track">
+                                <div class="ds-carousel__item">Slide 1</div>
+                                <div class="ds-carousel__item">Slide 2</div>
+                                <div class="ds-carousel__item">Slide 3</div>
+                            </div>
+                            <button class="ds-carousel__prev" aria-label="Previous">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"/>
+                                </svg>
+                            </button>
+                            <button class="ds-carousel__next" aria-label="Next">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </button>
+                            <div class="ds-carousel__indicators">
+                                <span class="ds-carousel__auto">auto</span>
+                                <span class="ds-carousel__indicator is-active"></span>
+                                <span class="ds-carousel__indicator"></span>
+                                <span class="ds-carousel__indicator"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>mode</td><td>string</td><td>slide</td><td>Transition mode: slide | fade</td></tr>
+                                    <tr><td>vertical</td><td>boolean</td><td>false</td><td>Vertical orientation</td></tr>
+                                    <tr><td>autoPlay</td><td>boolean</td><td>true</td><td>Auto play</td></tr>
+                                    <tr><td>interval</td><td>number</td><td>3000</td><td>Auto play interval (ms)</td></tr>
+                                    <tr><td>transitionDuration</td><td>number</td><td>500</td><td>Transition duration (ms)</td></tr>
+                                    <tr><td>loop</td><td>boolean</td><td>true</td><td>Loop mode</td></tr>
+                                    <tr><td>pauseOnHover</td><td>boolean</td><td>true</td><td>Pause on hover</td></tr>
+                                    <tr><td>swipe</td><td>boolean</td><td>true</td><td>Enable swipe</td></tr>
+                                    <tr><td>swipeThreshold</td><td>number</td><td>50</td><td>Swipe threshold (px)</td></tr>
+                                    <tr><td>keyboardNav</td><td>boolean</td><td>false</td><td>Keyboard navigation</td></tr>
+                                    <tr><td>onChange</td><td>function</td><td>null</td><td>Callback on slide change</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Calendar</div>
+                    <div class="showcase-card">
+                        <div class="ds-calendar">
+                            <div class="ds-calendar__header">
+                                <span class="ds-calendar__title"></span>
+                                <div class="ds-calendar__nav-group">
+                                    <button class="ds-calendar__nav ds-calendar__nav--prev" aria-label="Previous month">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="15 18 9 12 15 6"/>
+                                        </svg>
+                                    </button>
+                                    <button class="ds-calendar__nav ds-calendar__nav--today">Today</button>
+                                    <button class="ds-calendar__nav ds-calendar__nav--next" aria-label="Next month">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="9 18 15 12 9 6"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ds-calendar__weekdays">
+                                <span class="ds-calendar__weekday">Sun</span>
+                                <span class="ds-calendar__weekday">Mon</span>
+                                <span class="ds-calendar__weekday">Tue</span>
+                                <span class="ds-calendar__weekday">Wed</span>
+                                <span class="ds-calendar__weekday">Thu</span>
+                                <span class="ds-calendar__weekday">Fri</span>
+                                <span class="ds-calendar__weekday">Sat</span>
+                            </div>
+                            <div class="ds-calendar__days"></div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>selectedDate</td><td>Date</td><td>null</td><td>Selected date</td></tr>
+                                    <tr><td>rangeStart</td><td>Date</td><td>null</td><td>Range start date</td></tr>
+                                    <tr><td>rangeEnd</td><td>Date</td><td>null</td><td>Range end date</td></tr>
+                                    <tr><td>isRangeMode</td><td>boolean</td><td>false</td><td>Enable range selection</td></tr>
+                                    <tr><td>viewMode</td><td>string</td><td>month</td><td>View mode: month | week</td></tr>
+                                    <tr><td>events</td><td>array</td><td>[]</td><td>Events to display</td></tr>
+                                    <tr><td>i18n</td><td>object</td><td>{...}</td><td>Internationalization config</td></tr>
+                                    <tr><td>onSelect</td><td>function</td><td>null</td><td>Callback on date select</td></tr>
+                                    <tr><td>onRangeSelect</td><td>function</td><td>null</td><td>Callback on range select</td></tr>
+                                    <tr><td>onChange</td><td>function</td><td>null</td><td>Callback on view change</td></tr>
+                                    <tr><td>onEventClick</td><td>function</td><td>null</td><td>Callback on event click</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Dynamic Tags</div>
+                    <div class="showcase-card">
+                        <div class="showcase-row">
+                            <div class="showcase-item" style="width: 400px;">
+                                <div class="ds-dynamic-tags">
+                                    <span class="ds-dynamic-tags__tag">Tag 1<button class="ds-dynamic-tags__remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>
+                                    <span class="ds-dynamic-tags__tag">Tag 2<button class="ds-dynamic-tags__remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>
+                                    <input type="text" class="ds-dynamic-tags__input" placeholder="Add tag...">
+                                </div>
+                                <span class="showcase-item__label">Dynamic Tags</span>
+                            </div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>maxCount</td><td>number</td><td>Infinity</td><td>Maximum tags allowed</td></tr>
+                                    <tr><td>allowDuplicates</td><td>boolean</td><td>true</td><td>Allow duplicate tags</td></tr>
+                                    <tr><td>color</td><td>string</td><td>default</td><td>Tag color: default, primary, success, warning, danger, info</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Color Picker</div>
+                    <div class="showcase-card">
+                        <div class="showcase-row">
+                            <div class="showcase-item" style="width: 200px;">
+                                <div class="ds-color-picker">
+                                    <div class="ds-color-picker__trigger" style="background-color: #B1A6CC;"></div>
+                                    <div class="ds-color-picker__panel">
+                                        <div class="ds-color-picker__grid">
+                                            <button class="ds-color-picker__color" data-color="#33b9c1" style="background-color: #33b9c1;"></button>
+                                            <button class="ds-color-picker__color" data-color="#387BFF" style="background-color: #387BFF;"></button>
+                                            <button class="ds-color-picker__color" data-color="#33C192" style="background-color: #33C192;"></button>
+                                            <button class="ds-color-picker__color" data-color="#F65A5A" style="background-color: #F65A5A;"></button>
+                                            <button class="ds-color-picker__color" data-color="#D29D00" style="background-color: #D29D00;"></button>
+                                            <button class="ds-color-picker__color" data-color="#9B59B6" style="background-color: #9B59B6;"></button>
+                                            <button class="ds-color-picker__color" data-color="#E74C3C" style="background-color: #E74C3C;"></button>
+                                            <button class="ds-color-picker__color" data-color="#1ABC9C" style="background-color: #1ABC9C;"></button>
+                                            <button class="ds-color-picker__color" data-color="#3498DB" style="background-color: #3498DB;"></button>
+                                            <button class="ds-color-picker__color" data-color="#F39C12" style="background-color: #F39C12;"></button>
+                                            <button class="ds-color-picker__color" data-color="#2C3E50" style="background-color: #2C3E50;"></button>
+                                            <button class="ds-color-picker__color" data-color="#FFFFFF" style="background-color: #FFFFFF; border-color: #ddd;"></button>
+                                            <button class="ds-color-picker__color" data-color="#7F8C8D" style="background-color: #7F8C8D;"></button>
+                                            <button class="ds-color-picker__color" data-color="#B1A6CC" style="background-color: #B1A6CC;"></button>
+                                            <button class="ds-color-picker__color" data-color="#FF6B6B" style="background-color: #FF6B6B;"></button>
+                                        </div>
+                                        <div class="ds-color-picker__custom">
+                                            <input type="color" class="ds-color-picker__input" value="#B1A6CC">
+                                            <span class="ds-color-picker__value">#B1A6CC</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="showcase-item__label">Color Picker</span>
+                            </div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>value</td><td>string</td><td>#007bff</td><td>Selected color</td></tr>
+                                    <tr><td>showAlpha</td><td>boolean</td><td>true</td><td>Show alpha slider</td></tr>
+                                    <tr><td>mode</td><td>string</td><td>hex</td><td>Color format: hex | rgb | hsl</td></tr>
+                                    <tr><td>previousColors</td><td>array</td><td>[]</td><td>Previous colors list</td></tr>
+                                    <tr><td>previousColorsLimit</td><td>number</td><td>12</td><td>Max previous colors stored</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Collapse</div>
+                    <div class="showcase-card">
+                        <div class="ds-collapse">
+                            <div class="ds-collapse__item is-active">
+                                <div class="ds-collapse__header">
+                                    <span class="ds-collapse__title">Item 1</span>
+                                    <span class="ds-collapse__icon">▼</span>
+                                </div>
+                                <div class="ds-collapse__content">Content for item 1</div>
+                            </div>
+                            <div class="ds-collapse__item">
+                                <div class="ds-collapse__header">
+                                    <span class="ds-collapse__title">Item 2</span>
+                                    <span class="ds-collapse__icon">▼</span>
+                                </div>
+                                <div class="ds-collapse__content">Content for item 2</div>
+                            </div>
+                            <div class="ds-collapse__item">
+                                <div class="ds-collapse__header">
+                                    <span class="ds-collapse__title">Item 3</span>
+                                    <span class="ds-collapse__icon">▼</span>
+                                </div>
+                                <div class="ds-collapse__content">Content for item 3</div>
+                            </div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>accordion</td><td>boolean</td><td>false</td><td>Accordion mode (only one open at a time)</td></tr>
+                                    <tr><td>animationDuration</td><td>number</td><td>300</td><td>Animation duration (ms)</td></tr>
+                                    <tr><td>disabledItems</td><td>array</td><td>[]</td><td>Indices of disabled items</td></tr>
+                                    <tr><td>defaultExpanded</td><td>array/'all'</td><td>[]</td><td>Default expanded indices or 'all'</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Skeleton</div>
+                    <div class="showcase-card">
+                        <div class="showcase-row">
+                            <div class="showcase-item" style="width: 400px;">
+                                <div class="ds-skeleton" style="width: 100%; height: 20px; margin-bottom: 8px;"></div>
+                                <div class="ds-skeleton" style="width: 60%; height: 16px; margin-bottom: 8px;"></div>
+                                <div class="ds-skeleton" style="width: 80%; height: 16px;"></div>
+                                <span class="showcase-item__label">Skeleton</span>
+                            </div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>width</td><td>string</td><td>'100%'</td><td>Skeleton width</td></tr>
+                                    <tr><td>height</td><td>string</td><td>'20px'</td><td>Skeleton height</td></tr>
+                                    <tr><td>circle</td><td>boolean</td><td>false</td><td>Round shape</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Divider</div>
+                    <div class="showcase-card">
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <div class="ds-divider"></div>
+                            <div class="ds-divider">
+                                <span class="ds-divider__text">Or</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <span>Left</span>
+                                <div class="ds-divider ds-divider--vertical" style="height: 24px;"></div>
+                                <span>Right</span>
+                            </div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>vertical</td><td>boolean</td><td>false</td><td>Vertical divider</td></tr>
+                                    <tr><td>text</td><td>string</td><td>''</td><td>Divider text</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Ellipsis</div>
+                    <div class="showcase-card">
+                        <div class="showcase-row">
+                            <div class="showcase-item" style="width: 200px;">
+                                <div class="ds-ellipsis" style="width: 100%;">This is a very long text that should be truncated with ellipsis</div>
+                                <span class="showcase-item__label">Ellipsis</span>
+                            </div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>lines</td><td>number</td><td>1</td><td>Number of lines to show</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-section">
+                    <div class="showcase-section__title">Slide Captcha</div>
+                    <div class="showcase-card">
+                        <div class="showcase-row">
+                            <div class="showcase-item" style="width: 360px;">
+                                <div class="ds-slider-captcha" data-shape="circle" data-angle="0">
+                                    <div class="ds-slider-captcha__track">
+                                        <div class="ds-slider-captcha__progress"></div>
+                                        <div class="ds-slider-captcha__target"></div>
+                                        <div class="ds-slider-captcha__target--distractor"></div>
+                                        <span class="ds-slider-captcha__text">圆形 (默认)</span>
+                                        <button class="ds-slider-captcha__btn">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                        </button>
+                                        <button class="ds-slider-captcha__refresh">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="ds-slider-captcha__status">请完成验证</div>
+                                    <div class="ds-slider-captcha__footer">
+                                        <span class="ds-slider-captcha__point-count">轨迹点: 0</span>
+                                        <button class="ds-slider-captcha__footer-refresh">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                            刷新
+                                        </button>
+                                    </div>
+                                </div>
+                                <span class="showcase-item__label">Circle</span>
+                            </div>
+                            <div class="showcase-item" style="width: 360px;">
+                                <div class="ds-slider-captcha" data-shape="square" data-angle="30">
+                                    <div class="ds-slider-captcha__track">
+                                        <div class="ds-slider-captcha__progress"></div>
+                                        <div class="ds-slider-captcha__target"></div>
+                                        <div class="ds-slider-captcha__target--distractor"></div>
+                                        <span class="ds-slider-captcha__text">正方形</span>
+                                        <button class="ds-slider-captcha__btn">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                        </button>
+                                        <button class="ds-slider-captcha__refresh">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="ds-slider-captcha__status">请完成验证</div>
+                                    <div class="ds-slider-captcha__footer">
+                                        <span class="ds-slider-captcha__point-count">轨迹点: 0</span>
+                                        <button class="ds-slider-captcha__footer-refresh">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                            刷新
+                                        </button>
+                                    </div>
+                                </div>
+                                <span class="showcase-item__label">Square</span>
+                            </div>
+                        </div>
+                        <div class="showcase-row">
+                            <div class="showcase-item" style="width: 360px;">
+                                <div class="ds-slider-captcha" data-shape="triangle" data-angle="15">
+                                    <div class="ds-slider-captcha__track">
+                                        <div class="ds-slider-captcha__progress"></div>
+                                        <div class="ds-slider-captcha__target"></div>
+                                        <div class="ds-slider-captcha__target--distractor"></div>
+                                        <span class="ds-slider-captcha__text">三角形</span>
+                                        <button class="ds-slider-captcha__btn">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                        </button>
+                                        <button class="ds-slider-captcha__refresh">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="ds-slider-captcha__status">请完成验证</div>
+                                    <div class="ds-slider-captcha__footer">
+                                        <span class="ds-slider-captcha__point-count">轨迹点: 0</span>
+                                        <button class="ds-slider-captcha__footer-refresh">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                            刷新
+                                        </button>
+                                    </div>
+                                </div>
+                                <span class="showcase-item__label">Triangle</span>
+                            </div>
+                            <div class="showcase-item" style="width: 360px;">
+                                <div class="ds-slider-captcha" data-shape="star" data-angle="20">
+                                    <div class="ds-slider-captcha__track">
+                                        <div class="ds-slider-captcha__progress"></div>
+                                        <div class="ds-slider-captcha__target"></div>
+                                        <div class="ds-slider-captcha__target--distractor"></div>
+                                        <span class="ds-slider-captcha__text">五角星</span>
+                                        <button class="ds-slider-captcha__btn">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                        </button>
+                                        <button class="ds-slider-captcha__refresh">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="ds-slider-captcha__status">请完成验证</div>
+                                    <div class="ds-slider-captcha__footer">
+                                        <span class="ds-slider-captcha__point-count">轨迹点: 0</span>
+                                        <button class="ds-slider-captcha__footer-refresh">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                            刷新
+                                        </button>
+                                    </div>
+                                </div>
+                                <span class="showcase-item__label">Star</span>
+                            </div>
+                        </div>
+                        
+                        <div class="component-docs">
+                            <h4>Props</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>data-shape</td><td>string</td><td>circle</td><td>Shape: circle, square, triangle, star. Non-circle shapes show 2 targets with different angles.</td></tr>
+                                    <tr><td>data-angle</td><td>number</td><td>30</td><td>Max rotation angle. Target/slider randomly rotate (0 to max). Distractor has different angle.</td></tr>
+                                    <tr><td>data-tolerance</td><td>number</td><td>6</td><td>Position tolerance (px)</td></tr>
+                                    <tr><td>data-min-points</td><td>number</td><td>5</td><td>Minimum track points</td></tr>
+                                    <tr><td>data-min-duration</td><td>number</td><td>300</td><td>Minimum duration (ms)</td></tr>
+                                    <tr><td>data-max-attempts</td><td>number</td><td>5</td><td>Max attempts before reset</td></tr>
+                                    <tr><td>data-err-refresh</td><td>string</td><td>-</td><td>Error behavior: auto (auto refresh), refresh (show refresh button). Default shows refresh button.</td></tr>
+                                </tbody>
+                            </table>
+                            <h4 style="margin-top: 12px;">校验规则</h4>
+                            <table>
+                                <thead>
+                                    <tr><th>校验项</th><th>规则</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>位置校验</td><td>偏差 &lt; 6px</td></tr>
+                                    <tr><td>速度变化</td><td>max-min &gt; 0.3</td></tr>
+                                    <tr><td>垂直抖动</td><td>y轴移动 &gt; 2px</td></tr>
+                                    <tr><td>总耗时</td><td>300ms ~ 10s</td></tr>
+                                    <tr><td>加速度</td><td>平均变化 &gt; 0.05</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../dist/kupola.umd.js"></script>
+    <script>
+        document.querySelector('[data-theme-toggle]').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+        });
+        
+        const brandColors = [
+            { name: '翠绿', color: '#32F08C' },
+            { name: '紫色', color: '#B1A6CC' },
+            { name: '蓝色', color: '#5B8FF9' },
+            { name: '橙色', color: '#FF7D00' }
+        ];
+        let brandIndex = 0;
+        document.querySelector('[data-brand-toggle]').addEventListener('click', () => {
+            brandIndex = (brandIndex + 1) % brandColors.length;
+            const brand = brandColors[brandIndex];
+            document.documentElement.setAttribute('data-brand', ['green', 'purple', 'blue', 'orange'][brandIndex]);
+            document.querySelector('.brand-icon').style.backgroundColor = brand.color;
+            document.querySelector('.brand-name').textContent = brand.name;
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof initCarousels === 'function') initCarousels();
+            if (typeof initSlideCaptchas === 'function') initSlideCaptchas();
+            if (typeof initCalendars === 'function') initCalendars();
+            if (typeof initColorPickers === 'function') initColorPickers();
+            if (typeof initCollapses === 'function') initCollapses();
+            if (typeof initDynamicTagsAll === 'function') initDynamicTagsAll();
+        });
+    </script>
+</body>
+</html>

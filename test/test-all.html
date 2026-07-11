@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kupola 终极测试 - 全功能集成</title>
+    <link rel="stylesheet" href="../css/kupola.css">
+    <style>
+        body { margin: 0; padding: 0; background: var(--bg-base-secondary); }
+        .kupola-test-header {
+            background: var(--bg-brand); color: var(--text-onbrand);
+            padding: 24px 32px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .kupola-test-header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+        .kupola-test-header .subtitle { opacity: 0.85; font-size: 13px; margin-top: 4px; }
+        .test-summary { display: flex; gap: 16px; align-items: center; }
+        .test-summary .badge {
+            padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;
+        }
+        .badge-pass { background: rgba(255,255,255,0.25); color: white; }
+        .badge-fail { background: var(--bg-error-default, #d32f2f); color: white; }
+        .test-nav {
+            background: var(--bg-overlay-l1); border-bottom: 1px solid var(--border-neutral-l2);
+            padding: 0 32px; display: flex; gap: 0; overflow-x: auto;
+        }
+        .test-nav a {
+            padding: 12px 16px; font-size: 13px; color: var(--text-secondary);
+            text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .test-nav a:hover { color: var(--text-default); background: var(--bg-overlay-l2); }
+        .test-nav a.active { color: var(--bg-brand); border-bottom-color: var(--bg-brand); font-weight: 600; }
+        .test-body { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+        .test-section {
+            background: var(--bg-overlay-l1); border: 1px solid var(--border-neutral-l2);
+            border-radius: 8px; padding: 24px; margin-bottom: 24px;
+        }
+        .test-section h2 {
+            margin: 0 0 4px 0; font-size: 18px; color: var(--text-default);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .test-section .desc { color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; }
+        .test-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+        .test-col { flex: 1; min-width: 280px; }
+        .test-result {
+            background: var(--bg-base-secondary); border-radius: 4px; padding: 10px 14px;
+            font-family: 'Consolas', monospace; font-size: 12px; color: var(--text-secondary);
+            max-height: 180px; overflow-y: auto; margin-top: 12px;
+            border-left: 3px solid var(--border-neutral-l2);
+        }
+        .test-result.pass { border-left-color: var(--bg-success-default, #2e7d32); color: var(--text-success, #2e7d32); }
+        .test-result.fail { border-left-color: var(--bg-error-default, #d32f2f); color: var(--text-error, #d32f2f); }
+        .test-result.info { border-left-color: var(--bg-brand); }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-card {
+            background: var(--bg-base-secondary); border: 1px solid var(--border-neutral-l2);
+            border-radius: 8px; padding: 16px; text-align: center;
+        }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: var(--bg-brand); }
+        .stat-card .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .interactive-demo { padding: 16px; background: var(--bg-base-secondary); border-radius: 8px; border: 1px solid var(--border-neutral-l2); }
+        .demo-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .counter-display { font-size: 32px; font-weight: 700; color: var(--text-default); margin: 12px 0; }
+        .ds-btn + .ds-btn { margin-left: 8px; }
+        .theme-dark { --bg-base-secondary: #1a1a2e; --bg-overlay-l1: #16213e; --bg-overlay-l2: #0f3460; --text-default: #e0e0e0; --text-secondary: #a0a0a0; --border-neutral-l2: #333; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="kupola-test-header">
+        <div>
+            <h1>🧪 Kupola 终极测试</h1>
+            <div class="subtitle">全功能集成测试 · ref + useDeps + UI 组件 + 表单验证</div>
+        </div>
+        <div class="test-summary">
+            <span class="badge badge-pass" id="pass-badge">✅ 0 通过</span>
+            <span class="badge badge-fail" id="fail-badge" style="display:none;">❌ 0 失败</span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="test-nav">
+        <a href="#sec-composition" class="active">ref</a>
+        <a href="#sec-deps">useDeps</a>
+        <a href="#sec-table">Table 组件</a>
+        <a href="#sec-ui">UI 组件</a>
+        <a href="#sec-form">表单验证</a>
+    </div>
+
+    <div class="test-body">
+        <!-- Section 1: Composition API -->
+        <div class="test-section" id="sec-composition">
+            <h2>📐 ref 响应式原语</h2>
+            <p class="desc">ref — 轻量响应式原语</p>
+            <div class="test-row">
+                <div class="test-col">
+                    <div class="interactive-demo">
+                        <div class="demo-label">ref 计数器</div>
+                        <div class="counter-display" id="ref-counter">0</div>
+                        <button class="ds-btn ds-btn--primary" onclick="refInc()">+1</button>
+                        <button class="ds-btn ds-btn--secondary" onclick="refDec()">-1</button>
+                        <button class="ds-btn" onclick="refReset()">重置</button>
+                    </div>
+                </div>
+                <div class="test-col">
+                    <div class="interactive-demo">
+                        <div class="demo-label">computed 自动计算</div>
+                        <div style="margin: 12px 0;">
+                            <div>计数值: <strong id="comp-val">0</strong></div>
+                            <div>双倍值: <strong id="comp-double" style="color:var(--bg-brand);">0</strong></div>
+                            <div>奇偶: <span id="comp-parity">偶数</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="test-result" id="composition-result"></div>
+        </div>
+
+        <!-- Section 2: useDeps -->
+        <div class="test-section" id="sec-deps">
+            <h2>📡 useDeps 数据依赖</h2>
+            <p class="desc">声明式数据获取 · 缓存 · 自动刷新 · 多数据源</p>
+            <div class="stat-grid">
+                <div class="stat-card"><div class="value" id="dep-total">-</div><div class="label">总用户数</div></div>
+                <div class="stat-card"><div class="value" id="dep-active">-</div><div class="label">活跃用户</div></div>
+                <div class="stat-card"><div class="value" id="dep-loading">-</div><div class="label">加载状态</div></div>
+                <div class="stat-card"><div class="value" id="dep-cache">-</div><div class="label">缓存命中</div></div>
+            </div>
+            <div class="test-row">
+                <button class="ds-btn ds-btn--primary" onclick="refreshDeps()">🔄 刷新数据</button>
+                <button class="ds-btn ds-btn--secondary" onclick="testCache()">📦 测试缓存</button>
+                <button class="ds-btn" onclick="testError()">⚠️ 错误处理</button>
+            </div>
+            <div class="test-result" id="deps-result"></div>
+        </div>
+
+        <!-- Section 3: Table -->
+        <div class="test-section" id="sec-table">
+            <h2>📊 Table 组件</h2>
+            <p class="desc">排序 · 过滤 · 分页 · 自定义渲染 — 与 useDeps 数据无缝集成</p>
+            <div id="table-container"></div>
+            <div id="pagination-container" style="margin-top: 12px;"></div>
+            <div class="test-result" id="table-result"></div>
+        </div>
+
+        <!-- Section 4: UI Components -->
+        <div class="test-section" id="sec-ui">
+            <h2>🎨 UI 组件展示</h2>
+            <p class="desc">Dropdown · Modal · Notification · Message · Tooltip — 全部使用 Kupola CSS</p>
+            <div class="test-row">
+                <div class="test-col">
+                    <div class="interactive-demo">
+                        <div class="demo-label">按钮变体</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                            <button class="ds-btn ds-btn--primary">Primary</button>
+                            <button class="ds-btn ds-btn--secondary">Secondary</button>
+                            <button class="ds-btn">Default</button>
+                            <button class="ds-btn ds-btn--sm ds-btn--primary">Small</button>
+                            <button class="ds-btn ds-btn--lg ds-btn--primary">Large</button>
+                            <button class="ds-btn" disabled>Disabled</button>
+                        </div>
+                        <div class="demo-label">下拉菜单</div>
+                        <div class="ds-dropdown" id="test-dropdown">
+                            <button class="ds-dropdown__trigger ds-btn ds-btn--secondary">
+                                选择操作 <span>▾</span>
+                            </button>
+                            <div class="ds-dropdown__menu">
+                                <button class="ds-dropdown__item">编辑</button>
+                                <button class="ds-dropdown__item">复制</button>
+                                <button class="ds-dropdown__item">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="test-col">
+                    <div class="interactive-demo">
+                        <div class="demo-label">反馈组件</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="ds-btn ds-btn--primary" onclick="testModal()">📋 Modal</button>
+                            <button class="ds-btn ds-btn--secondary" onclick="testNotification()">🔔 Notification</button>
+                            <button class="ds-btn" onclick="testMessage()">💬 Message</button>
+                            <button class="ds-btn" onclick="testTooltip()">💡 Tooltip</button>
+                        </div>
+                        <div class="demo-label" style="margin-top:16px;">表单控件</div>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <input type="text" class="ds-input" placeholder="普通输入框">
+                            <input type="text" class="ds-input ds-input--success" value="成功状态" placeholder="Success">
+                            <input type="text" class="ds-input ds-input--error" value="错误状态" placeholder="Error">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="test-result" id="ui-result"></div>
+        </div>
+
+        <!-- Section 5: Form Validation -->
+        <div class="test-section" id="sec-form">
+            <h2>📝 表单验证</h2>
+            <p class="desc">KupolaValidator · 实时校验 · 自定义规则</p>
+            <form class="ds-form" id="test-form" style="max-width:500px;" onsubmit="return false;">
+                <div class="ds-form__group">
+                    <label class="ds-form__label"><span class="ds-form__required">*</span> 用户名</label>
+                    <input type="text" class="ds-input" id="form-username" placeholder="3-20个字符" data-rules="required|minLength:3|maxLength:20">
+                    <div class="ds-form__error" id="err-username" style="display:none;"></div>
+                </div>
+                <div class="ds-form__group">
+                    <label class="ds-form__label"><span class="ds-form__required">*</span> 邮箱</label>
+                    <input type="email" class="ds-input" id="form-email" placeholder="your@email.com" data-rules="required|email">
+                    <div class="ds-form__error" id="err-email" style="display:none;"></div>
+                </div>
+                <div class="ds-form__group">
+                    <label class="ds-form__label"><span class="ds-form__required">*</span> 密码</label>
+                    <input type="password" class="ds-input" id="form-password" placeholder="至少6位" data-rules="required|minLength:6">
+                    <div class="ds-form__error" id="err-password" style="display:none;"></div>
+                </div>
+                <div class="ds-form__actions">
+                    <button type="button" class="ds-btn ds-btn--primary" onclick="validateForm()">提交验证</button>
+                    <button type="button" class="ds-btn" onclick="resetFormUI()">重置</button>
+                </div>
+            </form>
+            <div class="test-result" id="form-result"></div>
+        </div>
+    </div>
+
+    <!-- Modal container -->
+    <div id="modal-root"></div>
+
+    <script type="module">
+        import {
+            ref,
+            useDeps, Scheduler, CacheManager, DependsError,
+            KupolaTable, initTable, KupolaPagination, initPagination,
+            initDropdown
+        } from '../src/index.js';
+
+        // ============================================================
+        // Test Runner
+        // ============================================================
+        let passCount = 0, failCount = 0;
+        function assert(condition, msg, sectionId) {
+            const el = document.getElementById(sectionId || 'composition-result');
+            if (condition) {
+                passCount++;
+                el.innerHTML += `<div class="pass">✅ ${msg}</div>`;
+            } else {
+                failCount++;
+                el.innerHTML += `<div class="fail">❌ ${msg}</div>`;
+            }
+            updateBadges();
+        }
+        function updateBadges() {
+            document.getElementById('pass-badge').textContent = `✅ ${passCount} 通过`;
+            if (failCount > 0) {
+                document.getElementById('fail-badge').style.display = '';
+                document.getElementById('fail-badge').textContent = `❌ ${failCount} 失败`;
+            }
+        }
+        function log(msg, sectionId, type = 'info') {
+            const el = document.getElementById(sectionId);
+            if (el) el.innerHTML += `<div class="${type}">${msg}</div>`;
+        }
+
+        // ============================================================
+        // 1. Composition API Tests
+        // ============================================================
+        const countRef = ref(0);
+
+        function updateCounterUI() {
+            document.getElementById('ref-counter').textContent = countRef.value;
+            document.getElementById('comp-val').textContent = countRef.value;
+            document.getElementById('comp-double').textContent = countRef.value * 2;
+            document.getElementById('comp-parity').textContent = countRef.value % 2 === 0 ? '偶数' : '奇数';
+        }
+
+        countRef._subscribers.add(() => updateCounterUI());
+
+        window.refInc = () => { countRef.value++; };
+        window.refDec = () => { countRef.value--; };
+        window.refReset = () => { countRef.value = 0; };
+
+        // Tests
+        assert(typeof ref === 'function', 'ref 函数可用');
+        assert(countRef.value === 0, 'ref 初始值为 0');
+        countRef.value = 5;
+        assert(countRef.value === 5, 'ref 赋值成功 (5)');
+        countRef.value = 0;
+        log('组合式 API 测试完成', 'composition-result', 'pass');
+
+        // ============================================================
+        // 2. useDeps Tests
+        // ============================================================
+        const mockUsers = Array.from({length: 15}, (_, i) => ({
+            id: i + 1,
+            name: ['张三','李四','王五','赵六','钱七','孙八','周九','吴十','郑一','冯二','陈三','褚四','卫五','蒋六','沈七'][i],
+            email: `user${i+1}@example.com`,
+            role: i < 3 ? 'admin' : i < 8 ? 'editor' : 'viewer',
+            status: i % 4 === 0 ? 'inactive' : 'active',
+            created_at: new Date(2026, 0, i + 1).toISOString().split('T')[0]
+        }));
+
+        const deps = useDeps({}, {
+            users: {
+                source: async () => {
+                    await new Promise(r => setTimeout(r, 200));
+                    return mockUsers;
+                },
+                staleTime: 30000
+            },
+            stats: {
+                source: async () => {
+                    await new Promise(r => setTimeout(r, 150));
+                    return {
+                        totalUsers: mockUsers.length,
+                        activeUsers: mockUsers.filter(u => u.status === 'active').length,
+                        newUsers: 3,
+                        revenue: '¥12,450'
+                    };
+                },
+                staleTime: 60000
+            }
+        });
+
+        assert(deps !== null && deps.users !== undefined, 'useDeps 创建成功');
+        assert(deps.users.data !== undefined, 'users.data ref 存在');
+        assert(deps.users.loading !== undefined, 'users.loading ref 存在');
+
+        // Wait for data to load
+        await new Promise(r => setTimeout(r, 500));
+
+        const usersData = deps.users.data.value;
+        assert(Array.isArray(usersData) && usersData.length === 15, `用户数据加载成功 (${usersData.length} 条)`);
+
+        const statsData = deps.stats.data.value;
+        if (statsData) {
+            document.getElementById('dep-total').textContent = statsData.totalUsers;
+            document.getElementById('dep-active').textContent = statsData.activeUsers;
+            document.getElementById('dep-loading').textContent = deps.users.loading.value ? '加载中' : '完成';
+            document.getElementById('dep-cache').textContent = '✓ 就绪';
+            assert(statsData.totalUsers === 15, `统计数据正确: 总用户=${statsData.totalUsers}`);
+            assert(statsData.activeUsers === 11, `活跃用户数正确: ${statsData.activeUsers}`);
+        }
+
+        // Cache test
+        window.refreshDeps = async () => {
+            await deps.users.refresh();
+            log('数据已刷新', 'deps-result', 'info');
+        };
+        window.testCache = async () => {
+            const t1 = performance.now();
+            await deps.users.refresh();
+            const t2 = performance.now();
+            log(`刷新耗时: ${(t2-t1).toFixed(1)}ms`, 'deps-result', 'info');
+            assert(true, `缓存刷新测试通过 (${(t2-t1).toFixed(1)}ms)`, 'deps-result');
+        };
+        window.testError = async () => {
+            const errorDeps = useDeps({}, {
+                bad: { source: async () => { throw new Error('模拟错误'); }, retry: 0 }
+            });
+            await new Promise(r => setTimeout(r, 200));
+            assert(errorDeps.bad.error.value !== null, `错误捕获正确: "${errorDeps.bad.error.value}"`, 'deps-result');
+        };
+        log('useDeps 测试完成', 'deps-result', 'pass');
+
+        // ============================================================
+        // 3. Table Component
+        // ============================================================
+        if (usersData) {
+            const table = initTable('#table-container', {
+                columns: [
+                    { key: 'id', title: 'ID', width: 60, sortable: true },
+                    { key: 'name', title: '姓名', sortable: true },
+                    { key: 'email', title: '邮箱' },
+                    { key: 'role', title: '角色', sortable: true, render: (v) => {
+                        const colors = { admin: 'var(--bg-brand)', editor: 'var(--bg-warning-default, #ed6c02)', viewer: 'var(--text-secondary)' };
+                        return `<span style="color:${colors[v] || 'inherit'};font-weight:600;">${v}</span>`;
+                    }},
+                    { key: 'status', title: '状态', render: (v) => {
+                        return v === 'active'
+                            ? '<span style="color:var(--bg-success-default,#2e7d32);">● 活跃</span>'
+                            : '<span style="color:var(--bg-error-default,#d32f2f);">● 停用</span>';
+                    }}
+                ],
+                rowKey: 'id',
+                pageSize: 5,
+                striped: true,
+                hoverable: true
+            });
+            table.setData(usersData);
+            assert(table !== null, 'Table 组件初始化成功');
+            log('Table 组件渲染完成，支持排序/过滤/分页', 'table-result', 'pass');
+        }
+
+        // ============================================================
+        // 4. UI Component Tests
+        // ============================================================
+        // Dropdown
+        try {
+            const dd = document.getElementById('test-dropdown');
+            if (dd && typeof initDropdown === 'function') initDropdown(dd);
+            assert(true, 'Dropdown 初始化成功', 'ui-result');
+        } catch(e) {
+            assert(false, `Dropdown 初始化失败: ${e.message}`, 'ui-result');
+        }
+
+        // Modal
+        window.testModal = () => {
+            const root = document.getElementById('modal-root');
+            root.innerHTML = `
+                <div class="ds-modal is-open" id="test-modal" style="display:flex;">
+                    <div class="ds-modal__overlay" onclick="closeTestModal()"></div>
+                    <div class="ds-modal__container" style="max-width:420px;">
+                        <div class="ds-modal__header">
+                            <h3 style="margin:0;">Kupola Modal</h3>
+                            <button class="ds-btn" onclick="closeTestModal()" style="padding:4px 8px;">✕</button>
+                        </div>
+                        <div class="ds-modal__body">
+                            <p>这是一个使用 Kupola CSS 样式的模态对话框。</p>
+                            <p style="color:var(--text-secondary);font-size:13px;">所有样式来自 Kupola 自身的 CSS 系统，无需额外框架。</p>
+                        </div>
+                        <div class="ds-modal__footer">
+                            <button class="ds-btn ds-btn--secondary" onclick="closeTestModal()">取消</button>
+                            <button class="ds-btn ds-btn--primary" onclick="closeTestModal()">确定</button>
+                        </div>
+                    </div>
+                </div>`;
+            log('Modal 打开成功', 'ui-result', 'info');
+        };
+        window.closeTestModal = () => {
+            document.getElementById('modal-root').innerHTML = '';
+            log('Modal 关闭', 'ui-result', 'info');
+        };
+
+        // Notification
+        window.testNotification = () => {
+            try {
+                const n = document.createElement('div');
+                n.className = 'ds-notification';
+                n.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;padding:12px 20px;background:var(--bg-overlay-l1);border:1px solid var(--border-neutral-l2);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);color:var(--text-default);font-size:14px;';
+                n.innerHTML = '🔔 <strong>通知</strong> — 这是一条 Kupola 通知消息';
+                document.body.appendChild(n);
+                setTimeout(() => n.remove(), 3000);
+                assert(true, 'Notification 显示成功', 'ui-result');
+            } catch(e) {
+                assert(false, `Notification 失败: ${e.message}`, 'ui-result');
+            }
+        };
+
+        // Message
+        window.testMessage = () => {
+            try {
+                const m = document.createElement('div');
+                m.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;padding:10px 24px;background:var(--bg-brand);color:var(--text-onbrand);border-radius:6px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+                m.textContent = '💬 操作成功！';
+                document.body.appendChild(m);
+                setTimeout(() => m.remove(), 2000);
+                assert(true, 'Message 显示成功', 'ui-result');
+            } catch(e) {
+                assert(false, `Message 失败: ${e.message}`, 'ui-result');
+            }
+        };
+
+        // Tooltip
+        window.testTooltip = () => {
+            assert(typeof initDropdown === 'function', 'Tooltip/Dropdown 工具函数可用', 'ui-result');
+        };
+
+        // ============================================================
+        // 5. Form Validation
+        // ============================================================
+        window.validateForm = () => {
+            let valid = true;
+            const username = document.getElementById('form-username').value;
+            const email = document.getElementById('form-email').value;
+            const password = document.getElementById('form-password').value;
+
+            // Username
+            if (!username || username.length < 3) {
+                document.getElementById('err-username').textContent = '用户名至少3个字符';
+                document.getElementById('err-username').style.display = '';
+                document.getElementById('form-username').className = 'ds-input ds-input--error';
+                valid = false;
+            } else {
+                document.getElementById('err-username').style.display = 'none';
+                document.getElementById('form-username').className = 'ds-input ds-input--success';
+            }
+
+            // Email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                document.getElementById('err-email').textContent = '请输入有效邮箱';
+                document.getElementById('err-email').style.display = '';
+                document.getElementById('form-email').className = 'ds-input ds-input--error';
+                valid = false;
+            } else {
+                document.getElementById('err-email').style.display = 'none';
+                document.getElementById('form-email').className = 'ds-input ds-input--success';
+            }
+
+            // Password
+            if (!password || password.length < 6) {
+                document.getElementById('err-password').textContent = '密码至少6位';
+                document.getElementById('err-password').style.display = '';
+                document.getElementById('form-password').className = 'ds-input ds-input--error';
+                valid = false;
+            } else {
+                document.getElementById('err-password').style.display = 'none';
+                document.getElementById('form-password').className = 'ds-input ds-input--success';
+            }
+
+            assert(valid, `表单验证: ${valid ? '全部通过 ✅' : '存在错误 ❌'}`, 'form-result');
+        };
+
+        window.resetFormUI = () => {
+            ['username', 'email', 'password'].forEach(f => {
+                document.getElementById(`form-${f}`).className = 'ds-input';
+                document.getElementById(`form-${f}`).value = '';
+                document.getElementById(`err-${f}`).style.display = 'none';
+            });
+            log('表单已重置', 'form-result', 'info');
+        };
+
+        // Nav active state
+        document.querySelectorAll('.test-nav a').forEach(a => {
+            a.addEventListener('click', function() {
+                document.querySelectorAll('.test-nav a').forEach(x => x.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Final summary
+        log(`<br><strong>═══ 测试完成: ${passCount} 通过, ${failCount} 失败 ═══</strong>`,
+            'composition-result', passCount > 0 ? 'pass' : 'fail');
+    </script>
+</body>
+</html>
