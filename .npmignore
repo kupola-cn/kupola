@@ -25,6 +25,15 @@ tsconfig.json
 his/
 sync-to-his.ps1
 
+# CI / plugins / templates
+.github/
+plugins/
+templates/
+
+# Internal metadata
+version.json
+package-lock.json
+
 # Maps
 *.map
 
@@ -39,3 +48,7 @@ Thumbs.db
 SKILL.md
 INTEGRATION.md
 CHANGELOG.md
+CONTRIBUTING.md
+
+# Git
+.gitignore

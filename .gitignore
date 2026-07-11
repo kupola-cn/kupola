@@ -1,9 +1,18 @@
+# IDE / tools
 .agents/
 .vscode/
 .qoder/
+
+# Internal
 his/
+
+# Dependencies / build
 node_modules/
 dist/
-*.log
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
