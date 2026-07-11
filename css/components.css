@@ -543,7 +543,7 @@
         /* BUG-003 fix: ensure <select class="ds-input"> matches <input> height/padding */
         select.ds-input,
         .ds-input select {
-          height: 28px;
+          height: 36px;
           padding: 0 var(--spacer-24) 0 var(--spacer-12);
           appearance: none;
           -webkit-appearance: none;
@@ -555,8 +555,29 @@
           cursor: pointer;
           font: inherit;
           color: var(--text-default);
+          background-color: var(--bg-overlay-l1);
+          line-height: 36px;
+          font-size: 14px;
         }
         select.ds-input::-ms-expand { display: none; }
+        
+        /* Fix dropdown options background color - Note: limited browser support */
+        select.ds-input option,
+        .ds-input select option {
+          background-color: var(--bg-base-secondary);
+          color: var(--text-default);
+          padding: 10px 12px;
+          line-height: 1.8;
+          min-height: 36px;
+        }
+        
+        select.ds-input optgroup,
+        .ds-input select optgroup {
+          background-color: var(--bg-base-secondary);
+          color: var(--text-default);
+          padding: 8px 12px;
+          line-height: 1.6;
+        }
     
     .ds-input__status-icon {
       position: absolute;
@@ -1460,12 +1481,14 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: var(--spacer-8) var(--spacer-12);
+  padding: 12px var(--spacer-12);
+  min-height: 40px;
   background: none;
   border: none;
   border-radius: var(--radius-2);
   color: var(--text-default);
   font-size: var(--body-sm-font-size);
+  line-height: 1.6;
   cursor: pointer;
   text-align: left;
 }

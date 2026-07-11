@@ -46,6 +46,10 @@
       "import": "./adapters/navios-http.js",
       "types": "./adapters/navios-http.d.ts"
     },
+    "./kupola.css": "./dist/css/kupola.css",
+    "./kupola.min.css": "./dist/css/kupola.min.css",
+    "./kupola.umd.js": "./dist/kupola.umd.js",
+    "./kupola.min.js": "./dist/kupola.min.js",
     "./dist/css/kupola.css": "./dist/css/kupola.css",
     "./dist/css/*": "./dist/css/*",
     "./dist/icons/*": "./dist/icons/*"

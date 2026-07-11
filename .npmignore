@@ -24,6 +24,7 @@ tsconfig.json
 # Internal / sync
 his-sys/
 sync-to-his.ps1
+scripts/sync-kupola.cjs
 
 # CI / plugins / templates
 .github/

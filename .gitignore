@@ -10,6 +10,10 @@ his-sys/
 node_modules/
 dist/
 *.tgz
+scripts/sync-kupola.cjs
+
+# MD Files
+RELEASE_WORKFLOW.md
 
 # OS
 .DS_Store
