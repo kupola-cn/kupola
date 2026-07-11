@@ -266,6 +266,29 @@
 .ds-p-12 { padding: var(--spacer-12); }
 .ds-p-16 { padding: var(--spacer-16); }
 .ds-p-24 { padding: var(--spacer-24); }
+.ds-p-32 { padding: var(--spacer-32); }
+.ds-mb-24 { margin-bottom: var(--spacer-24); }
+.ds-mb-32 { margin-bottom: var(--spacer-32); }
+.ds-mt-24 { margin-top: var(--spacer-24); }
+.ds-mt-16 { margin-top: var(--spacer-16); }
+
+/* Width extras */
+.ds-w-200 { width: 200px; }
+.ds-w-400 { width: 400px; }
+.ds-w-440 { width: 440px; }
+.ds-w-480 { width: 480px; }
+.ds-w-500 { width: 500px; }
+.ds-w-520 { width: 520px; }
+.ds-w-560 { width: 560px; }
+.ds-w-640 { width: 640px; }
+
+/* Overflow extras */
+.ds-overflow-x-auto { overflow-x: auto; }
+.ds-overflow-y-auto { overflow-y: auto; }
+
+/* Max height */
+.ds-max-h-80vh { max-height: 80vh; }
+.ds-max-h-85vh { max-height: 85vh; }
 
 /* Rounded */
 .ds-rounded-2 { border-radius: var(--radius-2); }
@@ -287,3 +310,20 @@
 /* Cursor */
 .ds-cursor-pointer { cursor: pointer; }
 .ds-cursor-not-allowed { cursor: not-allowed; }
+
+/* Inset (for modals) */
+.ds-inset-0 { inset: 0; }
+
+/* Text heading */
+.ds-text-heading-sm { font-size: var(--heading-sm-font-size); }
+.ds-text-heading-md { font-size: var(--heading-md-font-size); }
+
+/* Text semantic colors */
+.ds-text-info { color: var(--status-info-default); }
+
+/* Background */
+.ds-bg-overlay { background: rgba(0,0,0,.5); }
+.ds-bg-base { background: var(--bg-base-secondary); }
+
+/* Z-index */
+.ds-z-modal { z-index: 1000; }
