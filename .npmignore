@@ -22,7 +22,7 @@ tsconfig.json
 .qoder/
 
 # Internal / sync
-his/
+his-sys/
 sync-to-his.ps1
 
 # CI / plugins / templates
