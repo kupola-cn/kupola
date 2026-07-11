@@ -19,10 +19,10 @@ This is a sample Flask application demonstrating how to use the Kupola design sy
 2. Create a symlink to the kupola folder (or copy it):
    ```bash
    # Linux/Mac
-   ln -s ../../../kupola static/kupola
+   ln -s ../../../../kupola static/kupola
    
    # Windows
-   mklink /D static\kupola ..\..\..\kupola
+   mklink /D static\kupola ..\..\..\..\kupola
    ```
 
 3. Run the application:
@@ -35,7 +35,7 @@ This is a sample Flask application demonstrating how to use the Kupola design sy
 ## Project Structure
 
 ```
-flask_example/
+flask/
 ├── app.py              # Flask application
 ├── requirements.txt    # Dependencies
 ├── README.md           # This file
@@ -43,6 +43,8 @@ flask_example/
     ├── dashboard.html  # Dashboard page
     └── settings.html   # Settings page
 ```
+
+> **Note**: Templates extend `base_dashboard.html` from the project root `templates/` directory. Make sure to run Flask from the correct working directory or adjust the template folder path in `app.py`.
 
 ## Usage
 

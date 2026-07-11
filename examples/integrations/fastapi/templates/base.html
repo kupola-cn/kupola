@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-brand="zengqing">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kupola FastAPI{% endblock %}</title>
+    <link rel="stylesheet" href="/static/kupola/css/kupola.css">
+    <link rel="stylesheet" href="/static/kupola/css/components-ext.css">
+    <link rel="stylesheet" href="/static/kupola/css/responsive.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="ds-layout">
+        <header class="ds-header">
+            <div class="ds-header__left">
+                <span class="ds-header__brand">Kupola</span>
+            </div>
+            <nav class="ds-header__center">
+                <a href="/" class="ds-header__link {% if request.url.path == '/' %}is-active{% endif %}">Dashboard</a>
+                <a href="/settings" class="ds-header__link {% if request.url.path == '/settings' %}is-active{% endif %}">Settings</a>
+            </nav>
+            <div class="ds-header__right">
+                <button data-theme-toggle class="ds-btn ds-btn--ghost ds-btn--sm ds-btn--icon">
+                    <img class="theme-icon" src="/static/kupola/icons/sun.svg" width="14" height="14" alt="Toggle theme">
+                </button>
+                <button data-brand-toggle class="ds-btn ds-btn--ghost ds-btn--sm" style="display: flex; align-items: center; gap: 6px;">
+                    <span class="brand-icon" style="width: 12px; height: 12px; border-radius: 50%; background-color: #535164;"></span>
+                    <span class="brand-name" style="font-size: 11px;">曾青</span>
+                </button>
+            </div>
+        </header>
+        <aside class="ds-sidebar">
+            <nav class="ds-navlist">
+                <div class="ds-navlist__group-title">Main</div>
+                <a href="/" class="ds-navlist__item {% if request.url.path == '/' %}is-active{% endif %}">
+                    <img src="/static/kupola/icons/dashboard.svg" width="18" height="18" alt="" class="icon" />
+                    <span class="ds-navlist__label">Dashboard</span>
+                </a>
+                <a href="/settings" class="ds-navlist__item {% if request.url.path == '/settings' %}is-active{% endif %}">
+                    <img src="/static/kupola/icons/settings.svg" width="18" height="18" alt="" class="icon" />
+                    <span class="ds-navlist__label">Settings</span>
+                </a>
+            </nav>
+        </aside>
+        <main class="ds-main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script type="module" src="/static/kupola/js/kupola-core.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

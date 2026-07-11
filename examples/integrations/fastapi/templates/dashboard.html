@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Kupola FastAPI{% endblock %}
+
+{% block content %}
+<div class="mb-16">
+    <h1 class="h1">Dashboard</h1>
+    <p class="text-secondary">Welcome to the Kupola FastAPI example!</p>
+</div>
+
+<div class="grid grid-cols-4 gap-16 mb-32">
+    <div class="ds-statcard">
+        <span class="ds-statcard__label">Total Projects</span>
+        <span class="ds-statcard__value">24</span>
+        <span class="ds-statcard__delta is-up">
+            <img src="/static/kupola/icons/trending-up.svg" width="16" height="16" alt="" class="icon" />
+            +12%
+        </span>
+    </div>
+    <div class="ds-statcard">
+        <span class="ds-statcard__label">Active Tasks</span>
+        <span class="ds-statcard__value">156</span>
+        <span class="ds-statcard__delta is-up">
+            <img src="/static/kupola/icons/trending-up.svg" width="16" height="16" alt="" class="icon" />
+            +8%
+        </span>
+    </div>
+    <div class="ds-statcard">
+        <span class="ds-statcard__label">Completed</span>
+        <span class="ds-statcard__value">84%</span>
+        <span class="ds-statcard__delta is-up">
+            <img src="/static/kupola/icons/trending-up.svg" width="16" height="16" alt="" class="icon" />
+            +2%
+        </span>
+    </div>
+    <div class="ds-statcard">
+        <span class="ds-statcard__label">Team Members</span>
+        <span class="ds-statcard__value">12</span>
+        <span class="ds-statcard__delta is-up">
+            <img src="/static/kupola/icons/trending-up.svg" width="16" height="16" alt="" class="icon" />
+            +1
+        </span>
+    </div>
+</div>
+
+<div class="grid grid-cols-3 gap-16">
+    <div class="grid-cols-2">
+        <div class="ds-card mb-16">
+            <div class="ds-card__title">Recent Activity</div>
+            <div class="flex flex-col gap-12">
+                <div class="flex items-center gap-8">
+                    <div class="ds-avatar" style="width: 28px; height: 28px;">
+                        <img src="/static/kupola/icons/user.svg" width="12" height="12" alt="" class="icon">
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium">John Doe</div>
+                        <div class="text-xs text-secondary">Completed "Design Review"</div>
+                    </div>
+                    <div class="text-xs text-tertiary">2h ago</div>
+                </div>
+                <div class="flex items-center gap-8">
+                    <div class="ds-avatar" style="width: 28px; height: 28px;">
+                        <img src="/static/kupola/icons/user.svg" width="12" height="12" alt="" class="icon">
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium">Jane Smith</div>
+                        <div class="text-xs text-secondary">Created "New Website"</div>
+                    </div>
+                    <div class="text-xs text-tertiary">5h ago</div>
+                </div>
+                <div class="flex items-center gap-8">
+                    <div class="ds-avatar" style="width: 28px; height: 28px;">
+                        <img src="/static/kupola/icons/user.svg" width="12" height="12" alt="" class="icon">
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium">Bob Wilson</div>
+                        <div class="text-xs text-secondary">Updated "API Integration"</div>
+                    </div>
+                    <div class="text-xs text-tertiary">1d ago</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ds-card">
+            <div class="ds-card__title">Quick Actions</div>
+            <div class="flex flex-col gap-8">
+                <button class="ds-btn ds-btn--secondary ds-btn--sm">New Project</button>
+                <button class="ds-btn ds-btn--secondary ds-btn--sm">Invite Team Member</button>
+                <button class="ds-btn ds-btn--secondary ds-btn--sm">Generate Report</button>
+                <button class="ds-btn ds-btn--secondary ds-btn--sm">Export Data</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="ds-card">
+        <div class="ds-card__title">Project Status</div>
+        <div class="flex flex-col gap-16">
+            <div>
+                <div class="flex justify-between mb-4">
+                    <span class="text-sm">Web App</span>
+                    <span class="text-sm text-tertiary">75%</span>
+                </div>
+                <div class="h-2 bg-overlay-l2 rounded-full overflow-hidden">
+                    <div class="h-full bg-brand rounded-full" style="width: 75%;"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between mb-4">
+                    <span class="text-sm">Mobile App</span>
+                    <span class="text-sm text-tertiary">45%</span>
+                </div>
+                <div class="h-2 bg-overlay-l2 rounded-full overflow-hidden">
+                    <div class="h-full bg-brand rounded-full" style="width: 45%;"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between mb-4">
+                    <span class="text-sm">API Service</span>
+                    <span class="text-sm text-tertiary">90%</span>
+                </div>
+                <div class="h-2 bg-overlay-l2 rounded-full overflow-hidden">
+                    <div class="h-full bg-brand rounded-full" style="width: 90%;"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between mb-4">
+                    <span class="text-sm">Documentation</span>
+                    <span class="text-sm text-tertiary">30%</span>
+                </div>
+                <div class="h-2 bg-overlay-l2 rounded-full overflow-hidden">
+                    <div class="h-full bg-brand rounded-full" style="width: 30%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
