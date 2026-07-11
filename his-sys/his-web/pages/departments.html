@@ -1,0 +1,154 @@
+<div class="page-header"><h2 class="page-header__title">部门管理</h2></div>
+
+<div class="ds-card" style="padding:var(--spacer-16);margin-bottom:var(--spacer-16)">
+    <div style="display:flex;gap:var(--spacer-12);align-items:center;flex-wrap:wrap">
+        <select id="filterOrg" class="ds-input" style="width:200px;height:32px" onchange="loadDepts()">
+            <option value="">全部组织</option>
+        </select>
+        <button class="ds-btn ds-btn--primary ds-btn--md" onclick="showDeptModal()">新增部门</button>
+    </div>
+</div>
+
+<div class="ds-card" style="padding:0;overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+        <thead>
+            <tr style="border-bottom:1px solid var(--border-neutral-l1)">
+                <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">ID</th>
+                <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">部门名称</th>
+                <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">编码</th>
+                <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">所属组织</th>
+                <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">操作</th>
+            </tr>
+        </thead>
+        <tbody id="deptTableBody"></tbody>
+    </table>
+</div>
+
+<div id="deptModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
+    <div class="ds-card" style="width:400px;padding:var(--spacer-24)">
+        <h3 style="margin-bottom:var(--spacer-16)" id="deptModalTitle">新增部门</h3>
+        <form id="deptForm">
+            <input type="hidden" id="editDeptId">
+            <div style="margin-bottom:var(--spacer-12)">
+                <label style="display:block;font-size:var(--body-sm-font-size);color:var(--text-secondary);margin-bottom:var(--spacer-4)">所属组织</label>
+                <select id="deptOrgId" style="width:100%;height:32px;padding:0 var(--spacer-8);background:var(--bg-base-default);border:1px solid var(--border-neutral-l1);border-radius:var(--radius-4);color:var(--text-default);font-size:var(--body-sm-font-size)" required>
+                    <option value="">请选择组织</option>
+                </select>
+            </div>
+            <div style="margin-bottom:var(--spacer-12)">
+                <label style="display:block;font-size:var(--body-sm-font-size);color:var(--text-secondary);margin-bottom:var(--spacer-4)">部门名称</label>
+                <div class="ds-input" style="width:100%"><input type="text" id="deptName" required></div>
+            </div>
+            <div style="margin-bottom:var(--spacer-16)">
+                <label style="display:block;font-size:var(--body-sm-font-size);color:var(--text-secondary);margin-bottom:var(--spacer-4)">编码</label>
+                <div class="ds-input" style="width:100%"><input type="text" id="deptCode" required></div>
+            </div>
+            <div style="display:flex;gap:var(--spacer-8);justify-content:flex-end">
+                <button type="button" class="ds-btn ds-btn--secondary ds-btn--md" onclick="closeDeptModal()">取消</button>
+                <button type="submit" class="ds-btn ds-btn--primary ds-btn--md">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    const api = window.HIS_API;
+    let orgs = [];
+
+    // ── 加载组织列表（用于下拉） ─────────────────────────
+    async function loadOrgs() {
+        const data = await api.get('/api/organizations');
+        if (!data || data.code !== 0) return;
+        // 扁平化组织树
+        orgs = [];
+        function flatten(list) {
+            (list || []).forEach(o => {
+                orgs.push(o);
+                if (o.children) flatten(o.children);
+            });
+        }
+        flatten(data.data);
+
+        // 填充筛选下拉
+        const filterSel = document.getElementById('filterOrg');
+        filterSel.innerHTML = '<option value="">全部组织</option>' +
+            orgs.map(o => `<option value="${o.id}">${o.name}${o.org_type === 'group' ? ' (集团)' : ''}</option>`).join('');
+
+        // 填充表单下拉
+        const formSel = document.getElementById('deptOrgId');
+        formSel.innerHTML = '<option value="">请选择组织</option>' +
+            orgs.map(o => `<option value="${o.id}">${o.name}${o.org_type === 'group' ? ' (集团)' : ''}</option>`).join('');
+    }
+
+    // ── 加载部门列表 ──────────────────────────────────────
+    window.loadDepts = async function() {
+        const orgId = document.getElementById('filterOrg').value;
+        let url = '/api/departments';
+        if (orgId) url += '?org_id=' + orgId;
+        const data = await api.get(url);
+        if (!data || data.code !== 0) return;
+        document.getElementById('deptTableBody').innerHTML = data.data.map(d => `
+            <tr style="border-bottom:1px solid var(--border-neutral-l1)">
+                <td style="padding:var(--spacer-12)">${d.id}</td>
+                <td style="padding:var(--spacer-12);font-weight:500">${d.name}</td>
+                <td style="padding:var(--spacer-12)"><code style="font-size:var(--body-xs-font-size);padding:2px 6px;background:var(--bg-overlay-l2);border-radius:3px">${d.code}</code></td>
+                <td style="padding:var(--spacer-12)">${d.org ? d.org.name : '-'}</td>
+                <td style="padding:var(--spacer-12)">
+                    <div style="display:flex;gap:4px">
+                        <button class="ds-btn ds-btn--sm ds-btn--tertiary" onclick="editDept(${d.id})">编辑</button>
+                        <button class="ds-btn ds-btn--sm ds-btn--tertiary" style="color:var(--status-error-default)" onclick="deleteDept(${d.id})">删除</button>
+                    </div>
+                </td>
+            </tr>`).join('');
+    };
+
+    // ── 新增/编辑 ─────────────────────────────────────────
+    window.showDeptModal = function() {
+        document.getElementById('deptModalTitle').textContent = '新增部门';
+        document.getElementById('deptForm').reset();
+        document.getElementById('editDeptId').value = '';
+        document.getElementById('deptModal').style.display = 'flex';
+    };
+    window.closeDeptModal = function() { document.getElementById('deptModal').style.display = 'none'; };
+
+    window.editDept = async function(id) {
+        const data = await api.get('/api/departments');
+        if (!data || data.code !== 0) return;
+        const d = data.data.find(x => x.id === id);
+        if (!d) return;
+        document.getElementById('deptModalTitle').textContent = '编辑部门';
+        document.getElementById('editDeptId').value = d.id;
+        document.getElementById('deptOrgId').value = d.org_id;
+        document.getElementById('deptName').value = d.name;
+        document.getElementById('deptCode').value = d.code;
+        document.getElementById('deptModal').style.display = 'flex';
+    };
+
+    window.deleteDept = async function(id) {
+        if (!confirm('确定删除该部门？')) return;
+        await api.del('/api/departments/' + id);
+        loadDepts();
+    };
+
+    document.getElementById('deptForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const body = {
+            org_id: parseInt(document.getElementById('deptOrgId').value),
+            name: document.getElementById('deptName').value,
+            code: document.getElementById('deptCode').value
+        };
+        const id = document.getElementById('editDeptId').value;
+        if (id) {
+            await api.put('/api/departments/' + id, body);
+        } else {
+            await api.post('/api/departments', body);
+        }
+        closeDeptModal();
+        loadDepts();
+    });
+
+    loadOrgs();
+    loadDepts();
+})();
+</script>

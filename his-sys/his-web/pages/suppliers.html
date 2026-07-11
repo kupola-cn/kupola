@@ -1,0 +1,135 @@
+<div class="page-header"><h2 class="page-header__title">供应商管理</h2></div>
+
+<div class="ds-card" style="padding:var(--spacer-16);margin-bottom:var(--spacer-16)">
+    <div style="display:flex;gap:var(--spacer-12);align-items:center;flex-wrap:wrap">
+        <div class="ds-input" style="width:200px"><input type="text" id="supKeyword" placeholder="搜索名称"></div>
+        <button class="ds-btn ds-btn--primary ds-btn--md" onclick="loadSuppliers()">搜索</button>
+        <button class="ds-btn ds-btn--secondary ds-btn--md" onclick="showSupModal()">新增供应商</button>
+    </div>
+</div>
+
+<div class="ds-card" style="padding:0;overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="border-bottom:1px solid var(--border-neutral-l1)">
+            <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">ID</th>
+            <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">名称</th>
+            <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">联系人</th>
+            <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">电话</th>
+            <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">许可证号</th>
+            <th style="padding:var(--spacer-12);text-align:left;font-size:var(--body-sm-font-size);color:var(--text-secondary)">操作</th>
+        </tr></thead>
+        <tbody id="supTableBody"></tbody>
+    </table>
+</div>
+
+<div id="supModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
+    <div class="ds-card" style="width:440px;padding:var(--spacer-24)">
+        <h3 style="margin-bottom:var(--spacer-16)" id="supModalTitle">新增供应商</h3>
+        <form id="supForm">
+            <input type="hidden" id="editSupId">
+            <div style="margin-bottom:var(--spacer-12)">
+                <label style="display:block;font-size:var(--body-sm-font-size);color:var(--text-secondary);margin-bottom:var(--spacer-4)">名称</label>
+                <div class="ds-input" style="width:100%"><input type="text" id="supName" required></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacer-12);margin-bottom:var(--spacer-12)">
+                <div>
+                    <label style="display:block;font-size:var(--body-sm-font-size);color:var(--text-secondary);margin-bottom:var(--spacer-4)">联系人</label>
+                    <div class="ds-input" style="width:100%"><input type="text" id="supContact"></div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:var(--body-sm-font-size);color:var(--text-secondary);margin-bottom:var(--spacer-4)">电话</label>
+                    <div class="ds-input" style="width:100%"><input type="text" id="supPhone"></div>
+                </div>
+            </div>
+            <div style="margin-bottom:var(--spacer-12)">
+                <label style="display:block;font-size:var(--body-sm-font-size);color:var(--text-secondary);margin-bottom:var(--spacer-4)">地址</label>
+                <div class="ds-input" style="width:100%"><input type="text" id="supAddress"></div>
+            </div>
+            <div style="margin-bottom:var(--spacer-16)">
+                <label style="display:block;font-size:var(--body-sm-font-size);color:var(--text-secondary);margin-bottom:var(--spacer-4)">许可证号</label>
+                <div class="ds-input" style="width:100%"><input type="text" id="supLicense"></div>
+            </div>
+            <div style="display:flex;gap:var(--spacer-8);justify-content:flex-end">
+                <button type="button" class="ds-btn ds-btn--secondary ds-btn--md" onclick="closeSupModal()">取消</button>
+                <button type="submit" class="ds-btn ds-btn--primary ds-btn--md">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    const api = window.HIS_API;
+
+    window.loadSuppliers = async function() {
+        const kw = document.getElementById('supKeyword').value;
+        const data = await api.get('/api/suppliers?keyword=' + encodeURIComponent(kw));
+        if (!data || data.code !== 0) return;
+        document.getElementById('supTableBody').innerHTML = data.data.list.map(s => `
+            <tr style="border-bottom:1px solid var(--border-neutral-l1)">
+                <td style="padding:var(--spacer-12)">${s.id}</td>
+                <td style="padding:var(--spacer-12);font-weight:500">${s.name}</td>
+                <td style="padding:var(--spacer-12)">${s.contact||'-'}</td>
+                <td style="padding:var(--spacer-12)">${s.phone||'-'}</td>
+                <td style="padding:var(--spacer-12)"><code style="font-size:var(--body-xs-font-size);padding:2px 6px;background:var(--bg-overlay-l2);border-radius:3px">${s.license_no||'-'}</code></td>
+                <td style="padding:var(--spacer-12)">
+                    <div style="display:flex;gap:4px">
+                        <button class="ds-btn ds-btn--sm ds-btn--tertiary" onclick="editSup(${s.id})">编辑</button>
+                        <button class="ds-btn ds-btn--sm ds-btn--tertiary" style="color:var(--status-error-default)" onclick="deleteSup(${s.id})">删除</button>
+                    </div>
+                </td>
+            </tr>`).join('');
+    };
+
+    window.showSupModal = function() {
+        document.getElementById('supModalTitle').textContent = '新增供应商';
+        document.getElementById('supForm').reset();
+        document.getElementById('editSupId').value = '';
+        document.getElementById('supModal').style.display = 'flex';
+    };
+    window.closeSupModal = function() { document.getElementById('supModal').style.display = 'none'; };
+
+    window.editSup = async function(id) {
+        // 从列表中查找（或重新请求）
+        const data = await api.get('/api/suppliers');
+        if (!data || data.code !== 0) return;
+        const s = (data.data.list || data.data || []).find(x => x.id === id);
+        if (!s) return;
+        document.getElementById('supModalTitle').textContent = '编辑供应商';
+        document.getElementById('editSupId').value = s.id;
+        document.getElementById('supName').value = s.name;
+        document.getElementById('supContact').value = s.contact || '';
+        document.getElementById('supPhone').value = s.phone || '';
+        document.getElementById('supAddress').value = s.address || '';
+        document.getElementById('supLicense').value = s.license_no || '';
+        document.getElementById('supModal').style.display = 'flex';
+    };
+
+    window.deleteSup = async function(id) {
+        if (!confirm('确定删除该供应商？')) return;
+        await api.del('/api/suppliers/' + id);
+        loadSuppliers();
+    };
+
+    document.getElementById('supForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const body = {
+            name: document.getElementById('supName').value,
+            contact: document.getElementById('supContact').value,
+            phone: document.getElementById('supPhone').value,
+            address: document.getElementById('supAddress').value,
+            license_no: document.getElementById('supLicense').value
+        };
+        const id = document.getElementById('editSupId').value;
+        if (id) {
+            await api.put('/api/suppliers/' + id, body);
+        } else {
+            await api.post('/api/suppliers', body);
+        }
+        closeSupModal();
+        loadSuppliers();
+    });
+
+    loadSuppliers();
+})();
+</script>

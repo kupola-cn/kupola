@@ -33,15 +33,64 @@
 
 ```
 his-sys/
-├── his-app/                    # 后端 - Gin API 服务
-│   ── main.go
-├── his-web/                    # 前端 - Kupola 静态页面
-│   └── index.html
-├── kupola/                     # Kupola 缺陷记录与优化建议
-│   ├── bugs.md                 # Bug 报告
-│   ├── improvements.md         # 功能改进建议
-│   └── performance.md          # 性能问题记录
-└── TECH_STACK.md               # 技术栈文档（本文档）
+├── his-app/                        # 后端 - Gin API 服务
+│   ├── main.go                     # 入口
+│   ├── config/
+│   │   └── config.go               # 配置管理
+│   ├── database/
+│   │   ├── database.go             # PostgreSQL 连接
+│   │   ├── migrate.go              # 数据库迁移
+│   │   └── seed.go                 # 种子数据
+│   ├── models/                     # 数据模型
+│   │   ├── organization.go         # 组织
+│   │   ├── department.go           # 部门
+│   │   ├── user.go                 # 用户
+│   │   ├── role.go                 # 角色
+│   │   ├── permission.go           # 权限
+│   │   ├── material.go             # 耗材
+│   │   ├── supplier.go             # 供应商
+│   │   ├── inventory.go            # 库存
+│   │   └── purchase_order.go       # 采购订单
+│   ├── handlers/                   # 控制器
+│   │   ├── auth.go                 # 认证
+│   │   ├── user.go                 # 用户管理
+│   │   ├── organization.go         # 组织管理
+│   │   ├── department.go           # 部门管理
+│   │   ├── role.go                 # 角色管理
+│   │   ├── permission.go           # 权限管理
+│   │   ├── material.go             # 耗材管理
+│   │   ├── supplier.go             # 供应商管理
+│   │   ├── inventory.go            # 库存管理
+│   │   └── purchase.go             # 采购管理
+│   ├── middleware/
+│   │   ├── auth.go                 # JWT 认证
+│   │   ├── cors.go                 # 跨域
+│   │   └── data_scope.go           # 数据权限
+│   ├── routes/
+│   │   └── router.go               # 路由注册
+│   └── go.mod
+├── his-web/                        # 前端 - Kupola 静态页面
+│   ├── login.html                  # 登录页
+│   ├── dashboard.html              # 主布局
+│   ├── css/                        # Kupola CSS
+│   ├── icons/                      # 图标
+│   ├── js/
+│   │   └── app.js                  # 前端核心逻辑
+│   └── pages/                      # 业务页面
+│       ├── users.html
+│       ├── organizations.html
+│       ├── departments.html
+│       ├── roles.html
+│       ├── materials.html
+│       ├── suppliers.html
+│       ├── purchase-orders.html
+│       └── inventory.html
+├── kupola/                         # Kupola 缺陷记录与优化建议
+│   ├── bugs.md
+│   ├── improvements.md
+│   └── performance.md
+├── README.md                       # 权限模型设计文档
+└── TECH_STACK.md                   # 技术栈文档
 ```
 
 ## 四、Kupola 使用规范

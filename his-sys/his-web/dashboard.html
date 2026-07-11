@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-brand="zengqing" class="ds-dashboard-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIS 管理系统</title>
+    <link rel="stylesheet" href="/static/css/kupola.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        /* 内容区页面标题 */
+        .page-header { margin-bottom: var(--spacer-24); }
+        .page-header__title {
+            font-size: var(--heading-md-font-size);
+            font-weight: var(--heading-md-font-weight);
+        }
+        .page-header__breadcrumb {
+            font-size: var(--body-sm-font-size);
+            color: var(--text-tertiary);
+            margin-top: var(--spacer-4);
+        }
+        /* tooltip for sidebar items */
+        .ds-dashboard__sidebar-item { position: relative; }
+        .ds-dashboard__sidebar-item[data-title]:hover::after {
+            content: attr(data-title);
+            position: absolute;
+            left: calc(100% + 8px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-overlay-l3);
+            color: var(--text-default);
+            padding: 4px 8px;
+            border-radius: var(--radius-4);
+            font-size: var(--body-xs-font-size);
+            white-space: nowrap;
+            z-index: 200;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="ds-dashboard-page">
+    <div class="ds-dashboard">
+        <!-- Header -->
+        <header class="ds-dashboard__header">
+            <div class="ds-dashboard__header-left">
+                <div class="ds-dashboard__logo">
+                    <div class="ds-dashboard__logo-icon"></div>
+                    <span>HIS</span>
+                </div>
+            </div>
+            <div class="ds-dashboard__header-center">
+                <span id="headerTitle" style="color: var(--text-secondary); font-size: 13px;">医院信息管理系统</span>
+            </div>
+            <div class="ds-dashboard__header-right">
+                <button class="ds-btn ds-btn--ghost ds-btn--sm" data-theme-toggle data-title="Theme" id="themeToggleBtn">
+                    <img class="theme-icon" src="/static/icons/sun.svg" width="16" height="16" alt="theme" class="icon">
+                </button>
+                <span style="font-size: 12px; color: var(--text-secondary);" id="userName">-</span>
+                <button class="ds-btn ds-btn--ghost ds-btn--sm" id="logoutBtn" data-title="退出登录">
+                    <img class="icon" src="/static/icons/log-out.svg" width="16" height="16" alt="logout">
+                </button>
+            </div>
+        </header>
+
+        <!-- Main -->
+        <div class="ds-dashboard__main">
+            <!-- Icon Sidebar -->
+            <aside class="ds-dashboard__sidebar">
+                <nav class="ds-dashboard__sidebar-nav" id="sideNav">
+                    <!-- 动态渲染菜单 -->
+                </nav>
+            </aside>
+
+            <!-- Content -->
+            <main class="ds-dashboard__content" id="mainContent">
+                <!-- 动态加载页面 -->
+            </main>
+        </div>
+
+        <!-- Footer Status Bar -->
+        <footer class="ds-dashboard__footer">
+            <div class="ds-dashboard__footer-left">
+                <div class="ds-dashboard__status-item">
+                    <span class="ds-dashboard__status-dot"></span>
+                    <span>HIS v1.0.0</span>
+                </div>
+            </div>
+            <div class="ds-dashboard__footer-right">
+                <div class="ds-dashboard__status-item">
+                    <span id="footerTime">-</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

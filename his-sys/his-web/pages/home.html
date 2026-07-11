@@ -1,0 +1,86 @@
+<div style="padding: var(--spacer-24);">
+    <div style="margin-bottom: var(--spacer-32);">
+        <h2 style="font-size: var(--heading-lg-font-size); font-weight: var(--heading-lg-font-weight); color: var(--text-default); margin-bottom: var(--spacer-8);">欢迎使用 HIS 管理系统</h2>
+        <p style="color: var(--text-secondary); font-size: var(--body-md-font-size);">医院信息管理平台 — 请选择左侧菜单开始操作</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacer-16); margin-bottom: var(--spacer-32);">
+        <div class="ds-card" style="padding: var(--spacer-20); text-align: center; cursor: pointer;" onclick="window.location.hash='users'">
+            <img src="/static/icons/users.svg" width="32" height="32" alt="用户" class="icon" style="margin-bottom: var(--spacer-12);">
+            <div style="font-size: var(--heading-sm-font-size); font-weight: 600; color: var(--text-default); margin-bottom: var(--spacer-4);">用户管理</div>
+            <p style="font-size: var(--body-xs-font-size); color: var(--text-tertiary);">管理系统用户和账号</p>
+        </div>
+        <div class="ds-card" style="padding: var(--spacer-20); text-align: center; cursor: pointer;" onclick="window.location.hash='materials'">
+            <img src="/static/icons/box.svg" width="32" height="32" alt="耗材" class="icon" style="margin-bottom: var(--spacer-12);">
+            <div style="font-size: var(--heading-sm-font-size); font-weight: 600; color: var(--text-default); margin-bottom: var(--spacer-4);">耗材目录</div>
+            <p style="font-size: var(--body-xs-font-size); color: var(--text-tertiary);">管理耗材基础信息</p>
+        </div>
+        <div class="ds-card" style="padding: var(--spacer-20); text-align: center; cursor: pointer;" onclick="window.location.hash='purchase-orders'">
+            <img src="/static/icons/file-text.svg" width="32" height="32" alt="采购" class="icon" style="margin-bottom: var(--spacer-12);">
+            <div style="font-size: var(--heading-sm-font-size); font-weight: 600; color: var(--text-default); margin-bottom: var(--spacer-4);">采购订单</div>
+            <p style="font-size: var(--body-xs-font-size); color: var(--text-tertiary);">查看和管理采购订单</p>
+        </div>
+        <div class="ds-card" style="padding: var(--spacer-20); text-align: center; cursor: pointer;" onclick="window.location.hash='inventory'">
+            <img src="/static/icons/layers.svg" width="32" height="32" alt="库存" class="icon" style="margin-bottom: var(--spacer-12);">
+            <div style="font-size: var(--heading-sm-font-size); font-weight: 600; color: var(--text-default); margin-bottom: var(--spacer-4);">库存查询</div>
+            <p style="font-size: var(--body-xs-font-size); color: var(--text-tertiary);">查看各机构库存情况</p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacer-16);">
+        <div class="ds-card" style="padding: var(--spacer-16);">
+            <h3 style="font-size: var(--heading-sm-font-size); font-weight: 600; color: var(--text-default); margin-bottom: var(--spacer-12); display: flex; align-items: center; gap: var(--spacer-8);">
+                <img src="/static/icons/info.svg" width="16" height="16" alt="" class="icon">
+                系统信息
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: var(--spacer-8); font-size: var(--body-sm-font-size);">
+                <div style="display: flex; justify-content: space-between; padding: var(--spacer-8); background: var(--bg-base-default); border-radius: var(--radius-4);">
+                    <span style="color: var(--text-secondary);">系统版本</span>
+                    <span style="color: var(--text-default);">v1.0.0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--spacer-8); background: var(--bg-base-default); border-radius: var(--radius-4);">
+                    <span style="color: var(--text-secondary);">当前用户</span>
+                    <span style="color: var(--text-default);" id="homeUserName">-</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--spacer-8); background: var(--bg-base-default); border-radius: var(--radius-4);">
+                    <span style="color: var(--text-secondary);">组织类型</span>
+                    <span style="color: var(--text-default);" id="homeOrgType">-</span>
+                </div>
+            </div>
+        </div>
+        <div class="ds-card" style="padding: var(--spacer-16);">
+            <h3 style="font-size: var(--heading-sm-font-size); font-weight: 600; color: var(--text-default); margin-bottom: var(--spacer-12); display: flex; align-items: center; gap: var(--spacer-8);">
+                <img src="/static/icons/clock.svg" width="16" height="16" alt="" class="icon">
+                快捷操作
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: var(--spacer-8);">
+                <button class="ds-btn ds-btn--secondary ds-btn--md" style="justify-content: flex-start;" onclick="window.location.hash='organizations'">
+                    <img src="/static/icons/home.svg" width="16" height="16" alt="" class="icon">
+                    组织管理
+                </button>
+                <button class="ds-btn ds-btn--secondary ds-btn--md" style="justify-content: flex-start;" onclick="window.location.hash='roles'">
+                    <img src="/static/icons/shield.svg" width="16" height="16" alt="" class="icon">
+                    角色管理
+                </button>
+                <button class="ds-btn ds-btn--secondary ds-btn--md" style="justify-content: flex-start;" onclick="window.location.hash='suppliers'">
+                    <img src="/static/icons/users.svg" width="16" height="16" alt="" class="icon">
+                    供应商管理
+                </button>
+                <button class="ds-btn ds-btn--secondary ds-btn--md" style="justify-content: flex-start;" onclick="window.location.hash='departments'">
+                    <img src="/static/icons/grid-2x2.svg" width="16" height="16" alt="" class="icon">
+                    部门管理
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var userInfo = JSON.parse(localStorage.getItem('his_user') || '{}');
+    var un = document.getElementById('homeUserName');
+    var ot = document.getElementById('homeOrgType');
+    if (un) un.textContent = userInfo.real_name || userInfo.username || '-';
+    if (ot) ot.textContent = userInfo.org_type === 'group' ? '集团' : (userInfo.org_type === 'branch' ? '分机构' : '-');
+})();
+</script>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-brand="zengqing">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIS 管理系统 - 登录</title>
+    <link rel="stylesheet" href="/static/css/kupola.css">
+    <style>
+        .login-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-base-default);
+        }
+        .login-card {
+            width: 400px;
+            padding: var(--spacer-32);
+            background: var(--bg-base-secondary);
+            border: 1px solid var(--border-neutral-l1);
+            border-radius: var(--radius-8);
+        }
+        .login-card__title {
+            font-size: var(--heading-lg-font-size);
+            font-weight: var(--heading-lg-font-weight);
+            text-align: center;
+            margin-bottom: var(--spacer-8);
+        }
+        .login-card__sub {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: var(--body-sm-font-size);
+            margin-bottom: var(--spacer-24);
+        }
+        .login-form__group {
+            margin-bottom: var(--spacer-16);
+        }
+        .login-form__label {
+            display: block;
+            font-size: var(--body-sm-font-size);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacer-6);
+        }
+        .login-form__group .ds-input {
+            width: 100%;
+        }
+        .login-form__submit {
+            width: 100%;
+            margin-top: var(--spacer-8);
+        }
+        .login-form__error {
+            color: var(--status-error-default);
+            font-size: var(--body-sm-font-size);
+            text-align: center;
+            margin-top: var(--spacer-12);
+            display: none;
+        }
+        .login-form__error.is-visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <h1 class="login-card__title">HIS 管理系统</h1>
+            <p class="login-card__sub">医院信息管理平台</p>
+
+            <form id="loginForm" autocomplete="off">
+                <div class="login-form__group">
+                    <label class="login-form__label">用户名</label>
+                    <div class="ds-input ds-input--lg">
+                        <span class="ds-input__icon">
+                            <img class="icon" src="/static/icons/user.svg" width="16" height="16" alt="">
+                        </span>
+                        <input type="text" id="username" placeholder="请输入用户名" required>
+                    </div>
+                </div>
+                <div class="login-form__group">
+                    <label class="login-form__label">密码</label>
+                    <div class="ds-input ds-input--lg">
+                        <span class="ds-input__icon">
+                            <img class="icon" src="/static/icons/lock.svg" width="16" height="16" alt="">
+                        </span>
+                        <input type="password" id="password" placeholder="请输入密码" required>
+                    </div>
+                </div>
+                <button type="submit" class="ds-btn ds-btn--primary ds-btn--lg login-form__submit" id="loginBtn">
+                    登 录
+                </button>
+                <div class="login-form__error" id="errorMsg"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 如果已登录，直接跳转
+        if (localStorage.getItem('his_token')) {
+            window.location.href = '/static/dashboard.html';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                errorMsg.textContent = '请输入用户名和密码';
+                errorMsg.classList.add('is-visible');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '登录中...';
+            errorMsg.classList.remove('is-visible');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    localStorage.setItem('his_token', data.data.token);
+                    localStorage.setItem('his_user', JSON.stringify(data.data));
+                    window.location.href = '/static/dashboard.html';
+                } else {
+                    errorMsg.textContent = data.message || '登录失败';
+                    errorMsg.classList.add('is-visible');
+                }
+            } catch (err) {
+                errorMsg.textContent = '网络错误，请稍后重试';
+                errorMsg.classList.add('is-visible');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '登 录';
+            }
+        });
+    </script>
+</body>
+</html>
