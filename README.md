@@ -20,8 +20,8 @@
 
 ## 📖 Documentation
 
-- [**用户文档**](docs/index.html) — 安装、组件速查、核心 API、主题、后端集成
-- [**架构文档**](docs/architecture.html) — 内部引擎、模块依赖、构建管线、贡献指南
+- [**用户文档**](https://kupola-cn.github.io/kupola/docs/index.html) — 安装、组件速查、核心 API、主题、后端集成
+- [**架构文档**](https://kupola-cn.github.io/kupola/docs/architecture.html) — 内部引擎、模块依赖、构建管线、贡献指南
 
 ---
 
