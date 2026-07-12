@@ -7,7 +7,7 @@ You are working with **Kupola**, a lightweight, dependency-free declarative UI c
 - **npm**: `@kupola/kupola`
 - **License**: MIT
 - **Build**: Vite (primary) / Rollup (alternative)
-- **Size**: ~550 KB ESM, ~104 KB gzipped
+- **Size**: ~550 KB ESM (unminified), ~75 KB minified gzipped
 - **Zero runtime dependencies**
 
 ## Architecture Overview

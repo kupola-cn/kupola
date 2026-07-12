@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kupola — 内部架构</title>
+  <link rel="stylesheet" href="../css/kupola.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .doc-sidebar {
+      background: var(--bg-base-secondary);
+      border-right: 1px solid var(--border-neutral-l1);
+      overflow-y: auto;
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+    }
+    .doc-sidebar::-webkit-scrollbar { width: 4px; }
+    .doc-sidebar::-webkit-scrollbar-thumb { background: var(--border-neutral-l2); border-radius: 4px; }
+
+    .doc-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px 16px;
+      border-bottom: 1px solid var(--border-neutral-l1);
+      margin-bottom: 12px;
+    }
+    .doc-logo__icon {
+      width: 28px; height: 28px;
+      background: var(--bg-brand);
+      border-radius: 6px;
+    }
+    .doc-logo__text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-default);
+    }
+    .doc-logo__sub {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-left: auto;
+    }
+    .doc-logo__back {
+      display: block;
+      padding: 4px 16px 12px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-decoration: none;
+    }
+    .doc-logo__back:hover { color: var(--text-brand); }
+
+    .doc-nav__group { margin-bottom: 4px; }
+    .doc-nav__title {
+      padding: 8px 16px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+    }
+    .doc-nav__link {
+      display: block;
+      padding: 5px 16px 5px 24px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.12s ease;
+    }
+    .doc-nav__link:hover {
+      color: var(--text-default);
+      background: var(--bg-overlay-l1);
+    }
+    .doc-nav__link.is-active {
+      color: var(--bg-brand);
+      border-left-color: var(--bg-brand);
+      background: var(--bg-brand-popup);
+      font-weight: 500;
+    }
+
+    /* ── Content ── */
+    .doc-content {
+      overflow-y: auto;
+      padding: 32px 48px 80px;
+      max-width: 900px;
+    }
+    .doc-content::-webkit-scrollbar { width: 6px; }
+    .doc-content::-webkit-scrollbar-thumb { background: var(--border-neutral-l2); border-radius: 4px; }
+
+    .doc-section { margin-bottom: 48px; scroll-margin-top: 24px; }
+    .doc-section h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-default);
+      margin-bottom: 8px;
+    }
+    .doc-section h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-default);
+      margin: 32px 0 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-neutral-l1);
+    }
+    .doc-section h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-default);
+      margin: 20px 0 6px;
+    }
+    .doc-section p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .doc-section .lead {
+      font-size: 16px;
+      color: var(--text-default);
+      margin-bottom: 16px;
+    }
+    .code-block {
+      background: var(--bg-overlay-l1);
+      border: 1px solid var(--border-neutral-l1);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--text-default);
+      overflow-x: auto;
+      margin-bottom: 12px;
+      white-space: pre;
+    }
+    .code-inline {
+      background: var(--bg-overlay-l2);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-brand);
+    }
+    .doc-tip {
+      background: var(--bg-overlay-l1);
+      border-left: 3px solid var(--bg-brand);
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .doc-tip strong { color: var(--text-brand); }
+    .doc-warn {
+      background: var(--status-warning-surface-l1);
+      border-left: 3px solid var(--status-warning-default);
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .doc-warn strong { color: var(--status-warning-default); }
+
+    /* Mermaid-style diagram via pure CSS */
+    .arch-diagram {
+      background: var(--bg-overlay-l1);
+      border: 1px solid var(--border-neutral-l1);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 12px 0 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* Module table */
+    .mod-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 8px 0 16px;
+    }
+    .mod-table th {
+      text-align: left;
+      padding: 6px 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-neutral-l1);
+    }
+    .mod-table td {
+      padding: 5px 10px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-neutral-l1);
+    }
+    .mod-table tr:last-child td { border-bottom: none; }
+    .mod-table code {
+      color: var(--text-brand);
+      font-size: 12px;
+    }
+    .mod-table .dep-tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: var(--bg-overlay-l2);
+      color: var(--text-tertiary);
+      margin-right: 3px;
+    }
+
+    @media (max-width: 768px) {
+      .doc-layout { grid-template-columns: 1fr; }
+      .doc-sidebar { display: none; }
+      .doc-content { padding: 20px 16px 60px; }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="doc-layout">
+
+    <!-- ═══════════════ Sidebar ═══════════════ -->
+    <aside class="doc-sidebar">
+      <div class="doc-logo">
+        <div class="doc-logo__icon"></div>
+        <span class="doc-logo__text">Kupola</span>
+        <span class="doc-logo__sub">Architecture</span>
+      </div>
+      <a href="index.html" class="doc-logo__back">&larr; 返回用户文档</a>
+
+      <nav>
+        <div class="doc-nav__group">
+          <div class="doc-nav__title">总览</div>
+          <a href="#overview" class="doc-nav__link is-active">架构概览</a>
+          <a href="#structure" class="doc-nav__link">目录结构</a>
+          <a href="#boot" class="doc-nav__link">启动流程</a>
+        </div>
+        <div class="doc-nav__group">
+          <div class="doc-nav__title">核心引擎</div>
+          <a href="#initializer" class="doc-nav__link">组件初始化器</a>
+          <a href="#databind" class="doc-nav__link">数据绑定引擎</a>
+          <a href="#events" class="doc-nav__link">事件系统</a>
+          <a href="#component" class="doc-nav__link">组件基类</a>
+        </div>
+        <div class="doc-nav__group">
+          <div class="doc-nav__title">子系统</div>
+          <a href="#theme-engine" class="doc-nav__link">主题引擎</a>
+          <a href="#depends" class="doc-nav__link">数据依赖系统</a>
+          <a href="#css-arch" class="doc-nav__link">CSS 架构</a>
+        </div>
+        <div class="doc-nav__group">
+          <div class="doc-nav__title">构建</div>
+          <a href="#build" class="doc-nav__link">构建管线</a>
+          <a href="#treeshaking" class="doc-nav__link">Tree-Shaking 策略</a>
+        </div>
+        <div class="doc-nav__group">
+          <div class="doc-nav__title">贡献</div>
+          <a href="#new-component" class="doc-nav__link">新增组件指南</a>
+          <a href="#conventions" class="doc-nav__link">编码约定</a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- ═══════════════ Content ═══════════════ -->
+    <main class="doc-content">
+
+      <!-- ── 架构概览 ── -->
+      <section id="overview" class="doc-section">
+        <h1>架构概览</h1>
+        <p class="lead">Kupola 是一个零运行时依赖的声明式 UI 组件系统。核心由 5 个引擎模块协作驱动。</p>
+        <div class="arch-diagram">┌─────────────────────────────────────────────────────────┐
+│                   kupolaBootstrap()                      │
+│        DOMContentLoaded / setTimeout(0)                  │
+└────────────────────┬────────────────────────────────────┘
+                     │
+        ┌────────────┼────────────────┐
+        ▼            ▼                ▼
+  ┌──────────┐ ┌──────────┐  ┌──────────────────┐
+  │ kupola   │ │ kupola   │  │ ComponentInit    │
+  │ DataBind │ │ Theme    │  │ Registry         │
+  │ (Proxy)  │ │ Engine   │  │ (MutationObserver│
+  └──────────┘ └──────────┘  └──────────────────┘
+        │            │                │
+        ▼            ▼                ▼
+  data-bind     data-theme       data-dropdown
+  双向绑定      暗/亮切换        组件自动发现</div>
+        <h2>五大核心引擎</h2>
+        <table class="mod-table">
+          <tr><th>模块</th><th>文件</th><th>职责</th><th>行数</th></tr>
+          <tr><td>Initializer</td><td><code>js/initializer.js</code></td><td>MutationObserver 组件自动发现 + 生命周期管理</td><td>~200</td></tr>
+          <tr><td>DataBind</td><td><code>js/data-bind.js</code></td><td>Proxy 响应式绑定 + EventBus + Store + ref()</td><td>~1360</td></tr>
+          <tr><td>KupolaCore</td><td><code>js/kupola-core.js</code></td><td>组件注册表 + Bootstrap 编排 + Mixin</td><td>~130</td></tr>
+          <tr><td>GlobalEvents</td><td><code>js/global-events.js</code></td><td>统一事件委托 + 作用域清理</td><td>~280</td></tr>
+          <tr><td>Theme</td><td><code>js/theme.js</code></td><td>暗/亮主题 + 11 种品牌色</td><td>~200</td></tr>
+        </table>
+      </section>
+
+      <!-- ── 目录结构 ── -->
+      <section id="structure" class="doc-section">
+        <h1>目录结构</h1>
+        <div class="arch-diagram">kupola/
+├── js/                    # 核心 JS 模块（ES modules）
+│   ├── initializer.js     #   组件自动发现引擎
+│   ├── kupola-core.js     #   组件注册 + Bootstrap 编排
+│   ├── component.js       #   KupolaComponent 基类
+│   ├── registry.js        #   KupolaComponentRegistry 类注册表
+│   ├── kupola-lifecycle.js#   页面级生命周期钩子
+│   ├── data-bind.js       #   Proxy 数据绑定 + EventBus + Store + ref()
+│   ├── global-events.js   #   全局事件管理（作用域清理）
+│   ├── theme.js           #   主题/品牌色引擎
+│   ├── icons.js           #   SVG 图标系统
+│   ├── validation.js      #   表单验证引擎
+│   ├── form.js            #   KupolaForm 高级表单
+│   ├── utils.js           #   Tree-shakable 工具库（命名导出）
+│   ├── depends.js         #   useDeps 声明式数据依赖 + HTTP 插件
+│   ├── table.js           #   KupolaTable 复杂表格
+│   └── [component].js     #   各 UI 组件（dropdown, modal, ...）
+├── css/                   # 样式源文件
+│   ├── kupola.css         #   入口（@import 汇总）
+│   ├── scaffold.css       #   基础重置 + 排版
+│   ├── colors-and-type.css#   CSS 变量 + 色彩系统
+│   ├── theme-dark.css     #   暗色主题变量
+│   ├── theme-light.css    #   亮色主题变量
+│   ├── brand-themes.css   #   11 种品牌色
+│   ├── components.css     #   组件样式
+│   ├── components-ext.css #   扩展组件样式
+│   └── table.css          #   表格组件样式
+├── src/index.js           # Rollup/Vite 入口，re-export 所有 API
+├── adapters/              # HTTP 客户端适配器（axios, navios-http）
+├── plugins/               # Vite 插件
+├── types/kupola.d.ts      # TypeScript 声明
+├── scripts/               # 构建脚本
+└── dist/                  # 构建产物（gitignored）</div>
+      </section>
+
+      <!-- ── 启动流程 ── -->
+      <section id="boot" class="doc-section">
+        <h1>启动流程</h1>
+        <p class="lead">Kupola 在页面加载时自动 bootstrap，按严格顺序初始化各子系统。</p>
+        <div class="arch-diagram">DOMContentLoaded
+       │
+       ▼
+ kupolaBootstrap()          ← js/kupola-core.js
+       │
+       ├── 1. kupolaData.loadPersisted()   加载 localStorage 持久化数据
+       ├── 2. kupolaData.bind()            扫描 data-bind 元素，建立 Proxy 绑定
+       ├── 3. initTheme()                  读取 data-theme，注入 CSS 变量
+       ├── 4. kupolaInitializer.initializeAll()   函数式组件初始化
+       │       └── MutationObserver 监听 DOM 变化
+       └── 5. kupolaRegistry.bootstrap()  类式组件实例化
+               └── 自动发现 + 懒加载</div>
+        <div class="doc-tip">
+          <strong>关键点：</strong> 函数式组件（init 函数）先于类式组件（KupolaComponent 子类）初始化。这是因为函数式组件通常提供基础设施（如 tooltip），类式组件可能依赖它们。
+        </div>
+        <h3>动态内容刷新</h3>
+        <div class="code-block">// 动态插入 HTML 后
+await window.Kupola.refresh(scopeElement);
+// 清理单个元素
+window.Kupola.cleanup(element);</div>
+      </section>
+
+      <!-- ── 组件初始化器 ── -->
+      <section id="initializer" class="doc-section">
+        <h1>组件初始化器</h1>
+        <p class="lead"><span class="code-inline">js/initializer.js</span> — 基于 MutationObserver 的声明式组件自动发现系统。</p>
+        <h2>工作原理</h2>
+        <div class="arch-diagram">register('dropdown', initFn, cleanupFn, { dataAttribute: 'data-dropdown' })
+       │
+       ▼
+ComponentInitializerRegistry
+  ├── initializers: Map&lt;name, initFn&gt;
+  ├── cleanupFunctions: Map&lt;name, cleanupFn&gt;
+  ├── processedElements: WeakSet         ← 防重复初始化
+  └── _dataAttrs: ['data-dropdown', 'data-modal', ...]
+       │
+       ▼  MutationObserver callback
+  扫描新增 DOM → 匹配 selector → 调用 initFn(el) → 存入 processedElements</div>
+        <h2>注册模式</h2>
+        <div class="code-block">// 函数式注册（大多数组件）
+kupolaInitializer.register('data-tooltip', initTooltip, cleanupTooltip, {
+  dataAttribute: 'data-tooltip'
+});
+
+// 类式注册（通过 registry.js）
+class MyWidget extends KupolaComponent { ... }
+registerComponent('my-widget', MyWidget);</div>
+        <div class="doc-warn">
+          <strong>注意：</strong> <span class="code-inline">processedElements</span> 是 WeakSet，元素被 GC 回收时自动移除。不要在外部缓存 DOM 元素引用来绕过此机制。
+        </div>
+      </section>
+
+      <!-- ── 数据绑定引擎 ── -->
+      <section id="databind" class="doc-section">
+        <h1>数据绑定引擎</h1>
+        <p class="lead"><span class="code-inline">js/data-bind.js</span> — 1360 行，Kupola 最大的单一模块。包含 4 个子系统。</p>
+        <table class="mod-table">
+          <tr><th>子系统</th><th>职责</th><th>关键数据结构</th></tr>
+          <tr><td>KupolaDataBind</td><td>Proxy 双向绑定 + DOM 同步</td><td>PathTrie（键路径索引）</td></tr>
+          <tr><td>KupolaEventBus</td><td>发布/订阅事件总线</td><td>Map&lt;event, handlers[]&gt;</td></tr>
+          <tr><td>KupolaStore</td><td>状态管理（mutations/actions）</td><td>依赖 kupolaData 实例</td></tr>
+          <tr><td>ref()</td><td>轻量响应式引用</td><td>Proxy { value, _subscribers }</td></tr>
+        </table>
+        <h2>绑定流程</h2>
+        <div class="arch-diagram">kupolaData.set('user.name', '张三')
+       │
+       ▼
+  Proxy set trap
+       │
+       ├── PathTrie 查找依赖此路径的 DOM 元素
+       │
+       ├── 遍历绑定元素
+       │    ├── data-bind="text:user.name"  → el.textContent = '张三'
+       │    ├── data-bind="value:user.name" → el.value = '张三'
+       │    └── data-bind="html:user.name"  → sanitizeHtml() → innerHTML
+       │
+       └── 通知 observers</div>
+        <h2>HTML 安全</h2>
+        <p><span class="code-inline">sanitizeHtml()</span> 在每次 innerHTML 赋值前执行，移除 &lt;script&gt;、&lt;iframe&gt;、on* 事件属性和 javascript: URI。</p>
+      </section>
+
+      <!-- ── 事件系统 ── -->
+      <section id="events" class="doc-section">
+        <h1>事件系统</h1>
+        <p class="lead"><span class="code-inline">js/global-events.js</span> — 统一事件管理，支持作用域批量清理。</p>
+        <div class="code-block">import { on, once, off, emit, offByScope } from 'kupola';
+
+// 绑定事件（返回 { unsubscribe }）
+const sub = on(document, 'click', handler, { scope: 'page:users' });
+
+// 一次性事件
+once(window, 'resize', handler);
+
+// 按作用域批量清理（页面卸载时）
+offByScope('page:users');  // 清理所有 scope='page:users' 的监听器</div>
+        <h2>内部数据结构</h2>
+        <div class="arch-diagram">GlobalEvents
+  ├── _listeners: Map&lt;eventKey, Listener[]&gt;
+  │     └── Listener { id, target, eventName, handler, scope, wrappedHandler }
+  └── _scopeListeners: Map&lt;scope, listenerId[]&gt;
+        └── offByScope() → 批量 removeEventListener</div>
+        <div class="doc-tip">
+          <strong>设计决策：</strong> <span class="code-inline">offByScope</span> 是防止内存泄漏的关键机制。页面 init 模块通过 <span class="code-inline">scope</span> 参数注册所有事件，卸载时一次调用即可全部清理。
+        </div>
+      </section>
+
+      <!-- ── 组件基类 ── -->
+      <section id="component" class="doc-section">
+        <h1>组件基类</h1>
+        <p class="lead"><span class="code-inline">js/component.js</span> — KupolaComponent 提供类式组件的标准生命周期。</p>
+        <div class="arch-diagram">KupolaComponent
+  ├── constructor(element)
+  │     ├── _parseProps()      读取 data-prop-* 属性
+  │     ├── _parseSlots()      读取 slot 元素
+  │     └── lifecycle = new KupolaLifecycle()
+  │
+  ├── setup()                  子类重写：初始化逻辑
+  ├── render()                 子类重写：渲染 DOM
+  ├── mount()                  挂载到 DOM
+  ├── beforeUnmount()          子类重写：清理
+  └── destroy()                销毁实例
+
+Mixin 系统：
+  defineMixin('validatable', { validate() {...} })
+  applyMixin(MyComponent, 'validatable')</div>
+        <h2>Props 解析</h2>
+        <div class="code-block">&lt;div data-my-widget data-prop-title="Hello" data-prop-count="42"&gt;
+  → this.props = { title: 'Hello', count: 42 }  // JSON.parse 自动转换</div>
+      </section>
+
+      <!-- ── 主题引擎 ── -->
+      <section id="theme-engine" class="doc-section">
+        <h1>主题引擎</h1>
+        <p class="lead"><span class="code-inline">js/theme.js</span> — CSS 变量驱动的主题切换，无 JS 样式计算。</p>
+        <div class="arch-diagram">setTheme('dark')
+       │
+       ▼
+  document.documentElement.setAttribute('data-theme', 'dark')
+       │
+       ▼
+  CSS [data-theme="dark"] { --bg-base-default: #1a1a2e; ... }
+  CSS [data-theme="light"] { --bg-base-default: #ffffff; ... }
+       │
+       ▼
+  所有组件自动继承新变量（零 JS 开销）</div>
+        <h2>品牌色</h2>
+        <p>11 种品牌色通过 <span class="code-inline">setBrand('zengqing')</span> 切换，修改 <span class="code-inline">--bg-brand</span> 系列变量。品牌色独立于主题，可以自由组合。</p>
+      </section>
+
+      <!-- ── 数据依赖系统 ── -->
+      <section id="depends" class="doc-section">
+        <h1>数据依赖系统</h1>
+        <p class="lead"><span class="code-inline">js/depends.js</span> — 声明式数据获取 + 可插拔 HTTP 客户端。</p>
+        <h2>架构分层</h2>
+        <div class="arch-diagram">useDeps({ users: { url: '/api/users', staleTime: 60000 } })
+       │
+       ▼
+  Scheduler            ← 调度器（去重 + 并发控制）
+       │
+       ▼
+  CacheManager         ← LRU 缓存（staleTime / maxAge）
+       │
+       ▼
+  HTTP Client Plugin   ← 可插拔（默认 fetch，可替换为 Axios）
+       │
+       ▼
+  DependsSource        ← 数据源抽象
+    ├── FetchedSource    (HTTP)
+    ├── StorageSource    (localStorage)
+    ├── WebSocketSource  (WebSocket)
+    └── StaticSource     (静态数据)</div>
+        <h2>HTTP 客户端插件</h2>
+        <div class="code-block">// 适配器模式 — 拦截器完全保留
+import { configureHttpClient } from 'kupola';
+import { createAxiosAdapter } from 'kupola/adapters/axios';
+configureHttpClient(createAxiosAdapter(axiosInstance));</div>
+      </section>
+
+      <!-- ── CSS 架构 ── -->
+      <section id="css-arch" class="doc-section">
+        <h1>CSS 架构</h1>
+        <p class="lead">13 个源文件，通过 @import 汇总，构建时合并 + 压缩。</p>
+        <h2>分层结构</h2>
+        <table class="mod-table">
+          <tr><th>层级</th><th>文件</th><th>职责</th></tr>
+          <tr><td>基础</td><td><code>scaffold.css</code></td><td>重置 + 排版 + 基础元素</td></tr>
+          <tr><td>变量</td><td><code>colors-and-type.css</code></td><td>CSS 自定义属性（颜色/字体/间距）</td></tr>
+          <tr><td>主题</td><td><code>theme-dark.css</code> / <code>theme-light.css</code></td><td>暗/亮主题变量覆盖</td></tr>
+          <tr><td>品牌</td><td><code>brand-themes.css</code></td><td>11 种品牌色变量</td></tr>
+          <tr><td>组件</td><td><code>components.css</code> / <code>components-ext.css</code></td><td>ds-* 组件样式</td></tr>
+          <tr><td>表格</td><td><code>table.css</code></td><td>KupolaTable 专用样式</td></tr>
+          <tr><td>状态</td><td><code>states.css</code></td><td>is-active / is-disabled 等状态类</td></tr>
+          <tr><td>响应式</td><td><code>responsive.css</code></td><td>断点适配</td></tr>
+          <tr><td>动画</td><td><code>animations.css</code></td><td>过渡 + 关键帧</td></tr>
+          <tr><td>无障碍</td><td><code>accessibility.css</code></td><td>WCAG AA 焦点/对比度</td></tr>
+          <tr><td>工具</td><td><code>utilities.css</code></td><td>.text-sm, .flex, .gap-* 等</td></tr>
+        </table>
+        <div class="doc-tip">
+          <strong>CSS 命名约定：</strong> 所有组件类以 <span class="code-inline">ds-</span> 前缀，BEM 风格：<span class="code-inline">ds-card__title</span>、<span class="code-inline">ds-btn--primary</span>。CSS 变量以 <span class="code-inline">--</span> 开头，不带 <span class="code-inline">ds-</span>。
+        </div>
+      </section>
+
+      <!-- ── 构建管线 ── -->
+      <section id="build" class="doc-section">
+        <h1>构建管线</h1>
+        <p class="lead">双构建系统：Vite（主）+ Rollup（替代），CSS 独立构建脚本。</p>
+        <h2>JS 构建</h2>
+        <div class="arch-diagram">src/index.js  →  Rollup/Vite
+       │
+       ├── ESM   → dist/kupola.esm.js     (550 KB)
+       ├── CJS   → dist/kupola.cjs.js     (554 KB)
+       ├── UMD   → dist/kupola.umd.js     (582 KB)
+       └── UMD min → dist/kupola.min.js   (317 KB, gzip 75 KB)
+
+Copy 插件:
+  types/kupola.d.ts → dist/types/
+  icons/            → dist/icons/
+  css/*.css         → dist/css/
+  plugins/          → dist/plugins/</div>
+        <h2>CSS 构建</h2>
+        <div class="arch-diagram">scripts/build-css.cjs
+  读取 css/kupola.css
+  解析 @import url('...')
+  递归内联所有 CSS 文件
+       │
+       ├── dist/kupola.css      (236 KB, 合并未压缩)
+       └── dist/kupola.min.css  (174 KB, 压缩)</div>
+        <div class="doc-warn">
+          <strong>注意：</strong> Rollup 的 rollup-plugin-postcss 不支持解析 @import，因此 CSS 构建使用独立的 Node.js 脚本，不走 Rollup。
+        </div>
+      </section>
+
+      <!-- ── Tree-Shaking ── -->
+      <section id="treeshaking" class="doc-section">
+        <h1>Tree-Shaking 策略</h1>
+        <p class="lead">所有模块使用 ES Module 命名导出，bundler 可裁剪未使用代码。</p>
+        <h2>sideEffects 声明</h2>
+        <div class="code-block">// package.json
+"sideEffects": [
+  "./js/icons.js",           // 注册全局图标（有副作用）
+  "./js/theme-standalone.js", // 独立主题初始化
+  "*.css"                     // CSS 文件不可裁剪
+]</div>
+        <h2>工具库命名导出</h2>
+        <div class="code-block">// utils.js 导出 8 个命名空间 + 2 个独立函数
+export { stringUtils, arrayUtils, objectUtils, numberUtils,
+         dateUtils, validatorUtils, cryptoUtils, preloadUtils,
+         debounce, throttle,
+         KupolaUtils  // 向后兼容的聚合对象
+};</div>
+        <div class="doc-tip">
+          <strong>效果：</strong> 如果用户只导入 <span class="code-inline">stringUtils</span>，其他 7 个命名空间的代码会被 bundler 裁剪。KupolaUtils 聚合对象保留向后兼容但不会阻止裁剪。
+        </div>
+      </section>
+
+      <!-- ── 新增组件指南 ── -->
+      <section id="new-component" class="doc-section">
+        <h1>新增组件指南</h1>
+        <p class="lead">向 Kupola 添加新组件的标准流程。</p>
+        <h2>步骤 1：创建组件文件</h2>
+        <div class="code-block">// js/my-component.js
+import { kupolaInitializer } from './initializer.js';
+import { on, offByScope } from './global-events.js';
+
+export function initMyComponent(el) {
+  // 初始化逻辑
+  on(el, 'click', handler, { scope: el });
+}
+
+export function cleanupMyComponent(el) {
+  offByScope(el);
+}
+
+// 注册到初始化器
+kupolaInitializer.register('my-component', initMyComponent, cleanupMyComponent, {
+  dataAttribute: 'data-my-component'
+});</div>
+        <h2>步骤 2：添加 CSS</h2>
+        <div class="code-block">/* css/components.css 或 css/components-ext.css */
+.ds-my-component {
+  background: var(--bg-base-secondary);
+  border: 1px solid var(--border-neutral-l1);
+  border-radius: var(--radius-4);
+}</div>
+        <h2>步骤 3：注册导出</h2>
+        <div class="code-block">// src/index.js 添加
+export { initMyComponent, cleanupMyComponent } from '../js/my-component.js';</div>
+        <h2>步骤 4：添加类型</h2>
+        <div class="code-block">// types/kupola.d.ts 添加
+export function initMyComponent(root?: Element): void;
+export function cleanupMyComponent(el: Element): void;</div>
+        <h2>步骤 5：验证</h2>
+        <div class="code-block">npm run build:rollup   # 确认 Rollup 构建通过
+npm run build:css      # 确认 CSS 构建通过
+npm run lint           # 确认 ESLint 通过</div>
+      </section>
+
+      <!-- ── 编码约定 ── -->
+      <section id="conventions" class="doc-section">
+        <h1>编码约定</h1>
+        <table class="mod-table">
+          <tr><th>约定</th><th>说明</th></tr>
+          <tr><td>ES Modules only</td><td>所有核心模块使用 import/export，禁止 require()</td></tr>
+          <tr><td>零外部依赖</td><td>核心模块不引入 npm 包，适配器除外</td></tr>
+          <tr><td>JSDoc 注释</td><td>所有 public API 必须有 JSDoc</td></tr>
+          <tr><td>camelCase JS</td><td>JS 变量/函数 camelCase，CSS/HTML kebab-case</td></tr>
+          <tr><td>data-* 声明式</td><td>组件通过 data-* 属性初始化，禁止硬编码选择器</td></tr>
+          <tr><td>cleanup 函数</td><td>每个 init 函数必须有对应的 cleanup，防内存泄漏</td></tr>
+          <tr><td>scope 清理事件</td><td>使用 GlobalEvents 的 scope 参数，页面卸载时批量清理</td></tr>
+          <tr><td>textContent 优先</td><td>避免 innerHTML，必须使用时先 sanitizeHtml()</td></tr>
+          <tr><td>2 空格缩进</td><td>ESLint 强制，Prettier 格式化</td></tr>
+        </table>
+        <div class="doc-tip">
+          <strong>提交规范：</strong> 使用 Conventional Commits — <span class="code-inline">feat:</span> 新功能、<span class="code-inline">fix:</span> 修复、<span class="code-inline">docs:</span> 文档、<span class="code-inline">perf:</span> 性能、<span class="code-inline">refactor:</span> 重构。
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Sidebar scroll-spy -->
+  <script>
+    const links = document.querySelectorAll('.doc-nav__link');
+    const sections = document.querySelectorAll('.doc-section');
+    const content = document.querySelector('.doc-content');
+
+    links.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = link.getAttribute('href').slice(1);
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        links.forEach(l => l.classList.remove('is-active'));
+        link.classList.add('is-active');
+      });
+    });
+
+    content.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const top = section.offsetTop - content.scrollTop;
+        if (top < 80) current = section.id;
+      });
+      if (current) {
+        links.forEach(l => {
+          l.classList.toggle('is-active', l.getAttribute('href') === '#' + current);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

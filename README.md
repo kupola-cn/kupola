@@ -6,7 +6,7 @@
 
 [![License](https://img.shields.io/github/license/kupola-cn/kupola)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
 [![npm](https://img.shields.io/npm/v/@kupola/kupola)](https://www.npmjs.com/package/@kupola/kupola)
-[![bundle size (gzip)](https://img.shields.io/badge/gzip-104%20KB-blue)](https://bundlephobia.com/package/@kupola/kupola)
+[![bundle size (gzip)](https://img.shields.io/badge/gzip-75%20KB-blue)](https://bundlephobia.com/package/@kupola/kupola)
 [![GitHub stars](https://img.shields.io/github/stars/kupola-cn/kupola)](https://github.com/kupola-cn/kupola/stargazers)
 
 **HTMX** (data fetching) + **Alpine.js** (declarative interaction) + **Bootstrap** (component richness) — in one zero-dependency package.
@@ -17,6 +17,11 @@
 
 - [English](#english)
 - [中文](#中文)
+
+## 📖 Documentation
+
+- [**用户文档**](docs/index.html) — 安装、组件速查、核心 API、主题、后端集成
+- [**架构文档**](docs/architecture.html) — 内部引擎、模块依赖、构建管线、贡献指南
 
 ---
 
@@ -32,7 +37,7 @@
 - **Responsive** — PC, Pad, and Phone
 - **Accessible** — WCAG AA compliant
 - **Form Validation** — Built-in validation with custom rules
-- **Zero Dependencies** — Pure HTML/CSS/JavaScript, ~104 KB gzipped
+- **Zero Dependencies** — Pure HTML/CSS/JavaScript, ~75 KB minified gzipped
 - **Backend Agnostic** — Works with Flask, Django, FastAPI, Gin, Spring Boot, ASP.NET, Express, Rails, Actix-web, and any backend that outputs HTML
 - **TypeScript Ready** — Full type definitions included
 
@@ -181,7 +186,7 @@ Chrome, Firefox, Safari, Edge (latest)
 - **响应式** — 适配 PC、平板、手机
 - **无障碍** — 符合 WCAG AA 标准
 - **表单验证** — 内置验证系统，支持自定义规则
-- **零依赖** — 纯 HTML/CSS/JavaScript，gzip 后约 104 KB
+- **零依赖** — 纯 HTML/CSS/JavaScript，minified gzip 约 75 KB
 - **后端无关** — 支持 Flask、Django、FastAPI、Gin、Spring Boot、ASP.NET、Express、Rails、Actix-web 等任何输出 HTML 的后端
 - **TypeScript 支持** — 完整类型定义
 
