@@ -3406,7 +3406,7 @@
   justify-content: center;
 }
 
-.ds-image-list__item.is-selected::after::before {
+.ds-image-list__item.is-selected::after {
   content: '';
   width: 6px;
   height: 3px;
