@@ -468,6 +468,18 @@ declare class KupolaUtils {
 
 declare const kupolaUtils: KupolaUtils;
 
+declare const stringUtils: KupolaUtils['string'];
+declare const arrayUtils: KupolaUtils['array'];
+declare const objectUtils: KupolaUtils['object'];
+declare const numberUtils: KupolaUtils['number'];
+declare const dateUtils: KupolaUtils['date'];
+declare const validatorUtils: KupolaUtils['validator'];
+declare const cryptoUtils: KupolaUtils['crypto'];
+declare const preloadUtils: KupolaUtils['preload'];
+
+declare function debounce<T extends (...args: unknown[]) => void>(func: T, wait: number, options?: DebounceOptions): T;
+declare function throttle<T extends (...args: unknown[]) => void>(func: T, limit: number, options?: ThrottleOptions): T;
+
 declare interface FormState {
   valid: boolean;
   errors: Record<string, string>;
@@ -681,14 +693,14 @@ declare class KupolaModalElement extends HTMLElement {
   close(): void;
 }
 
-declare function createModal(options?: Record<string, unknown>): any;
-declare function confirmModal(options: Record<string, unknown> | string): any;
-declare function alertModal(options: Record<string, unknown> | string): any;
+declare function createModal(options?: Record<string, unknown>): Modal;
+declare function confirmModal(options: Record<string, unknown> | string): Modal;
+declare function alertModal(options: Record<string, unknown> | string): Modal;
 
 declare function cleanupAllDropdowns(): void;
 declare function cleanupAllSlideCaptchas(): void;
 
-declare function ref<T = unknown>(initialValue?: T): { value: T; _subscribers: Set<Function> };
+declare function ref<T = unknown>(initialValue?: T): { value: T; _subscribers: Set<Function>; subscribe: (callback: Function) => { unsubscribe: () => void } };
 
 declare class Modal {
   constructor(element: HTMLElement, options?: Record<string, unknown>);
@@ -720,7 +732,7 @@ interface KupolaHttpResponse {
   statusText?: string;
   headers: Record<string, string>;
   url?: string;
-  json(): Promise<any>;
+  json(): Promise<unknown>;
   text(): Promise<string>;
 }
 
@@ -816,16 +828,16 @@ declare function clearCache(): void;
 // Table & Pagination Components
 // ============================================================
 
-interface KupolaTableColumn {
+interface KupolaTableColumn<T = Record<string, unknown>> {
   key: string;
   title: string;
   width?: string | number;
   minWidth?: string | number;
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
-  sorter?: (a: unknown, b: unknown, order?: string) => number;
+  sorter?: (a: T, b: T, order?: string) => number;
   fixed?: 'left' | 'right';
-  render?: (value: unknown, row: unknown, index?: number) => string | HTMLElement;
+  render?: (value: unknown, row: T, index?: number) => string | HTMLElement;
   editable?: boolean;
   editType?: string;
   editOptions?: Array<{ value: string; label: string }>;
@@ -842,8 +854,8 @@ interface KupolaTableVirtualScrollOptions {
   maxHeight?: string;
 }
 
-interface KupolaTableOptions {
-  columns: KupolaTableColumn[];
+interface KupolaTableOptions<T = Record<string, unknown>> {
+  columns: KupolaTableColumn<T>[];
   rowKey?: string;
   striped?: boolean;
   bordered?: boolean;
@@ -858,31 +870,31 @@ interface KupolaTableOptions {
   showExport?: boolean;
   showPageSize?: boolean;
   selection?: 'checkbox' | 'radio';
-  expandable?: (row: unknown) => string | HTMLElement;
+  expandable?: (row: T) => string | HTMLElement;
   editable?: boolean;
   resizable?: boolean;
   draggable?: boolean;
   multiSort?: boolean;
   tree?: KupolaTableTreeOptions;
   virtualScroll?: KupolaTableVirtualScrollOptions;
-  mergeCells?: (data: unknown[]) => Array<{ row: number; col: number; rowSpan: number; colSpan: number }>;
+  mergeCells?: (data: T[]) => Array<{ row: number; col: number; rowSpan: number; colSpan: number }>;
   onSort?: (sorts: Array<{ key: string; order: string }>) => void;
   onFilter?: (text: string) => void;
-  onRowClick?: (row: unknown, index: number, event: Event) => void;
+  onRowClick?: (row: T, index: number, event: Event) => void;
   onPageChange?: (page: number, pageSize: number) => void;
-  onSelect?: (selectedKeys: unknown[], selectedRows: unknown[]) => void;
+  onSelect?: (selectedKeys: unknown[], selectedRows: T[]) => void;
   onExpand?: (key: unknown, isExpanded: boolean) => void;
-  onEditSave?: (row: unknown, colKey: string, newValue: unknown, allData: unknown[]) => void;
-  onEditCancel?: (editingCell: unknown) => void;
+  onEditSave?: (row: T, colKey: string, newValue: unknown, allData: T[]) => void;
+  onEditCancel?: (editingCell: { row: T; colKey: string; value: unknown }) => void;
   onColumnResize?: (colKey: string, newWidth: number) => void;
-  onRowDragEnd?: (movedRow: unknown, fromIndex: number, toIndex: number, newData: unknown[]) => void;
+  onRowDragEnd?: (movedRow: T, fromIndex: number, toIndex: number, newData: T[]) => void;
 }
 
-declare class KupolaTable {
-  constructor(element: HTMLElement | string, options?: KupolaTableOptions);
-  setData(data: unknown[] | { value: unknown[] | null }): void;
+declare class KupolaTable<T = Record<string, unknown>> {
+  constructor(element: HTMLElement | string, options?: KupolaTableOptions<T>);
+  setData(data: T[] | { value: T[] | null }): void;
   setLoading(loading: boolean): void;
-  setColumns(columns: KupolaTableColumn[]): void;
+  setColumns(columns: KupolaTableColumn<T>[]): void;
   setPageSize(size: number): void;
   getSortState(): { key: string | null; order: string | null } | Array<{ key: string; order: string }>;
   getPage(): { current: number; pageSize: number; total: number };
@@ -894,11 +906,11 @@ declare class KupolaTable {
   selectRow(key: unknown): void;
   deselectRow(key: unknown): void;
   getSelectedKeys(): unknown[];
-  getSelectedRows(): unknown[];
+  getSelectedRows(): T[];
   destroy(): void;
 }
 
-declare function initTable(element: HTMLElement | string, options?: KupolaTableOptions): KupolaTable;
+declare function initTable<T = Record<string, unknown>>(element: HTMLElement | string, options?: KupolaTableOptions<T>): KupolaTable<T>;
 declare function initAllTables(): KupolaTable[];
 
 interface KupolaPaginationOptions {
@@ -1334,7 +1346,7 @@ declare module 'kupola' {
   export function cleanupAllDropdowns(): void;
   export function cleanupAllSlideCaptchas(): void;
 
-  export function ref<T = unknown>(initialValue?: T): { value: T; _subscribers: Set<Function> };
+  export function ref<T = unknown>(initialValue?: T): { value: T; _subscribers: Set<Function>; subscribe: (callback: Function) => { unsubscribe: () => void } };
 
   export class Modal {
     constructor(element: HTMLElement, options?: Record<string, unknown>);
@@ -1358,7 +1370,7 @@ declare module 'kupola' {
     statusText?: string;
     headers: Record<string, string>;
     url?: string;
-    json(): Promise<any>;
+    json(): Promise<unknown>;
     text(): Promise<string>;
   }
 
@@ -1453,5 +1465,9 @@ declare module 'kupola' {
   // Table & Pagination
   export { KupolaTable, KupolaTableColumn, KupolaTableOptions, KupolaPagination, KupolaPaginationOptions };
   export { initTable, initAllTables, initPagination };
+
+  // Utils (tree-shakeable namespace exports)
+  export { KupolaUtils, stringUtils, arrayUtils, objectUtils, numberUtils, dateUtils };
+  export { debounce, throttle, validatorUtils, cryptoUtils, preloadUtils };
 
 }

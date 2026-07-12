@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class VirtualList {
   constructor(element, options = {}) {
     this.element = element;
@@ -241,32 +243,7 @@ class VirtualList {
       const key = item[this.keyField] || actualIndex;
       const isSelected = this.selectedKey === key;
       const itemSize = this.getItemSize(actualIndex);
-      const position = currentPosition;
-      
-      if (isHorizontal) {
-        html += `
-          <div 
-            class="ds-virtual-list__item${isSelected ? ' is-selected' : ''}" 
-            style="position: absolute; top: 0; left: ${position}px; width: ${itemSize}px; height: 100%;"
-            data-index="${actualIndex}"
-            data-key="${key}"
-          >
-            ${this.renderItem(item, actualIndex)}
-          </div>
-        `;
-      } else {
-        html += `
-          <div 
-            class="ds-virtual-list__item${isSelected ? ' is-selected' : ''}" 
-            style="position: absolute; top: ${position}px; left: 0; right: 0; height: ${itemSize}px;"
-            data-index="${actualIndex}"
-            data-key="${key}"
-          >
-            ${this.renderItem(item, actualIndex)}
-          </div>
-        `;
-      }
-      
+      html += this._buildItemHtml(item, actualIndex, key, isSelected, itemSize, currentPosition, isHorizontal);
       currentPosition += itemSize;
     });
     
@@ -279,6 +256,15 @@ class VirtualList {
     this.container.querySelectorAll('.ds-virtual-list__item').forEach(item => {
       item.addEventListener('click', () => this.handleItemClick(item));
     });
+  }
+
+  _buildItemHtml(item, index, key, isSelected, size, position, isHorizontal) {
+    const selectedClass = isSelected ? ' is-selected' : '';
+    const content = this.renderItem(item, index);
+    if (isHorizontal) {
+      return `<div class="ds-virtual-list__item${selectedClass}" style="position: absolute; top: 0; left: ${position}px; width: ${size}px; height: 100%;" data-index="${index}" data-key="${key}">${content}</div>`;
+    }
+    return `<div class="ds-virtual-list__item${selectedClass}" style="position: absolute; top: ${position}px; left: 0; right: 0; height: ${size}px;" data-index="${index}" data-key="${key}">${content}</div>`;
   }
 
   updateDynamicHeights() {
@@ -583,15 +569,4 @@ function initVirtualLists() {
 
 export { VirtualList, initVirtualLists, initVirtualList, cleanupVirtualList, createVirtualList, generateMockVirtualListData };
 
-if (typeof window !== 'undefined') {
-  window.VirtualList = VirtualList;
-  window.initVirtualList = initVirtualList;
-  window.cleanupVirtualList = cleanupVirtualList;
-  window.initVirtualLists = initVirtualLists;
-  window.createVirtualList = createVirtualList;
-  window.generateMockVirtualListData = generateMockVirtualListData;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('virtual-list', initVirtualList, cleanupVirtualList);
-  }
-}
+kupolaInitializer.register('virtual-list', initVirtualList, cleanupVirtualList);

@@ -256,8 +256,3 @@ function initPagination(element, options) {
 }
 
 export { KupolaPagination, initPagination };
-
-if (typeof window !== 'undefined') {
-    window.KupolaPagination = KupolaPagination;
-    window.initPagination = initPagination;
-}

@@ -26,9 +26,8 @@ his-sys/
 sync-to-his.ps1
 scripts/sync-kupola.cjs
 
-# CI / plugins / templates
+# CI / templates
 .github/
-plugins/
 templates/
 
 # Internal metadata
@@ -51,6 +50,7 @@ INTEGRATION.md
 CHANGELOG.md
 CONTRIBUTING.md
 RELEASE_WORKFLOW.md
+USAGE_GUIDE.md
 
 # Git
 .gitignore

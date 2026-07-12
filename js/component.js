@@ -120,15 +120,10 @@ export class KupolaComponent {
 
       await this.lifecycle.bootstrap();
 
-      if (typeof window !== 'undefined' && window._setCurrentSetupContext && window.SetupContext) {
-        this.setupContext = new window.SetupContext(this);
-        window._setCurrentSetupContext(this.setupContext);
-        
-        if (typeof this.setup === 'function') {
-          const result = this.setup();
-          if (result instanceof Promise) {
-            await result;
-          }
+      if (typeof this.setup === 'function') {
+        const result = this.setup();
+        if (result instanceof Promise) {
+          await result;
         }
       }
 
@@ -136,10 +131,6 @@ export class KupolaComponent {
       await this.lifecycle.mount();
 
       this.setupContext?._executeMounted();
-      
-      if (typeof window !== 'undefined' && window._clearSetupContext) {
-        window._clearSetupContext();
-      }
     } catch (error) {
       console.error(`[KupolaComponent] Error mounting component "${this.constructor.name}":`, error);
       
@@ -257,9 +248,4 @@ export function applyMixin(componentClass, mixin) {
       componentClass.prototype[key] = mixin[key];
     }
   });
-}
-
-if (typeof window !== 'undefined') {
-  window.KupolaComponent = KupolaComponent;
-  window.applyMixin = applyMixin;
 }

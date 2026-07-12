@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Drawer {
     constructor(element, options = {}) {
         this.element = element;
@@ -269,14 +271,4 @@ function initDrawers() {
 
 export { Drawer, initDrawer, initDrawers, cleanupDrawer, createDrawer };
 
-if (typeof window !== 'undefined') {
-    window.Drawer = Drawer;
-    window.initDrawer = initDrawer;
-    window.initDrawers = initDrawers;
-    window.cleanupDrawer = cleanupDrawer;
-    window.createDrawer = createDrawer;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('drawer', initDrawer, cleanupDrawer);
-    }
-}
+kupolaInitializer.register('drawer', initDrawer, cleanupDrawer);

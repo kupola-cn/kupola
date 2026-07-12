@@ -1,4 +1,4 @@
-@import url('colors_and_type.css');
+@import url('colors-and-type.css');
 @import url('theme-light.css');
 @import url('theme-dark.css');
 @import url('brand-themes.css');
@@ -10,3 +10,4 @@
 @import url('responsive.css');
 @import url('accessibility.css');
 @import url('animations.css');
+@import url('table.css');

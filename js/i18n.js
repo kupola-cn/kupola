@@ -221,16 +221,3 @@ export {
   t, n, setLocale, getLocale,
   formatDate, formatNumber, formatCurrency 
 };
-
-if (typeof window !== 'undefined') {
-  window.KupolaI18n = KupolaI18n;
-  window.kupolaI18n = kupolaI18n;
-  window.createI18n = createI18n;
-  window.t = t;
-  window.n = n;
-  window.setLocale = setLocale;
-  window.getLocale = getLocale;
-  window.formatDate = formatDate;
-  window.formatNumber = formatNumber;
-  window.formatCurrency = formatCurrency;
-}

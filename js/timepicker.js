@@ -1,3 +1,6 @@
+import { globalEvents } from './global-events.js';
+import { kupolaInitializer } from './initializer.js';
+
 class Timepicker {
   constructor(element, options = {}) {
     this.element = element;
@@ -55,15 +58,8 @@ class Timepicker {
 
     this.inputWrap.addEventListener('click', this._inputWrapClickHandler);
 
-    if (window.globalEvents) {
-      this._documentClickListener = window.globalEvents.on(document, 'click', (e) => this.hideTimepicker(e), { scope: this.scope });
-      this._resizeListener = window.globalEvents.on(window, 'resize', () => this.resizeHandler(), { scope: this.scope });
-    } else {
-      document.addEventListener('click', (e) => this.hideTimepicker(e));
-      window.addEventListener('resize', () => this.resizeHandler());
-      this._documentClickHandler = (e) => this.hideTimepicker(e);
-      this._resizeHandler = () => this.resizeHandler();
-    }
+    this._documentClickListener = globalEvents.on(document, 'click', (e) => this.hideTimepicker(e), { scope: this.scope });
+    this._resizeListener = globalEvents.on(window, 'resize', () => this.resizeHandler(), { scope: this.scope });
 
     this._keydownHandler = (e) => {
       if (e.key === 'Escape' && this.panelEl && this.panelEl.style.display === 'block') {
@@ -495,13 +491,4 @@ function cleanupTimepicker(element) {
 
 export { Timepicker, initTimepicker, initTimepickers, cleanupTimepicker };
 
-if (typeof window !== 'undefined') {
-  window.Timepicker = Timepicker;
-  window.initTimepicker = initTimepicker;
-  window.initTimepickers = initTimepickers;
-  window.cleanupTimepicker = cleanupTimepicker;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('timepicker', initTimepicker, cleanupTimepicker);
-  }
-}
+kupolaInitializer.register('timepicker', initTimepicker, cleanupTimepicker);

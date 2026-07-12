@@ -216,7 +216,3 @@ export class KupolaComponentRegistry {
     this.mixins.clear();
   }
 }
-
-if (typeof window !== 'undefined') {
-  window.KupolaComponentRegistry = KupolaComponentRegistry;
-}

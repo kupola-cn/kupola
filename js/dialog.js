@@ -127,7 +127,3 @@ class Dialog {
 }
 
 export { Dialog };
-
-if (typeof window !== 'undefined') {
-  window.Dialog = Dialog;
-}

@@ -1,3 +1,6 @@
+import { globalEvents } from './global-events.js';
+import { kupolaInitializer } from './initializer.js';
+
 class Select {
   constructor(element, options = {}) {
     this.element = element;
@@ -130,11 +133,7 @@ class Select {
       }
     };
 
-    if (window.globalEvents) {
-      this._documentClickListener = window.globalEvents.on(document, 'click', this._documentClickHandler, { scope: this.scope });
-    } else {
-      document.addEventListener('click', this._documentClickHandler);
-    }
+    this._documentClickListener = globalEvents.on(document, 'click', this._documentClickHandler, { scope: this.scope });
 
     // Restore selected state from native select or data attributes
     this._restoreSelectedState();
@@ -585,14 +584,4 @@ function cleanupAllSelects() {
 
 export { Select, initSelect, initSelects, cleanupSelect, cleanupAllSelects };
 
-if (typeof window !== 'undefined') {
-  window.Select = Select;
-  window.initSelect = initSelect;
-  window.initSelects = initSelects;
-  window.cleanupSelect = cleanupSelect;
-  window.cleanupAllSelects = cleanupAllSelects;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('select', initSelect, cleanupSelect);
-  }
-}
+kupolaInitializer.register('select', initSelect, cleanupSelect);

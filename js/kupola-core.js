@@ -130,15 +130,3 @@ export {
   useMixin,
   defineComponent
 };
-
-if (typeof window !== 'undefined') {
-  window.kupolaRegistry = kupolaRegistry;
-  window.kupolaInitializer = kupolaInitializer;
-  window.kupolaBootstrap = kupolaBootstrap;
-  window.registerComponent = registerComponent;
-  window.registerLazyComponent = registerLazyComponent;
-  window.bootstrapComponents = bootstrapComponents;
-  window.defineMixin = defineMixin;
-  window.useMixin = useMixin;
-  window.defineComponent = defineComponent;
-}

@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class StatCard {
   constructor(element) {
     this.element = element;
@@ -208,14 +210,4 @@ function updateStatCard(selector, newValue) {
 
 export { StatCard, initStatCards, initStatCard, cleanupStatCard, updateStatCard };
 
-if (typeof window !== 'undefined') {
-  window.StatCard = StatCard;
-  window.initStatCard = initStatCard;
-  window.cleanupStatCard = cleanupStatCard;
-  window.initStatCards = initStatCards;
-  window.updateStatCard = updateStatCard;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('statcard', initStatCard, cleanupStatCard);
-  }
-}
+kupolaInitializer.register('statcard', initStatCard, cleanupStatCard);

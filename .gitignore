@@ -3,14 +3,15 @@
 .vscode/
 .qoder/
 
-# Internal
+# Internal / sync
 his-sys/
+sync-to-his.ps1
+scripts/sync-kupola.cjs
 
 # Dependencies / build
 node_modules/
 dist/
 *.tgz
-scripts/sync-kupola.cjs
 
 # MD Files
 RELEASE_WORKFLOW.md

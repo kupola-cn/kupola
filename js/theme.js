@@ -321,14 +321,3 @@ export {
   getBrand, setBrand, BRAND_OPTIONS, createBrandPicker,
   THEME_KEY, BRAND_KEY
 };
-
-if (typeof window !== 'undefined') {
-  window.getTheme = getTheme;
-  window.setTheme = setTheme;
-  window.initTheme = initTheme;
-  window.createThemeToggle = createThemeToggle;
-  window.getBrand = getBrand;
-  window.setBrand = setBrand;
-  window.BRAND_OPTIONS = BRAND_OPTIONS;
-  window.createBrandPicker = createBrandPicker;
-}

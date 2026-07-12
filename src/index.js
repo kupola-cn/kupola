@@ -6,7 +6,7 @@
  */
 
 import { KupolaLifecycle, createLifecycle, kupolaLifecycle } from '../js/kupola-lifecycle.js';
-import { KupolaUtils } from '../js/utils.js';
+import { KupolaUtils, stringUtils, arrayUtils, objectUtils, numberUtils, dateUtils, debounce, throttle, validatorUtils, cryptoUtils, preloadUtils } from '../js/utils.js';
 import { 
   KupolaDataBind, KupolaEventBus, KupolaStore, KupolaStoreManager,
   kupolaData, kupolaEvents, kupolaStoreManager, createStore, getStore, ref
@@ -76,6 +76,7 @@ export { KupolaComponent, applyMixin };
 export { KupolaComponentRegistry };
 export { KupolaLifecycle, createLifecycle, kupolaLifecycle };
 export { KupolaUtils };
+export { stringUtils, arrayUtils, objectUtils, numberUtils, dateUtils, debounce, throttle, validatorUtils, cryptoUtils, preloadUtils };
 export { KupolaDataBind, KupolaEventBus, KupolaStore, KupolaStoreManager };
 export { kupolaData, kupolaEvents, kupolaStoreManager, createStore, getStore };
 export { initTheme, setTheme, getTheme, setBrand, getBrand, createThemeToggle, createBrandPicker, BRAND_OPTIONS };

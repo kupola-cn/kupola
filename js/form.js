@@ -1,9 +1,13 @@
+import { kupolaInitializer } from './initializer.js';
+
 class KupolaForm {
     constructor(formElement) {
         this.form = formElement;
         this.fields = [];
         this.validators = {};
         this.errorMessages = {};
+        this._submitHandler = null;
+        this._fieldHandlers = new Map(); // field → { blur, input }
         this._init();
     }
 
@@ -100,15 +104,19 @@ class KupolaForm {
     }
 
     _bindEvents() {
-        this.form.addEventListener('submit', (e) => {
+        this._submitHandler = (e) => {
             if (!this.validate()) {
                 e.preventDefault();
             }
-        });
+        };
+        this.form.addEventListener('submit', this._submitHandler);
 
         this.fields.forEach(field => {
-            field.addEventListener('blur', () => this.validateField(field));
-            field.addEventListener('input', () => this.clearError(field));
+            const blurHandler = () => this.validateField(field);
+            const inputHandler = () => this.clearError(field);
+            this._fieldHandlers.set(field, { blur: blurHandler, input: inputHandler });
+            field.addEventListener('blur', blurHandler);
+            field.addEventListener('input', inputHandler);
         });
     }
 
@@ -264,13 +272,20 @@ class KupolaForm {
     }
 
     destroy() {
-        this.fields.forEach(field => {
-            field.removeEventListener('blur', () => this.validateField(field));
-            field.removeEventListener('input', () => this.clearError(field));
+        // 移除 submit handler
+        if (this._submitHandler && this.form) {
+            this.form.removeEventListener('submit', this._submitHandler);
+        }
+
+        // 移除每个字段的 blur/input handlers
+        this._fieldHandlers.forEach((handlers, field) => {
+            field.removeEventListener('blur', handlers.blur);
+            field.removeEventListener('input', handlers.input);
         });
-        
-        this.form.removeEventListener('submit', () => {});
-        
+
+        this._submitHandler = null;
+        this._fieldHandlers.clear();
+        this._fieldHandlers = null;
         this.fields = null;
         this.validators = null;
         this.errorMessages = null;
@@ -305,13 +320,4 @@ function validateForm(formElement) {
 
 export { KupolaForm, initFormValidation, getFormInstance, validateForm };
 
-if (typeof window !== 'undefined') {
-    window.KupolaForm = KupolaForm;
-    window.initFormValidation = initFormValidation;
-    window.getFormInstance = getFormInstance;
-    window.validateForm = validateForm;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('form-validation', initFormValidation);
-    }
-}
+kupolaInitializer.register('form-validation', initFormValidation);

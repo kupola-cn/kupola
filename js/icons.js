@@ -135,8 +135,8 @@ const Icons = { svg, render, PATHS };
 
 export { Icons, svg, render, PATHS };
 
-if (typeof window !== 'undefined') {
-  window.Icons = Icons;
+// Auto-render SVG sprite on DOM ready
+if (typeof document !== 'undefined') {
   if (document.readyState !== 'loading') {
     render();
   } else {

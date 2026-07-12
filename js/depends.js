@@ -8,6 +8,8 @@ class Scheduler {
     constructor() {
         this._queue = new Set();
         this._scheduled = false;
+        this._flushDepth = 0;
+        this._maxDepth = 10;
     }
 
     schedule(fn) {
@@ -19,9 +21,16 @@ class Scheduler {
     }
 
     _flush() {
+        if (this._flushDepth >= this._maxDepth) {
+            console.warn('[Kupola Scheduler] Max flush depth reached, possible infinite loop detected');
+            this._queue.clear();
+            this._scheduled = false;
+            return;
+        }
         const tasks = Array.from(this._queue);
         this._queue.clear();
         this._scheduled = false;
+        this._flushDepth++;
         // Deduplicate: same function only runs once
         const seen = new Set();
         for (const task of tasks) {
@@ -30,6 +39,7 @@ class Scheduler {
                 try { task(); } catch (e) { console.error('[DependsScheduler]', e); }
             }
         }
+        this._flushDepth--;
     }
 }
 
@@ -216,7 +226,10 @@ class DependsSource {
             return result;
         } catch (error) {
             if (attempt < this.retryCount) {
-                const delay = this.retryDelay * Math.pow(2, attempt);
+                // Exponential backoff + random jitter to prevent thundering herd
+                const baseDelay = this.retryDelay * Math.pow(2, attempt);
+                const jitter = Math.random() * baseDelay * 0.5;
+                const delay = baseDelay + jitter;
                 await new Promise(resolve => setTimeout(resolve, delay));
                 return this._fetchWithRetry(params, attempt + 1);
             }
@@ -400,8 +413,11 @@ class WebSocketSource extends DependsSource {
         this.ws = null;
         this.reconnect = config.reconnect !== false;
         this.reconnectDelay = config.reconnectDelay || 3000;
+        this._reconnectAttempt = 0;
+        this._maxReconnectDelay = config.maxReconnectDelay || 30000;
         this.messageHandler = null;
         this._connected = false;
+        this._destroyed = false;
     }
 
     async fetch() {
@@ -411,6 +427,7 @@ class WebSocketSource extends DependsSource {
 
                 this.ws.onopen = () => {
                     this._connected = true;
+                    this._reconnectAttempt = 0; // Reset on successful connection
                     // Resolve with current cached data or null
                     resolve(this.cache.getStale(this.cacheKey));
                 };
@@ -432,10 +449,15 @@ class WebSocketSource extends DependsSource {
 
                 this.ws.onclose = () => {
                     this._connected = false;
-                    if (this.reconnect) {
+                    if (this.reconnect && !this._destroyed) {
+                        // Exponential backoff + jitter for reconnection
+                        const baseDelay = this.reconnectDelay * Math.pow(2, this._reconnectAttempt);
+                        const jitter = Math.random() * baseDelay * 0.3;
+                        const delay = Math.min(baseDelay + jitter, this._maxReconnectDelay);
+                        this._reconnectAttempt++;
                         setTimeout(() => {
-                            this.fetch().catch(() => {});
-                        }, this.reconnectDelay);
+                            if (!this._destroyed) this.fetch().catch(() => {});
+                        }, delay);
                     }
                 };
             } catch (e) {
@@ -451,6 +473,7 @@ class WebSocketSource extends DependsSource {
     }
 
     destroy() {
+        this._destroyed = true;
         super.destroy();
         if (this.ws) {
             this.ws.onmessage = null;
@@ -696,15 +719,3 @@ export {
 };
 
 // HTTP Client Plugin System exports are above (configureHttpClient, getHttpClient, resetHttpClient)
-
-if (typeof window !== 'undefined') {
-    window.useDeps = useDeps;
-    window.useQuery = useQuery;
-    window.clearCache = clearCache;
-    window.DependsError = DependsError;
-    window.CacheManager = CacheManager;
-    window.Scheduler = Scheduler;
-    window.configureHttpClient = configureHttpClient;
-    window.getHttpClient = getHttpClient;
-    window.resetHttpClient = resetHttpClient;
-}

@@ -281,16 +281,3 @@ function getListenerCount(target, eventName) {
 }
 
 export { GlobalEvents, globalEvents, on, once, off, emit, emitGlobal, offByScope, offAll, getListenerCount };
-
-if (typeof window !== 'undefined') {
-    window.GlobalEvents = GlobalEvents;
-    window.globalEvents = globalEvents;
-    window.kupolaOn = on;
-    window.kupolaOnce = once;
-    window.kupolaOff = off;
-    window.kupolaEmit = emit;
-    window.kupolaEmitGlobal = emitGlobal;
-    window.kupolaOffByScope = offByScope;
-    window.kupolaOffAll = offAll;
-    window.kupolaGetListenerCount = getListenerCount;
-}

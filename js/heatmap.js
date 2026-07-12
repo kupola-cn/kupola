@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Heatmap {
   constructor(element, options = {}) {
     this.element = element;
@@ -394,15 +396,4 @@ function createHeatmap(selector, options = {}) {
 
 export { Heatmap, initHeatmaps, initHeatmap, cleanupHeatmap, createHeatmap, generateMockHeatmapData };
 
-if (typeof window !== 'undefined') {
-  window.Heatmap = Heatmap;
-  window.initHeatmap = initHeatmap;
-  window.cleanupHeatmap = cleanupHeatmap;
-  window.initHeatmaps = initHeatmaps;
-  window.createHeatmap = createHeatmap;
-  window.generateMockHeatmapData = generateMockHeatmapData;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('heatmap', initHeatmap, cleanupHeatmap);
-  }
-}
+kupolaInitializer.register('heatmap', initHeatmap, cleanupHeatmap);

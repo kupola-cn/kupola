@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Collapse {
     constructor(element, options = {}) {
         this.element = element;
@@ -229,13 +231,4 @@ function initCollapses() {
 
 export { Collapse, initCollapses, initCollapse, cleanupCollapse };
 
-if (typeof window !== 'undefined') {
-    window.Collapse = Collapse;
-    window.initCollapse = initCollapse;
-    window.cleanupCollapse = cleanupCollapse;
-    window.initCollapses = initCollapses;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('collapse', initCollapse, cleanupCollapse);
-    }
-}
+kupolaInitializer.register('collapse', initCollapse, cleanupCollapse);

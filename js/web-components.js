@@ -277,12 +277,3 @@ export {
   KupolaDrawerElement,
   KupolaModalElement
 };
-
-if (typeof window !== 'undefined') {
-  window.registerWebComponents = registerWebComponents;
-  window.KupolaDropdownElement = KupolaDropdownElement;
-  window.KupolaTooltipElement = KupolaTooltipElement;
-  window.KupolaCollapseElement = KupolaCollapseElement;
-  window.KupolaDrawerElement = KupolaDrawerElement;
-  window.KupolaModalElement = KupolaModalElement;
-}

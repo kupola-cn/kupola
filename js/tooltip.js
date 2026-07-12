@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Tooltip {
     constructor(element, options = {}) {
         this.element = element;
@@ -341,13 +343,4 @@ function cleanupTooltip(element) {
 
 export { Tooltip, initTooltip, initTooltips, cleanupTooltip };
 
-if (typeof window !== 'undefined') {
-    window.Tooltip = Tooltip;
-    window.initTooltip = initTooltip;
-    window.initTooltips = initTooltips;
-    window.cleanupTooltip = cleanupTooltip;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('tooltip', initTooltip, cleanupTooltip);
-    }
-}
+kupolaInitializer.register('tooltip', initTooltip, cleanupTooltip);

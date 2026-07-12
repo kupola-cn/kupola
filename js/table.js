@@ -6,6 +6,7 @@
  */
 
 import { ref } from './data-bind.js';
+import { kupolaInitializer } from './initializer.js';
 
 class KupolaTable {
     constructor(element, options = {}) {
@@ -70,6 +71,10 @@ class KupolaTable {
         // Virtual scroll
         this.virtualScroll = options.virtualScroll || null; // { rowHeight: 40, overscan: 5 }
         this._scrollContainer = null;
+        this._scrollHandler = null;   // 保存引用以便 destroy 移除
+        this._resizeCleanups = [];   // 列宽拖拽清理函数
+        this._filterDebounceTimer = null;
+        this._reactiveCleanups = [];  // ref() subscribe 清理
 
         // Merge cells
         this.mergeCells = options.mergeCells || null; // function(data) => [{row, col, rowSpan, colSpan}]
@@ -109,11 +114,15 @@ class KupolaTable {
     setData(data) {
         if (data && typeof data === 'object' && 'value' in data) {
             this._data = Array.isArray(data.value) ? data.value : [];
-            data._subscribers?.add((newVal) => {
-                this._data = Array.isArray(newVal) ? newVal : [];
-                this._total = this._data.length;
-                this.render();
-            });
+            if (data.subscribe) {
+                this._reactiveCleanups.push(
+                    data.subscribe((newVal) => {
+                        this._data = Array.isArray(newVal) ? newVal : [];
+                        this._total = this._data.length;
+                        this.render();
+                    })
+                );
+            }
         } else if (Array.isArray(data)) {
             this._data = data;
         } else {
@@ -129,7 +138,11 @@ class KupolaTable {
     setLoading(loading) {
         if (loading && typeof loading === 'object' && 'value' in loading) {
             this._loading = loading.value;
-            loading._subscribers?.add((val) => { this._loading = val; this.render(); });
+            if (loading.subscribe) {
+                this._reactiveCleanups.push(
+                    loading.subscribe((val) => { this._loading = val; this.render(); })
+                );
+            }
         } else {
             this._loading = !!loading;
         }
@@ -305,72 +318,76 @@ class KupolaTable {
         const thead = document.createElement('thead');
         const tr = document.createElement('tr');
 
-        // Selection column
-        if (this.selection) {
-            const th = document.createElement('th');
-            th.className = 'kupola-table-col-selection';
-            if (this.selection === 'checkbox') {
-                const cb = document.createElement('input');
-                cb.type = 'checkbox';
-                const pageData = this.getProcessedData();
-                const allKeys = pageData.map(r => r[this.rowKey]);
-                cb.checked = allKeys.length > 0 && allKeys.every(k => this._selectedKeys.has(k));
-                cb.addEventListener('change', () => cb.checked ? this.selectAll() : this.deselectAll());
-                th.appendChild(cb);
-            }
-            tr.appendChild(th);
-        }
-
-        // Expand column
+        if (this.selection) this._renderSelectionHeader(tr);
         if (this.expandable) {
             const th = document.createElement('th');
             th.className = 'kupola-table-col-expand';
             tr.appendChild(th);
         }
 
-        // Data columns
         this.columns.forEach(col => {
-            const th = document.createElement('th');
-            th.textContent = col.title || col.key;
-            if (col.width) th.style.width = typeof col.width === 'number' ? col.width + 'px' : col.width;
-            if (col.minWidth) th.style.minWidth = typeof col.minWidth === 'number' ? col.minWidth + 'px' : col.minWidth;
-            if (col.align) th.style.textAlign = col.align;
-            if (col.fixed) th.setAttribute('data-fixed', col.fixed);
-
-            // Sortable
-            if (col.sortable) {
-                th.classList.add('kupola-table-sortable');
-                const sortInfo = this._sorts.find(s => s.key === col.key);
-                if (sortInfo) th.classList.add(`kupola-table-sort-${sortInfo.order}`);
-                th.addEventListener('click', (e) => {
-                    if (this.resizable && e.target.classList.contains('kupola-table-resize-handle')) return;
-                    this._handleSort(col.key);
-                });
-                const indicator = document.createElement('span');
-                indicator.className = 'kupola-table-sort-icon';
-                if (sortInfo) {
-                    indicator.textContent = this.multiSort
-                        ? ` ${this._sorts.indexOf(sortInfo) + 1}${sortInfo.order === 'asc' ? '▲' : '▼'}`
-                        : (sortInfo.order === 'asc' ? ' ▲' : ' ▼');
-                } else {
-                    indicator.textContent = ' ⇅';
-                }
-                th.appendChild(indicator);
-            }
-
-            // Resize handle
-            if (this.resizable && col.key !== this.columns[this.columns.length - 1]?.key) {
-                const handle = document.createElement('span');
-                handle.className = 'kupola-table-resize-handle';
-                handle.setAttribute('data-col-key', col.key);
-                th.appendChild(handle);
-            }
-
+            const th = this._renderColumnHeader(col);
             tr.appendChild(th);
         });
 
         thead.appendChild(tr);
         return thead;
+    }
+
+    _renderSelectionHeader(tr) {
+        const th = document.createElement('th');
+        th.className = 'kupola-table-col-selection';
+        if (this.selection === 'checkbox') {
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            const pageData = this.getProcessedData();
+            const allKeys = pageData.map(r => r[this.rowKey]);
+            cb.checked = allKeys.length > 0 && allKeys.every(k => this._selectedKeys.has(k));
+            cb.addEventListener('change', () => cb.checked ? this.selectAll() : this.deselectAll());
+            th.appendChild(cb);
+        }
+        tr.appendChild(th);
+    }
+
+    _renderColumnHeader(col) {
+        const th = document.createElement('th');
+        th.textContent = col.title || col.key;
+        if (col.width) th.style.width = typeof col.width === 'number' ? col.width + 'px' : col.width;
+        if (col.minWidth) th.style.minWidth = typeof col.minWidth === 'number' ? col.minWidth + 'px' : col.minWidth;
+        if (col.align) th.style.textAlign = col.align;
+        if (col.fixed) th.setAttribute('data-fixed', col.fixed);
+
+        if (col.sortable) this._renderSortIndicator(th, col);
+
+        // Resize handle
+        if (this.resizable && col.key !== this.columns[this.columns.length - 1]?.key) {
+            const handle = document.createElement('span');
+            handle.className = 'kupola-table-resize-handle';
+            handle.setAttribute('data-col-key', col.key);
+            th.appendChild(handle);
+        }
+
+        return th;
+    }
+
+    _renderSortIndicator(th, col) {
+        th.classList.add('kupola-table-sortable');
+        const sortInfo = this._sorts.find(s => s.key === col.key);
+        if (sortInfo) th.classList.add(`kupola-table-sort-${sortInfo.order}`);
+        th.addEventListener('click', (e) => {
+            if (this.resizable && e.target.classList.contains('kupola-table-resize-handle')) return;
+            this._handleSort(col.key);
+        });
+        const indicator = document.createElement('span');
+        indicator.className = 'kupola-table-sort-icon';
+        if (sortInfo) {
+            indicator.textContent = this.multiSort
+                ? ` ${this._sorts.indexOf(sortInfo) + 1}${sortInfo.order === 'asc' ? '▲' : '▼'}`
+                : (sortInfo.order === 'asc' ? ' ▲' : ' ▼');
+        } else {
+            indicator.textContent = ' ⇅';
+        }
+        th.appendChild(indicator);
     }
 
     _renderTbody(data) {
@@ -424,110 +441,13 @@ class KupolaTable {
             tr.classList.add('kupola-table-draggable');
         }
 
-        // Selection cell
-        if (this.selection) {
-            const td = document.createElement('td');
-            td.className = 'kupola-table-col-selection';
-            const input = document.createElement('input');
-            input.type = this.selection;
-            input.checked = isSelected;
-            input.addEventListener('change', () => {
-                if (this.selection === 'radio') {
-                    this._selectedKeys.clear();
-                    this._selectedKeys.add(key);
-                } else {
-                    isSelected ? this._selectedKeys.delete(key) : this._selectedKeys.add(key);
-                }
-                this.selectedKeys.value = [...this._selectedKeys];
-                if (this.onSelect) this.onSelect([...this._selectedKeys], this.getSelectedRows());
-                this.render();
-            });
-            td.appendChild(input);
-            tr.appendChild(td);
-        }
-
-        // Expand cell
-        if (this.expandable) {
-            const td = document.createElement('td');
-            td.className = 'kupola-table-col-expand';
-            const btn = document.createElement('button');
-            btn.className = 'kupola-table-expand-btn';
-            const isExpanded = this._expandedKeys.has(key);
-            btn.textContent = isExpanded ? '▼' : '▶';
-            btn.type = 'button';
-            btn.addEventListener('click', () => this._toggleExpand(key));
-            td.appendChild(btn);
-            tr.appendChild(td);
-        }
+        if (this.selection) this._renderSelectionCell(tr, key, isSelected);
+        if (this.expandable) this._renderExpandCell(tr, key);
 
         // Data cells
         this.columns.forEach((col, colIndex) => {
-            // Skip merged cells
             if (skipCells.has(`${rowIndex}-${colIndex}`)) return;
-
-            const td = document.createElement('td');
-            if (col.align) td.style.textAlign = col.align;
-            if (col.fixed) {
-                td.setAttribute('data-fixed', col.fixed);
-                td.classList.add(`kupola-table-fixed-${col.fixed}`);
-            }
-
-            // Merge cells
-            const mergeInfo = mergeMap.get(`${rowIndex}-${colIndex}`);
-            if (mergeInfo) {
-                if (mergeInfo.rowSpan > 1) td.rowSpan = mergeInfo.rowSpan;
-                if (mergeInfo.colSpan > 1) td.colSpan = mergeInfo.colSpan;
-                for (let r = 0; r < (mergeInfo.rowSpan || 1); r++) {
-                    for (let c = 0; c < (mergeInfo.colSpan || 1); c++) {
-                        if (r === 0 && c === 0) continue;
-                        skipCells.add(`${rowIndex + r}-${colIndex + c}`);
-                    }
-                }
-            }
-
-            // Tree indent
-            if (this.tree && colIndex === 0 && row._level > 0) {
-                const indent = document.createElement('span');
-                indent.className = 'kupola-table-tree-indent';
-                indent.style.paddingLeft = (row._level * 20) + 'px';
-                td.appendChild(indent);
-                if (row._hasChildren) {
-                    const toggle = document.createElement('button');
-                    toggle.className = 'kupola-table-tree-toggle';
-                    toggle.textContent = this._treeExpandedKeys.has(row[this.rowKey]) ? '▼' : '▶';
-                    toggle.type = 'button';
-                    toggle.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this._toggleTreeExpand(row[this.rowKey]);
-                    });
-                    td.appendChild(toggle);
-                } else {
-                    const spacer = document.createElement('span');
-                    spacer.className = 'kupola-table-tree-toggle-placeholder';
-                    td.appendChild(spacer);
-                }
-            }
-
-            // Editable cell
-            const isEditing = this._editingCell &&
-                this._editingCell.rowKey === key && this._editingCell.colKey === col.key;
-
-            if (isEditing) {
-                td.appendChild(this._renderEditCell(col, row));
-            } else if (col.render) {
-                const content = col.render(row[col.key], row, rowIndex);
-                if (typeof content === 'string') td.innerHTML = content;
-                else if (content instanceof HTMLElement) td.appendChild(content);
-            } else {
-                td.textContent = row[col.key] ?? '';
-            }
-
-            // Double-click to edit
-            if (this.editable && !isEditing && col.editable !== false) {
-                td.classList.add('kupola-table-editable-cell');
-                td.addEventListener('dblclick', () => this._startEdit(key, col.key, row[col.key]));
-            }
-
+            const td = this._renderDataCell(row, rowIndex, key, col, colIndex, skipCells, mergeMap);
             tr.appendChild(td);
         });
 
@@ -540,6 +460,110 @@ class KupolaTable {
         }
 
         return tr;
+    }
+
+    _renderSelectionCell(tr, key, isSelected) {
+        const td = document.createElement('td');
+        td.className = 'kupola-table-col-selection';
+        const input = document.createElement('input');
+        input.type = this.selection;
+        input.checked = isSelected;
+        input.addEventListener('change', () => {
+            if (this.selection === 'radio') {
+                this._selectedKeys.clear();
+                this._selectedKeys.add(key);
+            } else {
+                isSelected ? this._selectedKeys.delete(key) : this._selectedKeys.add(key);
+            }
+            this.selectedKeys.value = [...this._selectedKeys];
+            if (this.onSelect) this.onSelect([...this._selectedKeys], this.getSelectedRows());
+            this.render();
+        });
+        td.appendChild(input);
+        tr.appendChild(td);
+    }
+
+    _renderExpandCell(tr, key) {
+        const td = document.createElement('td');
+        td.className = 'kupola-table-col-expand';
+        const btn = document.createElement('button');
+        btn.className = 'kupola-table-expand-btn';
+        btn.textContent = this._expandedKeys.has(key) ? '▼' : '▶';
+        btn.type = 'button';
+        btn.addEventListener('click', () => this._toggleExpand(key));
+        td.appendChild(btn);
+        tr.appendChild(td);
+    }
+
+    _renderDataCell(row, rowIndex, key, col, colIndex, skipCells, mergeMap) {
+        const td = document.createElement('td');
+        if (col.align) td.style.textAlign = col.align;
+        if (col.fixed) {
+            td.setAttribute('data-fixed', col.fixed);
+            td.classList.add(`kupola-table-fixed-${col.fixed}`);
+        }
+
+        // Merge cells
+        const mergeInfo = mergeMap.get(`${rowIndex}-${colIndex}`);
+        if (mergeInfo) {
+            if (mergeInfo.rowSpan > 1) td.rowSpan = mergeInfo.rowSpan;
+            if (mergeInfo.colSpan > 1) td.colSpan = mergeInfo.colSpan;
+            for (let r = 0; r < (mergeInfo.rowSpan || 1); r++) {
+                for (let c = 0; c < (mergeInfo.colSpan || 1); c++) {
+                    if (r === 0 && c === 0) continue;
+                    skipCells.add(`${rowIndex + r}-${colIndex + c}`);
+                }
+            }
+        }
+
+        // Tree indent (first column only)
+        if (this.tree && colIndex === 0 && row._level > 0) {
+            this._renderTreeIndent(td, row);
+        }
+
+        // Cell content: editing / custom render / plain text
+        const isEditing = this._editingCell &&
+            this._editingCell.rowKey === key && this._editingCell.colKey === col.key;
+
+        if (isEditing) {
+            td.appendChild(this._renderEditCell(col, row));
+        } else if (col.render) {
+            const content = col.render(row[col.key], row, rowIndex);
+            if (typeof content === 'string') td.innerHTML = content;
+            else if (content instanceof HTMLElement) td.appendChild(content);
+        } else {
+            td.textContent = row[col.key] ?? '';
+        }
+
+        // Double-click to edit
+        if (this.editable && !isEditing && col.editable !== false) {
+            td.classList.add('kupola-table-editable-cell');
+            td.addEventListener('dblclick', () => this._startEdit(key, col.key, row[col.key]));
+        }
+
+        return td;
+    }
+
+    _renderTreeIndent(td, row) {
+        const indent = document.createElement('span');
+        indent.className = 'kupola-table-tree-indent';
+        indent.style.paddingLeft = (row._level * 20) + 'px';
+        td.appendChild(indent);
+        if (row._hasChildren) {
+            const toggle = document.createElement('button');
+            toggle.className = 'kupola-table-tree-toggle';
+            toggle.textContent = this._treeExpandedKeys.has(row[this.rowKey]) ? '▼' : '▶';
+            toggle.type = 'button';
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this._toggleTreeExpand(row[this.rowKey]);
+            });
+            td.appendChild(toggle);
+        } else {
+            const spacer = document.createElement('span');
+            spacer.className = 'kupola-table-tree-toggle-placeholder';
+            td.appendChild(spacer);
+        }
     }
 
     _renderStatusRow(text, className) {
@@ -583,12 +607,16 @@ class KupolaTable {
         bottomSpacer.style.height = '0px';
         tbody.appendChild(bottomSpacer);
 
-        // Attach scroll listener
+        // Attach scroll listener (移除旧的再绑新的，避免重复)
         const wrapper = this.element.querySelector('.kupola-table-container');
         if (wrapper) {
             wrapper.style.maxHeight = this.virtualScroll.maxHeight || '400px';
             wrapper.style.overflowY = 'auto';
-            wrapper.addEventListener('scroll', () => this._updateVirtualScroll());
+            if (this._scrollHandler) {
+                wrapper.removeEventListener('scroll', this._scrollHandler);
+            }
+            this._scrollHandler = () => this._updateVirtualScroll();
+            wrapper.addEventListener('scroll', this._scrollHandler);
         }
 
         return tbody;
@@ -807,6 +835,8 @@ class KupolaTable {
                 };
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);
+                // 注册清理函数，destroy 时可强制移除
+                this._resizeCleanups.push(onMouseUp);
             });
         });
     }
@@ -829,26 +859,28 @@ class KupolaTable {
                 row.classList.add('kupola-table-drag-over');
             });
             row.addEventListener('dragleave', () => row.classList.remove('kupola-table-drag-over'));
-            row.addEventListener('drop', (e) => {
-                e.preventDefault();
-                row.classList.remove('kupola-table-drag-over');
-                if (!this._dragState) return;
-                const toKey = row.getAttribute('data-row-key');
-                if (this._dragState.fromKey === toKey) return;
-                const fromIdx = this._data.findIndex(r => String(r[this.rowKey]) === this._dragState.fromKey);
-                const toIdx = this._data.findIndex(r => String(r[this.rowKey]) === toKey);
-                if (fromIdx >= 0 && toIdx >= 0) {
-                    const [moved] = this._data.splice(fromIdx, 1);
-                    this._data.splice(toIdx, 0, moved);
-                    if (this.onRowDragEnd) this.onRowDragEnd(moved, fromIdx, toIdx, this._data);
-                    this.render();
-                }
-            });
+            row.addEventListener('drop', (e) => this._handleRowDrop(e, row));
             row.addEventListener('dragend', () => {
                 row.classList.remove('kupola-table-dragging');
                 this._dragState = null;
             });
         });
+    }
+
+    _handleRowDrop(e, targetRow) {
+        e.preventDefault();
+        targetRow.classList.remove('kupola-table-drag-over');
+        if (!this._dragState) return;
+        const toKey = targetRow.getAttribute('data-row-key');
+        if (this._dragState.fromKey === toKey) return;
+        const fromIdx = this._data.findIndex(r => String(r[this.rowKey]) === this._dragState.fromKey);
+        const toIdx = this._data.findIndex(r => String(r[this.rowKey]) === toKey);
+        if (fromIdx >= 0 && toIdx >= 0) {
+            const [moved] = this._data.splice(fromIdx, 1);
+            this._data.splice(toIdx, 0, moved);
+            if (this.onRowDragEnd) this.onRowDragEnd(moved, fromIdx, toIdx, this._data);
+            this.render();
+        }
     }
 
     // ================================================================
@@ -914,10 +946,9 @@ class KupolaTable {
             filterInput.className = 'ds-input kupola-table-filter-input';
             filterInput.placeholder = this.options.filterPlaceholder || '搜索...';
             filterInput.value = this._filterText;
-            let debounceTimer;
             filterInput.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
+                clearTimeout(this._filterDebounceTimer);
+                this._filterDebounceTimer = setTimeout(() => {
                     this._filterText = filterInput.value;
                     this._currentPage = 1;
                     this.filterText.value = this._filterText;
@@ -1105,91 +1136,41 @@ class KupolaTable {
     }
 
     destroy() {
+        // 移除虚拟滚动 scroll listener
+        if (this._scrollHandler) {
+            const wrapper = this.element.querySelector('.kupola-table-container');
+            if (wrapper) wrapper.removeEventListener('scroll', this._scrollHandler);
+            this._scrollHandler = null;
+        }
+
+        // 清除 filter debounce timer
+        if (this._filterDebounceTimer) {
+            clearTimeout(this._filterDebounceTimer);
+            this._filterDebounceTimer = null;
+        }
+
+        // 清理列宽拖拽残留的 document listener
+        this._resizeCleanups.forEach(fn => fn());
+        this._resizeCleanups = [];
+
+        // 清理 ref() 订阅
+        this._reactiveCleanups.forEach(sub => sub.unsubscribe());
+        this._reactiveCleanups = [];
+
+        // 清理 DOM 和 class
         this.element.innerHTML = '';
         this.element.classList.remove('kupola-table-wrapper', 'kupola-table-virtual-wrapper');
+
+        // 清理数据引用
+        this._data = [];
+        this._virtualData = null;
+        this._dragState = null;
+        this._editingCell = null;
+        this._editBuffer = {};
     }
 }
 
-// ================================================================
-// CSS
-// ================================================================
-
-let stylesInjected = false;
-function injectTableStyles() {
-    if (stylesInjected || typeof document === 'undefined') return;
-    const style = document.createElement('style');
-    style.textContent = `
-        .kupola-table-wrapper { width: 100%; }
-        .kupola-table-container { overflow-x: auto; }
-        .kupola-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .kupola-table th, .kupola-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e8e8e8; }
-        .kupola-table th { background: #fafafa; font-weight: 600; color: #333; white-space: nowrap; }
-        .kupola-table-striped tbody tr:nth-child(even) { background: #fafafa; }
-        .kupola-table-hover tbody tr:hover { background: #f0f7ff; }
-        .kupola-table-bordered { border: 1px solid #e8e8e8; }
-        .kupola-table-bordered th, .kupola-table-bordered td { border: 1px solid #e8e8e8; }
-        .kupola-table-compact th, .kupola-table-compact td { padding: 8px 12px; }
-        .kupola-table-sortable { cursor: pointer; user-select: none; position: relative; }
-        .kupola-table-sortable:hover { background: #f0f0f0; }
-        .kupola-table-sort-icon { font-size: 12px; opacity: 0.5; margin-left: 4px; }
-        .kupola-table-sort-asc .kupola-table-sort-icon,
-        .kupola-table-sort-desc .kupola-table-sort-icon { opacity: 1; color: #1890ff; }
-        .kupola-table-empty, .kupola-table-loading { text-align: center; padding: 40px 16px !important; color: #999; }
-        .kupola-table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-        .kupola-table-toolbar-right { display: flex; align-items: center; gap: 8px; }
-        .kupola-table-filter-input { padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; width: 240px; }
-        .kupola-table-filter-input:focus { outline: none; border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
-        .kupola-table-info { color: #999; font-size: 13px; }
-        .kupola-table-selection-info { color: #1890ff; font-size: 13px; font-weight: 500; }
-        .kupola-table-col-selection { width: 40px; text-align: center; }
-        .kupola-table-col-expand { width: 40px; text-align: center; }
-        .kupola-table-expand-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px 6px; color: #666; }
-        .kupola-table-expand-btn:hover { color: #1890ff; }
-        .kupola-table-expand-row td { background: #fafafa; padding: 16px; }
-        .kupola-table-row-selected { background: #e6f7ff !important; }
-        .kupola-table-row-selected:hover { background: #bae7ff !important; }
-        /* Resize */
-        .kupola-table-resize-handle { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: col-resize; background: transparent; }
-        .kupola-table-resize-handle:hover { background: #1890ff; opacity: 0.3; }
-        /* Drag */
-        .kupola-table-draggable { transition: opacity 0.2s; }
-        .kupola-table-dragging { opacity: 0.4; }
-        .kupola-table-drag-over { border-top: 2px solid #1890ff !important; }
-        /* Edit */
-        .kupola-table-editable-cell { cursor: text; }
-        .kupola-table-editable-cell:hover { background: #e6f7ff; }
-        .kupola-table-edit-cell { display: flex; gap: 4px; align-items: center; }
-        .kupola-table-edit-input { flex: 1; padding: 2px 6px; font-size: 13px; }
-        .kupola-table-edit-actions { display: flex; gap: 2px; }
-        .kupola-table-edit-save, .kupola-table-edit-cancel { background: none; border: 1px solid #d9d9d9; border-radius: 3px; cursor: pointer; padding: 2px 6px; font-size: 12px; }
-        .kupola-table-edit-save { color: #52c41a; border-color: #52c41a; }
-        .kupola-table-edit-cancel { color: #ff4d4f; border-color: #ff4d4f; }
-        .kupola-table-edit-save:hover { background: #f6ffed; }
-        .kupola-table-edit-cancel:hover { background: #fff2f0; }
-        /* Tree */
-        .kupola-table-tree-indent { display: inline-block; }
-        .kupola-table-tree-toggle { background: none; border: none; cursor: pointer; font-size: 10px; padding: 0 4px; color: #666; }
-        .kupola-table-tree-toggle:hover { color: #1890ff; }
-        .kupola-table-tree-toggle-placeholder { display: inline-block; width: 18px; }
-        /* Virtual */
-        .kupola-table-virtual-wrapper .kupola-table-container { overflow-y: auto; }
-        /* Pagination */
-        .kupola-table-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 16px; padding: 8px 0; }
-        .kupola-table-pages { display: flex; gap: 4px; align-items: center; }
-        .kupola-table-page-btn { min-width: 32px; height: 32px; border: 1px solid #d9d9d9; border-radius: 4px; background: #fff; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-        .kupola-table-page-btn:hover:not(:disabled):not(.active) { border-color: #1890ff; color: #1890ff; }
-        .kupola-table-page-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
-        .kupola-table-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .kupola-table-page-ellipsis { padding: 0 4px; color: #999; }
-        .kupola-table-page-size { padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; }
-        .kupola-table-page-info { color: #999; font-size: 13px; }
-    `;
-    document.head.appendChild(style);
-    stylesInjected = true;
-}
-
 function initTable(element, options) {
-    injectTableStyles();
     return new KupolaTable(element, options);
 }
 
@@ -1204,7 +1185,4 @@ function initAllTables() {
 
 export { KupolaTable, initTable, initAllTables };
 
-if (typeof window !== 'undefined') {
-    window.KupolaTable = KupolaTable;
-    window.initTable = initTable;
-}
+kupolaInitializer.register('table', initTable);

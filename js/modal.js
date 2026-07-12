@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Modal {
   constructor(element, options = {}) {
     this.element = element;
@@ -15,6 +17,8 @@ class Modal {
     this.onBeforeClose = options.onBeforeClose || null;
     this.onOpened = options.onOpened || null;
     this.onClosed = options.onClosed || null;
+    
+    this._isOpen = false; // 实例级跟踪，防止 _openCount 不匹配
     
     this._keydownHandler = (e) => {
       if (this.escClose && e.key === 'Escape' && this.isVisible()) {
@@ -75,7 +79,10 @@ class Modal {
       });
     }
     
-    Modal._openCount = (Modal._openCount || 0) + 1;
+    if (!this._isOpen) {
+      Modal._openCount = (Modal._openCount || 0) + 1;
+      this._isOpen = true;
+    }
     document.body.style.overflow = 'hidden';
     
     if (this.onOpened) {
@@ -109,9 +116,12 @@ class Modal {
       }
     }, 300);
     
-    Modal._openCount = Math.max(0, (Modal._openCount || 0) - 1);
-    if (Modal._openCount === 0) {
-      document.body.style.overflow = '';
+    if (this._isOpen) {
+      Modal._openCount = Math.max(0, (Modal._openCount || 0) - 1);
+      this._isOpen = false;
+      if (Modal._openCount === 0) {
+        document.body.style.overflow = '';
+      }
     }
     
     if (this.onClosed) {
@@ -140,8 +150,13 @@ class Modal {
     if (this.mask) {
       this.mask.removeEventListener('click', this._maskClickHandler);
     }
-    if (this.isVisible()) {
-      this.close();
+    // 防御性：如果 destroy 时 modal 仍处于打开状态，强制修正计数
+    if (this._isOpen) {
+      Modal._openCount = Math.max(0, (Modal._openCount || 0) - 1);
+      this._isOpen = false;
+      if (Modal._openCount === 0) {
+        document.body.style.overflow = '';
+      }
     }
   }
 }
@@ -323,17 +338,4 @@ function initModals() {
 
 export { Modal, initModals, initModal, cleanupModal, createModal, confirmModal, alertModal };
 
-if (typeof window !== 'undefined') {
-  window.Modal = Modal;
-  window.initModal = initModal;
-  window.cleanupModal = cleanupModal;
-  window.initModals = initModals;
-  window.createModal = createModal;
-  window.confirmModal = confirmModal;
-  window.alertModal = alertModal;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('modal', initModal, cleanupModal);
-  }
-}
-
+kupolaInitializer.register('modal', initModal, cleanupModal);

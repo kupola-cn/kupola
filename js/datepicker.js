@@ -1,3 +1,6 @@
+import { globalEvents } from './global-events.js';
+import { kupolaInitializer } from './initializer.js';
+
 class Datepicker {
   constructor(element, options = {}) {
     this.element = element;
@@ -35,6 +38,7 @@ class Datepicker {
     
     this._iconClickHandler = null;
     this._inputClickHandler = null;
+    this._endInputClickHandler = null;
     this._documentClickHandler = null;
     this._documentClickListener = null;
     this._resizeHandler = null;
@@ -70,20 +74,16 @@ class Datepicker {
 
     if (this.icon) this.icon.addEventListener('click', this._iconClickHandler);
     if (this.input) this.input.addEventListener('click', this._inputClickHandler);
-    if (this.endInput) this.endInput.addEventListener('click', (e) => {
-      this.isSelectingEnd = true;
-      this.toggleCalendar(e);
-    });
-
-    if (window.globalEvents) {
-      this._documentClickListener = window.globalEvents.on(document, 'click', (e) => this.hideCalendar(e), { scope: this.scope });
-      this._resizeListener = window.globalEvents.on(window, 'resize', () => this.resizeHandler(), { scope: this.scope });
-    } else {
-      document.addEventListener('click', (e) => this.hideCalendar(e));
-      window.addEventListener('resize', () => this.resizeHandler());
-      this._documentClickHandler = (e) => this.hideCalendar(e);
-      this._resizeHandler = () => this.resizeHandler();
+    if (this.endInput) {
+      this._endInputClickHandler = (e) => {
+        this.isSelectingEnd = true;
+        this.toggleCalendar(e);
+      };
+      this.endInput.addEventListener('click', this._endInputClickHandler);
     }
+
+    this._documentClickListener = globalEvents.on(document, 'click', (e) => this.hideCalendar(e), { scope: this.scope });
+    this._resizeListener = globalEvents.on(window, 'resize', () => this.resizeHandler(), { scope: this.scope });
 
     // Keyboard
     this._keydownHandler = (e) => {
@@ -577,6 +577,7 @@ class Datepicker {
 
     if (this.icon && this._iconClickHandler) this.icon.removeEventListener('click', this._iconClickHandler);
     if (this.input && this._inputClickHandler) this.input.removeEventListener('click', this._inputClickHandler);
+    if (this.endInput && this._endInputClickHandler) this.endInput.removeEventListener('click', this._endInputClickHandler);
     if (this._keydownHandler) document.removeEventListener('keydown', this._keydownHandler);
 
     if (this._documentClickListener && this._documentClickListener.unsubscribe) {
@@ -603,6 +604,7 @@ class Datepicker {
     this._resizeListener = null;
     this._iconClickHandler = null;
     this._inputClickHandler = null;
+    this._endInputClickHandler = null;
     this._keydownHandler = null;
     this.element.__kupolaInitialized = false;
   }
@@ -635,14 +637,4 @@ function cleanupAllDatepickers() {
 
 export { Datepicker, initDatepicker, initDatepickers, cleanupDatepicker, cleanupAllDatepickers };
 
-if (typeof window !== 'undefined') {
-  window.Datepicker = Datepicker;
-  window.initDatepicker = initDatepicker;
-  window.initDatepickers = initDatepickers;
-  window.cleanupDatepicker = cleanupDatepicker;
-  window.cleanupAllDatepickers = cleanupAllDatepickers;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('datepicker', initDatepicker, cleanupDatepicker);
-  }
-}
+kupolaInitializer.register('datepicker', initDatepicker, cleanupDatepicker);

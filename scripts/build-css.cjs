@@ -18,7 +18,7 @@ const OUTPUT_DIR = path.resolve(__dirname, '..', 'dist');
 
 // Import order must match kupola.css @import order
 const IMPORT_ORDER = [
-  'colors_and_type.css',
+  'colors-and-type.css',
   'theme-light.css',
   'theme-dark.css',
   'brand-themes.css',
@@ -29,7 +29,8 @@ const IMPORT_ORDER = [
   'utilities.css',
   'responsive.css',
   'accessibility.css',
-  'animations.css'
+  'animations.css',
+  'table.css'
 ];
 
 function resolveImports(cssContent, basePath) {

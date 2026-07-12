@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class DynamicTags {
     constructor(element, options = {}) {
         this.element = element;
@@ -260,13 +262,4 @@ function initDynamicTagsAll() {
 
 export { DynamicTags, initDynamicTagsAll, initDynamicTags, cleanupDynamicTags };
 
-if (typeof window !== 'undefined') {
-    window.DynamicTags = DynamicTags;
-    window.initDynamicTags = initDynamicTags;
-    window.cleanupDynamicTags = cleanupDynamicTags;
-    window.initDynamicTagsAll = initDynamicTagsAll;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('dynamic-tags', initDynamicTags, cleanupDynamicTags);
-    }
-}
+kupolaInitializer.register('dynamic-tags', initDynamicTags, cleanupDynamicTags);

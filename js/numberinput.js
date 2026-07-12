@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class NumberInput {
     constructor(element) {
         this.element = element;
@@ -135,13 +137,4 @@ function initNumberInputs() {
 
 export { NumberInput, initNumberInputs, initNumberInput, cleanupNumberInput };
 
-if (typeof window !== 'undefined') {
-    window.NumberInput = NumberInput;
-    window.initNumberInput = initNumberInput;
-    window.cleanupNumberInput = cleanupNumberInput;
-    window.initNumberInputs = initNumberInputs;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('number-input', initNumberInput, cleanupNumberInput);
-    }
-}
+kupolaInitializer.register('number-input', initNumberInput, cleanupNumberInput);

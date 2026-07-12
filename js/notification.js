@@ -73,8 +73,3 @@ const Notification = {
 function initNotifications() {}
 
 export { Notification, initNotifications };
-
-if (typeof window !== 'undefined') {
-  window.Notification = Notification;
-  window.initNotifications = initNotifications;
-}

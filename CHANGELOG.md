@@ -32,7 +32,7 @@
 - Data transform support for adapting backend JSON formats
 
 #### Build & Tooling
-- ESM (~418 KB, gzip ~88 KB), CJS, UMD builds
+- ESM (~550 KB, gzip ~104 KB), CJS, UMD builds
 - Full TypeScript type definitions (`types/kupola.d.ts`)
 - Vite plugin (`kupola/vite`)
 - CSS with responsive design, accessibility (WCAG AA)

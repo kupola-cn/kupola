@@ -354,9 +354,3 @@ function showImagePreview(images, index = 0) {
 }
 
 export { ImagePreview, initImagePreview, showImagePreview };
-
-if (typeof window !== 'undefined') {
-  window.ImagePreview = ImagePreview;
-  window.initImagePreview = initImagePreview;
-  window.showImagePreview = showImagePreview;
-}

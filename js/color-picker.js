@@ -1,3 +1,6 @@
+import { globalEvents } from './global-events.js';
+import { kupolaInitializer } from './initializer.js';
+
 class ColorPicker {
     constructor(element, options = {}) {
         this.element = element;
@@ -251,11 +254,7 @@ class ColorPicker {
             }
         });
 
-        if (window.globalEvents) {
-            this._documentClickListener = window.globalEvents.on(document, 'click', this._documentClickHandler, { scope: this.scope });
-        } else {
-            document.addEventListener('click', this._documentClickHandler);
-        }
+        this._documentClickListener = globalEvents.on(document, 'click', this._documentClickHandler, { scope: this.scope });
 
         this._renderPreviousColors();
         this._renderColorPanel();
@@ -439,14 +438,4 @@ function cleanupAllColorPickers() {
 
 export { ColorPicker, initColorPicker, initColorPickers, cleanupColorPicker, cleanupAllColorPickers };
 
-if (typeof window !== 'undefined') {
-    window.ColorPicker = ColorPicker;
-    window.initColorPicker = initColorPicker;
-    window.initColorPickers = initColorPickers;
-    window.cleanupColorPicker = cleanupColorPicker;
-    window.cleanupAllColorPickers = cleanupAllColorPickers;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('color-picker', initColorPicker, cleanupColorPicker);
-    }
-}
+kupolaInitializer.register('color-picker', initColorPicker, cleanupColorPicker);

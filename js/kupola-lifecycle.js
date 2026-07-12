@@ -477,7 +477,7 @@ export class KupolaPluginManager {
     const pluginHooks = this.pluginHooks.get(pluginName);
     
     Object.keys(hooks).forEach(phase => {
-      const unsubscribe = typeof window !== 'undefined' && window.kupolaLifecycle?.on(phase, hooks[phase], { name: `${pluginName}:${phase}` });
+      const unsubscribe = kupolaLifecycle?.on(phase, hooks[phase], { name: `${pluginName}:${phase}` });
       if (unsubscribe) {
         pluginHooks.push({ phase, unsubscribe });
       }
@@ -501,12 +501,4 @@ export const kupolaPluginManager = new KupolaPluginManager();
 
 export function createLifecycle(scope = 'app') {
   return new KupolaLifecycle(scope);
-}
-
-if (typeof window !== 'undefined') {
-  window.KupolaLifecycle = KupolaLifecycle;
-  window.KupolaPluginManager = KupolaPluginManager;
-  window.kupolaLifecycle = kupolaLifecycle;
-  window.kupolaPluginManager = kupolaPluginManager;
-  window.createLifecycle = createLifecycle;
 }

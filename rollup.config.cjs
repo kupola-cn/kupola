@@ -1,7 +1,6 @@
 const nodeResolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const terser = require('@rollup/plugin-terser');
-const postcss = require('rollup-plugin-postcss');
 const copy = require('rollup-plugin-copy');
 
 module.exports = [
@@ -49,25 +48,5 @@ module.exports = [
       })
     ],
     external: []
-  },
-  {
-    input: 'src/index.css',
-    output: [
-      {
-        file: 'dist/css/kupola.css',
-        format: 'esm'
-      },
-      {
-        file: 'dist/css/kupola.min.css',
-        format: 'esm',
-        plugins: [postcss({ extract: true, minimize: true })]
-      }
-    ],
-    plugins: [
-      postcss({
-        extract: true,
-        minimize: true
-      })
-    ]
   }
 ];

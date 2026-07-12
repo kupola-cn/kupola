@@ -11,13 +11,26 @@
  */
 function sanitizeHtml(html) {
   if (!html) return '';
-  const str = String(html);
-  return str
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-    .replace(/<embed\b[^>]*\/?>/gi, '')
-    .replace(/\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  let str = String(html);
+
+  // Iteratively remove dangerous tags (handles nested attempts like <scr<script>ipt>)
+  const dangerousTags = /<\s*(script|iframe|object|embed|applet|form|base|link|meta|style)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>|<\s*(script|iframe|object|embed|applet|form|base|link|meta|style)\b[^>]*\/?>/gi;
+  let prev;
+  do {
+    prev = str;
+    str = str.replace(dangerousTags, '');
+  } while (str !== prev);
+
+  // Remove event handler attributes (on* = ...)
+  str = str.replace(/\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+
+  // Remove javascript:, vbscript:, data: URIs in href/src/action attributes
+  str = str.replace(/(href|src|action|background)\s*=\s*(?:"[^"]*(?:javascript|vbscript|data)\s*:[^"]*"|'[^']*(?:javascript|vbscript|data)\s*:[^']*'|[^\s>]*(?:javascript|vbscript|data)\s*:[^\s>]*)/gi, '$1=""');
+
+  // Remove expression() in style attributes (IE CSS expression)
+  str = str.replace(/expression\s*\([^)]*\)/gi, '');
+
+  return str;
 }
 
 class TrieNode {
@@ -946,18 +959,26 @@ class KupolaDataBind {
     });
     
     if (!this._mutationObserver) {
+      this._isObserving = false;
       this._mutationObserver = new MutationObserver((mutations) => {
-        mutations.forEach(mutation => {
-          mutation.addedNodes.forEach(node => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const bindElements = node.querySelectorAll('[data-bind]');
-              bindElements.forEach(element => this._bindElement(element));
-              if (node.hasAttribute && node.hasAttribute('data-bind')) {
-                this._bindElement(node);
+        // Re-entry guard: skip mutations caused by _bindElement itself
+        if (this._isObserving) return;
+        this._isObserving = true;
+        try {
+          mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                const bindElements = node.querySelectorAll('[data-bind]');
+                bindElements.forEach(element => this._bindElement(element));
+                if (node.hasAttribute && node.hasAttribute('data-bind')) {
+                  this._bindElement(node);
+                }
               }
-            }
+            });
           });
-        });
+        } finally {
+          this._isObserving = false;
+        }
       });
       
       this._mutationObserver.observe(document.body, {
@@ -1052,12 +1073,12 @@ class KupolaStore {
     
     this.observers = {};
     
-    if (window.kupolaData) {
-      window.kupolaData.set(this._stateKey, initialState);
-      this.state = window.kupolaData.data?.[this._stateKey] || 
-        window.kupolaData.createReactive(initialState, this._stateKey);
+    if (kupolaData) {
+      kupolaData.set(this._stateKey, initialState);
+      this.state = kupolaData.data?.[this._stateKey] || 
+        kupolaData.createReactive(initialState, this._stateKey);
       
-      window.kupolaData.observe(this._stateKey, (newState) => {
+      kupolaData.observe(this._stateKey, (newState) => {
         this.notify(newState);
       });
     } else {
@@ -1140,8 +1161,8 @@ class KupolaStore {
       });
     }
     
-    if (window.kupolaData) {
-      window.kupolaData.set(this.name, newState);
+    if (kupolaData) {
+      kupolaData.set(this.name, newState);
     }
   }
 
@@ -1303,6 +1324,18 @@ function ref(initialValue = null) {
         }
     });
 
+    /**
+     * Subscribe to value changes.
+     * @param {Function} callback - Called with new value on change
+     * @returns {{ unsubscribe: Function }} Unsubscribe handle
+     */
+    refObj.subscribe = (callback) => {
+        refObj._subscribers.add(callback);
+        return {
+            unsubscribe() { refObj._subscribers.delete(callback); }
+        };
+    };
+
     return refObj;
 }
 
@@ -1328,16 +1361,3 @@ export { KupolaDataBind, KupolaEventBus, KupolaStore, KupolaStoreManager };
 export { kupolaData, kupolaEvents, kupolaStoreManager };
 export { createStore, getStore };
 export { ref };
-
-if (typeof window !== 'undefined') {
-  window.KupolaDataBind = KupolaDataBind;
-  window.KupolaEventBus = KupolaEventBus;
-  window.KupolaStore = KupolaStore;
-  window.KupolaStoreManager = KupolaStoreManager;
-  window.kupolaData = kupolaData;
-  window.kupolaEvents = kupolaEvents;
-  window.kupolaStoreManager = kupolaStoreManager;
-  window.createStore = createStore;
-  window.getStore = getStore;
-  window.kupolaRef = ref;
-}

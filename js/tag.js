@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Tag {
     constructor(element, options = {}) {
         this.element = element;
@@ -325,13 +327,4 @@ function initTags() {
 
 export { Tag, initTags, initTag, cleanupTag };
 
-if (typeof window !== 'undefined') {
-    window.Tag = Tag;
-    window.initTag = initTag;
-    window.cleanupTag = cleanupTag;
-    window.initTags = initTags;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('tag', initTag, cleanupTag);
-    }
-}
+kupolaInitializer.register('tag', initTag, cleanupTag);

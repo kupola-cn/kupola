@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Carousel {
   constructor(element, options = {}) {
     this.element = element;
@@ -295,13 +297,4 @@ function cleanupCarousel(element) {
 
 export { Carousel, initCarousel, initCarousels, cleanupCarousel };
 
-if (typeof window !== 'undefined') {
-  window.Carousel = Carousel;
-  window.initCarousel = initCarousel;
-  window.initCarousels = initCarousels;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('carousel', initCarousel, cleanupCarousel);
-  }
-}
-
+kupolaInitializer.register('carousel', initCarousel, cleanupCarousel);

@@ -518,7 +518,7 @@ if (!window.__kupolaValidationInitialized) {
         let timeout;
         return (...args) => {
           clearTimeout(timeout);
-          timeout = setTimeout(() => func.apply(this, args), wait);
+          timeout = setTimeout(() => func(...args), wait);
         };
       };
 
@@ -550,8 +550,3 @@ if (!window.__kupolaValidationInitialized) {
 }
 
 export { KupolaValidator, validator };
-
-if (typeof window !== 'undefined') {
-  window.KupolaValidator = KupolaValidator;
-  window.kupolaValidator = validator;
-}

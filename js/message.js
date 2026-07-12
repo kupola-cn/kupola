@@ -60,8 +60,3 @@ const Message = {
 function initMessages() {}
 
 export { Message, initMessages };
-
-if (typeof window !== 'undefined') {
-  window.Message = Message;
-  window.initMessages = initMessages;
-}

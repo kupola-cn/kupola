@@ -7,7 +7,7 @@ You are working with **Kupola**, a lightweight, dependency-free declarative UI c
 - **npm**: `@kupola/kupola`
 - **License**: MIT
 - **Build**: Vite (primary) / Rollup (alternative)
-- **Size**: ~418 KB ESM, ~88 KB gzipped
+- **Size**: ~550 KB ESM, ~104 KB gzipped
 - **Zero runtime dependencies**
 
 ## Architecture Overview
@@ -24,16 +24,17 @@ kupola/
 │   ├── theme.js          # Dark/light theme + brand colors
 │   ├── icons.js          # SVG icon system
 │   ├── validation.js     # Form validation engine
+│   ├── utils.js          # Tree-shakable utilities (stringUtils, arrayUtils, dateUtils, etc.)
 │   └── [component].js    # Individual components (dropdown, modal, datepicker, etc.)
 ├── css/          # Stylesheets (compiled to dist/css/kupola.css)
 ├── adapters/     # HTTP client adapters (axios, navios-http)
-├── src/          # Entry points (index.js, esm-index.js, index.css)
+├── src/          # Entry point (index.js)
 ├── dist/         # Build output (gitignored, built by CI)
 ├── types/        # TypeScript declarations (kupola.d.ts)
 ├── plugins/      # Vite plugin
 ├── icons/        # SVG icon source files
 ├── examples/     # Usage examples (Flask, HTMX, case pages)
-└── docs/         # Documentation
+└── scripts/      # Build scripts (build-css.cjs, build-svg-sprite.cjs)
 ```
 
 ## Key Patterns
@@ -192,6 +193,23 @@ import { message, notification } from 'kupola';
 message.success('操作成功');
 message.error('失败');
 notification({ title: '通知', content: '...', type: 'info' });
+```
+
+### Utils 工具库（Tree-Shakable 命名导出）
+
+```js
+// 按需导入，未使用的命名空间会被 bundler 自动裁剪
+import { stringUtils, arrayUtils, dateUtils, debounce, throttle } from 'kupola';
+
+stringUtils.capitalize('hello');     // 'Hello'
+stringUtils.camelize('my-class');    // 'myClass'
+arrayUtils.isEmpty([]);              // true
+dateUtils.formatDate(new Date(), 'yyyy-MM-dd');
+debounce(fn, 300);                   // 防抖
+throttle(fn, 200);                   // 节流
+
+// 其他可用命名空间: objectUtils, numberUtils, validatorUtils, cryptoUtils, preloadUtils
+// 兼容对象: KupolaUtils.string / KupolaUtils.array / ...（包含全部命名空间）
 ```
 
 ### Component 基类

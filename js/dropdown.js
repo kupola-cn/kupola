@@ -1,3 +1,6 @@
+import { globalEvents } from './global-events.js';
+import { kupolaInitializer } from './initializer.js';
+
 class Dropdown {
   constructor(element, options = {}) {
     this.element = element;
@@ -30,6 +33,7 @@ class Dropdown {
     this._mouseleaveHandler = null;
     this._triggerMouseenterHandler = null;
     this._triggerMouseleaveHandler = null;
+    this._triggerKeydownHandler = null;
   }
 
   init() {
@@ -139,13 +143,14 @@ class Dropdown {
     }
 
     // Keyboard on trigger
-    this.trigger.addEventListener('keydown', (e) => {
+    this._triggerKeydownHandler = (e) => {
       if (this.disabled) return;
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
         e.preventDefault();
         this.showMenu();
       }
-    });
+    };
+    this.trigger.addEventListener('keydown', this._triggerKeydownHandler);
 
     document.addEventListener('keydown', this._keydownHandler);
 
@@ -156,11 +161,7 @@ class Dropdown {
       }
     };
 
-    if (window.globalEvents) {
-      this._documentClickListener = window.globalEvents.on(document, 'click', this._documentClickHandler, { scope: this.scope });
-    } else {
-      document.addEventListener('click', this._documentClickHandler);
-    }
+    this._documentClickListener = globalEvents.on(document, 'click', this._documentClickHandler, { scope: this.scope });
 
     this.menu.style.display = 'none';
     this.element.__kupolaInitialized = true;
@@ -304,6 +305,7 @@ class Dropdown {
       if (this._triggerClickHandler) this.trigger.removeEventListener('click', this._triggerClickHandler);
       if (this._triggerMouseenterHandler) this.trigger.removeEventListener('mouseenter', this._triggerMouseenterHandler);
       if (this._triggerMouseleaveHandler) this.trigger.removeEventListener('mouseleave', this._triggerMouseleaveHandler);
+      if (this._triggerKeydownHandler) this.trigger.removeEventListener('keydown', this._triggerKeydownHandler);
     }
 
     if (this.menu) {
@@ -333,6 +335,7 @@ class Dropdown {
     this._mouseleaveHandler = null;
     this._triggerMouseenterHandler = null;
     this._triggerMouseleaveHandler = null;
+    this._triggerKeydownHandler = null;
     this.element.__kupolaInitialized = false;
   }
 }
@@ -364,14 +367,4 @@ function cleanupAllDropdowns() {
 
 export { Dropdown, initDropdown, initDropdowns, cleanupDropdown, cleanupAllDropdowns };
 
-if (typeof window !== 'undefined') {
-  window.Dropdown = Dropdown;
-  window.initDropdown = initDropdown;
-  window.initDropdowns = initDropdowns;
-  window.cleanupDropdown = cleanupDropdown;
-  window.cleanupAllDropdowns = cleanupAllDropdowns;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('dropdown', initDropdown, cleanupDropdown);
-  }
-}
+kupolaInitializer.register('dropdown', initDropdown, cleanupDropdown);

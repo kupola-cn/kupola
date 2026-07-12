@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Calendar {
     constructor(element, options = {}) {
         this.element = element;
@@ -481,13 +483,4 @@ function initCalendars() {
 
 export { Calendar, initCalendars, initCalendar, cleanupCalendar };
 
-if (typeof window !== 'undefined') {
-    window.Calendar = Calendar;
-    window.initCalendar = initCalendar;
-    window.cleanupCalendar = cleanupCalendar;
-    window.initCalendars = initCalendars;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('calendar', initCalendar, cleanupCalendar);
-    }
-}
+kupolaInitializer.register('calendar', initCalendar, cleanupCalendar);

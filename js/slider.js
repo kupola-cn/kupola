@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Slider {
     constructor(element, options = {}) {
         this.element = element;
@@ -499,13 +501,4 @@ function initSliders() {
 
 export { Slider, initSlider, initSliders, cleanupSlider };
 
-if (typeof window !== 'undefined') {
-    window.Slider = Slider;
-    window.initSlider = initSlider;
-    window.initSliders = initSliders;
-    window.cleanupSlider = cleanupSlider;
-    
-    if (window.kupolaInitializer) {
-        window.kupolaInitializer.register('slider', initSlider, cleanupSlider);
-    }
-}
+kupolaInitializer.register('slider', initSlider, cleanupSlider);

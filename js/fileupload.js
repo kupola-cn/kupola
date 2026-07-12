@@ -1,3 +1,10 @@
+import { kupolaInitializer } from './initializer.js';
+
+function _escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 class FileUpload {
   constructor(element) {
     this.element = element;
@@ -126,7 +133,7 @@ class FileUpload {
       <div class="ds-fileupload__icon" style="width: 24px; height: 24px; border-radius: 4px;">
         ${fileIcon}
       </div>
-      <span class="ds-fileupload__filename">${this.truncateFilename(file.name)}</span>
+      <span class="ds-fileupload__filename">${this.truncateFilename(_escapeHtml(file.name))}</span>
       <span class="ds-fileupload__size">${this.formatSize(file.size)}</span>
       <button class="ds-fileupload__remove" type="button" aria-label="Remove file">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -254,7 +261,7 @@ class FileUpload {
       const previewItem = document.createElement('div');
       previewItem.className = 'ds-fileupload__preview-item';
       previewItem.innerHTML = `
-        <img src="${e.target.result}" alt="${file.name}">
+        <img src="${e.target.result}" alt="${_escapeHtml(file.name)}">
         <button class="ds-fileupload__preview-remove" type="button" aria-label="Remove preview">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18"/>
@@ -381,13 +388,4 @@ function initFileUploads() {
 
 export { FileUpload, initFileUploads, initFileUpload, cleanupFileUpload };
 
-if (typeof window !== 'undefined') {
-  window.FileUpload = FileUpload;
-  window.initFileUpload = initFileUpload;
-  window.cleanupFileUpload = cleanupFileUpload;
-  window.initFileUploads = initFileUploads;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('fileupload', initFileUpload, cleanupFileUpload);
-  }
-}
+kupolaInitializer.register('fileupload', initFileUpload, cleanupFileUpload);

@@ -1,3 +1,5 @@
+import { kupolaInitializer } from './initializer.js';
+
 class Countdown {
   constructor(element) {
     this.element = element;
@@ -133,13 +135,4 @@ function initCountdowns() {
 
 export { Countdown, initCountdowns, initCountdown, cleanupCountdown };
 
-if (typeof window !== 'undefined') {
-  window.Countdown = Countdown;
-  window.initCountdown = initCountdown;
-  window.cleanupCountdown = cleanupCountdown;
-  window.initCountdowns = initCountdowns;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('countdown', initCountdown, cleanupCountdown);
-  }
-}
+kupolaInitializer.register('countdown', initCountdown, cleanupCountdown);

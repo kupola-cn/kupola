@@ -1,3 +1,6 @@
+import { globalEvents } from './global-events.js';
+import { kupolaInitializer } from './initializer.js';
+
 class SlideCaptcha {
   constructor(container) {
     this.container = container;
@@ -139,17 +142,10 @@ class SlideCaptcha {
 
     this.btn.addEventListener('mousedown', this._mouseDownHandler);
 
-    if (window.globalEvents) {
-      this._mouseMoveListener = window.globalEvents.on(document, 'mousemove', this._mouseMoveHandler, { scope: this.scope });
-      this._mouseUpListener = window.globalEvents.on(document, 'mouseup', this._mouseUpHandler, { scope: this.scope });
-      this._touchMoveListener = window.globalEvents.on(document, 'touchmove', this._touchMoveHandler, { scope: this.scope, passive: false });
-      this._touchEndListener = window.globalEvents.on(document, 'touchend', this._touchEndHandler, { scope: this.scope });
-    } else {
-      document.addEventListener('mousemove', this._mouseMoveHandler);
-      document.addEventListener('mouseup', this._mouseUpHandler);
-      document.addEventListener('touchmove', this._touchMoveHandler, { passive: false });
-      document.addEventListener('touchend', this._touchEndHandler);
-    }
+    this._mouseMoveListener = globalEvents.on(document, 'mousemove', this._mouseMoveHandler, { scope: this.scope });
+    this._mouseUpListener = globalEvents.on(document, 'mouseup', this._mouseUpHandler, { scope: this.scope });
+    this._touchMoveListener = globalEvents.on(document, 'touchmove', this._touchMoveHandler, { scope: this.scope, passive: false });
+    this._touchEndListener = globalEvents.on(document, 'touchend', this._touchEndHandler, { scope: this.scope });
 
     this.btn.addEventListener('touchstart', this._touchStartHandler, { passive: false });
 
@@ -501,13 +497,4 @@ function cleanupAllSlideCaptchas() {
 
 export { SlideCaptcha, initSlideCaptchas, cleanupSlideCaptcha, cleanupAllSlideCaptchas };
 
-if (typeof window !== 'undefined') {
-  window.SlideCaptcha = SlideCaptcha;
-  window.initSlideCaptchas = initSlideCaptchas;
-  window.cleanupSlideCaptcha = cleanupSlideCaptcha;
-  window.cleanupAllSlideCaptchas = cleanupAllSlideCaptchas;
-  
-  if (window.kupolaInitializer) {
-    window.kupolaInitializer.register('slide-captcha', initSlideCaptchas, cleanupAllSlideCaptchas);
-  }
-}
+kupolaInitializer.register('slide-captcha', initSlideCaptchas, cleanupAllSlideCaptchas);
