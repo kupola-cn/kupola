@@ -45,6 +45,16 @@
 
 ## 🚀 Quick Start
 
+### Scaffold (recommended)
+
+Create a fully configured Kupola project in seconds:
+
+```bash
+npx create-kupola
+```
+
+Choose from **Static**, **Flask**, **FastAPI**, or **Gin** — with dark theme, brand colors, and example pages out of the box.
+
 ### npm
 
 ```bash
@@ -193,6 +203,16 @@ Chrome, Firefox, Safari, Edge (latest)
 ---
 
 ## 🚀 快速开始
+
+### 脚手架（推荐）
+
+一行命令创建配置好的 Kupola 项目：
+
+```bash
+npx create-kupola
+```
+
+支持 **Static**、**Flask**、**FastAPI**、**Gin** 四种后端模板，自带暗色主题、品牌色和示例页面。
 
 ### npm 安装
 
