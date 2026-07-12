@@ -50,7 +50,7 @@
 Create a fully configured Kupola project in seconds:
 
 ```bash
-npx create-kupola
+npx @kupola/create-kupola
 ```
 
 Choose from **Static**, **Flask**, **FastAPI**, or **Gin** — with dark theme, brand colors, and example pages out of the box.
@@ -209,7 +209,7 @@ Chrome, Firefox, Safari, Edge (latest)
 一行命令创建配置好的 Kupola 项目：
 
 ```bash
-npx create-kupola
+npx @kupola/create-kupola
 ```
 
 支持 **Static**、**Flask**、**FastAPI**、**Gin** 四种后端模板，自带暗色主题、品牌色和示例页面。
