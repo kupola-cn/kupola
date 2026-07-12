@@ -350,7 +350,7 @@
         <div class="code-block">&lt;!DOCTYPE html&gt;
 &lt;html lang="zh-CN"&gt;
 &lt;head&gt;
-  &lt;link rel="stylesheet" href="node_modules/@kupola/kupola/dist/css/kupola.css"&gt;
+  &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola.min.css"&gt;
 &lt;/head&gt;
 &lt;body data-theme="dark"&gt;
 
@@ -367,7 +367,7 @@
   &lt;input class="ds-input" data-bind="value:name" placeholder="输入姓名"&gt;
   &lt;span data-bind="text:name"&gt;&lt;/span&gt;
 
-  &lt;script src="node_modules/@kupola/kupola/dist/kupola.umd.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola.min.js"&gt;&lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;</div>
         <div class="doc-tip">
@@ -388,11 +388,14 @@
   &lt;/div&gt;
 &lt;/div&gt;</div>
         <h3>动态插入后刷新</h3>
-        <div class="code-block">// 动态插入 HTML 后，重新初始化组件
-await window.Kupola.refresh(scopeElement);
+        <div class="code-block">// CDN / UMD 模式
+Kupola.refresh(scopeElement);
+Kupola.cleanup(element);</div>
 
-// 清理单个元素
-window.Kupola.cleanup(element);</div>
+<div class="code-block">// ESM 模式
+import { refresh, cleanup } from 'kupola';
+await refresh(scopeElement);
+cleanup(element);</div>
       </section>
 
       <!-- ── 数据绑定 ── -->

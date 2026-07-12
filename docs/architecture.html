@@ -443,10 +443,14 @@
           <strong>关键点：</strong> 函数式组件（init 函数）先于类式组件（KupolaComponent 子类）初始化。这是因为函数式组件通常提供基础设施（如 tooltip），类式组件可能依赖它们。
         </div>
         <h3>动态内容刷新</h3>
-        <div class="code-block">// 动态插入 HTML 后
-await window.Kupola.refresh(scopeElement);
-// 清理单个元素
-window.Kupola.cleanup(element);</div>
+        <div class="code-block">// CDN / UMD
+Kupola.refresh(scopeElement);
+Kupola.cleanup(element);
+
+// ESM
+import { refresh, cleanup } from 'kupola';
+await refresh(scopeElement);
+cleanup(element);</div>
       </section>
 
       <!-- ── 组件初始化器 ── -->
