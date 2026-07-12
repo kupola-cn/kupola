@@ -1,3 +1,224 @@
+/**
+ * Kupola TypeScript Example
+ * Demonstrates the real public API of @kupola/kupola
+ */
+import { 
+  // Data-binding
+  kupolaData, ref, createStore, getStore,
+  KupolaDataBind, KupolaEventBus,
+  // Theme
+  setTheme, getTheme, setBrand, getBrand,
+  // Components
+  KupolaComponent, registerComponent, bootstrapComponents,
+  // Modal & Dialog
+  Modal, createModal, confirmModal, alertModal,
+  Dialog, Message, Notification,
+  // Form
+  KupolaForm, initFormValidation, validateForm,
+  // Table
+  KupolaTable, initTable,
+  // Dropdown
+  Dropdown, initDropdowns, cleanupDropdown,
+  // Utils
+  debounce, throttle, stringUtils, dateUtils,
+  // Icons
+  svg, renderIcon,
+  // Global Events
+  globalEvents, on, off, emit,
+  // Lifecycle
+  createLifecycle,
+  // i18n
+  createI18n, t, setLocale, getLocale,
+  // Types
+  type ThemeType,
+} from 'kupola';
+
+// ── Data-binding ──────────────────────────────────
+
+interface User {
+  name: string;
+  age: number;
+  active: boolean;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+}
+
+const typedData = kupolaData as KupolaDataBind<{ user: User; counter: number }>;
+
+const userData = typedData.data.user = {
+  name: 'John',
+  age: 25,
+  active: true,
+  firstName: 'John',
+  lastName: 'Doe',
+};
+
+userData.name = 'Jane';
+userData.age = 26;
+
+typedData.observe<string>('user.name', (newValue, oldValue) => {
+  console.log(`Name changed from ${oldValue} to ${newValue}`);
+});
+
+typedData.computed<string>('user.fullName', ['user.firstName', 'user.lastName'], (first, last) => {
+  return `${first || ''} ${last || ''}`.trim();
+});
+
+// ── Ref (reactive primitive) ──────────────────────
+
+const count = ref(0);
+count.value = 1;
+console.log('Count:', count.value);
+
+// ── Store ─────────────────────────────────────────
+
+const userStore = createStore('users', {
+  list: [] as User[],
+  loading: false,
+});
+
+console.log('Store state:', userStore.getState());
+
+// ── Global Events ─────────────────────────────────
+
+on<User>('user:updated', (data) => {
+  console.log('User updated:', data);
+});
+
+emit<User>('user:updated', { name: 'Jane', age: 25, active: true });
+
+// ── Theme & Brand ─────────────────────────────────
+
+setTheme('light');
+console.log('Current theme:', getTheme());
+
+setBrand('zengqing');
+console.log('Current brand:', getBrand());
+
+// ── Message & Notification ────────────────────────
+
+Message.success('Operation completed!');
+Message.error('Something went wrong.');
+
+Notification.show({
+  title: 'New Message',
+  content: 'You have a new message from Jane.',
+  type: 'info',
+  duration: 5000,
+});
+
+// ── Modal ─────────────────────────────────────────
+
+confirmModal({
+  title: 'Confirm',
+  content: 'Are you sure?',
+  onConfirm: () => {
+    console.log('Confirmed');
+  },
+  onCancel: () => {
+    console.log('Cancelled');
+  },
+});
+
+// ── Utils ─────────────────────────────────────────
+
+const debouncedSearch = debounce((query: string) => {
+  console.log('Searching:', query);
+}, 300);
+
+debouncedSearch('hello');
+
+const throttledScroll = throttle(() => {
+  console.log('Scroll handler');
+}, 200);
+
+console.log(stringUtils.capitalize('hello'));    // 'Hello'
+console.log(stringUtils.camelCase('hello-world')); // 'helloWorld'
+
+console.log(dateUtils.formatDate(new Date(), 'yyyy-MM-dd'));
+
+// ── Icons ─────────────────────────────────────────
+
+const iconSvg = svg('check', { width: 16, height: 16 });
+console.log('Icon SVG:', iconSvg);
+
+const rendered = renderIcon('settings', { width: 20, height: 20 });
+console.log('Rendered icon:', rendered);
+
+// ── Lifecycle ─────────────────────────────────────
+
+const lifecycle = createLifecycle({
+  onInit() {
+    console.log('Component initialized');
+  },
+  onDestroy() {
+    console.log('Component destroyed');
+  },
+});
+
+// ── i18n ──────────────────────────────────────────
+
+const i18n = createI18n({
+  locale: 'zh-CN',
+  messages: {
+    'zh-CN': { greeting: '你好，{name}！' },
+    'en': { greeting: 'Hello, {name}!' },
+  },
+});
+
+setLocale('zh-CN');
+console.log(t('greeting', { name: 'Kupola' }));
+
+// ── Custom Component ──────────────────────────────
+
+class CounterComponent extends KupolaComponent {
+  state = { count: 0 };
+
+  beforeMount() {
+    console.log('CounterComponent: beforeMount');
+  }
+
+  afterMount() {
+    console.log('CounterComponent: afterMount');
+    this.render();
+  }
+
+  render() {
+    this.element.innerHTML = `
+      <div class="ds-card" style="padding: 16px;">
+        <div class="ds-text-lg font-bold mb-2">Count: ${this.state.count}</div>
+        <button class="ds-btn ds-btn--primary">Increment</button>
+      </div>
+    `;
+  }
+
+  increment() {
+    this.setState({ count: this.state.count + 1 });
+  }
+}
+
+class WelcomeComponent extends KupolaComponent {
+  afterMount() {
+    this.render();
+  }
+
+  render() {
+    this.element.innerHTML = `
+      <div class="ds-card" style="padding: 16px;">
+        <div class="ds-text-lg font-bold">Welcome to Kupola!</div>
+        <div class="ds-text-sm text-muted mt-1">This is a demo component.</div>
+      </div>
+    `;
+  }
+}
+
+registerComponent('counter', CounterComponent);
+registerComponent('welcome', WelcomeComponent);
+
+bootstrapComponents();
+
+console.log('All Kupola features loaded successfully!');
 import { 
   kupolaData, 
   kupolaEvents, 

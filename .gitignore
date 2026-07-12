@@ -5,6 +5,7 @@
 
 # Internal / sync
 his-sys/
+packages/
 sync-to-his.ps1
 scripts/sync-kupola.cjs
 
