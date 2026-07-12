@@ -188,6 +188,72 @@
       white-space: pre;
     }
 
+    /* Flow diagram (CSS boxes) */
+    .flow-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      margin: 16px 0 24px;
+      background: var(--bg-overlay-l1);
+      border: 1px solid var(--border-neutral-l1);
+      border-radius: 12px;
+    }
+    .flow-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 20px;
+      background: var(--bg-base-secondary);
+      border: 2px solid var(--border-neutral-l2);
+      border-radius: 10px;
+      text-align: center;
+      gap: 4px;
+    }
+    .flow-box strong {
+      font-size: 14px;
+      color: var(--text-default);
+    }
+    .flow-box span {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .flow-box code {
+      font-size: 11px;
+      padding: 2px 8px;
+      background: var(--bg-brand-popup);
+      color: var(--bg-brand);
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+    .flow-box--main {
+      padding: 16px 32px;
+      border-color: var(--bg-brand);
+      background: var(--bg-brand-popup);
+    }
+    .flow-box--main strong {
+      font-size: 16px;
+      color: var(--bg-brand);
+    }
+    .flow-box--main small {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    .flow-arrow {
+      font-size: 24px;
+      color: var(--text-tertiary);
+      margin: 8px 0;
+    }
+    .flow-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .flow-row .flow-box {
+      min-width: 160px;
+    }
+
     /* Module table */
     .mod-table {
       width: 100%;
@@ -284,22 +350,30 @@
       <section id="overview" class="doc-section">
         <h1>架构概览</h1>
         <p class="lead">Kupola 是一个零运行时依赖的声明式 UI 组件系统。核心由 5 个引擎模块协作驱动。</p>
-        <div class="arch-diagram">┌───────────────────────────────────────────────────────────────┐
-│                     kupolaBootstrap()                         │
-│            DOMContentLoaded / setTimeout(0)                   │
-└────────────────────────────┬──────────────────────────────────┘
-                             │
-           ┌─────────────────┼─────────────────┐
-           ▼                 ▼                 ▼
-    ┌────────────┐    ┌────────────┐    ┌──────────────────┐
-    │ kupola     │    │ kupola     │    │ ComponentInit    │
-    │ DataBind   │    │ Theme      │    │ Registry         │
-    │ (Proxy)    │    │ Engine     │    │ (MutationObserver)│
-    └─────┬──────┘    └─────┬──────┘    └────────┬─────────┘
-          │                 │                    │
-          ▼                 ▼                    ▼
-     data-bind         data-theme          data-dropdown
-     双向绑定          暗/亮切换           组件自动发现</div>
+        <div class="flow-diagram">
+          <div class="flow-box flow-box--main">
+            <strong>kupolaBootstrap()</strong>
+            <small>DOMContentLoaded / setTimeout(0)</small>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-row">
+            <div class="flow-box">
+              <strong>kupolaData</strong>
+              <span>Proxy 双向绑定</span>
+              <code>data-bind</code>
+            </div>
+            <div class="flow-box">
+              <strong>kupolaTheme</strong>
+              <span>暗/亮主题切换</span>
+              <code>data-theme</code>
+            </div>
+            <div class="flow-box">
+              <strong>ComponentInit</strong>
+              <span>MutationObserver 自动发现</span>
+              <code>data-dropdown</code>
+            </div>
+          </div>
+        </div>
         <h2>五大核心引擎</h2>
         <table class="mod-table">
           <tr><th>模块</th><th>文件</th><th>职责</th><th>行数</th></tr>
