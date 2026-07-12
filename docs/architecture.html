@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kupola — 内部架构</title>
   <link rel="stylesheet" href="../css/kupola.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100vh; overflow: hidden; }
@@ -92,7 +93,6 @@
     .doc-content {
       overflow-y: auto;
       padding: 32px 48px 80px;
-      max-width: 900px;
     }
     .doc-content::-webkit-scrollbar { width: 6px; }
     .doc-content::-webkit-scrollbar-thumb { background: var(--border-neutral-l2); border-radius: 4px; }
@@ -284,22 +284,22 @@
       <section id="overview" class="doc-section">
         <h1>架构概览</h1>
         <p class="lead">Kupola 是一个零运行时依赖的声明式 UI 组件系统。核心由 5 个引擎模块协作驱动。</p>
-        <div class="arch-diagram">┌─────────────────────────────────────────────────────────┐
-│                   kupolaBootstrap()                      │
-│        DOMContentLoaded / setTimeout(0)                  │
-└────────────────────┬────────────────────────────────────┘
-                     │
-        ┌────────────┼────────────────┐
-        ▼            ▼                ▼
-  ┌──────────┐ ┌──────────┐  ┌──────────────────┐
-  │ kupola   │ │ kupola   │  │ ComponentInit    │
-  │ DataBind │ │ Theme    │  │ Registry         │
-  │ (Proxy)  │ │ Engine   │  │ (MutationObserver│
-  └──────────┘ └──────────┘  └──────────────────┘
-        │            │                │
-        ▼            ▼                ▼
-  data-bind     data-theme       data-dropdown
-  双向绑定      暗/亮切换        组件自动发现</div>
+        <div class="arch-diagram">┌───────────────────────────────────────────────────────────────┐
+│                     kupolaBootstrap()                         │
+│            DOMContentLoaded / setTimeout(0)                   │
+└────────────────────────────┬──────────────────────────────────┘
+                             │
+           ┌─────────────────┼─────────────────┐
+           ▼                 ▼                 ▼
+    ┌────────────┐    ┌────────────┐    ┌──────────────────┐
+    │ kupola     │    │ kupola     │    │ ComponentInit    │
+    │ DataBind   │    │ Theme      │    │ Registry         │
+    │ (Proxy)    │    │ Engine     │    │ (MutationObserver)│
+    └─────┬──────┘    └─────┬──────┘    └────────┬─────────┘
+          │                 │                    │
+          ▼                 ▼                    ▼
+     data-bind         data-theme          data-dropdown
+     双向绑定          暗/亮切换           组件自动发现</div>
         <h2>五大核心引擎</h2>
         <table class="mod-table">
           <tr><th>模块</th><th>文件</th><th>职责</th><th>行数</th></tr>
@@ -701,6 +701,20 @@ npm run lint           # 确认 ESLint 通过</div>
           l.classList.toggle('is-active', l.getAttribute('href') === '#' + current);
         });
       }
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script>
+    // Convert .code-block to Prism format
+    document.querySelectorAll('.code-block').forEach(block => {
+      const text = block.textContent;
+      let lang = 'javascript';
+      if (text.includes('<!DOCTYPE') || text.includes('<div') || text.includes('<form') || text.includes('<input') || text.includes('<body') || text.includes('<link') || text.includes('<script')) lang = 'html';
+      else if (text.startsWith('npm ') || text.startsWith('npx ')) lang = 'bash';
+      else if (text.includes('import ') && text.includes(' from ')) lang = 'javascript';
+      block.innerHTML = '<pre class="language-' + lang + '" style="margin:0;background:transparent"><code class="language-' + lang + '">' + block.innerHTML + '</code></pre>';
+      Prism.highlightElement(block.querySelector('code'));
     });
   </script>
 </body>
