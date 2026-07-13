@@ -17,6 +17,10 @@
 /* @group-priority: brand-green, status, brand-blue, brand-purple, brand-yellow */
 
 :root {
+  --bg-base-default: #FFFFFF;
+  --bg-base-secondary: #F5F6F8;
+  --text-default: #0F1117;
+  
   /* radius */
   --radius-2: 2px;
   --radius-4: 4px;
