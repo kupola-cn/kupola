@@ -2,6 +2,7 @@ import { getIconsPath, getDefaultTheme, getDefaultBrand, setConfig } from './kup
 
 const THEME_KEY = 'kupola-theme';
 const BRAND_KEY = 'kupola-brand';
+let _themeInitialized = false;
 
 const BRAND_OPTIONS = [
   { id: 'green', name: '翠绿', color: '#32F08C' },
@@ -88,21 +89,26 @@ function updateThemeIcon(toggleBtn) {
 function initTheme() {
   
   const toggleBtn = document.querySelector('[data-theme-toggle]');
-  if (toggleBtn) {
-    const iconEl = toggleBtn.querySelector('.theme-icon');
-    if (iconEl && iconEl.src) {
-      const currentIconsPath = getIconsPath();
-      if (currentIconsPath === '/icons/') {
-        const iconPath = iconEl.src.substring(0, iconEl.src.lastIndexOf('/') + 1);
-        const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-        const relativeIconsPath = iconPath.replace(window.location.origin + basePath, '');
-        if (relativeIconsPath !== iconPath) {
-          setConfig({
-            paths: {
-              icons: relativeIconsPath,
-              base: basePath
-            }
-          });
+  
+  if (!_themeInitialized) {
+    _themeInitialized = true;
+    
+    if (toggleBtn) {
+      const iconEl = toggleBtn.querySelector('.theme-icon');
+      if (iconEl && iconEl.src) {
+        const currentIconsPath = getIconsPath();
+        if (currentIconsPath === '/icons/') {
+          const iconPath = iconEl.src.substring(0, iconEl.src.lastIndexOf('/') + 1);
+          const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+          const relativeIconsPath = iconPath.replace(window.location.origin + basePath, '');
+          if (relativeIconsPath !== iconPath) {
+            setConfig({
+              paths: {
+                icons: relativeIconsPath,
+                base: basePath
+              }
+            });
+          }
         }
       }
     }
