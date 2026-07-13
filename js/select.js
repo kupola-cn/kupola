@@ -74,6 +74,7 @@ class Select {
 
     // Option click handler
     this._optionClickHandler = (e) => {
+      e.stopPropagation();
       const option = e.currentTarget;
       if (option.classList.contains('is-disabled')) return;
       

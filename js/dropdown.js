@@ -48,12 +48,18 @@ class Dropdown {
 
     // Item click handler
     this._itemClickHandler = (e) => {
+      e.stopPropagation();
       const item = e.currentTarget;
       if (item.classList.contains('is-disabled') || item.classList.contains('ds-dropdown__divider')) {return;}
+
+      this.menu.querySelectorAll('.ds-dropdown__item').forEach(i => i.classList.remove('is-selected'));
+      item.classList.add('is-selected');
 
       if (this.triggerText && !item.hasAttribute('data-no-update-trigger')) {
         this.triggerText.textContent = item.textContent.trim();
       }
+
+      this.element.setAttribute('data-value', item.getAttribute('data-value') || '');
 
       if (this.onSelect) {
         this.onSelect({ item, value: item.getAttribute('data-value'), text: item.textContent.trim() });
