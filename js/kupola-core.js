@@ -9,6 +9,7 @@ import { KupolaLifecycle } from './kupola-lifecycle.js';
 import { kupolaInitializer } from './initializer.js';
 import { kupolaData } from './data-bind.js';
 import { initTheme } from './theme.js';
+import { getConfig } from './kupola-config.js';
 
 let kupolaRegistry = null;
 
@@ -19,16 +20,20 @@ if (typeof window !== 'undefined') {
 /** Bootstrap the Kupola component system (data binding, theme, component discovery). */
 async function kupolaBootstrap() {
   if (typeof window !== 'undefined') {
+    const config = getConfig();
     // Load persisted data and bind data-bind elements
     kupolaData.loadPersisted();
     kupolaData.bind();
     // Initialize theme
     initTheme();
-    // Initialize function-based components first
-    await kupolaInitializer.initializeAll();
-    // Then bootstrap class-based components
-    if (kupolaRegistry) {
-      await kupolaRegistry.bootstrap();
+    
+    if (config.components?.autoInit !== false) {
+      // Initialize function-based components first
+      await kupolaInitializer.initializeAll();
+      // Then bootstrap class-based components
+      if (kupolaRegistry) {
+        await kupolaRegistry.bootstrap();
+      }
     }
   }
 }

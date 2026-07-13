@@ -1,4 +1,4 @@
-import { getIconsPath } from './kupola-config.js';
+import { getIconsPath, getDefaultTheme, getDefaultBrand } from './kupola-config.js';
 
 const THEME_KEY = 'kupola-theme';
 const BRAND_KEY = 'kupola-brand';
@@ -18,7 +18,7 @@ const BRAND_OPTIONS = [
 ];
 
 function getTheme() {
-  return localStorage.getItem(THEME_KEY) || 'dark';
+  return localStorage.getItem(THEME_KEY) || getDefaultTheme();
 }
 
 function setTheme(theme) {
@@ -41,7 +41,7 @@ function setTheme(theme) {
 }
 
 function getBrand() {
-  return localStorage.getItem(BRAND_KEY) || 'zengqing';
+  return localStorage.getItem(BRAND_KEY) || getDefaultBrand();
 }
 
 function setBrand(brandId) {

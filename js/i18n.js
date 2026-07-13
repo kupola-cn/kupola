@@ -1,8 +1,11 @@
+import { getConfig } from './kupola-config.js';
+
 class KupolaI18n {
   constructor(options = {}) {
+    const config = getConfig();
     this.locales = options.locales || {};
-    this.currentLocale = options.defaultLocale || 'zh-CN';
-    this.fallbackLocale = options.fallbackLocale || 'zh-CN';
+    this.currentLocale = options.defaultLocale || config.i18n?.locale || 'zh-CN';
+    this.fallbackLocale = options.fallbackLocale || config.i18n?.fallbackLocale || 'en-US';
     this.delimiter = options.delimiter || '.';
     this.missingHandler = options.missingHandler || ((key) => {
       console.warn(`Missing translation: ${key}`);

@@ -15,7 +15,7 @@ import {
   initTheme, setTheme, getTheme, setBrand, getBrand,
   createThemeToggle, createBrandPicker, BRAND_OPTIONS
 } from '../js/theme.js';
-import { setConfig, getConfig, getIconsPath } from '../js/kupola-config.js';
+import { setConfig, getConfig, getIconsPath, getBasePath, getDefaultTheme, getDefaultBrand } from '../js/kupola-config.js';
 import { ComponentInitializerRegistry, kupolaInitializer } from '../js/initializer.js';
 import { 
   KupolaComponent, applyMixin,
@@ -129,4 +129,4 @@ export {
   formatDate, formatNumber, formatCurrency 
 };
 
-export { setConfig, getConfig, getIconsPath };
+export { setConfig, getConfig, getIconsPath, getBasePath, getDefaultTheme, getDefaultBrand };

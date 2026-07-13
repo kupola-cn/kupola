@@ -1,4 +1,5 @@
 import { ref } from './data-bind.js';
+import { getConfig } from './kupola-config.js';
 
 // ============================================================
 // Scheduler - 批量更新、去重、微任务调度
@@ -273,6 +274,11 @@ class FetchedSource extends DependsSource {
 
     async fetch(params) {
         let url = this.config.source;
+        const httpConfig = getConfig('http');
+        
+        if (httpConfig?.baseURL && !url.startsWith('http://') && !url.startsWith('https://')) {
+            url = httpConfig.baseURL + url.replace(/^\//, '');
+        }
 
         // Replace path params (:id -> value)
         for (const key in params) {
