@@ -133,7 +133,10 @@ class Select {
 
     // Document click to close
     this._documentClickHandler = (e) => {
-      if (!this.element.contains(e.target) && !this.optionsEl.contains(e.target)) {
+      if (!this.isOpen) return;
+      const isInElement = this.element.contains(e.target);
+      const isInOptions = this.optionsEl && this.optionsEl.contains(e.target);
+      if (!isInElement && !isInOptions) {
         this.hideOptions();
       }
     };
@@ -246,8 +249,8 @@ class Select {
       if (opt.disabled) el.classList.add('is-disabled');
       if (this.selectedValues.has(opt.value)) el.classList.add('is-selected');
       
-      el.addEventListener('click', (e) => this._optionClickHandler(e));
       el._selectOptionClickHandler = (e) => this._optionClickHandler(e);
+      el.addEventListener('click', el._selectOptionClickHandler);
       
       this.optionsEl.appendChild(el);
     });
@@ -408,8 +411,8 @@ class Select {
 
   _bindOptionClicks() {
     this.optionsEl.querySelectorAll('.ds-select__option, .ds-select__item').forEach(option => {
-      option.addEventListener('click', (e) => this._optionClickHandler(e));
       option._selectOptionClickHandler = (e) => this._optionClickHandler(e);
+      option.addEventListener('click', option._selectOptionClickHandler);
     });
   }
 

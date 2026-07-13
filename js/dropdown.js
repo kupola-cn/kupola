@@ -170,7 +170,10 @@ class Dropdown {
 
     // Document click to close
     this._documentClickHandler = (e) => {
-      if (!this.element.contains(e.target) && !this.menu.contains(e.target)) {
+      if (!this.isOpen) return;
+      const isInElement = this.element.contains(e.target);
+      const isInMenu = this.menu && this.menu.contains(e.target);
+      if (!isInElement && !isInMenu) {
         this.hideMenu();
       }
     };
@@ -183,8 +186,8 @@ class Dropdown {
 
   _bindMenuItems() {
     this.menu.querySelectorAll('.ds-dropdown__item').forEach(item => {
-      item.addEventListener('click', (e) => this._itemClickHandler(e));
       item._dropdownItemClickHandler = (e) => this._itemClickHandler(e);
+      item.addEventListener('click', item._dropdownItemClickHandler);
     });
   }
 
@@ -383,11 +386,13 @@ class Dropdown {
         if (item.value !== undefined) {el.setAttribute('data-value', item.value);}
         if (item.icon) {el.innerHTML = item.icon + el.innerHTML;}
         if (item.disabled) {el.classList.add('is-disabled');}
+        
+        el._dropdownItemClickHandler = (e) => this._itemClickHandler(e);
+        el.addEventListener('click', el._dropdownItemClickHandler);
+        
         this.menu.appendChild(el);
       }
     });
-
-    this._bindMenuItems();
   }
 
   destroy() {
