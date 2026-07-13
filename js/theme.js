@@ -101,26 +101,6 @@ function initTheme() {
   
   if (!_themeInitialized) {
     _themeInitialized = true;
-    
-    if (toggleBtn) {
-      const iconEl = toggleBtn.querySelector('.theme-icon');
-      if (iconEl && iconEl.src) {
-        const currentIconsPath = getIconsPath();
-        if (currentIconsPath === '/icons/') {
-          const iconPath = iconEl.src.substring(0, iconEl.src.lastIndexOf('/') + 1);
-          const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-          const relativeIconsPath = iconPath.replace(window.location.origin + basePath, '');
-          if (relativeIconsPath !== iconPath) {
-            setConfig({
-              paths: {
-                icons: relativeIconsPath,
-                base: basePath
-              }
-            });
-          }
-        }
-      }
-    }
   }
   
   const savedTheme = getTheme();
