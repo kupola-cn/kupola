@@ -102,13 +102,13 @@ function initTheme() {
   
   if (!_themeInitialized) {
     _themeInitialized = true;
-    
-    const savedTheme = getTheme();
-    setTheme(savedTheme);
-    
-    const savedBrand = getBrand();
-    setBrand(savedBrand);
   }
+  
+  const savedTheme = getTheme();
+  setTheme(savedTheme);
+  
+  const savedBrand = getBrand();
+  setBrand(savedBrand);
   
   if (toggleBtn) {
     updateThemeIcon(toggleBtn);
