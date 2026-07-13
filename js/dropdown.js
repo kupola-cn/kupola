@@ -1,6 +1,6 @@
 import { globalEvents } from './global-events.js';
 import { kupolaInitializer } from './initializer.js';
-import { getUiConfig } from './kupola-config.js';
+import { getUiConfig, getZIndexConfig } from './kupola-config.js';
 
 class Dropdown {
   constructor(element, options = {}) {
@@ -302,9 +302,13 @@ class Dropdown {
     this._originalBottom = this.menu.style.bottom;
     this._originalMarginBottom = this.menu.style.marginBottom;
     this._originalWidth = this.menu.style.width;
+    this._originalTransform = this.menu.style.transform;
+    this._originalZIndex = this.menu.style.zIndex;
 
+    const zIndex = getZIndexConfig().dropdown;
     this.menu.style.position = 'fixed';
-    this.menu.style.zIndex = '9999';
+    this.menu.style.zIndex = zIndex;
+    this.menu.style.transform = 'translateZ(0)';
     document.body.appendChild(this.menu);
   }
 
@@ -318,7 +322,8 @@ class Dropdown {
     this.menu.style.bottom = this._originalBottom || '';
     this.menu.style.marginBottom = this._originalMarginBottom || '';
     this.menu.style.width = this._originalWidth || '';
-    this.menu.style.zIndex = '';
+    this.menu.style.zIndex = this._originalZIndex || '';
+    this.menu.style.transform = this._originalTransform || '';
     this._originalParent = null;
   }
 

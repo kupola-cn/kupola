@@ -1,5 +1,6 @@
 import { globalEvents } from './global-events.js';
 import { kupolaInitializer } from './initializer.js';
+import { getZIndexConfig } from './kupola-config.js';
 
 class Select {
   constructor(element, options = {}) {
@@ -496,9 +497,13 @@ class Select {
     this._originalLeft = this.optionsEl.style.left;
     this._originalRight = this.optionsEl.style.right;
     this._originalWidth = this.optionsEl.style.width;
+    this._originalTransform = this.optionsEl.style.transform;
+    this._originalZIndex = this.optionsEl.style.zIndex;
 
+    const zIndex = getZIndexConfig().dropdown;
     this.optionsEl.style.position = 'fixed';
-    this.optionsEl.style.zIndex = '9999';
+    this.optionsEl.style.zIndex = zIndex;
+    this.optionsEl.style.transform = 'translateZ(0)';
     document.body.appendChild(this.optionsEl);
   }
 
@@ -510,7 +515,8 @@ class Select {
     this.optionsEl.style.left = this._originalLeft || '';
     this.optionsEl.style.right = this._originalRight || '';
     this.optionsEl.style.width = this._originalWidth || '';
-    this.optionsEl.style.zIndex = '';
+    this.optionsEl.style.zIndex = this._originalZIndex || '';
+    this.optionsEl.style.transform = this._originalTransform || '';
     this._originalParent = null;
   }
 

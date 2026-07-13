@@ -17,6 +17,16 @@ const config = {
     headers: {},
     withCredentials: false,
   },
+  zIndex: {
+    modal: 1000,
+    dropdown: 2000,
+    tooltip: 2100,
+    popover: 2200,
+    datepicker: 2300,
+    message: 3000,
+    notification: 3100,
+    loading: 5000,
+  },
   ui: {
     defaultSize: 'md',
     modal: {
@@ -115,6 +125,10 @@ export function getHttpConfig() {
 
 export function getUiConfig() {
   return config.ui;
+}
+
+export function getZIndexConfig() {
+  return config.zIndex;
 }
 
 export function getSecurityConfig() {

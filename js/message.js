@@ -1,4 +1,4 @@
-import { getMessageConfig } from './kupola-config.js';
+import { getMessageConfig, getZIndexConfig } from './kupola-config.js';
 
 const Message = {
   normal: function (message, options = {}) {
@@ -42,6 +42,9 @@ const Message = {
     if (!container) {
       container = document.createElement('div');
       container.className = `ds-message ds-message--${position}`;
+      const zIndex = getZIndexConfig().message;
+      container.style.zIndex = zIndex;
+      container.style.transform = 'translateZ(0)';
       document.body.appendChild(container);
     }
 

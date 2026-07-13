@@ -1,6 +1,6 @@
 import { globalEvents } from './global-events.js';
 import { kupolaInitializer } from './initializer.js';
-import { getUiConfig } from './kupola-config.js';
+import { getUiConfig, getZIndexConfig } from './kupola-config.js';
 
 class Datepicker {
   constructor(element, options = {}) {
@@ -249,9 +249,13 @@ class Datepicker {
     this._originalTop = this.calendarEl.style.top;
     this._originalLeft = this.calendarEl.style.left;
     this._originalWidth = this.calendarEl.style.width;
+    this._originalTransform = this.calendarEl.style.transform;
+    this._originalZIndex = this.calendarEl.style.zIndex;
 
+    const zIndex = getZIndexConfig().datepicker;
     this.calendarEl.style.position = 'fixed';
-    this.calendarEl.style.zIndex = '9999';
+    this.calendarEl.style.zIndex = zIndex;
+    this.calendarEl.style.transform = 'translateZ(0)';
     document.body.appendChild(this.calendarEl);
   }
 
@@ -262,7 +266,8 @@ class Datepicker {
     this.calendarEl.style.top = this._originalTop || '';
     this.calendarEl.style.left = this._originalLeft || '';
     this.calendarEl.style.width = this._originalWidth || '';
-    this.calendarEl.style.zIndex = '';
+    this.calendarEl.style.zIndex = this._originalZIndex || '';
+    this.calendarEl.style.transform = this._originalTransform || '';
     this._originalParent = null;
   }
 

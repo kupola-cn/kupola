@@ -1,4 +1,4 @@
-import { getNotificationConfig } from './kupola-config.js';
+import { getNotificationConfig, getZIndexConfig } from './kupola-config.js';
 
 const Notification = {
   normal: function (options) {
@@ -48,6 +48,9 @@ const Notification = {
     if (!container) {
       container = document.createElement('div');
       container.className = `ds-notification ds-notification--${position}`;
+      const zIndex = getZIndexConfig().notification;
+      container.style.zIndex = zIndex;
+      container.style.transform = 'translateZ(0)';
       document.body.appendChild(container);
     }
 

@@ -1,5 +1,5 @@
 import { kupolaInitializer } from './initializer.js';
-import { getUiConfig } from './kupola-config.js';
+import { getUiConfig, getZIndexConfig } from './kupola-config.js';
 
 class Tooltip {
   constructor(element, options = {}) {
@@ -117,6 +117,10 @@ class Tooltip {
 
     this.tooltipEl = document.createElement('div');
     this.tooltipEl.className = `ds-tooltip ds-tooltip--${this.position} ds-tooltip--${this.theme}`;
+
+    const zIndex = getZIndexConfig().tooltip;
+    this.tooltipEl.style.zIndex = zIndex;
+    this.tooltipEl.style.transform = 'translateZ(0)';
 
     if (this.html) {
       this.tooltipEl.innerHTML = text;
