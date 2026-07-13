@@ -1,3 +1,6 @@
+import { getValidationConfig } from './kupola-config.js';
+import { getPerformanceConfig } from './kupola-config.js';
+
 class KupolaValidator {
   constructor() {
     this.validators = {
@@ -12,9 +15,9 @@ class KupolaValidator {
       equalTo: this.validateEqualTo,
       phone: this.validatePhone,
       date: this.validateDate,
-      number: this.validateNumber
+      number: this.validateNumber,
     };
-    
+
     this.customValidators = {};
     this.asyncValidators = {};
     this.customAsyncValidators = {};
@@ -35,13 +38,13 @@ class KupolaValidator {
     const errors = {};
     const inputs = form.querySelectorAll('[data-validate]');
     let hasError = false;
-    
+
     inputs.forEach(input => {
       const name = input.name || input.id;
       const rules = this.parseRules(input.getAttribute('data-validate'));
       const value = this.getValue(input);
-      
-      for (const [rule, params] of Object.entries(rules)) {
+
+      for (const [ rule, params ] of Object.entries(rules)) {
         const validatorFunc = this.customValidators[rule] || this.validators[rule];
         const isValid = validatorFunc?.(value, params);
         if (!isValid) {
@@ -54,15 +57,15 @@ class KupolaValidator {
         }
       }
     });
-    
+
     this.formStates[formId] = {
       valid: !hasError,
       errors: errors,
-      errorCount: Object.keys(errors).length
+      errorCount: Object.keys(errors).length,
     };
-    
+
     this.updateFormState(form);
-    
+
     return !hasError;
   }
 
@@ -70,27 +73,27 @@ class KupolaValidator {
     if (input.classList.contains('ds-datepicker__input') || input.classList.contains('ds-timepicker__input')) {
       return input.value.trim();
     }
-    
+
     if (input.closest('.ds-select')) {
       const select = input.closest('.ds-select');
       const valueEl = select.querySelector('.ds-select__value') || select.querySelector('.ds-select__trigger span');
       return valueEl ? valueEl.textContent.trim() : '';
     }
-    
+
     if (input.closest('.ds-fileupload')) {
       const upload = input.closest('.ds-fileupload');
       const uploadInstance = upload.__fileUploadInstance;
       return uploadInstance && uploadInstance.getFiles().length > 0 ? 'has-files' : '';
     }
-    
+
     return input.value.trim();
   }
 
   validateInput(input) {
     const rules = this.parseRules(input.getAttribute('data-validate'));
     const value = this.getValue(input);
-    
-    for (const [rule, params] of Object.entries(rules)) {
+
+    for (const [ rule, params ] of Object.entries(rules)) {
       const validatorFunc = this.customValidators[rule] || this.validators[rule];
       const isValid = validatorFunc?.(value, params);
       if (!isValid) {
@@ -98,7 +101,7 @@ class KupolaValidator {
         return false;
       }
     }
-    
+
     this.clearError(input);
     return true;
   }
@@ -106,13 +109,13 @@ class KupolaValidator {
   validateAll() {
     const forms = document.querySelectorAll('form[data-validation]');
     let allValid = true;
-    
+
     forms.forEach(form => {
       if (!this.validate(form)) {
         allValid = false;
       }
     });
-    
+
     return allValid;
   }
 
@@ -120,19 +123,19 @@ class KupolaValidator {
     const formId = form.id || `form-${Math.random().toString(36).substr(2, 9)}`;
     const errors = {};
     const group = options.group;
-    const inputs = group 
+    const inputs = group
       ? form.querySelectorAll(`[data-validate][data-validate-group="${group}"]`)
       : form.querySelectorAll('[data-validate]');
-    
+
     let hasError = false;
-    
+
     for (const input of inputs) {
       const isValid = await this.validateInputAsync(input);
       if (!isValid) {
         hasError = true;
       }
     }
-    
+
     const formErrors = {};
     inputs.forEach(input => {
       const name = input.name || input.id;
@@ -141,15 +144,15 @@ class KupolaValidator {
         formErrors[name] = errorElement.textContent;
       }
     });
-    
+
     this.formStates[formId] = {
       valid: !hasError,
       errors: formErrors,
-      errorCount: Object.keys(formErrors).length
+      errorCount: Object.keys(formErrors).length,
     };
-    
+
     this.updateFormState(form);
-    
+
     return !hasError;
   }
 
@@ -157,8 +160,8 @@ class KupolaValidator {
     const rules = this.parseRules(input.getAttribute('data-validate'));
     const asyncRules = this.parseRules(input.getAttribute('data-validate-async') || '');
     const value = this.getValue(input);
-    
-    for (const [rule, params] of Object.entries(rules)) {
+
+    for (const [ rule, params ] of Object.entries(rules)) {
       const validatorFunc = this.customValidators[rule] || this.validators[rule];
       const isValid = validatorFunc?.(value, params);
       if (!isValid) {
@@ -166,8 +169,8 @@ class KupolaValidator {
         return false;
       }
     }
-    
-    for (const [rule, params] of Object.entries(asyncRules)) {
+
+    for (const [ rule, params ] of Object.entries(asyncRules)) {
       const validatorFunc = this.customAsyncValidators[rule] || this.asyncValidators[rule];
       if (validatorFunc) {
         try {
@@ -182,7 +185,7 @@ class KupolaValidator {
         }
       }
     }
-    
+
     this.clearError(input);
     return true;
   }
@@ -190,14 +193,14 @@ class KupolaValidator {
   async validateGroup(form, groupName) {
     const inputs = form.querySelectorAll(`[data-validate][data-validate-group="${groupName}"]`);
     let hasError = false;
-    
+
     for (const input of inputs) {
       const isValid = await this.validateInputAsync(input);
       if (!isValid) {
         hasError = true;
       }
     }
-    
+
     return !hasError;
   }
 
@@ -216,7 +219,7 @@ class KupolaValidator {
 
   updateFormState(form) {
     const state = this.getFormState(form);
-    
+
     if (state.valid) {
       form.classList.remove('ds-form--invalid');
       form.classList.add('ds-form--valid');
@@ -224,19 +227,19 @@ class KupolaValidator {
       form.classList.remove('ds-form--valid');
       form.classList.add('ds-form--invalid');
     }
-    
+
     if (state.loading) {
       form.classList.add('ds-form--loading');
     } else {
       form.classList.remove('ds-form--loading');
     }
-    
+
     if (state.submitting) {
       form.classList.add('ds-form--submitting');
     } else {
       form.classList.remove('ds-form--submitting');
     }
-    
+
     if (state.disabled) {
       form.classList.add('ds-form--disabled');
       form.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
@@ -248,7 +251,7 @@ class KupolaValidator {
         }
       });
     }
-    
+
     const statusElement = form.querySelector('.ds-form__status');
     if (statusElement) {
       if (state.errorCount > 0) {
@@ -305,12 +308,12 @@ class KupolaValidator {
   parseRules(rulesString) {
     const rules = {};
     const parts = rulesString.split('|');
-    
+
     parts.forEach(part => {
-      const [rule, params] = part.split(':');
+      const [ rule, params ] = part.split(':');
       rules[rule] = params ? params.split(',') : [];
     });
-    
+
     return rules;
   }
 
@@ -328,34 +331,34 @@ class KupolaValidator {
     return urlRegex.test(value);
   }
 
-  validateMinLength(value, [min]) {
+  validateMinLength(value, [ min ]) {
     return value.length >= parseInt(min);
   }
 
-  validateMaxLength(value, [max]) {
+  validateMaxLength(value, [ max ]) {
     return value.length <= parseInt(max);
   }
 
-  validatePattern(value, [pattern]) {
+  validatePattern(value, [ pattern ]) {
     const regex = new RegExp(pattern);
     return regex.test(value);
   }
 
-  validateMin(value, [min]) {
+  validateMin(value, [ min ]) {
     return parseFloat(value) >= parseFloat(min);
   }
 
-  validateMax(value, [max]) {
+  validateMax(value, [ max ]) {
     return parseFloat(value) <= parseFloat(max);
   }
 
-  validateEqualTo(value, [targetId]) {
+  validateEqualTo(value, [ targetId ]) {
     const target = document.getElementById(targetId);
     return target && value === target.value;
   }
 
   validatePhone(value) {
-    const phoneRegex = /^[\d\s\-\+\(\)]{7,20}$/;
+    const phoneRegex = /^[\d\s\-+()]{7,20}$/;
     return phoneRegex.test(value);
   }
 
@@ -372,7 +375,7 @@ class KupolaValidator {
     input.classList.add('ds-input--error');
     input.classList.remove('ds-input--success');
     input.setAttribute('aria-invalid', 'true');
-    
+
     let errorElement = input.parentElement.querySelector('.ds-input__error');
     if (!errorElement) {
       errorElement = document.createElement('span');
@@ -382,21 +385,21 @@ class KupolaValidator {
       input.parentElement.appendChild(errorElement);
     }
     errorElement.textContent = message;
-    
+
     this.removeStatusIcon(input);
-    
+
     input.dispatchEvent(new CustomEvent('validation-error', { detail: { message } }));
   }
 
   clearError(input) {
     input.classList.remove('ds-input--error');
     input.setAttribute('aria-invalid', 'false');
-    
+
     const errorElement = input.parentElement.querySelector('.ds-input__error');
     if (errorElement) {
       errorElement.remove();
     }
-    
+
     input.dispatchEvent(new CustomEvent('validation-success'));
   }
 
@@ -404,13 +407,13 @@ class KupolaValidator {
     input.classList.add('ds-input--success');
     input.classList.remove('ds-input--error');
     input.setAttribute('aria-invalid', 'false');
-    
+
     this.removeStatusIcon(input);
-    
+
     const icon = document.createElement('span');
     icon.className = 'ds-input__status-icon ds-input__status-icon--success';
     icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
-    
+
     input.parentElement.appendChild(icon);
   }
 
@@ -423,8 +426,8 @@ class KupolaValidator {
 
   getErrorMessage(rule, params, input) {
     const customMessage = input.getAttribute(`data-message-${rule}`);
-    if (customMessage) return customMessage;
-    
+    if (customMessage) {return customMessage;}
+
     const messages = {
       required: 'This field is required',
       email: 'Please enter a valid email address',
@@ -437,7 +440,7 @@ class KupolaValidator {
       equalTo: 'Values do not match',
       phone: 'Please enter a valid phone number',
       date: 'Please enter a valid date (YYYY-MM-DD)',
-      number: 'Please enter a valid number'
+      number: 'Please enter a valid number',
     };
     return messages[rule] || 'Invalid input';
   }
@@ -448,105 +451,117 @@ const validator = new KupolaValidator();
 if (!window.__kupolaValidationInitialized) {
   window.__kupolaValidationInitialized = true;
   document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('form[data-validation]').forEach(form => {
-    form.addEventListener('submit', async (e) => {
-      const formId = form.id || `form-${Math.random().toString(36).substr(2, 9)}`;
-      
-      if (validator.submitting.has(formId)) {
+    document.querySelectorAll('form[data-validation]').forEach(form => {
+      form.addEventListener('submit', async (e) => {
+        const formId = form.id || `form-${Math.random().toString(36).substr(2, 9)}`;
+
+        if (validator.submitting.has(formId)) {
+          e.preventDefault();
+          return;
+        }
+
         e.preventDefault();
-        return;
-      }
-      
-      e.preventDefault();
-      
-      const hasAsyncValidation = form.querySelector('[data-validate-async]') !== null;
-      
-      let isValid;
-      if (hasAsyncValidation) {
-        isValid = await validator.validateAsync(form);
-      } else {
-        isValid = validator.validate(form);
-      }
-      
-      if (!isValid) {
-        const firstError = form.querySelector('.ds-input--error');
-        if (firstError) {
-          firstError.focus();
-        }
-      } else {
-        validator.submitting.add(formId);
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-          const originalText = submitBtn.textContent;
-          submitBtn.setAttribute('data-original-text', originalText);
-          submitBtn.textContent = 'Submitting...';
-          submitBtn.disabled = true;
-        }
-        
-        try {
-          const onSubmit = form.getAttribute('data-on-submit');
-          if (onSubmit && window[onSubmit]) {
-            await window[onSubmit](form);
-          } else {
-            form.submit();
-          }
-        } finally {
-          validator.submitting.delete(formId);
-          if (submitBtn) {
-            submitBtn.textContent = submitBtn.getAttribute('data-original-text') || 'Submit';
-            submitBtn.disabled = false;
-          }
-        }
-      }
-    });
 
-    form.querySelectorAll('[data-validate]').forEach(input => {
-      input.addEventListener('blur', () => {
-        setTimeout(() => {
-          const activeElement = document.activeElement;
-          if (activeElement && activeElement.closest('.ds-select')) {
-            return;
-          }
-          const isValid = validator.validateInput(input);
-          if (isValid && input.value.trim()) {
-            validator.showSuccess(input);
-          }
-        }, 50);
-      });
+        const hasAsyncValidation = form.querySelector('[data-validate-async]') !== null;
 
-      const debounce = (func, wait) => {
-        let timeout;
-        return (...args) => {
-          clearTimeout(timeout);
-          timeout = setTimeout(() => func(...args), wait);
-        };
-      };
+        let isValid;
+        if (hasAsyncValidation) {
+          isValid = await validator.validateAsync(form);
+        } else {
+          isValid = validator.validate(form);
+        }
 
-      const validateOnInput = debounce(() => {
-        const value = validator.getValue(input);
-        if (value.length > 0 || input.classList.contains('ds-input--error')) {
-          const isValid = validator.validateInput(input);
-          if (isValid && value) {
-            validator.showSuccess(input);
+        if (!isValid) {
+          const firstError = form.querySelector('.ds-input--error');
+          if (firstError) {
+            firstError.focus();
           }
         } else {
-          validator.removeStatusIcon(input);
-        }
-      }, 300);
+          validator.submitting.add(formId);
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            const originalText = submitBtn.textContent;
+            submitBtn.setAttribute('data-original-text', originalText);
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+          }
 
-      input.addEventListener('input', validateOnInput);
-
-      input.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-          const isValid = validator.validateInput(input);
-          if (isValid && input.value.trim()) {
-            validator.showSuccess(input);
+          try {
+            const onSubmit = form.getAttribute('data-on-submit');
+            if (onSubmit && window[onSubmit]) {
+              await window[onSubmit](form);
+            } else {
+              form.submit();
+            }
+          } finally {
+            validator.submitting.delete(formId);
+            if (submitBtn) {
+              submitBtn.textContent = submitBtn.getAttribute('data-original-text') || 'Submit';
+              submitBtn.disabled = false;
+            }
           }
         }
+      });
+
+      form.querySelectorAll('[data-validate]').forEach(input => {
+        const validationConfig = getValidationConfig();
+        const trigger = validationConfig.trigger || 'blur';
+
+        const validateAndShow = () => {
+          if (!validationConfig.showErrors) {return;}
+          setTimeout(() => {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.closest('.ds-select')) {
+              return;
+            }
+            const isValid = validator.validateInput(input);
+            if (isValid && input.value.trim()) {
+              validator.showSuccess(input);
+            }
+          }, 50);
+        };
+
+        if (trigger === 'blur' || trigger === 'both') {
+          input.addEventListener('blur', validateAndShow);
+        }
+
+        const debounce = (func, wait) => {
+          let timeout;
+          return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func(...args), wait);
+          };
+        };
+
+        const performanceConfig = getPerformanceConfig();
+        const validateOnInput = debounce(() => {
+          if (!validationConfig.showErrors) {return;}
+          const value = validator.getValue(input);
+          if (value.length > 0 || input.classList.contains('ds-input--error')) {
+            const isValid = validator.validateInput(input);
+            if (isValid && value) {
+              validator.showSuccess(input);
+            }
+          } else {
+            validator.removeStatusIcon(input);
+          }
+        }, performanceConfig.debounceDelay);
+
+        if (trigger === 'input' || trigger === 'both') {
+          input.addEventListener('input', validateOnInput);
+        }
+
+        input.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter') {
+            const isValid = validator.validateInput(input);
+            if (isValid && input.value.trim()) {
+              validator.showSuccess(input);
+            }
+          }
+        });
       });
     });
   });
-});
 }
 
 export { KupolaValidator, validator };

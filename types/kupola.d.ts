@@ -697,6 +697,141 @@ declare function createModal(options?: Record<string, unknown>): Modal;
 declare function confirmModal(options: Record<string, unknown> | string): Modal;
 declare function alertModal(options: Record<string, unknown> | string): Modal;
 
+// ============================================================
+// Configuration API
+// ============================================================
+
+interface KupolaPathsConfig {
+  icons: string;
+  base: string;
+}
+
+interface KupolaThemeConfig {
+  default: ThemeType;
+  brand: BrandColor;
+}
+
+interface KupolaI18nConfig {
+  locale: string;
+  fallbackLocale: string;
+}
+
+interface KupolaHttpConfig {
+  baseURL: string;
+  timeout: number;
+  headers: Record<string, string>;
+  withCredentials: boolean;
+}
+
+interface KupolaUiModalConfig {
+  backdropClick: boolean;
+}
+
+interface KupolaUiDropdownConfig {
+  closeOnClick: boolean;
+}
+
+interface KupolaUiDatepickerConfig {
+  weekStart: number;
+}
+
+interface KupolaUiTooltipConfig {
+  delay: number;
+}
+
+interface KupolaUiConfig {
+  defaultSize: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  modal: KupolaUiModalConfig;
+  dropdown: KupolaUiDropdownConfig;
+  datepicker: KupolaUiDatepickerConfig;
+  tooltip: KupolaUiTooltipConfig;
+}
+
+interface KupolaPerformanceConfig {
+  lazyLoad: boolean;
+  debounceDelay: number;
+  throttleDelay: number;
+  animationEnabled: boolean;
+}
+
+interface KupolaSecuritySanitizeConfig {
+  enabled: boolean;
+  allowedTags: string[];
+  allowedAttributes: Record<string, string[]>;
+}
+
+interface KupolaSecurityMaskPattern {
+  regex: string;
+  replace: string;
+}
+
+interface KupolaSecurityMaskConfig {
+  enabled: boolean;
+  patterns: Record<string, KupolaSecurityMaskPattern>;
+}
+
+interface KupolaSecuritySecureIdConfig {
+  length: number;
+  charset: string;
+}
+
+interface KupolaSecurityConfig {
+  xssProtection: boolean;
+  sanitizeHtml: KupolaSecuritySanitizeConfig;
+  maskData: KupolaSecurityMaskConfig;
+  secureId: KupolaSecuritySecureIdConfig;
+}
+
+interface KupolaMessageConfig {
+  duration: number;
+  position: 'top' | 'bottom' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  maxCount: number;
+}
+
+interface KupolaNotificationConfig {
+  duration: number;
+  position: 'top' | 'bottom' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+}
+
+interface KupolaValidationConfig {
+  defaultRules: string[];
+  showErrors: boolean;
+  trigger: 'blur' | 'input' | 'both';
+}
+
+interface KupolaComponentsConfig {
+  autoInit: boolean;
+  silentErrors: boolean;
+}
+
+interface KupolaConfig {
+  paths: KupolaPathsConfig;
+  theme: KupolaThemeConfig;
+  i18n: KupolaI18nConfig;
+  http: KupolaHttpConfig;
+  ui: KupolaUiConfig;
+  performance: KupolaPerformanceConfig;
+  security: KupolaSecurityConfig;
+  message: KupolaMessageConfig;
+  notification: KupolaNotificationConfig;
+  validation: KupolaValidationConfig;
+  components: KupolaComponentsConfig;
+}
+
+declare function setConfig(options: Partial<KupolaConfig>): void;
+declare function getConfig(key?: string): KupolaConfig | unknown;
+declare function getIconsPath(): string;
+declare function getBasePath(): string;
+declare function getDefaultTheme(): ThemeType;
+declare function getDefaultBrand(): BrandColor;
+declare function getHttpConfig(): KupolaHttpConfig;
+declare function getUiConfig(): KupolaUiConfig;
+declare function getSecurityConfig(): KupolaSecurityConfig;
+declare function getPerformanceConfig(): KupolaPerformanceConfig;
+declare function getMessageConfig(): KupolaMessageConfig;
+declare function getNotificationConfig(): KupolaNotificationConfig;
+declare function getValidationConfig(): KupolaValidationConfig;
+
 declare function cleanupAllDropdowns(): void;
 declare function cleanupAllSlideCaptchas(): void;
 

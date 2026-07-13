@@ -1,31 +1,87 @@
 const config = {
   paths: {
     icons: '/icons/',
-    base: '/'
+    base: '/',
   },
   theme: {
     default: 'dark',
-    brand: 'zengqing'
+    brand: 'zengqing',
   },
   i18n: {
     locale: 'zh-CN',
-    fallbackLocale: 'en-US'
+    fallbackLocale: 'en-US',
   },
   http: {
     baseURL: '',
-    timeout: 10000
+    timeout: 10000,
+    headers: {},
+    withCredentials: false,
+  },
+  ui: {
+    defaultSize: 'md',
+    modal: {
+      backdropClick: true,
+    },
+    dropdown: {
+      closeOnClick: true,
+    },
+    datepicker: {
+      weekStart: 1,
+    },
+    tooltip: {
+      delay: 300,
+    },
+  },
+  performance: {
+    lazyLoad: false,
+    debounceDelay: 200,
+    throttleDelay: 100,
+    animationEnabled: true,
+  },
+  security: {
+    xssProtection: true,
+    sanitizeHtml: {
+      enabled: true,
+      allowedTags: [ 'b', 'i', 'u', 'em', 'strong', 'a', 'br', 'p', 'span', 'div', 'img' ],
+      allowedAttributes: {
+        'a': [ 'href', 'target', 'rel' ],
+        'img': [ 'src', 'alt', 'width', 'height' ],
+        'span': [ 'class', 'style' ],
+        'div': [ 'class', 'style' ],
+      },
+    },
+    maskData: {
+      enabled: true,
+      patterns: {
+        phone: { regex: '^(\\d{3})\\d{4}(\\d{4})$', replace: '$1****$2' },
+        email: { regex: '^(.)(.*)(@.*)$', replace: '$1***$3' },
+        idCard: { regex: '^(\\d{6})\\d{8}(\\d{4})$', replace: '$1********$2' },
+        bankCard: { regex: '^(\\d{4})\\d{8}(\\d{4})$', replace: '$1 **** **** $2' },
+      },
+    },
+    secureId: {
+      length: 16,
+      charset: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+    },
+  },
+  message: {
+    duration: 3000,
+    position: 'top-right',
+    maxCount: 5,
+  },
+  notification: {
+    duration: 4500,
+    position: 'top-right',
+  },
+  validation: {
+    defaultRules: [],
+    showErrors: true,
+    trigger: 'blur',
   },
   components: {
     autoInit: true,
-    silentErrors: false
+    silentErrors: false,
   },
-  store: {
-    persist: true,
-    prefix: 'kupola-'
-  },
-  events: {
-    global: true
-  }
 };
 
 export function setConfig(options) {
@@ -33,7 +89,7 @@ export function setConfig(options) {
 }
 
 export function getConfig(key) {
-  if (!key) return config;
+  if (!key) {return config;}
   return getNestedValue(config, key);
 }
 
@@ -51,6 +107,34 @@ export function getDefaultTheme() {
 
 export function getDefaultBrand() {
   return config.theme.brand;
+}
+
+export function getHttpConfig() {
+  return config.http;
+}
+
+export function getUiConfig() {
+  return config.ui;
+}
+
+export function getSecurityConfig() {
+  return config.security;
+}
+
+export function getPerformanceConfig() {
+  return config.performance;
+}
+
+export function getMessageConfig() {
+  return config.message;
+}
+
+export function getNotificationConfig() {
+  return config.notification;
+}
+
+export function getValidationConfig() {
+  return config.validation;
 }
 
 function mergeDeep(target, source) {

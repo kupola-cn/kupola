@@ -20,6 +20,7 @@ class Select {
     this.maxSelection = options.maxSelection || parseInt(element.getAttribute('data-select-max')) || Infinity;
     this.remoteMethod = options.remoteMethod || null;
     this.onChange = options.onChange || null;
+    this.appendToBody = options.appendToBody !== false;
     
     // State
     this.isOpen = false;
@@ -30,6 +31,8 @@ class Select {
     this.searchInput = null;
     this.clearBtn = null;
     this.tagsWrap = null;
+    this._originalParent = null;
+    this._originalPosition = null;
     
     this._triggerClickHandler = null;
     this._documentClickHandler = null;
@@ -128,7 +131,7 @@ class Select {
 
     // Document click to close
     this._documentClickHandler = (e) => {
-      if (!this.element.contains(e.target)) {
+      if (!this.element.contains(e.target) && !this.optionsEl.contains(e.target)) {
         this.hideOptions();
       }
     };
@@ -431,10 +434,17 @@ class Select {
   showOptions() {
     if (this.disabled || this.isOpen) return;
     this.isOpen = true;
-    this.optionsEl.style.display = 'block';
-    if (this.icon) this.icon.style.transform = 'rotate(180deg)';
     this.element.classList.add('is-open');
+    if (this.icon) this.icon.style.transform = 'rotate(180deg)';
     this.focusIndex = -1;
+
+    if (this.appendToBody) {
+      this._appendOptionsToBody();
+      this._addScrollListener();
+    }
+
+    this.optionsEl.style.display = 'block';
+    this._calculateOptionsPosition();
     
     if (this.searchInput) {
       setTimeout(() => this.searchInput.focus(), 50);
@@ -447,6 +457,11 @@ class Select {
     this.optionsEl.style.display = 'none';
     if (this.icon) this.icon.style.transform = 'rotate(0deg)';
     this.element.classList.remove('is-open');
+
+    if (this.appendToBody) {
+      this._restoreOptionsFromBody();
+      this._removeScrollListener();
+    }
     
     // Clear search
     if (this.searchInput) {
@@ -456,6 +471,72 @@ class Select {
     
     // Clear focus
     this.optionsEl.querySelectorAll('.ds-select__option, .ds-select__item').forEach(o => o.classList.remove('is-focused'));
+  }
+
+  _addScrollListener() {
+    this._scrollHandler = () => {
+      this.hideOptions();
+    };
+    window.addEventListener('scroll', this._scrollHandler, true);
+  }
+
+  _removeScrollListener() {
+    if (this._scrollHandler) {
+      window.removeEventListener('scroll', this._scrollHandler, true);
+      this._scrollHandler = null;
+    }
+  }
+
+  _appendOptionsToBody() {
+    if (!this.optionsEl) return;
+    this._originalParent = this.optionsEl.parentNode;
+    this._originalPosition = this.optionsEl.style.position;
+    this._originalTop = this.optionsEl.style.top;
+    this._originalLeft = this.optionsEl.style.left;
+    this._originalRight = this.optionsEl.style.right;
+    this._originalWidth = this.optionsEl.style.width;
+
+    this.optionsEl.style.position = 'fixed';
+    this.optionsEl.style.zIndex = '9999';
+    document.body.appendChild(this.optionsEl);
+  }
+
+  _restoreOptionsFromBody() {
+    if (!this.optionsEl || !this._originalParent) return;
+    this._originalParent.appendChild(this.optionsEl);
+    this.optionsEl.style.position = this._originalPosition || '';
+    this.optionsEl.style.top = this._originalTop || '';
+    this.optionsEl.style.left = this._originalLeft || '';
+    this.optionsEl.style.right = this._originalRight || '';
+    this.optionsEl.style.width = this._originalWidth || '';
+    this.optionsEl.style.zIndex = '';
+    this._originalParent = null;
+  }
+
+  _calculateOptionsPosition() {
+    if (!this.appendToBody || !this.optionsEl) return;
+
+    const triggerRect = this.element.getBoundingClientRect();
+    const optionsRect = this.optionsEl.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+
+    this.optionsEl.style.width = `${Math.max(triggerRect.width, optionsRect.width)}px`;
+
+    const spaceBelow = viewportHeight - triggerRect.bottom;
+    const spaceAbove = triggerRect.top;
+
+    if (spaceBelow < optionsRect.height && spaceAbove > spaceBelow) {
+      this.optionsEl.style.top = `${triggerRect.top - optionsRect.height - 4}px`;
+    } else {
+      this.optionsEl.style.top = `${triggerRect.bottom + 4}px`;
+    }
+
+    if (triggerRect.left + optionsRect.width > viewportWidth) {
+      this.optionsEl.style.left = `${triggerRect.right - Math.max(triggerRect.width, optionsRect.width)}px`;
+    } else {
+      this.optionsEl.style.left = `${triggerRect.left}px`;
+    }
   }
 
   toggleOptions() {
@@ -547,6 +628,10 @@ class Select {
     if (this.searchInput) this.searchInput.remove();
     if (this.clearBtn) this.clearBtn.remove();
     if (this.tagsWrap) this.tagsWrap.remove();
+
+    if (this.appendToBody && this._originalParent) {
+      this._restoreOptionsFromBody();
+    }
 
     this._documentClickHandler = null;
     this._documentClickListener = null;

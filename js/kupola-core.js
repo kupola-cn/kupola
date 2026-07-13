@@ -9,7 +9,7 @@ import { KupolaLifecycle } from './kupola-lifecycle.js';
 import { kupolaInitializer } from './initializer.js';
 import { kupolaData } from './data-bind.js';
 import { initTheme } from './theme.js';
-import { getConfig } from './kupola-config.js';
+import { getConfig, getSecurityConfig } from './kupola-config.js';
 
 let kupolaRegistry = null;
 
@@ -17,9 +17,41 @@ if (typeof window !== 'undefined') {
   kupolaRegistry = new KupolaComponentRegistry();
 }
 
+function _applySecurityHeaders() {
+  const securityConfig = getSecurityConfig();
+  
+  if (securityConfig.xssProtection && typeof document !== 'undefined') {
+    let metaTag = document.querySelector('meta[http-equiv="X-XSS-Protection"]');
+    if (!metaTag) {
+      metaTag = document.createElement('meta');
+      metaTag.setAttribute('http-equiv', 'X-XSS-Protection');
+      metaTag.setAttribute('content', '1; mode=block');
+      document.head.insertBefore(metaTag, document.head.firstChild);
+    }
+    
+    metaTag = document.querySelector('meta[http-equiv="X-Content-Type-Options"]');
+    if (!metaTag) {
+      metaTag = document.createElement('meta');
+      metaTag.setAttribute('http-equiv', 'X-Content-Type-Options');
+      metaTag.setAttribute('content', 'nosniff');
+      document.head.insertBefore(metaTag, document.head.firstChild);
+    }
+    
+    metaTag = document.querySelector('meta[http-equiv="X-Frame-Options"]');
+    if (!metaTag) {
+      metaTag = document.createElement('meta');
+      metaTag.setAttribute('http-equiv', 'X-Frame-Options');
+      metaTag.setAttribute('content', 'SAMEORIGIN');
+      document.head.insertBefore(metaTag, document.head.firstChild);
+    }
+  }
+}
+
 /** Bootstrap the Kupola component system (data binding, theme, component discovery). */
 async function kupolaBootstrap() {
   if (typeof window !== 'undefined') {
+    _applySecurityHeaders();
+    
     const config = getConfig();
     // Load persisted data and bind data-bind elements
     kupolaData.loadPersisted();

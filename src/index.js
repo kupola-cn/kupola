@@ -7,17 +7,23 @@
 
 import { KupolaLifecycle, createLifecycle, kupolaLifecycle } from '../js/kupola-lifecycle.js';
 import { KupolaUtils, stringUtils, arrayUtils, objectUtils, numberUtils, dateUtils, debounce, throttle, validatorUtils, cryptoUtils, preloadUtils } from '../js/utils.js';
-import { 
+import {
   KupolaDataBind, KupolaEventBus, KupolaStore, KupolaStoreManager,
-  kupolaData, kupolaEvents, kupolaStoreManager, createStore, getStore, ref
+  kupolaData, kupolaEvents, kupolaStoreManager, createStore, getStore, ref,
 } from '../js/data-bind.js';
-import { 
+import {
   initTheme, setTheme, getTheme, setBrand, getBrand,
-  createThemeToggle, createBrandPicker, BRAND_OPTIONS
+  createThemeToggle, createBrandPicker, BRAND_OPTIONS,
 } from '../js/theme.js';
-import { setConfig, getConfig, getIconsPath, getBasePath, getDefaultTheme, getDefaultBrand } from '../js/kupola-config.js';
+import {
+  setConfig, getConfig, getIconsPath, getBasePath,
+  getDefaultTheme, getDefaultBrand,
+  getHttpConfig, getUiConfig, getSecurityConfig,
+  getPerformanceConfig, getMessageConfig, getNotificationConfig, getValidationConfig,
+} from '../js/kupola-config.js';
+import { sanitizeHtml, escapeHtml, stripHtml, maskData, generateSecureId } from '../js/security.js';
 import { ComponentInitializerRegistry, kupolaInitializer } from '../js/initializer.js';
-import { 
+import {
   KupolaComponent, applyMixin,
   KupolaComponentRegistry,
   kupolaRegistry,
@@ -27,13 +33,13 @@ import {
   bootstrapComponents,
   defineMixin,
   useMixin,
-  defineComponent
+  defineComponent,
 } from '../js/kupola-core.js';
 
-import { 
-  KupolaI18n, kupolaI18n, createI18n, 
+import {
+  KupolaI18n, kupolaI18n, createI18n,
   t, n, setLocale, getLocale,
-  formatDate, formatNumber, formatCurrency 
+  formatDate, formatNumber, formatCurrency,
 } from '../js/i18n.js';
 import { Dropdown, initDropdown, initDropdowns, cleanupDropdown, cleanupAllDropdowns } from '../js/dropdown.js';
 import { Select, initSelect, initSelects, cleanupSelect } from '../js/select.js';
@@ -123,10 +129,16 @@ export { KupolaPagination, initPagination };
 export { ref };
 export { registerWebComponents };
 
-export { 
-  KupolaI18n, kupolaI18n, createI18n, 
+export {
+  KupolaI18n, kupolaI18n, createI18n,
   t, n, setLocale, getLocale,
-  formatDate, formatNumber, formatCurrency 
+  formatDate, formatNumber, formatCurrency,
 };
 
-export { setConfig, getConfig, getIconsPath, getBasePath, getDefaultTheme, getDefaultBrand };
+export {
+  setConfig, getConfig, getIconsPath, getBasePath,
+  getDefaultTheme, getDefaultBrand,
+  getHttpConfig, getUiConfig, getSecurityConfig,
+  getPerformanceConfig, getMessageConfig, getNotificationConfig, getValidationConfig,
+};
+export { sanitizeHtml, escapeHtml, stripHtml, maskData, generateSecureId };

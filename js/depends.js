@@ -299,10 +299,15 @@ class FetchedSource extends DependsSource {
             url += (url.includes('?') ? '&' : '?') + queryParts.join('&');
         }
 
+        const globalHeaders = httpConfig?.headers || {};
         const fetchOptions = {
             method: this.method.toUpperCase(),
-            headers: { 'Content-Type': 'application/json', ...this.headers }
+            headers: { 'Content-Type': 'application/json', ...globalHeaders, ...this.headers }
         };
+
+        if (httpConfig?.withCredentials) {
+            fetchOptions.credentials = 'include';
+        }
 
         if (['POST', 'PUT', 'PATCH'].includes(fetchOptions.method)) {
             fetchOptions.body = JSON.stringify(params);
