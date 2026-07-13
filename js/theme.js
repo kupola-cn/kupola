@@ -72,6 +72,14 @@ function setBrand(brandId) {
   });
 }
 
+function updateThemeIcon(toggleBtn) {
+  const iconEl = toggleBtn.querySelector('.theme-icon');
+  if (iconEl) {
+    const currentTheme = getTheme();
+    iconEl.src = currentTheme === 'dark' ? '/icons/sun.svg' : '/icons/moon.svg';
+  }
+}
+
 function initTheme() {
   
   const savedTheme = getTheme();
@@ -82,12 +90,14 @@ function initTheme() {
   
   const toggleBtn = document.querySelector('[data-theme-toggle]');
   if (toggleBtn) {
+    updateThemeIcon(toggleBtn);
     const existingOnClick = toggleBtn.onclick;
     toggleBtn.onclick = function(e) {
       e.preventDefault();
       const currentTheme = getTheme();
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       setTheme(newTheme);
+      updateThemeIcon(toggleBtn);
       if (typeof existingOnClick === 'function') {
         existingOnClick.call(this, e);
       }
