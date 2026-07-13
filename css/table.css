@@ -7,6 +7,7 @@
 .kupola-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .kupola-table th, .kupola-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-neutral-l1); }
 .kupola-table th { background: var(--bg-base-secondary); font-weight: 600; color: var(--text-default); white-space: nowrap; }
+.kupola-table tbody tr { background: var(--bg-base-default); }
 .kupola-table-striped tbody tr:nth-child(even) { background: var(--bg-base-secondary); }
 .kupola-table-hover tbody tr:hover { background: var(--status-primary-surface-l2); }
 .kupola-table-bordered { border: 1px solid var(--border-neutral-l1); }

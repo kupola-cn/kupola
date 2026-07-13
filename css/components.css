@@ -1020,6 +1020,7 @@
     .ds-table__pagination { display: flex; align-items: center; gap: var(--spacer-8); }
 
     /* Table variants (IMP-001) */
+    .ds-table tbody tr { background: var(--bg-base-default); }
     .ds-table--striped tbody tr:nth-child(even) { background: var(--bg-base-secondary); }
     .ds-table--hover tbody tr:hover { background: var(--bg-overlay-l1); cursor: default; }
     .ds-table--compact th,
