@@ -1,8 +1,17 @@
-import { getIconsPath, getDefaultTheme, getDefaultBrand, setConfig } from './kupola-config.js';
+import { getIconsPath, getDefaultTheme, getDefaultBrand, setConfig, onConfigChange } from './kupola-config.js';
 
 const THEME_KEY = 'kupola-theme';
 const BRAND_KEY = 'kupola-brand';
 let _themeInitialized = false;
+
+onConfigChange((newConfig) => {
+  const toggleBtn = document.querySelector('[data-theme-toggle]');
+  if (toggleBtn) {
+    const currentTheme = getTheme();
+    updateThemeIcon(toggleBtn);
+    setTheme(currentTheme);
+  }
+});
 
 const BRAND_OPTIONS = [
   { id: 'green', name: '翠绿', color: '#32F08C' },

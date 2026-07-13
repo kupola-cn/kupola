@@ -94,8 +94,53 @@ const config = {
   },
 };
 
+const configChangeListeners = [];
+
+function loadConfigFromGlobal() {
+  if (typeof window !== 'undefined' && window.kupolaConfig) {
+    try {
+      mergeDeep(config, window.kupolaConfig);
+      notifyConfigChange();
+    } catch (e) {
+      console.warn('[Kupola] Failed to parse window.kupolaConfig:', e);
+    }
+  }
+}
+
+function notifyConfigChange() {
+  configChangeListeners.forEach(listener => {
+    try {
+      listener(config);
+    } catch (e) {
+      console.warn('[Kupola] Error in config change listener:', e);
+    }
+  });
+}
+
+export function onConfigChange(listener) {
+  if (typeof listener === 'function') {
+    configChangeListeners.push(listener);
+  }
+}
+
+export function offConfigChange(listener) {
+  const index = configChangeListeners.indexOf(listener);
+  if (index > -1) {
+    configChangeListeners.splice(index, 1);
+  }
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadConfigFromGlobal);
+  } else {
+    loadConfigFromGlobal();
+  }
+}
+
 export function setConfig(options) {
   mergeDeep(config, options);
+  notifyConfigChange();
 }
 
 export function getConfig(key) {

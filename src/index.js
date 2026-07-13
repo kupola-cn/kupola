@@ -20,6 +20,7 @@ import {
   getDefaultTheme, getDefaultBrand,
   getHttpConfig, getUiConfig, getSecurityConfig,
   getPerformanceConfig, getMessageConfig, getNotificationConfig, getValidationConfig,
+  onConfigChange, offConfigChange,
 } from '../js/kupola-config.js';
 import { sanitizeHtml, escapeHtml, stripHtml, maskData, generateSecureId } from '../js/security.js';
 import { ComponentInitializerRegistry, kupolaInitializer } from '../js/initializer.js';
@@ -140,5 +141,6 @@ export {
   getDefaultTheme, getDefaultBrand,
   getHttpConfig, getUiConfig, getSecurityConfig,
   getPerformanceConfig, getMessageConfig, getNotificationConfig, getValidationConfig,
+  onConfigChange, offConfigChange,
 };
 export { sanitizeHtml, escapeHtml, stripHtml, maskData, generateSecureId };
