@@ -1,3 +1,5 @@
+import { getIconsPath } from './kupola-config.js';
+
 const THEME_KEY = 'kupola-theme';
 const BRAND_KEY = 'kupola-brand';
 
@@ -76,7 +78,8 @@ function updateThemeIcon(toggleBtn) {
   const iconEl = toggleBtn.querySelector('.theme-icon');
   if (iconEl) {
     const currentTheme = getTheme();
-    iconEl.src = currentTheme === 'dark' ? '/icons/sun.svg' : '/icons/moon.svg';
+    const iconsPath = getIconsPath();
+    iconEl.src = currentTheme === 'dark' ? iconsPath + 'sun.svg' : iconsPath + 'moon.svg';
   }
 }
 
@@ -203,12 +206,10 @@ function createThemeToggle() {
   
   const icon = document.createElement('img');
   icon.className = 'theme-icon';
-  const scripts = document.getElementsByTagName('script');
-  const currentScript = scripts[scripts.length - 1];
-  const scriptPath = currentScript.src.substring(0, currentScript.src.lastIndexOf('/') + 1);
+  const iconsPath = getIconsPath();
   icon.src = getTheme() === 'dark' 
-    ? scriptPath + '../icons/sun.svg' 
-    : scriptPath + '../icons/moon.svg';
+    ? iconsPath + 'sun.svg' 
+    : iconsPath + 'moon.svg';
   icon.width = 14;
   icon.height = 14;
   icon.alt = 'Toggle theme';
