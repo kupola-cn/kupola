@@ -1,4 +1,4 @@
-import { getIconsPath, getDefaultTheme, getDefaultBrand } from './kupola-config.js';
+import { getIconsPath, getDefaultTheme, getDefaultBrand, setConfig } from './kupola-config.js';
 
 const THEME_KEY = 'kupola-theme';
 const BRAND_KEY = 'kupola-brand';
@@ -78,14 +78,32 @@ function updateThemeIcon(toggleBtn) {
   const iconEl = toggleBtn.querySelector('.theme-icon');
   if (iconEl) {
     const currentTheme = getTheme();
-    const iconPath = iconEl.src.substring(0, iconEl.src.lastIndexOf('/') + 1);
+    const iconsPath = getIconsPath();
     iconEl.src = currentTheme === 'dark' 
-      ? iconPath + 'sun.svg' 
-      : iconPath + 'moon.svg';
+      ? iconsPath + 'sun.svg' 
+      : iconsPath + 'moon.svg';
   }
 }
 
 function initTheme() {
+  
+  const toggleBtn = document.querySelector('[data-theme-toggle]');
+  if (toggleBtn) {
+    const iconEl = toggleBtn.querySelector('.theme-icon');
+    if (iconEl && iconEl.src) {
+      const iconPath = iconEl.src.substring(0, iconEl.src.lastIndexOf('/') + 1);
+      const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+      const relativeIconsPath = iconPath.replace(window.location.origin + basePath, '');
+      if (relativeIconsPath !== iconPath) {
+        setConfig({
+          paths: {
+            icons: relativeIconsPath,
+            base: basePath
+          }
+        });
+      }
+    }
+  }
   
   const savedTheme = getTheme();
   setTheme(savedTheme);
@@ -93,7 +111,6 @@ function initTheme() {
   const savedBrand = getBrand();
   setBrand(savedBrand);
   
-  const toggleBtn = document.querySelector('[data-theme-toggle]');
   if (toggleBtn) {
     updateThemeIcon(toggleBtn);
     const existingOnClick = toggleBtn.onclick;
