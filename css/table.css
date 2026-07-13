@@ -5,58 +5,58 @@
 .kupola-table-wrapper { width: 100%; }
 .kupola-table-container { overflow-x: auto; }
 .kupola-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.kupola-table th, .kupola-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e8e8e8; }
-.kupola-table th { background: #fafafa; font-weight: 600; color: #333; white-space: nowrap; }
-.kupola-table-striped tbody tr:nth-child(even) { background: #fafafa; }
-.kupola-table-hover tbody tr:hover { background: #f0f7ff; }
-.kupola-table-bordered { border: 1px solid #e8e8e8; }
-.kupola-table-bordered th, .kupola-table-bordered td { border: 1px solid #e8e8e8; }
+.kupola-table th, .kupola-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-neutral-l1); }
+.kupola-table th { background: var(--bg-base-secondary); font-weight: 600; color: var(--text-default); white-space: nowrap; }
+.kupola-table-striped tbody tr:nth-child(even) { background: var(--bg-base-secondary); }
+.kupola-table-hover tbody tr:hover { background: var(--status-primary-surface-l2); }
+.kupola-table-bordered { border: 1px solid var(--border-neutral-l1); }
+.kupola-table-bordered th, .kupola-table-bordered td { border: 1px solid var(--border-neutral-l1); }
 .kupola-table-compact th, .kupola-table-compact td { padding: 8px 12px; }
 .kupola-table-sortable { cursor: pointer; user-select: none; position: relative; }
-.kupola-table-sortable:hover { background: #f0f0f0; }
+.kupola-table-sortable:hover { background: var(--bg-base-tertiary); }
 .kupola-table-sort-icon { font-size: 12px; opacity: 0.5; margin-left: 4px; }
 .kupola-table-sort-asc .kupola-table-sort-icon,
-.kupola-table-sort-desc .kupola-table-sort-icon { opacity: 1; color: #1890ff; }
-.kupola-table-empty, .kupola-table-loading { text-align: center; padding: 40px 16px !important; color: #999; }
+.kupola-table-sort-desc .kupola-table-sort-icon { opacity: 1; color: var(--status-primary-default); }
+.kupola-table-empty, .kupola-table-loading { text-align: center; padding: 40px 16px !important; color: var(--text-tertiary); }
 .kupola-table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
 .kupola-table-toolbar-right { display: flex; align-items: center; gap: 8px; }
-.kupola-table-filter-input { padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; width: 240px; }
-.kupola-table-filter-input:focus { outline: none; border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
-.kupola-table-info { color: #999; font-size: 13px; }
-.kupola-table-selection-info { color: #1890ff; font-size: 13px; font-weight: 500; }
+.kupola-table-filter-input { padding: 6px 12px; border: 1px solid var(--border-neutral-l2); border-radius: 4px; font-size: 14px; width: 240px; }
+.kupola-table-filter-input:focus { outline: none; border-color: var(--status-primary-default); box-shadow: 0 0 0 2px var(--status-primary-surface-l2); }
+.kupola-table-info { color: var(--text-tertiary); font-size: 13px; }
+.kupola-table-selection-info { color: var(--status-primary-default); font-size: 13px; font-weight: 500; }
 .kupola-table-col-selection { width: 40px; text-align: center; }
 .kupola-table-col-expand { width: 40px; text-align: center; }
-.kupola-table-expand-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px 6px; color: #666; }
-.kupola-table-expand-btn:hover { color: #1890ff; }
-.kupola-table-expand-row td { background: #fafafa; padding: 16px; }
-.kupola-table-row-selected { background: #e6f7ff !important; }
-.kupola-table-row-selected:hover { background: #bae7ff !important; }
+.kupola-table-expand-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px 6px; color: var(--text-secondary); }
+.kupola-table-expand-btn:hover { color: var(--status-primary-default); }
+.kupola-table-expand-row td { background: var(--bg-base-secondary); padding: 16px; }
+.kupola-table-row-selected { background: var(--status-primary-surface-l1) !important; }
+.kupola-table-row-selected:hover { background: var(--status-primary-surface-l2) !important; }
 
 /* Resize */
 .kupola-table-resize-handle { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: col-resize; background: transparent; }
-.kupola-table-resize-handle:hover { background: #1890ff; opacity: 0.3; }
+.kupola-table-resize-handle:hover { background: var(--status-primary-default); opacity: 0.3; }
 
 /* Drag */
 .kupola-table-draggable { transition: opacity 0.2s; }
 .kupola-table-dragging { opacity: 0.4; }
-.kupola-table-drag-over { border-top: 2px solid #1890ff !important; }
+.kupola-table-drag-over { border-top: 2px solid var(--status-primary-default) !important; }
 
 /* Edit */
 .kupola-table-editable-cell { cursor: text; }
-.kupola-table-editable-cell:hover { background: #e6f7ff; }
+.kupola-table-editable-cell:hover { background: var(--status-primary-surface-l1); }
 .kupola-table-edit-cell { display: flex; gap: 4px; align-items: center; }
 .kupola-table-edit-input { flex: 1; padding: 2px 6px; font-size: 13px; }
 .kupola-table-edit-actions { display: flex; gap: 2px; }
-.kupola-table-edit-save, .kupola-table-edit-cancel { background: none; border: 1px solid #d9d9d9; border-radius: 3px; cursor: pointer; padding: 2px 6px; font-size: 12px; }
-.kupola-table-edit-save { color: #52c41a; border-color: #52c41a; }
-.kupola-table-edit-cancel { color: #ff4d4f; border-color: #ff4d4f; }
-.kupola-table-edit-save:hover { background: #f6ffed; }
-.kupola-table-edit-cancel:hover { background: #fff2f0; }
+.kupola-table-edit-save, .kupola-table-edit-cancel { background: none; border: 1px solid var(--border-neutral-l2); border-radius: 3px; cursor: pointer; padding: 2px 6px; font-size: 12px; }
+.kupola-table-edit-save { color: var(--status-success-default); border-color: var(--status-success-default); }
+.kupola-table-edit-cancel { color: var(--status-error-default); border-color: var(--status-error-default); }
+.kupola-table-edit-save:hover { background: var(--status-success-surface-l1); }
+.kupola-table-edit-cancel:hover { background: var(--status-error-surface-l1); }
 
 /* Tree */
 .kupola-table-tree-indent { display: inline-block; }
-.kupola-table-tree-toggle { background: none; border: none; cursor: pointer; font-size: 10px; padding: 0 4px; color: #666; }
-.kupola-table-tree-toggle:hover { color: #1890ff; }
+.kupola-table-tree-toggle { background: none; border: none; cursor: pointer; font-size: 10px; padding: 0 4px; color: var(--text-secondary); }
+.kupola-table-tree-toggle:hover { color: var(--status-primary-default); }
 .kupola-table-tree-toggle-placeholder { display: inline-block; width: 18px; }
 
 /* Virtual */
@@ -65,10 +65,10 @@
 /* Pagination */
 .kupola-table-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 16px; padding: 8px 0; }
 .kupola-table-pages { display: flex; gap: 4px; align-items: center; }
-.kupola-table-page-btn { min-width: 32px; height: 32px; border: 1px solid #d9d9d9; border-radius: 4px; background: #fff; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-.kupola-table-page-btn:hover:not(:disabled):not(.active) { border-color: #1890ff; color: #1890ff; }
-.kupola-table-page-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+.kupola-table-page-btn { min-width: 32px; height: 32px; border: 1px solid var(--border-neutral-l2); border-radius: 4px; background: var(--bg-base-default); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.kupola-table-page-btn:hover:not(:disabled):not(.active) { border-color: var(--status-primary-default); color: var(--status-primary-default); }
+.kupola-table-page-btn.active { background: var(--status-primary-default); color: var(--text-onbrand); border-color: var(--status-primary-default); }
 .kupola-table-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.kupola-table-page-ellipsis { padding: 0 4px; color: #999; }
-.kupola-table-page-size { padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; }
-.kupola-table-page-info { color: #999; font-size: 13px; }
+.kupola-table-page-ellipsis { padding: 0 4px; color: var(--text-tertiary); }
+.kupola-table-page-size { padding: 4px 8px; border: 1px solid var(--border-neutral-l2); border-radius: 4px; font-size: 13px; }
+.kupola-table-page-info { color: var(--text-tertiary); font-size: 13px; }

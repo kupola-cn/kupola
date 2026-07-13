@@ -450,15 +450,15 @@
 }
 
 .ds-titlebar__traffic-btn--close {
-  background-color: #FF5F57;
+  background-color: var(--status-error-default);
 }
 
 .ds-titlebar__traffic-btn--minimize {
-  background-color: #FEBC2E;
+  background-color: var(--status-warning-default);
 }
 
 .ds-titlebar__traffic-btn--maximize {
-  background-color: #28C840;
+  background-color: var(--status-success-default);
 }
 
 .ds-titlebar__project {
@@ -2210,7 +2210,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #33b9c1;
+  background-color: var(--status-info-default);
 }
 
 .ds-calendar__day.is-selected {
@@ -3920,15 +3920,15 @@
 }
 
 .ds-heatmap__cell--level-0 {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-overlay-l1);
 }
 
 .ds-heatmap__cell--level-1 {
-  background-color: rgba(34, 197, 94, 0.2);
+  background-color: var(--status-success-surface-l2);
 }
 
 .ds-heatmap__cell--level-2 {
-  background-color: rgba(34, 197, 94, 0.4);
+  background-color: var(--status-success-surface-l3);
 }
 
 .ds-heatmap__cell--level-3 {
@@ -3940,7 +3940,7 @@
 }
 
 .ds-heatmap__cell--level-5 {
-  background-color: #22c55e;
+  background-color: var(--status-success-default);
 }
 
 .ds-heatmap__labels {

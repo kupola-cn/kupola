@@ -15,25 +15,25 @@
   --bg-invert-active: #E5E5E5;
   --bg-invert-disabled: rgba(255, 255, 255, 0.2);
 
-  --text-default: #D1D3DB;
+  --text-default: #E5E7EB;
   --text-default-hover: #FFFFFF;
   --text-default-active: #FFFFFF;
-  --text-secondary: #A0A5B2;
-  --text-secondary-hover: #D1D3DB;
-  --text-secondary-active: #D1D3DB;
-  --text-tertiary: #7D8493;
-  --text-disabled: #7D8493;
+  --text-secondary: #B8BDCA;
+  --text-secondary-hover: #E5E7EB;
+  --text-secondary-active: #E5E7EB;
+  --text-tertiary: #9CA3AF;
+  --text-disabled: #8B93A1;
   --text-onbrand: #FFFFFF;
   --text-onaccent: #FFFFFF;
 
-  --icon-default: #D1D3DB;
+  --icon-default: #E5E7EB;
   --icon-default-hover: #FFFFFF;
   --icon-default-active: #FFFFFF;
-  --icon-secondary: #9599A6;
-  --icon-secondary-hover: #D1D3DB;
-  --icon-secondary-active: #D1D3DB;
-  --icon-tertiary: #7D8493;
-  --icon-disabled: #7D8493;
+  --icon-secondary: #B8BDCA;
+  --icon-secondary-hover: #E5E7EB;
+  --icon-secondary-active: #E5E7EB;
+  --icon-tertiary: #9CA3AF;
+  --icon-disabled: #8B93A1;
   --icon-onbrand: #FFFFFF;
   --icon-onaccent: #FFFFFF;
 
