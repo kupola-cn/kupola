@@ -21,7 +21,7 @@
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
-  z-index: 1000;
+  z-index: var(--z-index-loading, 5000);
   transition: top 0.2s ease;
 }
 

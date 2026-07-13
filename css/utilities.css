@@ -326,4 +326,9 @@
 .ds-bg-base { background: var(--bg-base-secondary); }
 
 /* Z-index */
-.ds-z-modal { z-index: 1000; }
+.ds-z-modal { z-index: var(--z-index-modal, 1000); }
+.ds-z-dropdown { z-index: var(--z-index-dropdown, 2000); }
+.ds-z-tooltip { z-index: var(--z-index-tooltip, 2100); }
+.ds-z-message { z-index: var(--z-index-message, 3000); }
+.ds-z-notification { z-index: var(--z-index-notification, 3100); }
+.ds-z-loading { z-index: var(--z-index-loading, 5000); }

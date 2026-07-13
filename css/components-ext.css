@@ -667,7 +667,7 @@
   border: 1px solid var(--border-neutral-l2);
   border-radius: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  z-index: 100;
+  z-index: var(--z-index-datepicker, 2300);
 }
 
 .ds-datepicker__header {
@@ -819,7 +819,7 @@
   border: 1px solid var(--border-neutral-l2);
   border-radius: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  z-index: 100;
+  z-index: var(--z-index-dropdown, 2000);
   display: none;
 }
 
@@ -1912,7 +1912,7 @@
   position: fixed;
   top: 24px;
   right: 24px;
-  z-index: 2000;
+  z-index: var(--z-index-notification, 3100);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -2041,7 +2041,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 2000;
+  z-index: var(--z-index-message, 3000);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2392,7 +2392,7 @@
   border-radius: 6px;
   padding: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  z-index: var(--z-index-dropdown, 2000);
   display: none;
 }
 
@@ -2668,7 +2668,7 @@
   border-radius: var(--radius-4);
   padding: var(--spacer-4);
   display: none;
-  z-index: 100;
+  z-index: var(--z-index-dropdown, 2000);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -2782,7 +2782,7 @@
   font-size: var(--body-xs-font-size);
   line-height: var(--body-sm-line-height);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  z-index: 9999;
+  z-index: var(--z-index-tooltip, 2100);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.12s ease, transform 0.12s ease;
@@ -3530,7 +3530,7 @@
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.85);
-  z-index: 9999;
+  z-index: var(--z-index-loading, 5000);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4072,7 +4072,7 @@
   font-size: 12px;
   color: var(--text-default);
   pointer-events: none;
-  z-index: 1000;
+  z-index: var(--z-index-tooltip, 2100);
   display: none;
 }
 
