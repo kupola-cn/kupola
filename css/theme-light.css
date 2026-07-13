@@ -15,25 +15,25 @@
   --bg-invert-active: #3A3E44;
   --bg-invert-disabled: rgba(0, 0, 0, 0.2);
 
-  --text-default: #1A1B1D;
-  --text-default-hover: #0C0C0D;
-  --text-default-active: #0C0C0D;
-  --text-secondary: #666B75;
-  --text-secondary-hover: #3A3E44;
-  --text-secondary-active: #3A3E44;
-  --text-tertiary: #6B7280;
-  --text-disabled: #6F7482;
+  --text-default: #0F1117;
+  --text-default-hover: #000000;
+  --text-default-active: #000000;
+  --text-secondary: #4B5563;
+  --text-secondary-hover: #374151;
+  --text-secondary-active: #374151;
+  --text-tertiary: #5B6370;
+  --text-disabled: #6B7280;
   --text-onbrand: #FFFFFF;
   --text-onaccent: #FFFFFF;
 
-  --icon-default: #1A1B1D;
-  --icon-default-hover: #0C0C0D;
-  --icon-default-active: #0C0C0D;
-  --icon-secondary: #666B75;
-  --icon-secondary-hover: #3A3E44;
-  --icon-secondary-active: #3A3E44;
-  --icon-tertiary: #6B7280;
-  --icon-disabled: #6F7482;
+  --icon-default: #0F1117;
+  --icon-default-hover: #000000;
+  --icon-default-active: #000000;
+  --icon-secondary: #4B5563;
+  --icon-secondary-hover: #374151;
+  --icon-secondary-active: #374151;
+  --icon-tertiary: #5B6370;
+  --icon-disabled: #6B7280;
   --icon-onbrand: #FFFFFF;
   --icon-onaccent: #FFFFFF;
 
