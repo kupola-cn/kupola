@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "description": "A lightweight UI toolkit for any web project. No heavy frontend frameworks required.",
   "main": "dist/kupola.cjs.js",
   "module": "dist/kupola.esm.js",
@@ -50,8 +50,8 @@
       "import": "./adapters/navios-http.js",
       "types": "./adapters/navios-http.d.ts"
     },
-    "./kupola.css": "./dist/kupola.css",
-    "./kupola.min.css": "./dist/kupola.min.css",
+    "./kupola.css": "./dist/css/kupola.css",
+    "./kupola.min.css": "./dist/css/kupola.min.css",
     "./kupola.umd.js": "./dist/kupola.umd.js",
     "./kupola.min.js": "./dist/kupola.min.js",
     "./dist/css/kupola.css": "./dist/css/kupola.css",
