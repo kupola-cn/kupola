@@ -246,8 +246,8 @@ class Select {
       if (opt.disabled) el.classList.add('is-disabled');
       if (this.selectedValues.has(opt.value)) el.classList.add('is-selected');
       
-      el.addEventListener('click', this._optionClickHandler);
-      el._selectOptionClickHandler = this._optionClickHandler;
+      el.addEventListener('click', (e) => this._optionClickHandler(e));
+      el._selectOptionClickHandler = (e) => this._optionClickHandler(e);
       
       this.optionsEl.appendChild(el);
     });
@@ -408,8 +408,8 @@ class Select {
 
   _bindOptionClicks() {
     this.optionsEl.querySelectorAll('.ds-select__option, .ds-select__item').forEach(option => {
-      option.addEventListener('click', this._optionClickHandler);
-      option._selectOptionClickHandler = this._optionClickHandler;
+      option.addEventListener('click', (e) => this._optionClickHandler(e));
+      option._selectOptionClickHandler = (e) => this._optionClickHandler(e);
     });
   }
 

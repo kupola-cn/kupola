@@ -183,8 +183,8 @@ class Dropdown {
 
   _bindMenuItems() {
     this.menu.querySelectorAll('.ds-dropdown__item').forEach(item => {
-      item.addEventListener('click', this._itemClickHandler);
-      item._dropdownItemClickHandler = this._itemClickHandler;
+      item.addEventListener('click', (e) => this._itemClickHandler(e));
+      item._dropdownItemClickHandler = (e) => this._itemClickHandler(e);
     });
   }
 
