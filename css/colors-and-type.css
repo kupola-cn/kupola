@@ -20,7 +20,15 @@
   --bg-base-default: #FFFFFF;
   --bg-base-secondary: #F5F6F8;
   --text-default: #0F1117;
-  
+}
+
+[data-theme="dark"] {
+  --bg-base-default: #0C0C0D;
+  --bg-base-secondary: #1A1B1D;
+  --text-default: #E5E7EB;
+}
+
+:root {
   /* radius */
   --radius-2: 2px;
   --radius-4: 4px;
