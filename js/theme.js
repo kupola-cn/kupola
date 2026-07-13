@@ -82,11 +82,16 @@ function initTheme() {
   
   const toggleBtn = document.querySelector('[data-theme-toggle]');
   if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
+    const existingOnClick = toggleBtn.onclick;
+    toggleBtn.onclick = function(e) {
+      e.preventDefault();
       const currentTheme = getTheme();
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       setTheme(newTheme);
-    });
+      if (typeof existingOnClick === 'function') {
+        existingOnClick.call(this, e);
+      }
+    };
   }
   
   let brandPicker = document.getElementById('brand-picker');
@@ -201,11 +206,12 @@ function createThemeToggle() {
   btn.appendChild(icon);
   document.body.appendChild(btn);
   
-  btn.addEventListener('click', () => {
+  btn.onclick = function(e) {
+    e.preventDefault();
     const currentTheme = getTheme();
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
-  });
+  };
   
   return btn;
 }
