@@ -95,6 +95,18 @@ const config = {
 };
 
 export function setConfig(options) {
+  if (options && typeof options === 'object') {
+    if (options.iconsPath) {
+      options.paths = options.paths || {};
+      options.paths.icons = options.iconsPath;
+      delete options.iconsPath;
+    }
+    if (options.basePath) {
+      options.paths = options.paths || {};
+      options.paths.base = options.basePath;
+      delete options.basePath;
+    }
+  }
   mergeDeep(config, options);
 }
 
