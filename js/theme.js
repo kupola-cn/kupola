@@ -78,8 +78,10 @@ function updateThemeIcon(toggleBtn) {
   const iconEl = toggleBtn.querySelector('.theme-icon');
   if (iconEl) {
     const currentTheme = getTheme();
-    const iconsPath = getIconsPath();
-    iconEl.src = currentTheme === 'dark' ? iconsPath + 'sun.svg' : iconsPath + 'moon.svg';
+    const iconPath = iconEl.src.substring(0, iconEl.src.lastIndexOf('/') + 1);
+    iconEl.src = currentTheme === 'dark' 
+      ? iconPath + 'sun.svg' 
+      : iconPath + 'moon.svg';
   }
 }
 
