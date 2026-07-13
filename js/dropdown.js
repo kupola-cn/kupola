@@ -65,9 +65,9 @@ class Dropdown {
         this.onSelect({ item, value: item.getAttribute('data-value'), text: item.textContent.trim() });
       }
 
-      if (this.closeOnClick) {
+      if (this.closeOnClick !== false) {
         this.hideMenu();
-        this.trigger.focus();
+        if (this.trigger) {this.trigger.focus();}
       }
     };
 
@@ -208,7 +208,6 @@ class Dropdown {
     if (!this.autoPosition) {return;}
 
     const triggerRect = this.element.getBoundingClientRect();
-    const menuRect = this.menu.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
@@ -216,7 +215,8 @@ class Dropdown {
     this.menu.classList.remove('ds-dropdown--top', 'ds-dropdown--right', 'ds-dropdown--dropup');
 
     if (this.appendToBody) {
-      this.menu.style.width = `${Math.max(triggerRect.width, menuRect.width)}px`;
+      this.menu.style.width = `${triggerRect.width}px`;
+      const menuRect = this.menu.getBoundingClientRect();
 
       const spaceBelow = viewportHeight - triggerRect.bottom;
       const spaceAbove = triggerRect.top;
@@ -230,7 +230,7 @@ class Dropdown {
       }
 
       if (triggerRect.left + menuRect.width > viewportWidth) {
-        this.menu.style.left = `${triggerRect.right - Math.max(triggerRect.width, menuRect.width)}px`;
+        this.menu.style.left = `${triggerRect.right - menuRect.width}px`;
         this.menu.style.right = 'auto';
       } else {
         this.menu.style.left = `${triggerRect.left}px`;
@@ -307,9 +307,12 @@ class Dropdown {
     this._originalWidth = this.menu.style.width;
     this._originalTransform = this.menu.style.transform;
     this._originalZIndex = this.menu.style.zIndex;
+    this._originalDisplay = this.menu.style.display;
 
+    const triggerRect = this.element.getBoundingClientRect();
     const zIndex = getZIndexConfig().dropdown;
     this.menu.style.position = 'fixed';
+    this.menu.style.width = `${triggerRect.width}px`;
     this.menu.style.zIndex = zIndex;
     this.menu.style.transform = 'translateZ(0)';
     document.body.appendChild(this.menu);
@@ -327,7 +330,9 @@ class Dropdown {
     this.menu.style.width = this._originalWidth || '';
     this.menu.style.zIndex = this._originalZIndex || '';
     this.menu.style.transform = this._originalTransform || '';
+    this.menu.style.display = this._originalDisplay || '';
     this._originalParent = null;
+    console.log('[Dropdown] Menu restored from body');
   }
 
   _addScrollListener() {
@@ -365,6 +370,33 @@ class Dropdown {
 
   // Update menu items dynamically
   setItems(items) {
+    // Ensure _itemClickHandler is defined
+    if (!this._itemClickHandler) {
+      this._itemClickHandler = (e) => {
+        e.stopPropagation();
+        const item = e.currentTarget;
+        if (item.classList.contains('is-disabled') || item.classList.contains('ds-dropdown__divider')) {return;}
+
+        this.menu.querySelectorAll('.ds-dropdown__item').forEach(i => i.classList.remove('is-selected'));
+        item.classList.add('is-selected');
+
+        if (this.triggerText && !item.hasAttribute('data-no-update-trigger')) {
+          this.triggerText.textContent = item.textContent.trim();
+        }
+
+        this.element.setAttribute('data-value', item.getAttribute('data-value') || '');
+
+        if (this.onSelect) {
+          this.onSelect({ item, value: item.getAttribute('data-value'), text: item.textContent.trim() });
+        }
+
+        if (this.closeOnClick !== false) {
+          this.hideMenu();
+          if (this.trigger) {this.trigger.focus();}
+        }
+      };
+    }
+
     // Remove old item listeners
     this.menu.querySelectorAll('.ds-dropdown__item').forEach(item => {
       if (item._dropdownItemClickHandler) {
@@ -374,7 +406,7 @@ class Dropdown {
 
     // Rebuild menu content
     this.menu.innerHTML = '';
-    items.forEach(item => {
+    items.forEach((item, index) => {
       if (item.type === 'divider') {
         const divider = document.createElement('div');
         divider.className = 'ds-dropdown__divider';
@@ -445,6 +477,9 @@ class Dropdown {
 }
 
 function initDropdown(element, options) {
+  if (element._kupolaDropdown) {
+    element._kupolaDropdown.destroy();
+  }
   const dropdown = new Dropdown(element, options);
   dropdown.init();
   element._kupolaDropdown = dropdown;

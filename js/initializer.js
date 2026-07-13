@@ -86,7 +86,8 @@ class ComponentInitializerRegistry {
     const className = element.className;
     if (typeof className === 'string') {
       for (const cls of this._cssClasses) {
-        if (className.includes(cls)) {
+        const regex = new RegExp(`(^|\\s)${cls}(\\s|$)`);
+        if (regex.test(className)) {
           const name = cls.replace('ds-', '');
           const initFn = this.initializers.get(name) || this.initializers.get(cls);
           if (initFn) {
@@ -127,7 +128,8 @@ class ComponentInitializerRegistry {
     const className = element.className;
     if (typeof className === 'string') {
       for (const cls of this._cssClasses) {
-        if (className.includes(cls)) {
+        const regex = new RegExp(`(^|\\s)${cls}(\\s|$)`);
+        if (regex.test(className)) {
           const name = cls.replace('ds-', '');
           const cleanupFn = this.cleanupFunctions.get(name) || this.cleanupFunctions.get(cls);
           if (cleanupFn) {

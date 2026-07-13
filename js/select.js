@@ -234,6 +234,23 @@ class Select {
   }
 
   _renderRemoteOptions(options) {
+    // Ensure _optionClickHandler is defined
+    if (!this._optionClickHandler) {
+      this._optionClickHandler = (e) => {
+        e.stopPropagation();
+        const option = e.currentTarget;
+        if (option.classList.contains('is-disabled')) return;
+        
+        const value = option.getAttribute('data-value');
+        
+        if (this.multiple) {
+          this._toggleMultiOption(value, option);
+        } else {
+          this._selectSingleOption(value, option);
+        }
+      };
+    }
+
     this.optionsEl.querySelectorAll('.ds-select__option, .ds-select__item').forEach(opt => {
       if (opt._selectOptionClickHandler) {
         opt.removeEventListener('click', opt._selectOptionClickHandler);
@@ -503,8 +520,10 @@ class Select {
     this._originalTransform = this.optionsEl.style.transform;
     this._originalZIndex = this.optionsEl.style.zIndex;
 
+    const triggerRect = this.element.getBoundingClientRect();
     const zIndex = getZIndexConfig().dropdown;
     this.optionsEl.style.position = 'fixed';
+    this.optionsEl.style.width = `${triggerRect.width}px`;
     this.optionsEl.style.zIndex = zIndex;
     this.optionsEl.style.transform = 'translateZ(0)';
     document.body.appendChild(this.optionsEl);
@@ -527,11 +546,11 @@ class Select {
     if (!this.appendToBody || !this.optionsEl) return;
 
     const triggerRect = this.element.getBoundingClientRect();
-    const optionsRect = this.optionsEl.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
-    this.optionsEl.style.width = `${Math.max(triggerRect.width, optionsRect.width)}px`;
+    this.optionsEl.style.width = `${triggerRect.width}px`;
+    const optionsRect = this.optionsEl.getBoundingClientRect();
 
     const spaceBelow = viewportHeight - triggerRect.bottom;
     const spaceAbove = triggerRect.top;
@@ -543,7 +562,7 @@ class Select {
     }
 
     if (triggerRect.left + optionsRect.width > viewportWidth) {
-      this.optionsEl.style.left = `${triggerRect.right - Math.max(triggerRect.width, optionsRect.width)}px`;
+      this.optionsEl.style.left = `${triggerRect.right - optionsRect.width}px`;
     } else {
       this.optionsEl.style.left = `${triggerRect.left}px`;
     }
