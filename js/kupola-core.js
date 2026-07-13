@@ -36,14 +36,6 @@ function _applySecurityHeaders() {
       metaTag.setAttribute('content', 'nosniff');
       document.head.insertBefore(metaTag, document.head.firstChild);
     }
-    
-    metaTag = document.querySelector('meta[http-equiv="X-Frame-Options"]');
-    if (!metaTag) {
-      metaTag = document.createElement('meta');
-      metaTag.setAttribute('http-equiv', 'X-Frame-Options');
-      metaTag.setAttribute('content', 'SAMEORIGIN');
-      document.head.insertBefore(metaTag, document.head.firstChild);
-    }
   }
 }
 
