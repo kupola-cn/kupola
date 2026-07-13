@@ -40,13 +40,7 @@ function setTheme(theme) {
   const toggleBtn = document.querySelector('[data-theme-toggle]');
   if (toggleBtn) {
     toggleBtn.setAttribute('data-current-theme', theme);
-    const icon = toggleBtn.querySelector('.theme-icon');
-    if (icon) {
-      const iconPath = icon.src.substring(0, icon.src.lastIndexOf('/') + 1);
-      icon.src = theme === 'dark' 
-        ? iconPath + 'sun.svg' 
-        : iconPath + 'moon.svg';
-    }
+    updateThemeIcon(toggleBtn);
   }
 }
 
@@ -95,33 +89,32 @@ function updateThemeIcon(toggleBtn) {
   }
 }
 
+function _themeToggleHandler(e) {
+  e.preventDefault();
+  const currentTheme = getTheme();
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  setTheme(newTheme);
+}
+
 function initTheme() {
   
   const toggleBtn = document.querySelector('[data-theme-toggle]');
   
   if (!_themeInitialized) {
     _themeInitialized = true;
+    
+    const savedTheme = getTheme();
+    setTheme(savedTheme);
+    
+    const savedBrand = getBrand();
+    setBrand(savedBrand);
   }
-  
-  const savedTheme = getTheme();
-  setTheme(savedTheme);
-  
-  const savedBrand = getBrand();
-  setBrand(savedBrand);
   
   if (toggleBtn) {
     updateThemeIcon(toggleBtn);
-    const existingOnClick = toggleBtn.onclick;
-    toggleBtn.onclick = function(e) {
-      e.preventDefault();
-      const currentTheme = getTheme();
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      setTheme(newTheme);
-      updateThemeIcon(toggleBtn);
-      if (typeof existingOnClick === 'function') {
-        existingOnClick.call(this, e);
-      }
-    };
+    
+    toggleBtn.removeEventListener('click', _themeToggleHandler);
+    toggleBtn.addEventListener('click', _themeToggleHandler);
   }
   
   let brandPicker = document.getElementById('brand-picker');
