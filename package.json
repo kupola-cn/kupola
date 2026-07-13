@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "A lightweight UI toolkit for any web project. No heavy frontend frameworks required.",
   "main": "dist/kupola.cjs.js",
   "module": "dist/kupola.esm.js",
