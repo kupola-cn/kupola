@@ -1023,6 +1023,15 @@
   color: var(--text-default);
 }
 
+.ds-number-input__btn--decrease {
+  border-right: 1px solid var(--border-neutral-l2);
+}
+
+.ds-number-input__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .ds-number-input__input {
   flex: 1;
   width: 60px;
@@ -1049,6 +1058,16 @@
   -moz-appearance: textfield;
   -webkit-appearance: textfield;
   appearance: textfield;
+}
+
+.ds-input input[type="number"]::-webkit-inner-spin-button,
+.ds-input input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.ds-input input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 /* Countdown */
