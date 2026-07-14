@@ -66,6 +66,51 @@ function minifyCSS(css) {
     .trim();
 }
 
+const THEME_VARS = `:root {
+  --bg-base-default: #0C0C0D;
+  --bg-base-secondary: #1A1B1D;
+  --bg-base-tertiary: #222427;
+  --bg-overlay-l1: rgba(255, 255, 255, 0.04);
+  --bg-overlay-l2: rgba(255, 255, 255, 0.06);
+  --bg-overlay-l3: rgba(255, 255, 255, 0.08);
+  --bg-overlay-l4: rgba(255, 255, 255, 0.12);
+  --bg-menu: #1A1B1D;
+  --bg-tooltip: #1A1B1D;
+  --bg-invert: #FFFFFF;
+  --bg-invert-hover: #F5F5F5;
+  --bg-invert-active: #E5E5E5;
+  --bg-invert-disabled: rgba(255, 255, 255, 0.2);
+  --special-bgtabsoverlay: rgba(0, 0, 0, 0.2);
+  --text-default: #E5E7EB;
+  --text-default-hover: #FFFFFF;
+  --text-default-active: #FFFFFF;
+  --text-secondary: #B8BDCA;
+  --text-secondary-hover: #E5E7EB;
+  --text-secondary-active: #E5E7EB;
+  --text-tertiary: #9CA3AF;
+  --text-disabled: #8B93A1;
+  --text-onbrand: #FFFFFF;
+  --text-onaccent: #FFFFFF;
+  --icon-default: #E5E7EB;
+  --icon-default-hover: #FFFFFF;
+  --icon-default-active: #FFFFFF;
+  --icon-secondary: #B8BDCA;
+  --icon-secondary-hover: #E5E7EB;
+  --icon-secondary-active: #E5E7EB;
+  --icon-tertiary: #9CA3AF;
+  --icon-disabled: #8B93A1;
+  --icon-onbrand: #FFFFFF;
+  --icon-onaccent: #FFFFFF;
+  --border-neutral-l1: rgba(255, 255, 255, 0.12);
+  --border-neutral-l2: rgba(255, 255, 255, 0.18);
+  --border-neutral-l3: rgba(255, 255, 255, 0.25);
+  --border-contrast: #0C0C0D;
+  --bg-brand-popup: rgba(83, 81, 100, 0.15);
+  --icon-filter: brightness(0) saturate(0) invert(0.9);
+}
+
+`;
+
 function buildCSS() {
   console.log('Building Kupola CSS...');
 
@@ -80,6 +125,9 @@ function buildCSS() {
 
   // Resolve all @import statements
   let merged = resolveImports(mainContent, CSS_DIR);
+
+  // Inject theme variables at the beginning
+  merged = THEME_VARS + merged;
 
   // Also check for any files not in the import list (like dashboard.css)
   // and add them as optional separate output
