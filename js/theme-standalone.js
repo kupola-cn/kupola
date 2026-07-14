@@ -1,35 +1,47 @@
-/**
- * Kupola Theme Standalone — lightweight theme toggle (~1KB).
- *
- * Usage: Include this single script in your page. No other Kupola JS required.
- *   <script src="theme-standalone.js"></script>
- *
- * Features:
- *   - Reads/writes theme preference from localStorage
- *   - Sets data-theme attribute on <html>
- *   - Auto-binds [data-theme-toggle] buttons
- *   - Supports prefers-color-scheme as default
- *   - Optional: auto-detects brand preference
- */
 (function () {
   'use strict';
 
-  var THEME_KEY = 'kupola-theme';
-  var BRAND_KEY = 'kupola-brand';
+  const THEME_KEY = 'kupola-theme';
+  const BRAND_KEY = 'kupola-brand';
+  
+  const BRAND_OPTIONS = [
+    { id: 'green', name: '翠绿', color: '#32F08C' },
+    { id: 'xionghuang', name: '雄黄', color: '#FF9900' },
+    { id: 'jianghuang', name: '姜黄', color: '#E2C027' },
+    { id: 'lanlv', name: '蓝绿', color: '#12A182' },
+    { id: 'kongquelan', name: '孔雀蓝', color: '#0EB0C9' },
+    { id: 'meiguizi', name: '玫瑰紫', color: '#BA2F7B' },
+    { id: 'shihong', name: '柿红', color: '#F2481B' },
+    { id: 'quhong', name: '紫云', color: '#B1A6CC' },
+    { id: 'shanchahong', name: '山茶红', color: '#F05A46' },
+    { id: 'zengqing', name: '曾青', color: '#535164' },
+    { id: 'roulan', name: '柔蓝', color: '#106898' }
+  ];
 
-  function getPreferred() {
-    var saved = localStorage.getItem(THEME_KEY);
+  const KUPOLA_CONFIG = window.KupolaConfig || {
+    theme: { default: 'dark', brand: 'zengqing' },
+    paths: { icons: '/icons/', base: '/' }
+  };
+
+  function getPreferredTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
     if (saved === 'dark' || saved === 'light') {
       return saved;
     }
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
       return 'light';
     }
-    return 'dark';
+    return KUPOLA_CONFIG.theme.default;
+  }
+
+  function getPreferredBrand() {
+    const saved = localStorage.getItem(BRAND_KEY);
+    if (saved) return saved;
+    return KUPOLA_CONFIG.theme.brand;
   }
 
   function applyTheme(theme) {
-    var root = document.documentElement;
+    const root = document.documentElement;
 
     if (root.hasAttribute('data-kupola-theme-preloaded')) {
       root.style.removeProperty('--bg-base-default');
@@ -39,45 +51,93 @@
 
     root.setAttribute('data-theme', theme);
     localStorage.setItem(THEME_KEY, theme);
+    
+    updateThemeIcons();
   }
 
   function applyBrand(brand) {
     if (brand) {
       document.documentElement.setAttribute('data-brand', brand);
       localStorage.setItem(BRAND_KEY, brand);
+      updateBrandIcons();
     }
   }
 
+  function updateThemeIcons() {
+    const iconsPath = KUPOLA_CONFIG.paths.base + KUPOLA_CONFIG.paths.icons.replace(/^\//, '');
+    const currentTheme = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+    
+    document.querySelectorAll('[data-theme-toggle]').forEach(toggleBtn => {
+      const iconEl = toggleBtn.querySelector('.theme-icon');
+      if (iconEl) {
+        iconEl.src = currentTheme === 'dark' ? iconsPath + 'sun.svg' : iconsPath + 'moon.svg';
+      }
+    });
+  }
+
+  function updateBrandIcons() {
+    const currentBrand = document.documentElement.getAttribute('data-brand') || getPreferredBrand();
+    
+    document.querySelectorAll('[data-brand-toggle]').forEach(brandToggle => {
+      const brandIcon = brandToggle.querySelector('.brand-icon');
+      if (brandIcon) {
+        const brand = BRAND_OPTIONS.find(b => b.id === currentBrand);
+        if (brand) {
+          brandIcon.style.backgroundColor = brand.color;
+        }
+      }
+      const brandName = brandToggle.querySelector('.brand-name');
+      if (brandName) {
+        const brand = BRAND_OPTIONS.find(b => b.id === currentBrand);
+        if (brand) {
+          brandName.textContent = brand.name;
+        }
+      }
+    });
+  }
+
   function toggleTheme() {
-    var current = document.documentElement.getAttribute('data-theme') || getPreferred();
-    var next = current === 'dark' ? 'light' : 'dark';
+    const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
     applyTheme(next);
   }
 
   function bindToggleButtons() {
-    var buttons = document.querySelectorAll('[data-theme-toggle]');
-    buttons.forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
+    document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+      btn.onclick = function (e) {
         e.preventDefault();
         toggleTheme();
-      });
+      };
+    });
+    
+    document.querySelectorAll('[data-brand-btn]').forEach(btn => {
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        const brandId = btn.getAttribute('data-brand-btn');
+        applyBrand(brandId);
+        
+        const brandPicker = document.getElementById('brand-picker') || 
+                           document.getElementById('brand-picker-auto');
+        if (brandPicker) {
+          brandPicker.style.display = 'none';
+        }
+      };
     });
   }
 
-  // Initialize immediately (works even before DOMContentLoaded)
-  applyTheme(getPreferred());
-  applyBrand(localStorage.getItem(BRAND_KEY));
+  applyTheme(getPreferredTheme());
+  applyBrand(getPreferredBrand());
+  
+  document.body.classList.add('theme-initialized');
 
-  // Bind toggle buttons when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindToggleButtons);
   } else {
     bindToggleButtons();
   }
 
-  // Listen for system theme changes
   if (window.matchMedia) {
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
     if (mq.addEventListener) {
       mq.addEventListener('change', function (e) {
         if (!localStorage.getItem(THEME_KEY)) {
@@ -87,12 +147,15 @@
     }
   }
 
-  // Expose minimal API
   window.KupolaTheme = {
     toggle: toggleTheme,
     set: applyTheme,
     get: function () {
-      return document.documentElement.getAttribute('data-theme') || 'dark';
+      return document.documentElement.getAttribute('data-theme') || getPreferredTheme();
     },
+    setBrand: applyBrand,
+    getBrand: function () {
+      return document.documentElement.getAttribute('data-brand') || getPreferredBrand();
+    }
   };
 })();

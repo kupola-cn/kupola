@@ -25,9 +25,20 @@ class KupolaWebpackPlugin {
           (htmlPluginData) => {
             let html = htmlPluginData.html;
 
+            // Inject blocking theme-dark.css for CSS variables (before any rendering)
+            if (this.options.autoCSS && !html.includes('theme-dark.css')) {
+              const cssBasePath = this.options.cssPath ? this.options.cssPath.replace(/\/kupola\.css$/, '') : '';
+              const themeCSSLink = `<link rel="stylesheet" href="${cssBasePath ? cssBasePath + '/' : ''}theme-dark.css">`;
+              html = html.replace(
+                '<head>',
+                `<head>\n${themeCSSLink}\n`,
+              );
+            }
+
             // Inject theme preload script
-            if (this.options.themePreload && !html.includes('data-kupola-theme-preloaded')) {
-              const preloadScript = '<script>(function(){if(document.documentElement.hasAttribute("data-kupola-theme-preloaded"))return;var h=document.documentElement,t=localStorage.getItem("kupola-theme")||(window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");h.setAttribute("data-theme",t);h.setAttribute("data-kupola-theme-preloaded","true")})();</script>';
+            if (this.options.themePreload && !html.includes('theme-preload.js')) {
+              const cssBasePath = this.options.cssPath ? this.options.cssPath.replace(/\/kupola\.css$/, '') : '';
+              const preloadScript = `<script src="${cssBasePath ? cssBasePath + '/' : ''}theme-preload.js"></script>`;
 
               html = html.replace(
                 '<head>',

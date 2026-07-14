@@ -5,6 +5,17 @@
  */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ===== Theme Loading ===== */
+body:not(.theme-initialized):not([data-kupola-theme-preloaded]) {
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+body.theme-initialized,
+body[data-kupola-theme-preloaded] {
+  opacity: 1;
+}
+
 html, body {
   background: var(--bg-base-default);
   color: var(--text-default);

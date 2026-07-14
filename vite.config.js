@@ -55,7 +55,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     minify: 'terser',
-    emptyOutDir: false,
+    emptyOutDir: true,
     chunkSizeWarningLimit: 500,
   },
   resolve: {

@@ -78,9 +78,20 @@ export function kupola(options = {}) {
     transformIndexHtml(html) {
       let transformed = html;
 
+      // Inject blocking theme-dark.css for CSS variables (before any rendering)
+      if (autoCSS && !transformed.includes('theme-dark.css')) {
+        const cssBasePath = cssPath ? cssPath.replace(/\/kupola\.css$/, '') : '/css';
+        const themeCSSLink = `<link rel="stylesheet" href="${cssBasePath}/theme-dark.css">`;
+        transformed = transformed.replace(
+          '<head>',
+          `<head>\n${themeCSSLink}\n`,
+        );
+      }
+
       // Inject theme preload script
-      if (themePreload && !transformed.includes('data-kupola-theme-preloaded')) {
-        const preloadScript = '<script>(function(){if(document.documentElement.hasAttribute("data-kupola-theme-preloaded"))return;var h=document.documentElement,t=localStorage.getItem("kupola-theme")||(window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");h.setAttribute("data-theme",t);h.setAttribute("data-kupola-theme-preloaded","true")})();</script>';
+      if (themePreload && !transformed.includes('theme-preload.js')) {
+        const cssBasePath = cssPath ? cssPath.replace(/\/kupola\.css$/, '') : '/css';
+        const preloadScript = `<script src="${cssBasePath}/theme-preload.js"></script>`;
 
         transformed = transformed.replace(
           '<head>',
