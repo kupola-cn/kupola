@@ -11,7 +11,7 @@ class KupolaWebpackPlugin {
   constructor(options = {}) {
     this.options = {
       autoCSS: true,
-      themePreload: true,
+      themePreload: false,
       cssPath: null,
       ...options,
     };

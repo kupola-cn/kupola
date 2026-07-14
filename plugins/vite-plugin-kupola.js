@@ -14,7 +14,7 @@
  * @param {boolean} [options.autoImport=true] - Auto import useDeps/useQuery
  * @param {boolean} [options.devTools=true] - Enable dev tools in dev mode
  * @param {string} [options.cssPath] - Custom CSS path
- * @param {boolean} [options.themePreload=true] - Auto inject theme preload script
+ * @param {boolean} [options.themePreload=false] - Auto inject theme preload script
  */
 export function kupola(options = {}) {
   const {
@@ -22,7 +22,7 @@ export function kupola(options = {}) {
     autoImport = true,
     devTools = true,
     cssPath = null,
-    themePreload = true,
+    themePreload = false,
   } = options;
 
   let isDev = false;
