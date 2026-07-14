@@ -291,10 +291,10 @@
   --bg-timeline-line: rgba(255, 255, 255, 0.12);
   --bg-timeline-marker: #32F08C;
 
-  --body-xs-font-size: 10px;
-  --body-xs-line-height: 14px;
-  --body-sm-font-size: 11px;
-  --body-sm-line-height: 16px;
+  --body-xs-font-size: 11px;
+  --body-xs-line-height: 16px;
+  --body-sm-font-size: 12px;
+  --body-sm-line-height: 18px;
   --body-base-font-size: 13px;
   --body-base-line-height: 20px;
   --body-strong-xs-font-weight: 500;
@@ -304,14 +304,14 @@
   --heading-3xs-font-size: 11px;
   --heading-3xs-line-height: 16px;
   --heading-2xs-font-size: 12px;
-  --heading-2xs-line-height: 18px;
+  --heading-2xs-line-height: 16px;
   --heading-xs-font-size: 13px;
-  --heading-xs-line-height: 20px;
-  --heading-sm-font-size: 16px;
-  --heading-sm-line-height: 24px;
+  --heading-xs-line-height: 18px;
+  --heading-sm-font-size: 14px;
+  --heading-sm-line-height: 20px;
   --heading-base-font-size: 16px;
   --heading-base-line-height: 22px;
-  --heading-md-font-size: 20px;
+  --heading-md-font-size: 18px;
   --heading-md-line-height: 28px;
   --heading-lg-font-size: 24px;
   --heading-lg-line-height: 32px;

@@ -1,8 +1,9 @@
 @import url('colors-and-type.css');
-@import url('theme-light.css');
 @import url('theme-dark.css');
+@import url('theme-light.css');
 @import url('brand-themes.css');
 @import url('scaffold.css');
+@import url('dashboard.css');
 @import url('components.css');
 @import url('components-ext.css');
 @import url('states.css');

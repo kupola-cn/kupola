@@ -6,20 +6,13 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  background: var(--bg-base-default, #0C0C0D);
-  color: var(--text-default, #E5E7EB);
+  background: var(--bg-base-default);
+  color: var(--text-default);
   font-family: var(--body-base-font-family);
   font-size: var(--body-base-font-size);
   line-height: var(--body-base-line-height);
   font-weight: var(--body-base-font-weight);
   min-height: 100%;
-}
-
-@media (prefers-color-scheme: light) {
-  html, body {
-    background: var(--bg-base-default, #FFFFFF);
-    color: var(--text-default, #0F1117);
-  }
 }
 html, body { overflow-x: hidden; max-width: 100%; }
 body { padding: 0; }

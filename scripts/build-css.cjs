@@ -19,10 +19,11 @@ const OUTPUT_DIR = path.resolve(__dirname, '..', 'dist');
 // Import order must match kupola.css @import order
 const IMPORT_ORDER = [
   'colors-and-type.css',
-  'theme-light.css',
   'theme-dark.css',
+  'theme-light.css',
   'brand-themes.css',
   'scaffold.css',
+  'dashboard.css',
   'components.css',
   'components-ext.css',
   'states.css',
