@@ -27,7 +27,11 @@ export default defineConfig({
             { src: 'types/kupola.d.ts', dest: 'dist/types' },
             { src: 'icons/', dest: 'dist/icons' },
             { src: 'css/*.css', dest: 'dist/css' },
-            { src: 'plugins/*.js', dest: 'dist/plugins' }
+            { src: 'plugins/*.js', dest: 'dist/plugins' },
+            { src: 'js/theme-preload.js', dest: 'dist' },
+            { src: 'js/theme-standalone.js', dest: 'dist' },
+            { src: 'js/vue-theme.js', dest: 'dist' },
+            { src: 'js/react-theme.js', dest: 'dist' }
           ],
           hook: 'writeBundle'
         })

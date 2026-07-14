@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "1.7.9",
+  "version": "1.8.0",
   "description": "A lightweight UI toolkit for any web project. No heavy frontend frameworks required.",
   "main": "dist/kupola.cjs.js",
   "module": "dist/kupola.esm.js",
@@ -41,6 +41,21 @@
     },
     "./vite": {
       "import": "./plugins/vite-plugin-kupola.js"
+    },
+    "./webpack": {
+      "import": "./plugins/webpack-plugin-kupola.js"
+    },
+    "./theme-preload": {
+      "import": "./dist/theme-preload.js"
+    },
+    "./theme-standalone": {
+      "import": "./dist/theme-standalone.js"
+    },
+    "./vue-theme": {
+      "import": "./dist/vue-theme.js"
+    },
+    "./react-theme": {
+      "import": "./dist/react-theme.js"
     },
     "./adapters/axios": {
       "import": "./adapters/axios.js",

@@ -34,7 +34,15 @@ function getTheme() {
 function setTheme(theme) {
   if (theme !== 'dark' && theme !== 'light') return;
   
-  document.documentElement.setAttribute('data-theme', theme);
+  var root = document.documentElement;
+  
+  if (root.hasAttribute('data-kupola-theme-preloaded')) {
+    root.style.removeProperty('--bg-base-default');
+    root.style.removeProperty('--text-default');
+    root.removeAttribute('data-kupola-theme-preloaded');
+  }
+  
+  root.setAttribute('data-theme', theme);
   localStorage.setItem(THEME_KEY, theme);
   
   const toggleBtn = document.querySelector('[data-theme-toggle]');
@@ -97,6 +105,14 @@ function _themeToggleHandler(e) {
 }
 
 function initTheme() {
+  
+  var root = document.documentElement;
+  
+  if (root.hasAttribute('data-kupola-theme-preloaded')) {
+    root.style.removeProperty('--bg-base-default');
+    root.style.removeProperty('--text-default');
+    root.removeAttribute('data-kupola-theme-preloaded');
+  }
   
   const toggleBtn = document.querySelector('[data-theme-toggle]');
   

@@ -1,9 +1,9 @@
 /**
  * Kupola Theme Standalone — lightweight theme toggle (~1KB).
- * 
+ *
  * Usage: Include this single script in your page. No other Kupola JS required.
  *   <script src="theme-standalone.js"></script>
- * 
+ *
  * Features:
  *   - Reads/writes theme preference from localStorage
  *   - Sets data-theme attribute on <html>
@@ -19,7 +19,9 @@
 
   function getPreferred() {
     var saved = localStorage.getItem(THEME_KEY);
-    if (saved === 'dark' || saved === 'light') return saved;
+    if (saved === 'dark' || saved === 'light') {
+      return saved;
+    }
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
       return 'light';
     }
@@ -27,7 +29,15 @@
   }
 
   function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
+    var root = document.documentElement;
+
+    if (root.hasAttribute('data-kupola-theme-preloaded')) {
+      root.style.removeProperty('--bg-base-default');
+      root.style.removeProperty('--text-default');
+      root.removeAttribute('data-kupola-theme-preloaded');
+    }
+
+    root.setAttribute('data-theme', theme);
     localStorage.setItem(THEME_KEY, theme);
   }
 
@@ -83,6 +93,6 @@
     set: applyTheme,
     get: function () {
       return document.documentElement.getAttribute('data-theme') || 'dark';
-    }
+    },
   };
 })();
