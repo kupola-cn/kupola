@@ -1,0 +1,1 @@
+export { Notification, initNotifications } from '../../js/notification.js';

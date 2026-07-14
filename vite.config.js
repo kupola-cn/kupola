@@ -8,14 +8,23 @@ export default defineConfig({
   build: {
     target: 'es2020',
     lib: {
-      entry: path.resolve(__dirname, 'src/index.js'),
+      entry: {
+        index: path.resolve(__dirname, 'src/index.js'),
+        core: path.resolve(__dirname, 'src/core.js'),
+      },
       name: 'Kupola',
-      formats: ['es', 'cjs', 'umd'],
-      fileName: (format) => {
-        if (format === 'es') {
-          return 'kupola.esm.js';
+      formats: ['es', 'cjs'],
+      fileName: (format, entryName) => {
+        if (entryName === 'index') {
+          if (format === 'es') {
+            return 'kupola.esm.js';
+          }
+          return `kupola.${format}.js`;
         }
-        return `kupola.${format}.js`;
+        if (format === 'es') {
+          return `${entryName}.esm.js`;
+        }
+        return `${entryName}.${format}.js`;
       },
     },
     rollupOptions: {
@@ -40,12 +49,14 @@ export default defineConfig({
       output: {
         globals: {},
         exports: 'named',
+        manualChunks: undefined,
       },
     },
     outDir: 'dist',
-    sourcemap: true,
-    minify: true,
-    emptyOutDir: true,
+    sourcemap: false,
+    minify: 'terser',
+    emptyOutDir: false,
+    chunkSizeWarningLimit: 500,
   },
   resolve: {
     alias: {

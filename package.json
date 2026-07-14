@@ -20,6 +20,11 @@
       "require": "./dist/kupola.cjs.js",
       "types": "./dist/types/kupola.d.ts"
     },
+    "./lite": {
+      "import": "./dist/kupola-lite.esm.js",
+      "require": "./dist/kupola-lite.cjs.js",
+      "types": "./dist/types/kupola.d.ts"
+    },
     "./depends": {
       "import": "./js/depends.js",
       "types": "./dist/types/kupola.d.ts"
@@ -35,6 +40,17 @@
     },
     "./icons": {
       "import": "./js/icons.js"
+    },
+    "./core": {
+      "import": "./dist/core.esm.js",
+      "require": "./dist/core.cjs.js",
+      "types": "./dist/types/kupola.d.ts"
+    },
+    "./components": {
+      "import": "./src/components/index.js"
+    },
+    "./components/*": {
+      "import": "./src/components/*.js"
     },
     "./validation": {
       "import": "./js/validation.js"

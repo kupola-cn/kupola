@@ -1,0 +1,1 @@
+export { KupolaTable, initTable, initAllTables } from '../../js/table.js';

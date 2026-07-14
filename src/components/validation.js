@@ -1,0 +1,1 @@
+export { KupolaValidator, validator } from '../../js/validation.js';

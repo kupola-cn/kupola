@@ -10,26 +10,41 @@ module.exports = [
       {
         file: 'dist/kupola.esm.js',
         format: 'esm',
-        sourcemap: true
+        sourcemap: false,
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
       },
       {
         file: 'dist/kupola.cjs.js',
         format: 'cjs',
-        sourcemap: true,
-        exports: 'auto'
+        sourcemap: false,
+        exports: 'auto',
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
       },
       {
         file: 'dist/kupola.umd.js',
         format: 'umd',
         name: 'Kupola',
-        sourcemap: true
+        sourcemap: false,
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
       },
       {
         file: 'dist/kupola.min.js',
         format: 'umd',
         name: 'Kupola',
-        sourcemap: true,
-        plugins: [terser()]
+        sourcemap: false,
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
       }
     ],
     plugins: [
@@ -45,6 +60,84 @@ module.exports = [
           { src: 'types/kupola.d.ts', dest: 'dist/types' },
           { src: 'icons/', dest: 'dist/icons' }
         ]
+      })
+    ],
+    external: []
+  },
+  {
+    input: 'src/core.js',
+    output: [
+      {
+        file: 'dist/core.esm.js',
+        format: 'esm',
+        sourcemap: false,
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      },
+      {
+        file: 'dist/core.cjs.js',
+        format: 'cjs',
+        sourcemap: false,
+        exports: 'auto',
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      },
+      {
+        file: 'dist/core.umd.js',
+        format: 'umd',
+        name: 'KupolaCore',
+        sourcemap: false,
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      }
+    ],
+    plugins: [
+      nodeResolve({
+        browser: true
+      }),
+      commonjs({
+        include: ['js/**/*.js'],
+        requireReturnsDefault: 'auto'
+      })
+    ],
+    external: []
+  },
+  {
+    input: 'src/index-lite.js',
+    output: [
+      {
+        file: 'dist/kupola-lite.esm.js',
+        format: 'esm',
+        sourcemap: false,
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      },
+      {
+        file: 'dist/kupola-lite.cjs.js',
+        format: 'cjs',
+        sourcemap: false,
+        exports: 'auto',
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      }
+    ],
+    plugins: [
+      nodeResolve({
+        browser: true
+      }),
+      commonjs({
+        include: ['js/**/*.js'],
+        requireReturnsDefault: 'auto'
       })
     ],
     external: []

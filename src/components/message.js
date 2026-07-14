@@ -1,0 +1,1 @@
+export { Message, initMessages } from '../../js/message.js';

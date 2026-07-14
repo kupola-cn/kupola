@@ -1,8 +1,8 @@
 /**
- * Kupola — Main entry point. Re-exports all public APIs.
- * @module kupola
+ * Kupola Lite — Lightweight entry point. Excludes heavy components.
+ * @module kupola-lite
  * @example
- * import { useDeps, ref, configureHttpClient, initTheme } from 'kupola';
+ * import { useDeps, ref, initTheme } from '@kupola/kupola/lite';
  */
 
 import { KupolaLifecycle, createLifecycle, kupolaLifecycle } from '../js/kupola-lifecycle.js';
@@ -37,17 +37,11 @@ import {
   defineComponent,
 } from '../js/kupola-core.js';
 
-import {
-  KupolaI18n, kupolaI18n, createI18n,
-  t, n, setLocale, getLocale,
-  formatDate, formatNumber, formatCurrency,
-} from '../js/i18n.js';
 import { Dropdown, initDropdown, initDropdowns, cleanupDropdown, cleanupAllDropdowns } from '../js/dropdown.js';
 import { Select, initSelect, initSelects, cleanupSelect } from '../js/select.js';
 import { Datepicker, initDatepicker, initDatepickers, cleanupDatepicker } from '../js/datepicker.js';
 import { Timepicker, initTimepicker, initTimepickers, cleanupTimepicker } from '../js/timepicker.js';
 import { Slider, initSlider, initSliders, cleanupSlider } from '../js/slider.js';
-import { Carousel, initCarousel, initCarousels, cleanupCarousel } from '../js/carousel.js';
 import { Drawer, initDrawer, initDrawers, cleanupDrawer } from '../js/drawer.js';
 import { Modal, initModals, initModal, cleanupModal, createModal, confirmModal, alertModal } from '../js/modal.js';
 import { Dialog } from '../js/dialog.js';
@@ -60,16 +54,10 @@ import { Calendar, initCalendars, initCalendar, cleanupCalendar } from '../js/ca
 import { DynamicTags, initDynamicTagsAll, initDynamicTags, cleanupDynamicTags } from '../js/dynamic-tags.js';
 import { ImagePreview, initImagePreview, showImagePreview } from '../js/image-preview.js';
 import { Tag, initTags, initTag, cleanupTag } from '../js/tag.js';
-import { StatCard, initStatCards, initStatCard, cleanupStatCard } from '../js/statcard.js';
-import { Heatmap, initHeatmaps, initHeatmap, cleanupHeatmap } from '../js/heatmap.js';
 import { Tooltip, initTooltip, initTooltips, cleanupTooltip } from '../js/tooltip.js';
 import { KupolaValidator, validator } from '../js/validation.js';
-import { VirtualList, initVirtualList, cleanupVirtualList } from '../js/virtual-list.js';
-
-import { Icons, svg, render as renderIcon, PATHS } from '../js/icons.js';
 import { Countdown, initCountdowns, initCountdown, cleanupCountdown } from '../js/countdown.js';
 import { NumberInput, initNumberInputs, initNumberInput, cleanupNumberInput } from '../js/numberinput.js';
-import { SlideCaptcha, initSlideCaptchas, cleanupSlideCaptcha, cleanupAllSlideCaptchas } from '../js/slide-captcha.js';
 import { KupolaForm, initFormValidation, getFormInstance, validateForm } from '../js/form.js';
 
 import { GlobalEvents, globalEvents, on, once, off, emit, emitGlobal, offByScope, offAll, getListenerCount } from '../js/global-events.js';
@@ -77,7 +65,6 @@ import { GlobalEvents, globalEvents, on, once, off, emit, emitGlobal, offByScope
 import { useDeps, useQuery, clearCache, Scheduler, CacheManager, CacheEntry, DependsError, DependsSource, FetchedSource, StorageSource, RouteSource, FunctionSource, StaticSource, WebSocketSource, createSource, configureHttpClient, getHttpClient, resetHttpClient } from '../js/depends.js';
 import { KupolaTable, initTable, initAllTables } from '../js/table.js';
 import { KupolaPagination, initPagination } from '../js/pagination.js';
-import { registerWebComponents } from '../js/web-components.js';
 
 
 export { KupolaComponent, applyMixin };
@@ -98,7 +85,6 @@ export { Select, initSelect, initSelects, cleanupSelect };
 export { Datepicker, initDatepicker, initDatepickers, cleanupDatepicker };
 export { Timepicker, initTimepicker, initTimepickers, cleanupTimepicker };
 export { Slider, initSlider, initSliders, cleanupSlider };
-export { Carousel, initCarousel, initCarousels, cleanupCarousel };
 export { Drawer, initDrawer, initDrawers, cleanupDrawer };
 export { Modal, initModals, initModal, cleanupModal, createModal, confirmModal, alertModal };
 export { Dialog };
@@ -111,15 +97,10 @@ export { Calendar, initCalendars, initCalendar, cleanupCalendar };
 export { DynamicTags, initDynamicTagsAll, initDynamicTags, cleanupDynamicTags };
 export { ImagePreview, initImagePreview, showImagePreview };
 export { Tag, initTags, initTag, cleanupTag };
-export { StatCard, initStatCards, initStatCard, cleanupStatCard };
-export { Heatmap, initHeatmaps, initHeatmap, cleanupHeatmap };
 export { Tooltip, initTooltip, initTooltips, cleanupTooltip };
 export { KupolaValidator, validator };
-export { VirtualList, initVirtualList, cleanupVirtualList };
-export { Icons, svg, renderIcon, PATHS };
 export { Countdown, initCountdowns, initCountdown, cleanupCountdown };
 export { NumberInput, initNumberInputs, initNumberInput, cleanupNumberInput };
-export { SlideCaptcha, initSlideCaptchas, cleanupSlideCaptcha, cleanupAllSlideCaptchas };
 export { KupolaForm, initFormValidation, getFormInstance, validateForm };
 export { GlobalEvents, globalEvents, on, once, off, emit, emitGlobal, offByScope, offAll, getListenerCount };
 export { useDeps, useQuery, clearCache, configureHttpClient, getHttpClient, resetHttpClient };
@@ -128,13 +109,6 @@ export { DependsSource, FetchedSource, StorageSource, RouteSource, FunctionSourc
 export { KupolaTable, initTable, initAllTables };
 export { KupolaPagination, initPagination };
 export { ref };
-export { registerWebComponents };
-
-export {
-  KupolaI18n, kupolaI18n, createI18n,
-  t, n, setLocale, getLocale,
-  formatDate, formatNumber, formatCurrency,
-};
 
 export {
   setConfig, getConfig, getIconsPath, getBasePath,
@@ -144,6 +118,3 @@ export {
   onConfigChange, offConfigChange,
 };
 export { sanitizeHtml, escapeHtml, stripHtml, maskData, generateSecureId };
-
-export * from './core.js';
-export * from './components/index.js';

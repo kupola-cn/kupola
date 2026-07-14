@@ -1,0 +1,1 @@
+export { Heatmap, initHeatmaps, initHeatmap, cleanupHeatmap } from '../../js/heatmap.js';

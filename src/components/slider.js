@@ -1,0 +1,1 @@
+export { Slider, initSlider, initSliders, cleanupSlider } from '../../js/slider.js';

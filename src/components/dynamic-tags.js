@@ -1,0 +1,1 @@
+export { DynamicTags, initDynamicTagsAll, initDynamicTags, cleanupDynamicTags } from '../../js/dynamic-tags.js';

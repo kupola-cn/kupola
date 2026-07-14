@@ -1,0 +1,1 @@
+export { Collapse, initCollapses, initCollapse, cleanupCollapse } from '../../js/collapse.js';

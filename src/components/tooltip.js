@@ -1,0 +1,1 @@
+export { Tooltip, initTooltip, initTooltips, cleanupTooltip } from '../../js/tooltip.js';

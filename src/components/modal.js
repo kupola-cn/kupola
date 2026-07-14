@@ -1,0 +1,1 @@
+export { Modal, initModals, initModal, cleanupModal, createModal, confirmModal, alertModal } from '../../js/modal.js';

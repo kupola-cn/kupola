@@ -1,0 +1,1 @@
+export { Tag, initTags, initTag, cleanupTag } from '../../js/tag.js';

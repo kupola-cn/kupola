@@ -1,0 +1,1 @@
+export { ColorPicker, initColorPicker, initColorPickers, cleanupColorPicker } from '../../js/color-picker.js';

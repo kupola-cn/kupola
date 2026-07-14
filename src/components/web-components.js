@@ -1,0 +1,1 @@
+export { registerWebComponents } from '../../js/web-components.js';

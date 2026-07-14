@@ -1,0 +1,1 @@
+export { KupolaPagination, initPagination } from '../../js/pagination.js';

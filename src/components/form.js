@@ -1,0 +1,1 @@
+export { KupolaForm, initFormValidation, getFormInstance, validateForm } from '../../js/form.js';

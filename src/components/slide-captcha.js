@@ -1,0 +1,1 @@
+export { SlideCaptcha, initSlideCaptchas, cleanupSlideCaptcha, cleanupAllSlideCaptchas } from '../../js/slide-captcha.js';
