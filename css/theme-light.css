@@ -15,6 +15,8 @@
   --bg-invert-active: #3A3E44;
   --bg-invert-disabled: rgba(0, 0, 0, 0.2);
 
+  --special-bgtabsoverlay: rgba(0, 0, 0, 0.03);
+
   --text-default: #0F1117;
   --text-default-hover: #000000;
   --text-default-active: #000000;
