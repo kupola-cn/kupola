@@ -191,17 +191,17 @@ npm run docs:preview # 预览
 - [ ] 组件集成 i18n（Table, Pagination, DatePicker 等）
 - [ ] 更多语言包
 
-### 3.3 性能优化
+### 3.3 性能优化 ✅ 基础完成
 
-- [ ] 各组件 bundle 体积分析，找出可优化项
+- [x] 各组件 bundle 体积分析：核心 12KB，最大组件 table 14KB，均在限制内
+- [x] Tree-shaking 验证：core 导出 21 个 API，组件在独立 bundle
 - [ ] 大列表组件（Table / VirtualList）虚拟滚动性能基准测试
 - [ ] Signal 响应式更新性能 profiling
-- [ ] Tree-shaking 验证：确保未使用的组件不会被打包
 - [ ] 懒加载支持：组件按需异步初始化
 
-### 3.4 测试增强
+### 3.4 测试增强 ✅ 基础完成
 
-- [ ] 补充集成测试（多组件协作场景）
+- [x] 集成测试：13 个跨模块测试（i18n、signal chain、SSR+locale）
 - [ ] SSR 水合（hydration）边界情况测试
 - [ ] 指令系统复杂场景测试（嵌套 `k-for` + `k-if`、动态组件）
 - [ ] 浏览器兼容性测试（Sauce Labs 或 Playwright）
@@ -245,16 +245,18 @@ npm run docs:preview # 预览
 | 指令系统 | ✅ 完成 | k-data / k-show / k-bind / k-on / k-model / k-for |
 | UI 组件 | ✅ 48 个 | 覆盖弹层/表单/反馈/数据展示/交互/工具 |
 | TypeScript | ✅ 完成 | types.d.ts 覆盖全部 48 个组件 |
-| 单元测试 | ✅ 883 个 | 53 套件，全部通过 |
+| 单元测试 | ✅ 896 个 | 54 套件，全部通过 |
 | 构建系统 | ✅ 完成 | 54 个入口，ESM + CJS |
 | npm 发布 | ✅ 已发布 | @next tag，2.0.0-alpha.1 |
 | GitHub | ✅ 已清理 | 无 1.0 历史，全新提交 |
 | create-kupola | ✅ 已发布 | 4 套模板（static/flask/fastapi/gin） |
 | 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
-| CI/CD | ✅ 已修复 | lint 0 errors, 883 tests, 覆盖率 86%+ |
+| CI/CD | ✅ 已修复 | lint 0 errors, 896 tests, 覆盖率 86%+ |
 | CSS 体系 | ⏳ 待建 | 无独立 CSS 包 / design tokens |
 | 无障碍 | ✅ 基础 | Modal ARIA/焦点管理，其他组件待完善 |
 | 国际化 | ✅ 基础 | i18n 模块，en-US/zh-CN，组件集成待做 |
+| 性能优化 | ✅ 基础 | Tree-shaking 验证，bundle 大小均在限制内 |
+| 集成测试 | ✅ 基础 | 13 个跨模块测试（i18n/signal/SSR） |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
 | 正式版 | ⏳ 待发布 | alpha → beta → RC → stable |
 
