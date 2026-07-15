@@ -233,10 +233,10 @@ npm run docs:preview # 预览
 - [ ] 迁移指南：1.0 → 2.0（API 对照表）
 - [ ] 常见问题 FAQ 页面
 
-### 4.3 安全与健壮性
+### 4.3 安全与健壮性 ✅ XSS 基础修复
 
-- [ ] XSS 防护审计（模板字面量中的用户输入处理）
-- [ ] CSP（Content Security Policy）兼容性验证
+- [x] XSS 防护：notification 组件 title/message HTML 转义
+- [x] CSP 兼容：无 `eval`/`new Function` 使用
 - [ ] 错误边界：组件内部异常不导致全局崩溃
 - [ ] 内存泄漏检测（Signal effect 清理、组件 destroy 完整性）
 
