@@ -60,15 +60,46 @@
   - 解决方案：构建时将 `.cjs.js` 改为 `.cjs` 扩展名
   - 优先级：中（现代项目多用 ESM）
 
-### 1.4 从 alpha 到正式版的发布路径
+### 1.4 从 alpha 到正式版的发布路径 ✅ 已规划
 
-**现状**：`2.0.0-alpha.1`，使用 `@next` tag。
+**当前状态**：`2.0.0-alpha.1`，使用 `@next` tag。
 
-- [ ] 制定 beta → RC → stable 的发布计划
-- [ ] 每个阶段需通过完整的回归测试
-- [ ] 正式版发布时：`npm dist-tag add @kupola/kupola@2.0.0 latest`
-- [ ] 更新文档移除 `@next` 标注
-- [ ] 更新 README badge 版本号
+**发布路径**：
+
+```
+alpha → beta → RC → stable
+```
+
+| 阶段 | 版本号 | npm tag | 操作 |
+|------|--------|---------|------|
+| Alpha（当前） | `2.0.0-alpha.N` | `next` | 内部测试，修复核心问题 |
+| Beta | `2.0.0-beta.N` | `next` | 功能冻结，修复 bug，文档站上线 |
+| RC | `2.0.0-rc.N` | `next` | 仅修复关键 bug，社区测试 |
+| Stable | `2.0.0` | `latest` | 正式发布 |
+
+**每个阶段检查点**：
+
+- [ ] 全量回归测试（`npm run test`）
+- [ ] lint 无 error
+- [ ] 覆盖率不低于阈值
+- [ ] npm 包安装验证
+
+**正式版发布操作**：
+
+```bash
+# 1. 更新版本号
+npm version minor  # 或 patch
+
+# 2. 发布
+npm publish --access public
+
+# 3. 切换到 latest tag
+npm dist-tag add @kupola/kupola@2.0.0 latest
+
+# 4. 更新文档移除 @next 标注
+# 5. 推送 GitHub tag
+git push origin main --tags
+```
 
 ---
 
