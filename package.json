@@ -263,8 +263,6 @@
   "files": [
     "dist/",
     "packages/core/",
-    "plugins/",
-    "scripts/",
     "version.json"
   ],
   "devDependencies": {
