@@ -105,15 +105,27 @@ git push origin main --tags
 
 ## 二、P1 — 高优先级（影响用户体验）
 
-### 2.1 文档网站
+### 2.1 文档网站 ✅ 已完成
 
-**现状**：仅有 Markdown 文档（README / CONTRIBUTING / INTEGRATION / CHANGELOG）。
+**VitePress 文档站**（精简版）已创建：
 
-- [ ] 搭建 VitePress 文档站
-- [ ] 每个组件独立 API 文档页（Options / Instance / 示例代码）
-- [ ] 核心概念页：Signal 响应式、模板字面量、指令系统、SSR
-- [ ] 在线代码 playground（可编辑运行示例）
-- [ ] 部署到 GitHub Pages 或 Vercel
+- [x] VitePress 配置（`docs-site/.vitepress/config.js`）
+- [x] 首页（Hero + Features）
+- [x] 指南：快速开始、核心概念、指令系统、SSR
+- [x] 组件：概览、Modal、Table、Form
+
+**命令**：
+
+```bash
+npm run docs:dev     # 开发
+npm run docs:build   # 构建
+npm run docs:preview # 预览
+```
+
+**待改进**：
+
+- [ ] 补充更多组件文档（按需添加）
+- [ ] 部署到 GitHub Pages
 
 ### 2.2 CSS / 主题系统
 
@@ -220,7 +232,7 @@ git push origin main --tags
 | npm 发布 | ✅ 已发布 | @next tag，2.0.0-alpha.1 |
 | GitHub | ✅ 已清理 | 无 1.0 历史，全新提交 |
 | create-kupola | ✅ 已发布 | 4 套模板（static/flask/fastapi/gin） |
-| 文档网站 | ⏳ 待建 | 需要 VitePress + 组件 API 文档 |
+| 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
 | CI/CD | ✅ 已修复 | lint 0 errors, 883 tests, 覆盖率 86%+ |
 | CSS 体系 | ⏳ 待建 | 无独立 CSS 包 / design tokens |
 | 无障碍 | ⏳ 待建 | ARIA / 键盘导航 / 焦点管理 |
