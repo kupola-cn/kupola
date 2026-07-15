@@ -127,15 +127,21 @@ npm run docs:preview # 预览
 - [ ] 补充更多组件文档（按需添加）
 - [ ] 部署到 GitHub Pages
 
-### 2.2 CSS / 主题系统
+### 2.2 CSS / 主题系统 ✅ 基础完成
 
-**现状**：组件使用内联样式和 `kupola-*` CSS 类名，但无独立 CSS 包发布。
+**已实现**：
 
-- [ ] 确认组件样式策略：CSS-in-JS vs 外部 CSS 文件
-- [ ] 如需外部 CSS，创建 `@kupola/css` 包或将其加入主包
-- [ ] 暗色主题完整实现（当前仅 `data-theme="dark"` 切换，无完整暗色变量体系）
-- [ ] CSS 变量体系：定义颜色、间距、字号等 design tokens
+- [x] 外部 CSS 策略：`packages/css/` 独立包，通过 `@kupola/kupola/css` 引入
+- [x] Design tokens：颜色、间距、字号、圆角、层级、过渡（`tokens.css`）
+- [x] 明暗主题：`:root` 暗色默认 + `[data-theme="light"]` 浅色
+- [x] 组件样式：`ds-*` 类名体系（`components.css`）
+- [x] package.json 导出：`./css`、`./css/tokens`、`./css/components`
+
+**待改进**：
+
 - [ ] 响应式断点规范
+- [ ] 更多组件样式细节（如 ColorPicker、DatePicker 复杂组件）
+- [ ] CSS 压缩构建（minify）
 
 ### 2.3 组件补全
 
@@ -252,7 +258,7 @@ npm run docs:preview # 预览
 | create-kupola | ✅ 已发布 | 4 套模板（static/flask/fastapi/gin） |
 | 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
 | CI/CD | ✅ 已修复 | lint 0 errors, 896 tests, 覆盖率 86%+ |
-| CSS 体系 | ⏳ 待建 | 无独立 CSS 包 / design tokens |
+| CSS 体系 | ✅ 基础 | design tokens + 明暗主题 + ds-* 组件样式 |
 | 无障碍 | ✅ 基础 | Modal ARIA/焦点管理，其他组件待完善 |
 | 国际化 | ✅ 基础 | i18n 模块，en-US/zh-CN，组件集成待做 |
 | 性能优化 | ✅ 基础 | Tree-shaking 验证，bundle 大小均在限制内 |
