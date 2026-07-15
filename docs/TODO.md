@@ -162,20 +162,34 @@ npm run docs:preview # 预览
 
 ## 三、P2 — 中优先级（提升质量）
 
-### 3.1 无障碍（Accessibility）
+### 3.1 无障碍（Accessibility） ✅ 基础完成
 
-- [ ] 所有弹层组件添加 ARIA 属性（`role="dialog"`, `aria-modal`, `aria-labelledby`）
-- [ ] 键盘导航支持（Tab / Escape / Arrow keys）
-- [ ] 焦点管理（Modal 打开时 trap focus，关闭时恢复焦点）
-- [ ] 表单组件关联 `<label>` 和 `aria-describedby` 错误提示
-- [ ] 颜色对比度符合 WCAG 2.1 AA 标准
+- [x] Modal: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`
+- [x] Modal: 焦点管理（打开时聚焦 dialog，`tabindex="-1"`）
+- [x] Modal: ESC 键关闭（已有）
+- [x] 关闭按钮: `aria-label`, `type="button"`
 
-### 3.2 国际化（i18n）
+**待改进**：
 
-- [ ] 组件内置文本可配置（如 Table 的 "No data"、Pagination 的 "Page"）
-- [ ] 提供 `Kupola.configure({ locale: 'zh-CN' })` API
-- [ ] 内置中英文语言包
-- [ ] 日期/时间组件支持多语言格式化
+- [ ] 其他弹层组件 ARIA（Drawer, Dialog, Dropdown）
+- [ ] 键盘导航（Tab/Arrow keys）
+- [ ] 焦点陷阱（Modal 打开时限制 Tab 在 dialog 内）
+- [ ] 表单组件 `<label>` 关联
+
+### 3.2 国际化（i18n） ✅ 基础完成
+
+**已创建 `packages/core/src/i18n.js`**：
+
+- [x] `setLocale(locale)` / `getLocale()` — 切换语言
+- [x] `t(key, params)` — 获取翻译文本
+- [x] `addMessages(locale, messages)` — 添加自定义翻译
+- [x] 内置 en-US / zh-CN 语言包
+- [x] 导出到 `@kupola/kupola/i18n`
+
+**待改进**：
+
+- [ ] 组件集成 i18n（Table, Pagination, DatePicker 等）
+- [ ] 更多语言包
 
 ### 3.3 性能优化
 
@@ -239,8 +253,8 @@ npm run docs:preview # 预览
 | 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
 | CI/CD | ✅ 已修复 | lint 0 errors, 883 tests, 覆盖率 86%+ |
 | CSS 体系 | ⏳ 待建 | 无独立 CSS 包 / design tokens |
-| 无障碍 | ⏳ 待建 | ARIA / 键盘导航 / 焦点管理 |
-| 国际化 | ⏳ 待建 | 组件文本可配置 |
+| 无障碍 | ✅ 基础 | Modal ARIA/焦点管理，其他组件待完善 |
+| 国际化 | ✅ 基础 | i18n 模块，en-US/zh-CN，组件集成待做 |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
 | 正式版 | ⏳ 待发布 | alpha → beta → RC → stable |
 
