@@ -1,0 +1,54 @@
+﻿# Source / dev files
+test/
+skills/
+node_modules/
+
+# Config files
+.eslintrc.cjs
+.prettierrc
+jest.config.cjs
+rollup.config.cjs
+vite.config.js
+tsconfig.json
+.size-limit.json
+.browserslistrc
+babel.config.json
+
+# IDE / tools
+.vscode/
+.agents/
+.qoder/
+
+# Internal / sync
+his-sys/
+sync-to-his.ps1
+
+# CI
+.github/
+
+# Internal metadata
+version.json
+package-lock.json
+
+# Maps
+*.map
+
+# Misc
+showcase.html
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Internal docs (not for npm consumers)
+SKILL.md
+INTEGRATION.md
+CHANGELOG.md
+CONTRIBUTING.md
+RELEASE_WORKFLOW.md
+USAGE_GUIDE.md
+文档编写指南.md
+
+# Git
+.gitignore
+.npmignore

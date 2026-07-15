@@ -1,0 +1,21 @@
+﻿# IDE / tools
+.agents/
+.vscode/
+.qoder/
+
+# Internal / sync
+his-sys/
+sync-to-his.ps1
+
+# Dependencies / build
+node_modules/
+dist/
+*.tgz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.tmp
