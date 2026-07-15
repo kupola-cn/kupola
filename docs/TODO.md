@@ -264,7 +264,7 @@ npm run docs:preview # 预览
 | 性能优化 | ✅ 基础 | Tree-shaking 验证，bundle 大小均在限制内 |
 | 集成测试 | ✅ 基础 | 13 个跨模块测试（i18n/signal/SSR） |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
-| 正式版 | ⏳ 待发布 | alpha → beta → RC → stable |
+| 正式版 | ⏳ beta | 2.0.0-beta.1 已发布 @next |
 
 ---
 

@@ -17,6 +17,13 @@
 
 // Notification items are created via innerHTML for simpler lifecycle (no reactive bindings needed)
 
+/** Escape HTML special chars to prevent XSS. */
+function _esc(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str ?? '');
+  return div.innerHTML;
+}
+
 let _container = null;
 let _position = 'top-right';
 let _idCounter = 0;
@@ -89,8 +96,8 @@ function _open(options = {}) {
     html_content += `<span class="ds-notification__icon">${iconHtml}</span>`;
   }
   html_content += '<div class="ds-notification__content">';
-  if (title) {html_content += `<div class="ds-notification__title">${title}</div>`;}
-  if (message) {html_content += `<div class="ds-notification__message">${message}</div>`;}
+  if (title) {html_content += `<div class="ds-notification__title">${_esc(title)}</div>`;}
+  if (message) {html_content += `<div class="ds-notification__message">${_esc(message)}</div>`;}
   html_content += '</div>';
   if (closable) {
     html_content += '<button class="ds-notification__close" aria-label="Close">&times;</button>';
