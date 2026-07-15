@@ -117,9 +117,9 @@ git push origin main --tags
 **命令**：
 
 ```bash
-npm run docs-site:dev     # 开发
-npm run docs-site:build   # 构建
-npm run docs-site:preview # 预览
+npm run docs:dev     # 开发
+npm run docs:build   # 构建
+npm run docs:preview # 预览
 ```
 
 **待改进**：

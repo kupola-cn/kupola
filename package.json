@@ -23,6 +23,10 @@
       "require": "./dist/kupola-core.cjs.js",
       "types": "./packages/core/src/components/types.d.ts"
     },
+    "./i18n": {
+      "import": "./dist/kupola-core-i18n.esm.js",
+      "require": "./dist/kupola-core-i18n.cjs.js"
+    },
     "./components/modal": {
       "import": "./dist/kupola-core-modal.esm.js",
       "require": "./dist/kupola-core-modal.cjs.js"

@@ -109,6 +109,41 @@ module.exports = [
     ],
     external: ['@babel/runtime']
   },
+  // ── @kupola/core/i18n (internationalization) ─────────────────────────
+  {
+    input: 'packages/core/src/i18n.js',
+    output: [
+      {
+        file: 'dist/kupola-core-i18n.esm.js',
+        format: 'esm',
+        sourcemap: false,
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      },
+      {
+        file: 'dist/kupola-core-i18n.cjs.js',
+        format: 'cjs',
+        sourcemap: false,
+        exports: 'named',
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      }
+    ],
+    plugins: [
+      nodeResolve({ browser: true }),
+      commonjs({ include: ['packages/core/src/**/*.js'], requireReturnsDefault: 'auto' }),
+      babel({
+        babelHelpers: 'runtime',
+        exclude: 'node_modules/**',
+        extensions: ['.js'],
+      })
+    ],
+    external: ['@babel/runtime']
+  },
   // ── @kupola/core/components/modal ──────────────────────────────────────
   {
     input: 'packages/core/src/components/modal.js',

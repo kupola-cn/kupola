@@ -50,6 +50,9 @@ export function Modal(options = {}, children = null) {
     _isOpen = true;
     if (maskEl) {maskEl.classList.add('is-visible');}
     document.body.style.overflow = 'hidden';
+    // Focus management: focus the dialog element
+    const dialogEl = maskEl?.querySelector('.ds-modal');
+    if (dialogEl) {dialogEl.focus();}
   }
 
   function close() {
@@ -84,10 +87,10 @@ export function Modal(options = {}, children = null) {
 
   const tpl = html`
     <div class="ds-modal-mask" onclick="${onMaskClick}">
-      <div class="ds-modal" style="${styleAttr}">
+      <div class="ds-modal" style="${styleAttr}" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
         <div class="ds-modal__header">
-          <span class="ds-modal__title">${title}</span>
-          <button class="ds-modal__close" onclick="${close}" aria-label="Close">
+          <span class="ds-modal__title" id="modal-title">${title}</span>
+          <button class="ds-modal__close" onclick="${close}" aria-label="Close" type="button">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>

@@ -37,3 +37,6 @@ export { walk } from './directives.js';
 
 // ── Scheduler (advanced / testing) ───────────────────────────────────────────
 export { flushJobs, resetScheduler } from './scheduler.js';
+
+// ── i18n ─────────────────────────────────────────────────────────────────────
+export { setLocale, getLocale, t, addMessages } from './i18n.js';
