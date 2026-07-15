@@ -166,7 +166,7 @@ describe('Select item selection', () => {
     items[1].click();
 
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ value: 'b', text: 'Beta' })
+      expect.objectContaining({ value: 'b', text: 'Beta' }),
     );
     expect(view.getValue()).toBe('b');
 
@@ -201,24 +201,24 @@ describe('Select item selection', () => {
     menuItems[0].click();
     menuItems[2].click();
 
-    expect(view.getValue()).toEqual(['a', 'c']);
+    expect(view.getValue()).toEqual([ 'a', 'c' ]);
     const valueEl = container.querySelector('.ds-select__value');
     expect(valueEl.textContent).toBe('2 selected');
     view.destroy();
   });
 
   test('deselects in multiple mode on second click', () => {
-    const view = Select({ items: ITEMS, multiple: true, values: ['a', 'b'] });
+    const view = Select({ items: ITEMS, multiple: true, values: [ 'a', 'b' ] });
     const container = document.createElement('div');
     container.appendChild(view.element);
     document.body.appendChild(container);
 
-    expect(view.getValue()).toEqual(['a', 'b']);
+    expect(view.getValue()).toEqual([ 'a', 'b' ]);
 
     const menuItems = container.querySelectorAll('.ds-select__item');
     menuItems[0].click(); // Deselect 'a'
 
-    expect(view.getValue()).toEqual(['b']);
+    expect(view.getValue()).toEqual([ 'b' ]);
     view.destroy();
   });
 });
@@ -293,7 +293,7 @@ describe('Select setValue and clear', () => {
 
     expect(view.getValue()).toBe('');
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ value: '', text: '' })
+      expect.objectContaining({ value: '', text: '' }),
     );
 
     const valueEl = container.querySelector('.ds-select__value');
@@ -331,7 +331,7 @@ describe('Select keyboard navigation', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ value: 'a', text: 'Alpha' })
+      expect.objectContaining({ value: 'a', text: 'Alpha' }),
     );
     view.destroy();
   });

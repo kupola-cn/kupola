@@ -83,7 +83,7 @@ export function Table(options = {}) {
   const multiSort = options.multiSort || false;
 
   // State
-  let _data = Array.isArray(options.data) ? [...options.data] : [];
+  let _data = Array.isArray(options.data) ? [ ...options.data ] : [];
   let _loading = false;
   let _sorts = []; // [{ key, order }]
   let _currentPage = 1;
@@ -105,7 +105,7 @@ export function Table(options = {}) {
 
   // Init
   element.classList.add('kupola-table-wrapper');
-  if (virtualScroll) element.classList.add('kupola-table-virtual-wrapper');
+  if (virtualScroll) {element.classList.add('kupola-table-virtual-wrapper');}
   _render();
 
   // === Tree helpers ===
@@ -134,13 +134,13 @@ export function Table(options = {}) {
   }
 
   function _getFlatData(data) {
-    if (!treeConfig) return data;
+    if (!treeConfig) {return data;}
     return _flattenVisible(data, 0);
   }
 
   // === Data processing: filter → sort → paginate ===
   function getProcessedData() {
-    let data = [..._data];
+    let data = [ ..._data ];
 
     // Filter
     if (_filterText) {
@@ -151,9 +151,9 @@ export function Table(options = {}) {
         data = data.filter(row =>
           columns.some(col => {
             const val = row[col.key];
-            if (col.filterFn) return col.filterFn(val, _filterText);
+            if (col.filterFn) {return col.filterFn(val, _filterText);}
             return val != null && String(val).toLowerCase().includes(text);
-          })
+          }),
         );
       }
     }
@@ -186,14 +186,14 @@ export function Table(options = {}) {
       });
       if (selfMatch || children.length > 0) {
         acc.push({ ...row, [childrenKey]: children });
-        if (children.length > 0) _treeExpandedKeys.add(row[rowKey]);
+        if (children.length > 0) {_treeExpandedKeys.add(row[rowKey]);}
       }
       return acc;
     }, []);
   }
 
   function _sortData(data) {
-    const sorted = [...data].sort((a, b) => {
+    const sorted = [ ...data ].sort((a, b) => {
       for (const s of _sorts) {
         const col = columns.find(c => c.key === s.key);
         let va = a[s.key], vb = b[s.key];
@@ -201,15 +201,15 @@ export function Table(options = {}) {
         if (col?.sorter) {
           cmp = col.sorter(va, vb, s.order);
         } else {
-          if (va == null) cmp = 1;
-          else if (vb == null) cmp = -1;
+          if (va == null) {cmp = 1;}
+          else if (vb == null) {cmp = -1;}
           else if (typeof va === 'number' && typeof vb === 'number') {
             cmp = s.order === 'asc' ? va - vb : vb - va;
           } else {
             cmp = s.order === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
           }
         }
-        if (cmp !== 0) return cmp;
+        if (cmp !== 0) {return cmp;}
       }
       return 0;
     });
@@ -248,16 +248,16 @@ export function Table(options = {}) {
     }
 
     // Post-render
-    if (resizable) _initColumnResize();
-    if (draggable) _initRowDrag();
+    if (resizable) {_initColumnResize();}
+    if (draggable) {_initRowDrag();}
   }
 
   function _getTableClass() {
-    const classes = ['kupola-table'];
-    if (options.striped) classes.push('kupola-table-striped');
-    if (options.hoverable !== false) classes.push('kupola-table-hover');
-    if (options.bordered) classes.push('kupola-table-bordered');
-    if (options.compact) classes.push('kupola-table-compact');
+    const classes = [ 'kupola-table' ];
+    if (options.striped) {classes.push('kupola-table-striped');}
+    if (options.hoverable !== false) {classes.push('kupola-table-hover');}
+    if (options.bordered) {classes.push('kupola-table-bordered');}
+    if (options.compact) {classes.push('kupola-table-compact');}
     return classes.join(' ');
   }
 
@@ -288,7 +288,7 @@ export function Table(options = {}) {
           _filterText = input.value;
           _currentPage = 1;
           _render();
-          if (options.onFilter) options.onFilter(_filterText);
+          if (options.onFilter) {options.onFilter(_filterText);}
         }, 300);
       });
       right.appendChild(input);
@@ -303,7 +303,7 @@ export function Table(options = {}) {
     const thead = document.createElement('thead');
     const tr = document.createElement('tr');
 
-    if (selection) _renderSelectionHeader(tr);
+    if (selection) {_renderSelectionHeader(tr);}
     if (expandable) {
       const th = document.createElement('th');
       th.className = 'kupola-table-col-expand';
@@ -313,15 +313,15 @@ export function Table(options = {}) {
     columns.forEach(col => {
       const th = document.createElement('th');
       th.textContent = col.title || col.key;
-      if (col.width) th.style.width = typeof col.width === 'number' ? col.width + 'px' : col.width;
-      if (col.minWidth) th.style.minWidth = typeof col.minWidth === 'number' ? col.minWidth + 'px' : col.minWidth;
-      if (col.align) th.style.textAlign = col.align;
-      if (col.fixed) th.setAttribute('data-fixed', col.fixed);
+      if (col.width) {th.style.width = typeof col.width === 'number' ? col.width + 'px' : col.width;}
+      if (col.minWidth) {th.style.minWidth = typeof col.minWidth === 'number' ? col.minWidth + 'px' : col.minWidth;}
+      if (col.align) {th.style.textAlign = col.align;}
+      if (col.fixed) {th.setAttribute('data-fixed', col.fixed);}
 
       if (col.sortable) {
         th.classList.add('kupola-table-sortable');
         const sortInfo = _sorts.find(s => s.key === col.key);
-        if (sortInfo) th.classList.add(`kupola-table-sort-${sortInfo.order}`);
+        if (sortInfo) {th.classList.add(`kupola-table-sort-${sortInfo.order}`);}
 
         th.addEventListener('click', () => _handleSort(col.key));
 
@@ -398,32 +398,32 @@ export function Table(options = {}) {
 
         const tr = document.createElement('tr');
         tr.setAttribute('data-row-key', key);
-        if (isSelected) tr.classList.add('kupola-table-row-selected');
+        if (isSelected) {tr.classList.add('kupola-table-row-selected');}
         if (draggable) { tr.draggable = true; tr.classList.add('kupola-table-draggable'); }
 
         if (options.onRowClick) {
           tr.addEventListener('click', () => options.onRowClick(row, key));
         }
 
-        if (selection) _renderSelectionCell(tr, key, isSelected);
-        if (expandable) _renderExpandCell(tr, key, isExpanded);
+        if (selection) {_renderSelectionCell(tr, key, isSelected);}
+        if (expandable) {_renderExpandCell(tr, key, isExpanded);}
 
         // Data cells
         columns.forEach((col, colIndex) => {
-          if (skipCells.has(`${rowIndex}-${colIndex}`)) return;
+          if (skipCells.has(`${rowIndex}-${colIndex}`)) {return;}
 
           const td = document.createElement('td');
-          if (col.align) td.style.textAlign = col.align;
-          if (col.fixed) td.setAttribute('data-fixed', col.fixed);
+          if (col.align) {td.style.textAlign = col.align;}
+          if (col.fixed) {td.setAttribute('data-fixed', col.fixed);}
 
           // Merge cells
           const merge = mergeMap.get(`${rowIndex}-${colIndex}`);
           if (merge) {
-            if (merge.rowSpan > 1) td.rowSpan = merge.rowSpan;
-            if (merge.colSpan > 1) td.colSpan = merge.colSpan;
+            if (merge.rowSpan > 1) {td.rowSpan = merge.rowSpan;}
+            if (merge.colSpan > 1) {td.colSpan = merge.colSpan;}
             for (let r = 0; r < (merge.rowSpan || 1); r++) {
               for (let c = 0; c < (merge.colSpan || 1); c++) {
-                if (r === 0 && c === 0) continue;
+                if (r === 0 && c === 0) {continue;}
                 skipCells.add(`${rowIndex + r}-${colIndex + c}`);
               }
             }
@@ -440,8 +440,8 @@ export function Table(options = {}) {
             _renderCellValue(td, col, value, row);
           } else if (col.render) {
             const result = col.render(value, row);
-            if (typeof result === 'string') td.innerHTML = result;
-            else if (result instanceof HTMLElement) td.appendChild(result);
+            if (typeof result === 'string') {td.innerHTML = result;}
+            else if (result instanceof HTMLElement) {td.appendChild(result);}
           } else {
             td.textContent = value != null ? String(value) : '';
           }
@@ -458,8 +458,8 @@ export function Table(options = {}) {
           const expandTd = document.createElement('td');
           expandTd.colSpan = _getTotalColCount();
           const content = expandable(row);
-          if (typeof content === 'string') expandTd.innerHTML = content;
-          else if (content instanceof HTMLElement) expandTd.appendChild(content);
+          if (typeof content === 'string') {expandTd.innerHTML = content;}
+          else if (content instanceof HTMLElement) {expandTd.appendChild(content);}
           expandTr.appendChild(expandTd);
           tbody.appendChild(expandTr);
         }
@@ -471,8 +471,8 @@ export function Table(options = {}) {
   function _renderCellValue(td, col, value, row) {
     if (col.render) {
       const result = col.render(value, row);
-      if (typeof result === 'string') td.innerHTML = result;
-      else if (result instanceof HTMLElement) td.appendChild(result);
+      if (typeof result === 'string') {td.innerHTML = result;}
+      else if (result instanceof HTMLElement) {td.appendChild(result);}
     } else {
       td.textContent = value != null ? String(value) : '';
     }
@@ -485,8 +485,8 @@ export function Table(options = {}) {
     input.type = selection === 'radio' ? 'radio' : 'checkbox';
     input.checked = isSelected;
     input.addEventListener('change', () => {
-      if (input.checked) selectRow(key);
-      else deselectRow(key);
+      if (input.checked) {selectRow(key);}
+      else {deselectRow(key);}
     });
     td.appendChild(input);
     tr.appendChild(td);
@@ -548,14 +548,14 @@ export function Table(options = {}) {
     }
     _editingCell = null;
     _editBuffer = {};
-    if (options.onEditSave) options.onEditSave(row, colKey);
+    if (options.onEditSave) {options.onEditSave(row, colKey);}
     _render();
   }
 
   function _cancelEdit() {
     _editingCell = null;
     _editBuffer = {};
-    if (options.onEditCancel) options.onEditCancel();
+    if (options.onEditCancel) {options.onEditCancel();}
     _render();
   }
 
@@ -567,16 +567,16 @@ export function Table(options = {}) {
   function _handleSort(key) {
     const existing = _sorts.find(s => s.key === key);
     if (existing) {
-      if (existing.order === 'asc') existing.order = 'desc';
+      if (existing.order === 'asc') {existing.order = 'desc';}
       else if (!multiSort) { _sorts = []; }
       else { _sorts = _sorts.filter(s => s.key !== key); }
     } else {
-      if (!multiSort) _sorts = [{ key, order: 'asc' }];
-      else _sorts.push({ key, order: 'asc' });
+      if (!multiSort) {_sorts = [ { key, order: 'asc' } ];}
+      else {_sorts.push({ key, order: 'asc' });}
     }
     _currentPage = 1;
     _render();
-    if (options.onSort) options.onSort(_sorts);
+    if (options.onSort) {options.onSort(_sorts);}
   }
 
   // === Pagination ===
@@ -600,7 +600,7 @@ export function Table(options = {}) {
     prevBtn.className = 'kupola-table-page-btn';
     prevBtn.textContent = '\u2039';
     prevBtn.disabled = _currentPage <= 1;
-    prevBtn.addEventListener('click', () => { if (_currentPage > 1) { _currentPage--; _render(); if (options.onPageChange) options.onPageChange(_currentPage); } });
+    prevBtn.addEventListener('click', () => { if (_currentPage > 1) { _currentPage--; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} } });
     pages.appendChild(prevBtn);
 
     // Page numbers
@@ -616,7 +616,7 @@ export function Table(options = {}) {
         btn.type = 'button';
         btn.className = 'kupola-table-page-btn' + (p === _currentPage ? ' active' : '');
         btn.textContent = p;
-        btn.addEventListener('click', () => { _currentPage = p; _render(); if (options.onPageChange) options.onPageChange(_currentPage); });
+        btn.addEventListener('click', () => { _currentPage = p; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} });
         pages.appendChild(btn);
       }
     });
@@ -627,7 +627,7 @@ export function Table(options = {}) {
     nextBtn.className = 'kupola-table-page-btn';
     nextBtn.textContent = '\u203A';
     nextBtn.disabled = _currentPage >= totalPages;
-    nextBtn.addEventListener('click', () => { if (_currentPage < totalPages) { _currentPage++; _render(); if (options.onPageChange) options.onPageChange(_currentPage); } });
+    nextBtn.addEventListener('click', () => { if (_currentPage < totalPages) { _currentPage++; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} } });
     pages.appendChild(nextBtn);
 
     // Page size selector
@@ -638,7 +638,7 @@ export function Table(options = {}) {
         const opt = document.createElement('option');
         opt.value = size;
         opt.textContent = `${size} / page`;
-        if (size === _pageSize) opt.selected = true;
+        if (size === _pageSize) {opt.selected = true;}
         select.appendChild(opt);
       });
       select.addEventListener('change', () => { _pageSize = Number(select.value); _currentPage = 1; _render(); });
@@ -654,17 +654,17 @@ export function Table(options = {}) {
   }
 
   function _getPageNumbers(current, total) {
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (total <= 7) {return Array.from({ length: total }, (_, i) => i + 1);}
     const pages = [];
     if (current <= 4) {
-      for (let i = 1; i <= 5; i++) pages.push(i);
+      for (let i = 1; i <= 5; i++) {pages.push(i);}
       pages.push('...', total);
     } else if (current >= total - 3) {
       pages.push(1, '...');
-      for (let i = total - 4; i <= total; i++) pages.push(i);
+      for (let i = total - 4; i <= total; i++) {pages.push(i);}
     } else {
       pages.push(1, '...');
-      for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+      for (let i = current - 1; i <= current + 1; i++) {pages.push(i);}
       pages.push('...', total);
     }
     return pages;
@@ -721,7 +721,7 @@ export function Table(options = {}) {
         row.classList.remove('kupola-table-drag-over');
         const fromKey = e.dataTransfer.getData('text/plain');
         const toKey = row.getAttribute('data-row-key');
-        if (fromKey !== toKey) _reorderRows(fromKey, toKey);
+        if (fromKey !== toKey) {_reorderRows(fromKey, toKey);}
       };
       const onDragEnd = () => {
         row.classList.remove('kupola-table-dragging');
@@ -746,26 +746,26 @@ export function Table(options = {}) {
   function _reorderRows(fromKey, toKey) {
     const fromIdx = _data.findIndex(r => String(r[rowKey]) === String(fromKey));
     const toIdx = _data.findIndex(r => String(r[rowKey]) === String(toKey));
-    if (fromIdx === -1 || toIdx === -1) return;
-    const [item] = _data.splice(fromIdx, 1);
+    if (fromIdx === -1 || toIdx === -1) {return;}
+    const [ item ] = _data.splice(fromIdx, 1);
     _data.splice(toIdx, 0, item);
     _render();
-    if (options.onRowDragEnd) options.onRowDragEnd(fromKey, toKey);
+    if (options.onRowDragEnd) {options.onRowDragEnd(fromKey, toKey);}
   }
 
   // === Public API ===
 
   function setData(data) {
     if (data && typeof data === 'object' && 'value' in data) {
-      _data = Array.isArray(data.value) ? [...data.value] : [];
+      _data = Array.isArray(data.value) ? [ ...data.value ] : [];
       if (data.subscribe) {
         _reactiveCleanups.push(data.subscribe((newVal) => {
-          _data = Array.isArray(newVal) ? [...newVal] : [];
+          _data = Array.isArray(newVal) ? [ ...newVal ] : [];
           _render();
         }));
       }
     } else if (Array.isArray(data)) {
-      _data = [...data];
+      _data = [ ...data ];
     } else {
       _data = [];
     }
@@ -788,9 +788,9 @@ export function Table(options = {}) {
     _render();
   }
 
-  function getData() { return [..._data]; }
+  function getData() { return [ ..._data ]; }
 
-  function getSelectedKeys() { return [..._selectedKeys]; }
+  function getSelectedKeys() { return [ ..._selectedKeys ]; }
 
   function getSelectedRows() {
     return _data.filter(r => _selectedKeys.has(r[rowKey]));
@@ -804,33 +804,33 @@ export function Table(options = {}) {
       _selectedKeys.add(key);
     }
     _render();
-    if (options.onSelect) options.onSelect(getSelectedKeys(), getSelectedRows());
+    if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function deselectRow(key) {
     _selectedKeys.delete(key);
     _render();
-    if (options.onSelect) options.onSelect(getSelectedKeys(), getSelectedRows());
+    if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function selectAll() {
     const { pageData } = getProcessedData();
     pageData.forEach(r => _selectedKeys.add(r[rowKey]));
     _render();
-    if (options.onSelect) options.onSelect(getSelectedKeys(), getSelectedRows());
+    if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function deselectAll() {
     _selectedKeys.clear();
     _render();
-    if (options.onSelect) options.onSelect(getSelectedKeys(), getSelectedRows());
+    if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function toggleExpand(key) {
-    if (_expandedKeys.has(key)) _expandedKeys.delete(key);
-    else _expandedKeys.add(key);
+    if (_expandedKeys.has(key)) {_expandedKeys.delete(key);}
+    else {_expandedKeys.add(key);}
     _render();
-    if (options.onExpand) options.onExpand(key, _expandedKeys.has(key));
+    if (options.onExpand) {options.onExpand(key, _expandedKeys.has(key));}
   }
 
   function expandAll() {
@@ -845,11 +845,11 @@ export function Table(options = {}) {
   }
 
   function setSort(key, order) {
-    if (!multiSort) _sorts = [{ key, order: order || 'asc' }];
+    if (!multiSort) {_sorts = [ { key, order: order || 'asc' } ];}
     else {
       const existing = _sorts.find(s => s.key === key);
-      if (existing) existing.order = order || 'asc';
-      else _sorts.push({ key, order: order || 'asc' });
+      if (existing) {existing.order = order || 'asc';}
+      else {_sorts.push({ key, order: order || 'asc' });}
     }
     _currentPage = 1;
     _render();
@@ -863,7 +863,7 @@ export function Table(options = {}) {
   function setPage(page) {
     _currentPage = Math.max(1, page);
     _render();
-    if (options.onPageChange) options.onPageChange(_currentPage);
+    if (options.onPageChange) {options.onPageChange(_currentPage);}
   }
 
   function setPageSize(size) {
@@ -888,9 +888,9 @@ export function Table(options = {}) {
         const val = row[col.key];
         const str = val != null ? String(val) : '';
         return str.includes(',') ? `"${str}"` : str;
-      }).join(',')
+      }).join(','),
     );
-    return [headers, ...rows].join('\n');
+    return [ headers, ...rows ].join('\n');
   }
 
   function refresh() { _render(); }
@@ -911,6 +911,6 @@ export function Table(options = {}) {
     getSelectedRows, getSelectedKeys, selectRow, deselectRow, selectAll, deselectAll,
     toggleExpand, expandAll, collapseAll,
     setSort, clearSort, setPage, setPageSize, setFilterText, getFilterText,
-    exportCSV, refresh
+    exportCSV, refresh,
   };
 }

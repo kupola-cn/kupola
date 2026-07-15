@@ -15,7 +15,7 @@ module.exports = {
     'no-unused-vars': ['warn', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-debugger': 'error',
-    'eqeqeq': ['error', 'always'],
+    'eqeqeq': ['error', 'always', { null: 'ignore' }],
     'curly': ['error', 'all'],
     'quotes': ['error', 'single'],
     'semi': ['error', 'always'],
@@ -39,7 +39,15 @@ module.exports = {
   ignorePatterns: [
     'node_modules/',
     'dist/',
+    'his-sys/',
+    'packages/create-kupola/node_modules/',
     '*.min.js',
     '*.min.css',
+  ],
+  overrides: [
+    {
+      files: ['**/__tests__/**/*.js', '**/*.test.js'],
+      env: { jest: true },
+    },
   ],
 };

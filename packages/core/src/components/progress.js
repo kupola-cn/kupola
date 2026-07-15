@@ -68,14 +68,14 @@ export function Progress(options = {}) {
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _syncBar() {
-    if (!barEl) return;
+    if (!barEl) {return;}
     barEl.style.width = _percent + '%';
 
     // Update status classes
     barEl.classList.remove('is-error', 'is-warning', 'is-success');
-    if (_status === 'error') barEl.classList.add('is-error');
-    else if (_status === 'warning') barEl.classList.add('is-warning');
-    else if (_status === 'success') barEl.classList.add('is-success');
+    if (_status === 'error') {barEl.classList.add('is-error');}
+    else if (_status === 'warning') {barEl.classList.add('is-warning');}
+    else if (_status === 'success') {barEl.classList.add('is-success');}
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────

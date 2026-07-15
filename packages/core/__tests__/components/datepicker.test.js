@@ -169,7 +169,7 @@ describe('Datepicker date selection', () => {
 
     // Find a non-outside day button (e.g., June 15)
     const days = container.querySelectorAll('.ds-datepicker__days button:not(.is-outside)');
-    const day15 = [...days].find((b) => b.textContent === '15');
+    const day15 = [ ...days ].find((b) => b.textContent === '15');
     expect(day15).toBeDefined();
     day15.click();
 

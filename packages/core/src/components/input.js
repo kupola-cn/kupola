@@ -58,11 +58,11 @@ export function Input(options = {}) {
 
   function setValue(val) {
     _value = val;
-    if (inputEl) inputEl.value = _value;
+    if (inputEl) {inputEl.value = _value;}
   }
 
   function focus() {
-    if (inputEl) inputEl.focus();
+    if (inputEl) {inputEl.focus();}
   }
 
   function destroy() {
@@ -77,12 +77,12 @@ export function Input(options = {}) {
 
   function _handleInput(e) {
     _value = e.target.value;
-    if (onInput) onInput(_value);
+    if (onInput) {onInput(_value);}
   }
 
   function _handleChange(e) {
     _value = e.target.value;
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ export function Input(options = {}) {
   if (inputEl) {
     inputEl.value = _value;
     inputEl.disabled = disabled;
-    if (name) inputEl.name = name;
+    if (name) {inputEl.name = name;}
     inputEl.addEventListener('input', _handleInput);
     inputEl.addEventListener('change', _handleChange);
   }

@@ -45,7 +45,7 @@ describe('DynamicTags rendering', () => {
   });
 
   test('renders initial tags', () => {
-    const view = DynamicTags({ tags: ['JS', 'TS', 'Python'] });
+    const view = DynamicTags({ tags: [ 'JS', 'TS', 'Python' ] });
     document.body.appendChild(view.element);
 
     const tags = document.body.querySelectorAll('.ds-dynamic-tags__tag');
@@ -53,7 +53,7 @@ describe('DynamicTags rendering', () => {
   });
 
   test('each tag has a remove button', () => {
-    const view = DynamicTags({ tags: ['A', 'B'] });
+    const view = DynamicTags({ tags: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
 
     const removeButtons = document.body.querySelectorAll('.ds-dynamic-tags__remove');
@@ -87,7 +87,7 @@ describe('DynamicTags add', () => {
     document.body.appendChild(view.element);
 
     view.addTag('  spaced  ');
-    expect(view.getTags()).toEqual(['spaced']);
+    expect(view.getTags()).toEqual([ 'spaced' ]);
   });
 
   test('addTag rejects empty string', () => {
@@ -100,21 +100,21 @@ describe('DynamicTags add', () => {
   });
 
   test('addTag rejects duplicates', () => {
-    const view = DynamicTags({ tags: ['A'] });
+    const view = DynamicTags({ tags: [ 'A' ] });
     document.body.appendChild(view.element);
 
     const result = view.addTag('A');
     expect(result).toBe(false);
-    expect(view.getTags()).toEqual(['A']);
+    expect(view.getTags()).toEqual([ 'A' ]);
   });
 
   test('addTag respects maxTags', () => {
-    const view = DynamicTags({ maxTags: 2, tags: ['A', 'B'] });
+    const view = DynamicTags({ maxTags: 2, tags: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
 
     const result = view.addTag('C');
     expect(result).toBe(false);
-    expect(view.getTags()).toEqual(['A', 'B']);
+    expect(view.getTags()).toEqual([ 'A', 'B' ]);
   });
 
   test('onChange fires when tag added', () => {
@@ -123,7 +123,7 @@ describe('DynamicTags add', () => {
     document.body.appendChild(view.element);
 
     view.addTag('Test');
-    expect(onChange).toHaveBeenCalledWith(['Test']);
+    expect(onChange).toHaveBeenCalledWith([ 'Test' ]);
   });
 
   test('pressing Enter in input adds tag', () => {
@@ -153,23 +153,23 @@ describe('DynamicTags add', () => {
 
 describe('DynamicTags remove', () => {
   test('removeTag removes an existing tag', () => {
-    const view = DynamicTags({ tags: ['A', 'B', 'C'] });
+    const view = DynamicTags({ tags: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     view.removeTag('B');
-    expect(view.getTags()).toEqual(['A', 'C']);
+    expect(view.getTags()).toEqual([ 'A', 'C' ]);
   });
 
   test('removeTag returns false for non-existent tag', () => {
-    const view = DynamicTags({ tags: ['A'] });
+    const view = DynamicTags({ tags: [ 'A' ] });
     document.body.appendChild(view.element);
 
     expect(view.removeTag('Z')).toBe(false);
-    expect(view.getTags()).toEqual(['A']);
+    expect(view.getTags()).toEqual([ 'A' ]);
   });
 
   test('removeTag updates DOM', () => {
-    const view = DynamicTags({ tags: ['A', 'B'] });
+    const view = DynamicTags({ tags: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
 
     view.removeTag('A');
@@ -178,32 +178,32 @@ describe('DynamicTags remove', () => {
   });
 
   test('clicking remove button removes tag', () => {
-    const view = DynamicTags({ tags: ['X', 'Y'] });
+    const view = DynamicTags({ tags: [ 'X', 'Y' ] });
     document.body.appendChild(view.element);
 
     const removeButtons = document.body.querySelectorAll('.ds-dynamic-tags__remove');
     removeButtons[0].click();
 
-    expect(view.getTags()).toEqual(['Y']);
+    expect(view.getTags()).toEqual([ 'Y' ]);
   });
 
   test('onChange fires when tag removed', () => {
     const onChange = jest.fn();
-    const view = DynamicTags({ tags: ['A', 'B'], onChange });
+    const view = DynamicTags({ tags: [ 'A', 'B' ], onChange });
     document.body.appendChild(view.element);
 
     view.removeTag('A');
-    expect(onChange).toHaveBeenCalledWith(['B']);
+    expect(onChange).toHaveBeenCalledWith([ 'B' ]);
   });
 
   test('Backspace on empty input removes last tag', () => {
-    const view = DynamicTags({ tags: ['A', 'B'] });
+    const view = DynamicTags({ tags: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
 
     const input = document.body.querySelector('.ds-dynamic-tags__input');
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }));
 
-    expect(view.getTags()).toEqual(['A']);
+    expect(view.getTags()).toEqual([ 'A' ]);
   });
 });
 
@@ -219,7 +219,7 @@ describe('DynamicTags disabled', () => {
   });
 
   test('disabled tags have no remove buttons', () => {
-    const view = DynamicTags({ tags: ['A', 'B'], disabled: true });
+    const view = DynamicTags({ tags: [ 'A', 'B' ], disabled: true });
     document.body.appendChild(view.element);
 
     const removeButtons = document.body.querySelectorAll('.ds-dynamic-tags__remove');
@@ -231,7 +231,7 @@ describe('DynamicTags disabled', () => {
 
 describe('DynamicTags destroy', () => {
   test('destroy cleans up', () => {
-    const view = DynamicTags({ tags: ['A'] });
+    const view = DynamicTags({ tags: [ 'A' ] });
     document.body.appendChild(view.element);
 
     expect(() => view.destroy()).not.toThrow();

@@ -41,7 +41,7 @@ export function Countdown(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function start(newTarget) {
-    if (newTarget) _target = newTarget;
+    if (newTarget) {_target = newTarget;}
     stop();
     _completed = false;
     _tick();
@@ -76,16 +76,16 @@ export function Countdown(options = {}) {
     if (_target - now <= 0 && !_completed) {
       _completed = true;
       stop();
-      if (onComplete) onComplete();
+      if (onComplete) {onComplete();}
     }
   }
 
   function _updateDisplay(days, hours, minutes, seconds) {
-    if (!valueEls) return;
-    if (valueEls.days) valueEls.days.textContent = _pad(days);
-    if (valueEls.hours) valueEls.hours.textContent = _pad(hours);
-    if (valueEls.minutes) valueEls.minutes.textContent = _pad(minutes);
-    if (valueEls.seconds) valueEls.seconds.textContent = _pad(seconds);
+    if (!valueEls) {return;}
+    if (valueEls.days) {valueEls.days.textContent = _pad(days);}
+    if (valueEls.hours) {valueEls.hours.textContent = _pad(hours);}
+    if (valueEls.minutes) {valueEls.minutes.textContent = _pad(minutes);}
+    if (valueEls.seconds) {valueEls.seconds.textContent = _pad(seconds);}
   }
 
   function _pad(n) {

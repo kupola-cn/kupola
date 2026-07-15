@@ -48,10 +48,10 @@ export function Alert(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function dismiss() {
-    if (_isDismissed) return;
+    if (_isDismissed) {return;}
     _isDismissed = true;
-    if (wrapEl) wrapEl.classList.add('is-dismissed');
-    if (onClose) onClose();
+    if (wrapEl) {wrapEl.classList.add('is-dismissed');}
+    if (onClose) {onClose();}
   }
 
   function destroy() {

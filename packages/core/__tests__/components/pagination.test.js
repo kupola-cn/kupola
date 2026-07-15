@@ -99,7 +99,7 @@ describe('Pagination navigation', () => {
     // Click page 3
     const pageButtons = container.querySelectorAll('.ds-pagination__item:not([aria-label])');
     // Find button with text "3"
-    const btn3 = [...pageButtons].find((b) => b.textContent === '3');
+    const btn3 = [ ...pageButtons ].find((b) => b.textContent === '3');
     expect(btn3).toBeDefined();
     btn3.click();
 

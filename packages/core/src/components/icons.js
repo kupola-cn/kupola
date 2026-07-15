@@ -171,7 +171,7 @@ function registerAllGroups() {
 
 function svg(name, size = 16, viewBox = '0 0 24 24') {
   const path = PATHS[name];
-  if (!path) return '';
+  if (!path) {return '';}
   const attrs = ATTRS
     .replace('width="16"', `width="${size}"`)
     .replace('height="16"', `height="${size}"`)
@@ -181,11 +181,11 @@ function svg(name, size = 16, viewBox = '0 0 24 24') {
 
 function renderIcons(root) {
   const target = root || (typeof document !== 'undefined' ? document : null);
-  if (!target) return;
+  if (!target) {return;}
   target.querySelectorAll('[data-icon]').forEach(el => {
     const name = el.getAttribute('data-icon');
     const size = +el.getAttribute('data-size') || 16;
-    const vb   = el.getAttribute('data-viewbox') || '0 0 24 24';
+    const vb = el.getAttribute('data-viewbox') || '0 0 24 24';
     el.innerHTML = svg(name, size, vb);
     el.classList.add('icon');
   });

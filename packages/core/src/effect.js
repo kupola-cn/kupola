@@ -49,7 +49,7 @@ export function effect(fn) {
 
   // _run is the stable function reference the scheduler queues.
   eff._run = () => {
-    if (eff._disposed) return;
+    if (eff._disposed) {return;}
     runEffect(eff);
   };
 
@@ -92,7 +92,7 @@ function cleanupDeps(eff) {
  * @param {EffectRecord} eff
  */
 function dispose(eff) {
-  if (eff._disposed) return;
+  if (eff._disposed) {return;}
   eff._disposed = true;
   cleanupDeps(eff);
 }

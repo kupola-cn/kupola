@@ -45,10 +45,10 @@ export function Tag(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function dismiss() {
-    if (_isDismissed) return;
+    if (_isDismissed) {return;}
     _isDismissed = true;
-    if (wrapEl) wrapEl.style.display = 'none';
-    if (onClose) onClose();
+    if (wrapEl) {wrapEl.style.display = 'none';}
+    if (onClose) {onClose();}
   }
 
   function destroy() {

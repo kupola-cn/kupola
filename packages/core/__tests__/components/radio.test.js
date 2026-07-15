@@ -18,7 +18,7 @@ describe('Radio rendering', () => {
   test('renders a radio group', () => {
     const view = Radio({
       name: 'color',
-      options: [{ label: 'Red', value: 'red' }],
+      options: [ { label: 'Red', value: 'red' } ],
     });
     document.body.appendChild(view.element);
 
@@ -44,7 +44,7 @@ describe('Radio rendering', () => {
   test('renders dot element for each item', () => {
     const view = Radio({
       name: 'color',
-      options: [{ label: 'A', value: 'a' }, { label: 'B', value: 'b' }],
+      options: [ { label: 'A', value: 'a' }, { label: 'B', value: 'b' } ],
     });
     document.body.appendChild(view.element);
 
@@ -55,7 +55,7 @@ describe('Radio rendering', () => {
   test('renders label text for each item', () => {
     const view = Radio({
       name: 'color',
-      options: [{ label: 'Red', value: 'red' }],
+      options: [ { label: 'Red', value: 'red' } ],
     });
     document.body.appendChild(view.element);
 
@@ -151,7 +151,7 @@ describe('Radio destroy', () => {
     const onChange = jest.fn();
     const view = Radio({
       name: 'color',
-      options: [{ label: 'Red', value: 'red' }],
+      options: [ { label: 'Red', value: 'red' } ],
       onChange,
     });
     document.body.appendChild(view.element);

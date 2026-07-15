@@ -49,11 +49,11 @@ export function Carousel(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function goTo(index) {
-    if (items.length === 0) return;
+    if (items.length === 0) {return;}
     _current = ((index % items.length) + items.length) % items.length;
     _updatePosition();
     _updateIndicators();
-    if (onChange) onChange(_current);
+    if (onChange) {onChange(_current);}
   }
 
   function next() {
@@ -66,8 +66,8 @@ export function Carousel(options = {}) {
 
   function destroy() {
     _stopAutoPlay();
-    if (prevBtn) prevBtn.removeEventListener('click', _onPrev);
-    if (nextBtn) nextBtn.removeEventListener('click', _onNext);
+    if (prevBtn) {prevBtn.removeEventListener('click', _onPrev);}
+    if (nextBtn) {nextBtn.removeEventListener('click', _onNext);}
     instance.destroy();
   }
 
@@ -83,7 +83,7 @@ export function Carousel(options = {}) {
   }
 
   function _updateIndicators() {
-    if (!indicatorsEl) return;
+    if (!indicatorsEl) {return;}
     const dots = indicatorsEl.querySelectorAll('.ds-carousel__indicator');
     dots.forEach((dot, i) => {
       dot.classList.toggle('is-active', i === _current);
@@ -91,7 +91,7 @@ export function Carousel(options = {}) {
   }
 
   function _startAutoPlay() {
-    if (_timer || !autoPlay || items.length <= 1) return;
+    if (_timer || !autoPlay || items.length <= 1) {return;}
     _timer = setInterval(() => next(), interval);
   }
 
@@ -154,14 +154,14 @@ export function Carousel(options = {}) {
   }
 
   // Bind events
-  if (prevBtn) prevBtn.addEventListener('click', _onPrev);
-  if (nextBtn) nextBtn.addEventListener('click', _onNext);
+  if (prevBtn) {prevBtn.addEventListener('click', _onPrev);}
+  if (nextBtn) {nextBtn.addEventListener('click', _onNext);}
 
   // Initial position
   _updatePosition();
 
   // Auto-play
-  if (autoPlay) _startAutoPlay();
+  if (autoPlay) {_startAutoPlay();}
 
   return {
     get element() { return container; },

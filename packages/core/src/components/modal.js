@@ -46,16 +46,16 @@ export function Modal(options = {}, children = null) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
-    if (_isOpen) return;
+    if (_isOpen) {return;}
     _isOpen = true;
-    if (maskEl) maskEl.classList.add('is-visible');
+    if (maskEl) {maskEl.classList.add('is-visible');}
     document.body.style.overflow = 'hidden';
   }
 
   function close() {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
     _isOpen = false;
-    if (maskEl) maskEl.classList.remove('is-visible');
+    if (maskEl) {maskEl.classList.remove('is-visible');}
     document.body.style.overflow = '';
   }
 

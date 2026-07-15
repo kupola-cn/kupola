@@ -57,12 +57,12 @@ const BUILT_IN = {
   required: (v) => v !== '',
   email: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
   url: (v) => { try { new URL(v); return true; } catch { return false; } },
-  minLength: (v, [min]) => v.length >= parseInt(min),
-  maxLength: (v, [max]) => v.length <= parseInt(max),
-  pattern: (v, [pat]) => new RegExp(pat).test(v),
-  min: (v, [m]) => parseFloat(v) >= parseFloat(m),
-  max: (v, [m]) => parseFloat(v) <= parseFloat(m),
-  equalTo: (v, [targetId]) => {
+  minLength: (v, [ min ]) => v.length >= parseInt(min),
+  maxLength: (v, [ max ]) => v.length <= parseInt(max),
+  pattern: (v, [ pat ]) => new RegExp(pat).test(v),
+  min: (v, [ m ]) => parseFloat(v) >= parseFloat(m),
+  max: (v, [ m ]) => parseFloat(v) <= parseFloat(m),
+  equalTo: (v, [ targetId ]) => {
     const t = typeof document !== 'undefined' ? document.getElementById(targetId) : null;
     return t && v === t.value;
   },
@@ -72,7 +72,7 @@ const BUILT_IN = {
 };
 
 function _parseRules(str) {
-  if (!str) return {};
+  if (!str) {return {};}
   const rules = {};
   str.split('|').forEach(part => {
     const colonIdx = part.indexOf(':');
@@ -86,9 +86,9 @@ function _parseRules(str) {
 }
 
 function _getMessage(rule, params, customMsg) {
-  if (customMsg) return customMsg;
+  if (customMsg) {return customMsg;}
   const tpl = MESSAGES[rule];
-  if (!tpl) return 'Invalid input';
+  if (!tpl) {return 'Invalid input';}
   return typeof tpl === 'function' ? tpl(params) : tpl;
 }
 
@@ -108,10 +108,10 @@ export function Validation(options = {}) {
   // Single value check against a rule string
   function check(value, ruleString) {
     const rules = _parseRules(ruleString);
-    for (const [rule, params] of Object.entries(rules)) {
+    for (const [ rule, params ] of Object.entries(rules)) {
       const fn = customValidators[rule] || BUILT_IN[rule];
-      if (!fn) continue;
-      if (!fn(value, params)) return false;
+      if (!fn) {continue;}
+      if (!fn(value, params)) {return false;}
     }
     return true;
   }
@@ -119,13 +119,13 @@ export function Validation(options = {}) {
   // Validate a single input element
   function validateInput(input) {
     const ruleStr = input.getAttribute('data-validate');
-    if (!ruleStr) return true;
+    if (!ruleStr) {return true;}
     const rules = _parseRules(ruleStr);
     const value = (input.value || '').trim();
 
-    for (const [rule, params] of Object.entries(rules)) {
+    for (const [ rule, params ] of Object.entries(rules)) {
       const fn = customValidators[rule] || BUILT_IN[rule];
-      if (!fn) continue;
+      if (!fn) {continue;}
       if (!fn(value, params)) {
         const customMsg = input.getAttribute(`data-message-${rule}`);
         const msg = _getMessage(rule, params, customMsg);
@@ -147,13 +147,13 @@ export function Validation(options = {}) {
     inputs.forEach(input => {
       const name = input.name || input.id;
       const ruleStr = input.getAttribute('data-validate');
-      if (!ruleStr) return;
+      if (!ruleStr) {return;}
       const rules = _parseRules(ruleStr);
       const value = (input.value || '').trim();
 
-      for (const [rule, params] of Object.entries(rules)) {
+      for (const [ rule, params ] of Object.entries(rules)) {
         const fn = customValidators[rule] || BUILT_IN[rule];
-        if (!fn) continue;
+        if (!fn) {continue;}
         if (!fn(value, params)) {
           const customMsg = input.getAttribute(`data-message-${rule}`);
           const msg = _getMessage(rule, params, customMsg);
@@ -186,7 +186,7 @@ export function Validation(options = {}) {
 
     for (const input of inputs) {
       const ok = await _validateInputAsync(input);
-      if (!ok) valid = false;
+      if (!ok) {valid = false;}
     }
 
     inputs.forEach(input => {
@@ -211,9 +211,9 @@ export function Validation(options = {}) {
     // Sync rules first
     if (ruleStr) {
       const rules = _parseRules(ruleStr);
-      for (const [rule, params] of Object.entries(rules)) {
+      for (const [ rule, params ] of Object.entries(rules)) {
         const fn = customValidators[rule] || BUILT_IN[rule];
-        if (!fn) continue;
+        if (!fn) {continue;}
         if (!fn(value, params)) {
           const customMsg = input.getAttribute(`data-message-${rule}`);
           _showError(input, _getMessage(rule, params, customMsg));
@@ -225,9 +225,9 @@ export function Validation(options = {}) {
     // Async rules
     if (asyncRuleStr) {
       const asyncRules = _parseRules(asyncRuleStr);
-      for (const [rule, params] of Object.entries(asyncRules)) {
+      for (const [ rule, params ] of Object.entries(asyncRules)) {
         const fn = customAsyncValidators[rule];
-        if (!fn) continue;
+        if (!fn) {continue;}
         try {
           const ok = await fn(value, params, input);
           if (!ok) {
@@ -251,7 +251,7 @@ export function Validation(options = {}) {
     let valid = true;
     for (const input of inputs) {
       const ok = await _validateInputAsync(input);
-      if (!ok) valid = false;
+      if (!ok) {valid = false;}
     }
     return valid;
   }
@@ -269,7 +269,7 @@ export function Validation(options = {}) {
     form.querySelectorAll('.ds-input--error').forEach(el => {
       el.classList.remove('ds-input--error');
       const errEl = el.parentElement?.querySelector('.ds-input__error');
-      if (errEl) errEl.remove();
+      if (errEl) {errEl.remove();}
     });
     _updateFormClasses(form, true);
   }
@@ -294,7 +294,7 @@ export function Validation(options = {}) {
     input.classList.remove('ds-input--error');
     input.setAttribute('aria-invalid', 'false');
     const errEl = input.parentElement?.querySelector('.ds-input__error');
-    if (errEl) errEl.remove();
+    if (errEl) {errEl.remove();}
   }
 
   function _updateFormClasses(form, valid) {

@@ -75,7 +75,7 @@ describe('renderToString', () => {
   });
 
   test('renders list of templates', () => {
-    const items = ['a', 'b', 'c'];
+    const items = [ 'a', 'b', 'c' ];
     const tpl = html`<ul>${items.map(i => html`<li>${i}</li>`)}</ul>`;
     const result = renderToString(tpl);
     expect(result).toContain('<li>a</li>');
@@ -268,7 +268,7 @@ describe('hydrate', () => {
     const commentCount = () => {
       let c = 0;
       const walker = document.createTreeWalker(container, 5);
-      while (walker.nextNode()) c++;
+      while (walker.nextNode()) {c++;}
       return c;
     };
     expect(commentCount()).toBeGreaterThan(0);
@@ -280,7 +280,7 @@ describe('hydrate', () => {
     const hasComments = () => {
       for (const child of container.querySelectorAll('*')) {
         for (const c of child.childNodes) {
-          if (c.nodeType === 8) return true;
+          if (c.nodeType === 8) {return true;}
         }
       }
       return false;

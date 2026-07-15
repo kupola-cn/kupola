@@ -124,7 +124,7 @@ describe('Heatmap', () => {
   describe('updateData()', () => {
     test('re-renders with new data', () => {
       const hm = Heatmap(defaultOpts);
-      const newData = [{ date: '2024-01-15', value: 99 }];
+      const newData = [ { date: '2024-01-15', value: 99 } ];
       hm.updateData(newData);
       const cell = hm.element.querySelector('.ds-heatmap__cell[data-date="2024-01-15"]');
       expect(cell).not.toBeNull();

@@ -13,13 +13,13 @@ describe('Table', () => {
     { id: 2, name: 'Bob', age: 25, city: 'LA' },
     { id: 3, name: 'Charlie', age: 35, city: 'Chicago' },
     { id: 4, name: 'Diana', age: 28, city: 'NYC' },
-    { id: 5, name: 'Eve', age: 22, city: 'LA' }
+    { id: 5, name: 'Eve', age: 22, city: 'LA' },
   ];
 
   const columns = [
     { key: 'name', title: 'Name' },
     { key: 'age', title: 'Age' },
-    { key: 'city', title: 'City' }
+    { key: 'city', title: 'City' },
   ];
 
   function getTable(table) {
@@ -131,21 +131,21 @@ describe('Table', () => {
   // === Column Features ===
   describe('column features', () => {
     test('applies column width', () => {
-      const cols = [{ key: 'name', title: 'Name', width: 200 }];
+      const cols = [ { key: 'name', title: 'Name', width: 200 } ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[0];
       expect(th.style.width).toBe('200px');
     });
 
     test('applies column minWidth', () => {
-      const cols = [{ key: 'name', title: 'Name', minWidth: 100 }];
+      const cols = [ { key: 'name', title: 'Name', minWidth: 100 } ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[0];
       expect(th.style.minWidth).toBe('100px');
     });
 
     test('applies column align', () => {
-      const cols = [{ key: 'age', title: 'Age', align: 'right' }];
+      const cols = [ { key: 'age', title: 'Age', align: 'right' } ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[0];
       expect(th.style.textAlign).toBe('right');
@@ -153,7 +153,7 @@ describe('Table', () => {
 
     test('uses custom render function', () => {
       const cols = [
-        { key: 'name', title: 'Name', render: (val) => `<strong>${val}</strong>` }
+        { key: 'name', title: 'Name', render: (val) => `<strong>${val}</strong>` },
       ];
       const table = Table({ data: sampleData, columns: cols });
       const cell = getRows(table)[0].querySelector('td');
@@ -162,7 +162,7 @@ describe('Table', () => {
     });
 
     test('uses column key as title when title not set', () => {
-      const cols = [{ key: 'name' }];
+      const cols = [ { key: 'name' } ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[0];
       expect(th.textContent).toBe('name');
@@ -172,7 +172,7 @@ describe('Table', () => {
   // === Sort ===
   describe('sorting', () => {
     test('renders sortable headers', () => {
-      const cols = [{ key: 'name', title: 'Name', sortable: true }];
+      const cols = [ { key: 'name', title: 'Name', sortable: true } ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[0];
       expect(th.classList.contains('kupola-table-sortable')).toBe(true);
@@ -181,7 +181,7 @@ describe('Table', () => {
     test('sorts ascending on click', () => {
       const cols = [
         { key: 'name', title: 'Name' },
-        { key: 'age', title: 'Age', sortable: true }
+        { key: 'age', title: 'Age', sortable: true },
       ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[1]; // Age column
@@ -194,7 +194,7 @@ describe('Table', () => {
     test('toggles to descending on second click', () => {
       const cols = [
         { key: 'name', title: 'Name' },
-        { key: 'age', title: 'Age', sortable: true }
+        { key: 'age', title: 'Age', sortable: true },
       ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[1]; // Age column
@@ -207,7 +207,7 @@ describe('Table', () => {
     test('clears sort on third click (single sort mode)', () => {
       const cols = [
         { key: 'name', title: 'Name' },
-        { key: 'age', title: 'Age', sortable: true }
+        { key: 'age', title: 'Age', sortable: true },
       ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[1]; // Age column
@@ -222,7 +222,7 @@ describe('Table', () => {
       const cols = [
         { key: 'name', title: 'Name' },
         { key: 'city', title: 'City', sortable: true },
-        { key: 'age', title: 'Age', sortable: true }
+        { key: 'age', title: 'Age', sortable: true },
       ];
       const table = Table({ data: sampleData, columns: cols, multiSort: true });
       const headers = getHeaders(table);
@@ -236,7 +236,7 @@ describe('Table', () => {
     test('setSort API works', () => {
       const cols = [
         { key: 'name', title: 'Name' },
-        { key: 'age', title: 'Age', sortable: true }
+        { key: 'age', title: 'Age', sortable: true },
       ];
       const table = Table({ data: sampleData, columns: cols });
       table.setSort('age', 'desc');
@@ -246,7 +246,7 @@ describe('Table', () => {
     test('clearSort API works', () => {
       const cols = [
         { key: 'name', title: 'Name' },
-        { key: 'age', title: 'Age', sortable: true }
+        { key: 'age', title: 'Age', sortable: true },
       ];
       const table = Table({ data: sampleData, columns: cols });
       table.setSort('age', 'asc');
@@ -256,17 +256,17 @@ describe('Table', () => {
 
     test('calls onSort callback', () => {
       const onSort = jest.fn();
-      const cols = [{ key: 'age', title: 'Age', sortable: true }];
+      const cols = [ { key: 'age', title: 'Age', sortable: true } ];
       const table = Table({ data: sampleData, columns: cols, onSort });
       getHeaders(table)[0].click();
-      expect(onSort).toHaveBeenCalledWith([{ key: 'age', order: 'asc' }]);
+      expect(onSort).toHaveBeenCalledWith([ { key: 'age', order: 'asc' } ]);
     });
 
     test('supports custom sorter function', () => {
-      const cols = [{
+      const cols = [ {
         key: 'name', title: 'Name', sortable: true,
-        sorter: (a, b, order) => order === 'asc' ? a.length - b.length : b.length - a.length
-      }];
+        sorter: (a, b, order) => order === 'asc' ? a.length - b.length : b.length - a.length,
+      } ];
       const table = Table({ data: sampleData, columns: cols });
       getHeaders(table)[0].click();
       // By name length asc: Bob(3), Eve(3), Alice(5), Diana(5), Charlie(7)
@@ -369,7 +369,7 @@ describe('Table', () => {
     });
 
     test('shows page size selector with pageSizeOptions', () => {
-      const table = Table({ data: bigData, columns, pageSize: 10, pageSizeOptions: [5, 10, 20] });
+      const table = Table({ data: bigData, columns, pageSize: 10, pageSizeOptions: [ 5, 10, 20 ] });
       const select = table.element.querySelector('.kupola-table-page-size');
       expect(select).toBeTruthy();
       expect(select.options.length).toBe(3);
@@ -537,7 +537,7 @@ describe('Table', () => {
     });
 
     test('handles commas in values', () => {
-      const data = [{ id: 1, name: 'Smith, John', age: 30, city: 'NYC' }];
+      const data = [ { id: 1, name: 'Smith, John', age: 30, city: 'NYC' } ];
       const table = Table({ data, columns });
       const csv = table.exportCSV();
       expect(csv).toContain('"Smith, John"');
@@ -558,7 +558,7 @@ describe('Table', () => {
   // === Inline Edit ===
   describe('inline edit', () => {
     test('double click on editable cell starts edit', () => {
-      const cols = [{ key: 'name', title: 'Name', editable: true }];
+      const cols = [ { key: 'name', title: 'Name', editable: true } ];
       const table = Table({ data: sampleData, columns: cols, editable: true });
       const cell = getRows(table)[0].querySelector('td');
       cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
@@ -567,7 +567,7 @@ describe('Table', () => {
 
     test('save edit updates data', () => {
       const freshData = sampleData.map(d => ({ ...d }));
-      const cols = [{ key: 'name', title: 'Name', editable: true }];
+      const cols = [ { key: 'name', title: 'Name', editable: true } ];
       const table = Table({ data: freshData, columns: cols, editable: true });
       const cell = getRows(table)[0].querySelector('td');
       cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
@@ -581,7 +581,7 @@ describe('Table', () => {
 
     test('cancel edit restores original', () => {
       const freshData = sampleData.map(d => ({ ...d }));
-      const cols = [{ key: 'name', title: 'Name', editable: true }];
+      const cols = [ { key: 'name', title: 'Name', editable: true } ];
       const table = Table({ data: freshData, columns: cols, editable: true });
       const cell = getRows(table)[0].querySelector('td');
       cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));

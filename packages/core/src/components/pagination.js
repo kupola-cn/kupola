@@ -74,9 +74,9 @@ export function Pagination(options = {}) {
 
   function setCurrent(page) {
     page = Math.max(1, Math.min(page, _totalPages()));
-    if (page === _current) return;
+    if (page === _current) {return;}
     _current = page;
-    if (onChange) onChange(page, _pageSize);
+    if (onChange) {onChange(page, _pageSize);}
     _rerender();
   }
 
@@ -136,7 +136,7 @@ export function Pagination(options = {}) {
   container.appendChild(wrapEl);
 
   function _rerender() {
-    if (_lastInstance) _lastInstance.destroy();
+    if (_lastInstance) {_lastInstance.destroy();}
     const tpl = _buildTemplate();
     const frag = document.createDocumentFragment();
     _lastInstance = render(tpl, frag);
@@ -147,7 +147,7 @@ export function Pagination(options = {}) {
 
   function _bindClicks() {
     const nav = wrapEl.querySelector('.ds-pagination');
-    if (!nav) return;
+    if (!nav) {return;}
 
     // Prev button
     const prevBtn = nav.querySelector('.ds-pagination__prev');
@@ -180,7 +180,7 @@ export function Pagination(options = {}) {
     setPageSize,
     getCurrent,
     destroy() {
-      if (_lastInstance) _lastInstance.destroy();
+      if (_lastInstance) {_lastInstance.destroy();}
     },
   };
 }

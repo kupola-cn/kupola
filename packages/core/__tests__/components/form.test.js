@@ -43,7 +43,7 @@ describe('Form', () => {
       `);
       const f = Form({ element: form });
       const data = f.getData();
-      expect(data.colors).toEqual(['red']);
+      expect(data.colors).toEqual([ 'red' ]);
       f.destroy();
     });
 
@@ -98,7 +98,7 @@ describe('Form', () => {
         <input type="checkbox" name="colors" value="blue">
       `);
       const f = Form({ element: form });
-      f.setData({ colors: ['red', 'blue'] });
+      f.setData({ colors: [ 'red', 'blue' ] });
       expect(form.querySelectorAll('input:checked').length).toBe(2);
       f.destroy();
     });

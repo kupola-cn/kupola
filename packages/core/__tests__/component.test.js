@@ -51,7 +51,7 @@ describe('defineComponent', () => {
 
   test('renders component with props', () => {
     const Greeting = defineComponent({
-      props: ['name'],
+      props: [ 'name' ],
       setup(props) {
         return () => html`<span>Hello ${props.name}</span>`;
       },
@@ -112,7 +112,7 @@ describe('defineComponent', () => {
 
   test('update changes props reactively', () => {
     const Label = defineComponent({
-      props: ['text'],
+      props: [ 'text' ],
       setup(props) {
         return () => html`<span>${props.text}</span>`;
       },
@@ -133,7 +133,7 @@ describe('defineComponent', () => {
 
   test('destroy cleans up reactive effects', () => {
     const Label = defineComponent({
-      props: ['text'],
+      props: [ 'text' ],
       setup(props) {
         return () => html`<span>${props.text}</span>`;
       },
@@ -174,7 +174,7 @@ describe('defineComponent', () => {
 
   test('component with multiple props', () => {
     const Card = defineComponent({
-      props: ['title', 'body'],
+      props: [ 'title', 'body' ],
       setup(props) {
         return () => html`
           <div class="card">

@@ -60,7 +60,7 @@ export function Menu(options = {}) {
 
     const el = document.createElement('div');
     el.className = 'ds-menu__item';
-    if (item.danger) el.classList.add('ds-menu__item--danger');
+    if (item.danger) {el.classList.add('ds-menu__item--danger');}
     if (item.disabled) {
       el.style.opacity = '0.5';
       el.style.pointerEvents = 'none';

@@ -54,7 +54,7 @@ describe('VirtualList rendering', () => {
   });
 
   test('renders string items', () => {
-    const items = ['Alpha', 'Beta', 'Gamma'];
+    const items = [ 'Alpha', 'Beta', 'Gamma' ];
     const view = VirtualList({ items, itemHeight: 40, height: 200 });
     document.body.appendChild(view.element);
 
@@ -77,7 +77,7 @@ describe('VirtualList rendering', () => {
 
 describe('VirtualList custom render', () => {
   test('uses renderItem function', () => {
-    const items = ['A', 'B', 'C'];
+    const items = [ 'A', 'B', 'C' ];
     const renderItem = (item, idx) => `[${idx}] ${item}`;
     const view = VirtualList({ items, renderItem, itemHeight: 40, height: 200 });
     document.body.appendChild(view.element);
@@ -93,7 +93,7 @@ describe('VirtualList custom render', () => {
 describe('VirtualList click', () => {
   test('onClick fires with item and index', () => {
     const onClick = jest.fn();
-    const items = ['X', 'Y', 'Z'];
+    const items = [ 'X', 'Y', 'Z' ];
     const view = VirtualList({ items, onClick, itemHeight: 40, height: 200 });
     document.body.appendChild(view.element);
 

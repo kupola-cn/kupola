@@ -58,11 +58,11 @@ export function Textarea(options = {}) {
 
   function setValue(val) {
     _value = val;
-    if (textareaEl) textareaEl.value = _value;
+    if (textareaEl) {textareaEl.value = _value;}
   }
 
   function focus() {
-    if (textareaEl) textareaEl.focus();
+    if (textareaEl) {textareaEl.focus();}
   }
 
   function destroy() {
@@ -77,12 +77,12 @@ export function Textarea(options = {}) {
 
   function _handleInput(e) {
     _value = e.target.value;
-    if (onInput) onInput(_value);
+    if (onInput) {onInput(_value);}
   }
 
   function _handleChange(e) {
     _value = e.target.value;
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ export function Textarea(options = {}) {
     textareaEl.placeholder = placeholder;
     textareaEl.disabled = disabled;
     textareaEl.style.resize = resize;
-    if (name) textareaEl.name = name;
+    if (name) {textareaEl.name = name;}
     textareaEl.addEventListener('input', _handleInput);
     textareaEl.addEventListener('change', _handleChange);
   }

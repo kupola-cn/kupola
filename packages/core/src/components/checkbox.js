@@ -54,12 +54,12 @@ export function Checkbox(options = {}) {
 
   function setChecked(val) {
     _checked = !!val;
-    if (inputEl) inputEl.checked = _checked;
-    if (onChange) onChange(_checked);
+    if (inputEl) {inputEl.checked = _checked;}
+    if (onChange) {onChange(_checked);}
   }
 
   function destroy() {
-    if (inputEl) inputEl.removeEventListener('change', _handleChange);
+    if (inputEl) {inputEl.removeEventListener('change', _handleChange);}
     instance.destroy();
   }
 
@@ -67,7 +67,7 @@ export function Checkbox(options = {}) {
 
   function _handleChange() {
     _checked = inputEl.checked;
-    if (onChange) onChange(_checked);
+    if (onChange) {onChange(_checked);}
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -87,8 +87,8 @@ export function Checkbox(options = {}) {
   if (inputEl) {
     inputEl.checked = _checked;
     inputEl.disabled = disabled;
-    if (name) inputEl.name = name;
-    if (value) inputEl.value = value;
+    if (name) {inputEl.name = name;}
+    if (value) {inputEl.value = value;}
     inputEl.addEventListener('change', _handleChange);
   }
 

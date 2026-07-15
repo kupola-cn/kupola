@@ -12,7 +12,7 @@ export default defineConfig({
         'kupola-core-directives': path.resolve(__dirname, 'packages/core/src/directives.js'),
       },
       name: 'Kupola',
-      formats: ['es', 'cjs'],
+      formats: [ 'es', 'cjs' ],
       fileName: (format, entryName) => {
         if (format === 'es') {
           return `${entryName}.esm.js`;
@@ -25,10 +25,10 @@ export default defineConfig({
         babel({
           babelHelpers: 'runtime',
           exclude: 'node_modules/**',
-          extensions: ['.js'],
+          extensions: [ '.js' ],
         }),
       ],
-      external: ['@babel/runtime'],
+      external: [ '@babel/runtime' ],
       output: {
         exports: 'named',
       },

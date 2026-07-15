@@ -42,10 +42,10 @@ export function Switch(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function toggle() {
-    if (disabled) return;
+    if (disabled) {return;}
     _checked = !_checked;
     _syncInput();
-    if (onChange) onChange(_checked);
+    if (onChange) {onChange(_checked);}
   }
 
   function isChecked() {
@@ -53,7 +53,7 @@ export function Switch(options = {}) {
   }
 
   function setChecked(val) {
-    if (disabled) return;
+    if (disabled) {return;}
     _checked = !!val;
     _syncInput();
   }
@@ -65,7 +65,7 @@ export function Switch(options = {}) {
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _syncInput() {
-    if (inputEl) inputEl.checked = _checked;
+    if (inputEl) {inputEl.checked = _checked;}
   }
 
   // ── Event handler ──────────────────────────────────────────────────────────

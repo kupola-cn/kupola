@@ -66,14 +66,14 @@ export function Select(options = {}) {
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   function _filteredItems() {
-    if (!_searchQuery) return items;
+    if (!_searchQuery) {return items;}
     const q = _searchQuery.toLowerCase();
     return items.filter((item) => item.text.toLowerCase().includes(q));
   }
 
   function _getDisplayText() {
-    if (_selectedValues.size === 0) return '';
-    if (multiple) return '';
+    if (_selectedValues.size === 0) {return '';}
+    if (multiple) {return '';}
     const sel = items.find((i) => _selectedValues.has(i.value));
     return sel ? sel.text : '';
   }
@@ -81,7 +81,7 @@ export function Select(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
-    if (_isOpen) return;
+    if (_isOpen) {return;}
     _isOpen = true;
     _searchQuery = '';
     _focusIndex = -1;
@@ -94,7 +94,7 @@ export function Select(options = {}) {
   }
 
   function close() {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
     _isOpen = false;
     _searchQuery = '';
     _focusIndex = -1;
@@ -107,8 +107,8 @@ export function Select(options = {}) {
   }
 
   function getValue() {
-    if (multiple) return [..._selectedValues];
-    return [..._selectedValues][0] || '';
+    if (multiple) {return [ ..._selectedValues ];}
+    return [ ..._selectedValues ][0] || '';
   }
 
   function setValue(val) {
@@ -137,7 +137,7 @@ export function Select(options = {}) {
     }
 
     if (onChange) {
-      onChange({ value: item.value, text: item.text, values: [..._selectedValues] });
+      onChange({ value: item.value, text: item.text, values: [ ..._selectedValues ] });
     }
 
     _updateDisplay();
@@ -149,7 +149,7 @@ export function Select(options = {}) {
   }
 
   function _updateDisplay() {
-    if (!valueEl) return;
+    if (!valueEl) {return;}
     const text = _getDisplayText();
     if (text) {
       valueEl.textContent = text;
@@ -164,7 +164,7 @@ export function Select(options = {}) {
   }
 
   function _renderOptions() {
-    if (!menuEl) return;
+    if (!menuEl) {return;}
     const filtered = _filteredItems();
     // Clear existing options (keep search input if present)
     const existingItems = menuEl.querySelectorAll('.ds-select__item');
@@ -174,8 +174,8 @@ export function Select(options = {}) {
     filtered.forEach((item, idx) => {
       const btn = document.createElement('button');
       btn.className = 'ds-select__item';
-      if (_selectedValues.has(item.value)) btn.classList.add('is-active');
-      if (idx === _focusIndex) btn.classList.add('is-focused');
+      if (_selectedValues.has(item.value)) {btn.classList.add('is-active');}
+      if (idx === _focusIndex) {btn.classList.add('is-focused');}
       btn.setAttribute('data-value', item.value);
       btn.textContent = item.text;
       btn.addEventListener('click', (e) => {
@@ -189,19 +189,19 @@ export function Select(options = {}) {
   // ── Focus management ───────────────────────────────────────────────────────
 
   function _clearFocus() {
-    if (!menuEl) return;
+    if (!menuEl) {return;}
     const opts = menuEl.querySelectorAll('.ds-select__item');
     opts.forEach((el) => el.classList.remove('is-focused'));
   }
 
   function _setFocus(idx) {
     const filtered = _filteredItems();
-    if (filtered.length === 0) return;
+    if (filtered.length === 0) {return;}
     _clearFocus();
     _focusIndex = ((idx % filtered.length) + filtered.length) % filtered.length;
-    if (!menuEl) return;
+    if (!menuEl) {return;}
     const opts = menuEl.querySelectorAll('.ds-select__item');
-    if (opts[_focusIndex]) opts[_focusIndex].classList.add('is-focused');
+    if (opts[_focusIndex]) {opts[_focusIndex].classList.add('is-focused');}
   }
 
   // ── Event handlers ─────────────────────────────────────────────────────────
@@ -212,7 +212,7 @@ export function Select(options = {}) {
   };
 
   const onDocumentClick = (e) => {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
     if (wrapEl && !wrapEl.contains(e.target)) {
       close();
     }
@@ -220,29 +220,29 @@ export function Select(options = {}) {
   document.addEventListener('click', onDocumentClick);
 
   const onKeydown = (e) => {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
     switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        _setFocus(_focusIndex + 1);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        _setFocus(_focusIndex - 1);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        {
-          const filtered = _filteredItems();
-          if (_focusIndex >= 0 && _focusIndex < filtered.length) {
-            _selectItem(filtered[_focusIndex]);
-          }
+    case 'ArrowDown':
+      e.preventDefault();
+      _setFocus(_focusIndex + 1);
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      _setFocus(_focusIndex - 1);
+      break;
+    case 'Enter':
+      e.preventDefault();
+      {
+        const filtered = _filteredItems();
+        if (_focusIndex >= 0 && _focusIndex < filtered.length) {
+          _selectItem(filtered[_focusIndex]);
         }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        close();
-        break;
+      }
+      break;
+    case 'Escape':
+      e.preventDefault();
+      close();
+      break;
     }
   };
   document.addEventListener('keydown', onKeydown);
@@ -285,9 +285,9 @@ export function Select(options = {}) {
       <div class="ds-select__menu">
         ${searchable ? html`<div class="ds-select__search"><input class="ds-select__search-input" placeholder="Search..." /></div>` : ''}
         ${items.map((item) => {
-          const isActive = _selectedValues.has(item.value);
-          return html`<button class="ds-select__item${isActive ? ' is-active' : ''}" data-value="${item.value}">${item.text}</button>`;
-        })}
+    const isActive = _selectedValues.has(item.value);
+    return html`<button class="ds-select__item${isActive ? ' is-active' : ''}" data-value="${item.value}">${item.text}</button>`;
+  })}
       </div>
     </div>
   `;
@@ -303,18 +303,18 @@ export function Select(options = {}) {
 
   // Bind event handlers after render
   const triggerEl = container.querySelector('.ds-select__trigger');
-  if (triggerEl) triggerEl.addEventListener('click', onTriggerClick);
+  if (triggerEl) {triggerEl.addEventListener('click', onTriggerClick);}
 
-  if (searchEl) searchEl.addEventListener('input', onSearchInput);
+  if (searchEl) {searchEl.addEventListener('input', onSearchInput);}
 
   const clearBtnEl = container.querySelector('.ds-select__clear');
-  if (clearBtnEl) clearBtnEl.addEventListener('click', onClearClick);
+  if (clearBtnEl) {clearBtnEl.addEventListener('click', onClearClick);}
 
   // Bind initial option clicks
   _bindInitialOptionClicks();
 
   function _bindInitialOptionClicks() {
-    if (!menuEl) return;
+    if (!menuEl) {return;}
     const optionEls = menuEl.querySelectorAll('.ds-select__item');
     optionEls.forEach((el, i) => {
       el.addEventListener('click', (e) => {

@@ -22,8 +22,8 @@
  * @module components/heatmap
  */
 
-const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-const WEEKDAYS = ['', '一', '', '三', '', '五', ''];
+const MONTHS = [ '1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月' ];
+const WEEKDAYS = [ '', '一', '', '三', '', '五', '' ];
 
 function _formatDate(date) {
   const y = date.getFullYear();
@@ -42,18 +42,18 @@ function _hexToRgb(hex) {
 }
 
 function _getLevel(value, maxValue) {
-  if (value === 0) return 0;
-  if (!maxValue || maxValue === 0) return 1;
+  if (value === 0) {return 0;}
+  if (!maxValue || maxValue === 0) {return 1;}
   const ratio = value / maxValue;
-  if (ratio < 0.2) return 1;
-  if (ratio < 0.4) return 2;
-  if (ratio < 0.6) return 3;
-  if (ratio < 0.8) return 4;
+  if (ratio < 0.2) {return 1;}
+  if (ratio < 0.4) {return 2;}
+  if (ratio < 0.6) {return 3;}
+  if (ratio < 0.8) {return 4;}
   return 5;
 }
 
 function _getOpacity(level) {
-  return [0, 0.2, 0.4, 0.6, 0.8, 1][level] || 0;
+  return [ 0, 0.2, 0.4, 0.6, 0.8, 1 ][level] || 0;
 }
 
 export function Heatmap(options = {}) {
@@ -80,7 +80,7 @@ export function Heatmap(options = {}) {
   }
 
   function _cellColor(level) {
-    if (level === 0) return 'rgba(0, 0, 0, 0.1)';
+    if (level === 0) {return 'rgba(0, 0, 0, 0.1)';}
     const rgb = _hexToRgb(baseColor);
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${_getOpacity(level)})`;
   }
@@ -226,10 +226,10 @@ export function Heatmap(options = {}) {
             }
           };
           const mouseleaveHandler = () => {
-            if (tooltip) tooltip.classList.remove('is-visible');
+            if (tooltip) {tooltip.classList.remove('is-visible');}
           };
           const clickHandler = () => {
-            if (onCellClick) onCellClick({ date: dateStr, value });
+            if (onCellClick) {onCellClick({ date: dateStr, value });}
           };
 
           cell.addEventListener('mouseenter', mouseenterHandler);

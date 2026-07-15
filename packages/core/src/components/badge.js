@@ -63,14 +63,14 @@ export function Badge(options = {}) {
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _formatValue() {
-    if (dot) return '';
+    if (dot) {return '';}
     const num = Number(_value);
-    if (!isNaN(num) && num > max) return max + '+';
+    if (!isNaN(num) && num > max) {return max + '+';}
     return String(_value);
   }
 
   function _syncContent() {
-    if (!badgeEl) return;
+    if (!badgeEl) {return;}
     if (!dot) {
       badgeEl.textContent = _formatValue();
     }
@@ -82,9 +82,9 @@ export function Badge(options = {}) {
   const dotClass = dot ? ' ds-badge--dot' : '';
   const pulseClass = pulse ? ' ds-badge--pulse' : '';
 
-  const displayText = dot ? '' : String(_value !== '' ? (function() {
+  const displayText = dot ? '' : String(_value !== '' ? (function () {
     const num = Number(_value);
-    if (!isNaN(num) && num > max) return max + '+';
+    if (!isNaN(num) && num > max) {return max + '+';}
     return String(_value);
   }()) : '');
 

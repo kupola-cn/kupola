@@ -23,7 +23,7 @@
 
 export function Form(options = {}) {
   const formEl = options.element;
-  if (!formEl) throw new Error('Form: element is required');
+  if (!formEl) {throw new Error('Form: element is required');}
 
   const onSubmit = options.onSubmit || null;
   const onValidate = options.onValidate || null;
@@ -39,7 +39,7 @@ export function Form(options = {}) {
   // Get field value (handles checkbox, radio, select-multiple)
   function _getFieldValue(field) {
     const type = field.type;
-    if (type === 'checkbox') return field.checked;
+    if (type === 'checkbox') {return field.checked;}
     if (type === 'radio') {
       const checked = formEl.querySelector(`input[name="${field.name}"]:checked`);
       return checked ? checked.value : null;
@@ -53,14 +53,14 @@ export function Form(options = {}) {
   // Built-in validators
   const _validators = {
     required: (v) => {
-      if (typeof v === 'string') return v.trim() !== '';
-      if (typeof v === 'boolean') return v === true;
-      if (Array.isArray(v)) return v.length > 0;
+      if (typeof v === 'string') {return v.trim() !== '';}
+      if (typeof v === 'boolean') {return v === true;}
+      if (Array.isArray(v)) {return v.length > 0;}
       return v !== null && v !== undefined;
     },
     email: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
     phone: (v) => !v || /^[\d\s\-+()]{7,20}$/.test(v),
-    url: (v) => { if (!v) return true; try { new URL(v); return true; } catch { return false; } },
+    url: (v) => { if (!v) {return true;} try { new URL(v); return true; } catch { return false; } },
     number: (v) => !v || (!isNaN(parseFloat(v)) && isFinite(v)),
     minlength: (v, min) => !v || v.length >= parseInt(min),
     maxlength: (v, max) => !v || v.length <= parseInt(max),
@@ -92,7 +92,7 @@ export function Form(options = {}) {
     const value = _getFieldValue(field);
     const errors = [];
 
-    for (const [name, fn] of Object.entries(_validators)) {
+    for (const [ name, fn ] of Object.entries(_validators)) {
       const attr = field.getAttribute(`data-${name}`);
       if (attr !== null) {
         const ok = fn(value, attr);
@@ -117,9 +117,9 @@ export function Form(options = {}) {
     const fields = _getFields();
     let valid = true;
     fields.forEach(f => {
-      if (!validateField(f)) valid = false;
+      if (!validateField(f)) {valid = false;}
     });
-    if (onValidate) onValidate(valid);
+    if (onValidate) {onValidate(valid);}
     return valid;
   }
 
@@ -158,14 +158,14 @@ export function Form(options = {}) {
     const data = {};
     _getFields().forEach(field => {
       const name = field.name;
-      if (!name) return;
+      if (!name) {return;}
       const value = _getFieldValue(field);
 
       if (field.type === 'checkbox') {
-        if (!data[name]) data[name] = [];
-        if (field.checked) data[name].push(field.value);
+        if (!data[name]) {data[name] = [];}
+        if (field.checked) {data[name].push(field.value);}
       } else if (field.type === 'radio') {
-        if (field.checked) data[name] = field.value;
+        if (field.checked) {data[name] = field.value;}
       } else {
         data[name] = value;
       }
@@ -179,12 +179,12 @@ export function Form(options = {}) {
       fields.forEach(field => {
         const type = field.type;
         if (type === 'checkbox') {
-          const values = Array.isArray(data[name]) ? data[name] : [data[name]];
+          const values = Array.isArray(data[name]) ? data[name] : [ data[name] ];
           field.checked = values.includes(field.value);
         } else if (type === 'radio') {
           field.checked = field.value === data[name];
         } else if (type === 'select-multiple') {
-          const values = Array.isArray(data[name]) ? data[name] : [data[name]];
+          const values = Array.isArray(data[name]) ? data[name] : [ data[name] ];
           Array.from(field.options).forEach(o => { o.selected = values.includes(o.value); });
         } else {
           field.value = data[name] != null ? data[name] : '';

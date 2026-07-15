@@ -52,27 +52,27 @@ export function Timepicker(options = {}) {
 
   function setValue(val) {
     _value = val;
-    if (inputEl) inputEl.value = _value;
+    if (inputEl) {inputEl.value = _value;}
     _updateDisplay();
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   function destroy() {
     _closePanel();
-    if (inputEl) inputEl.removeEventListener('click', _togglePanel);
-    if (inputEl) inputEl.removeEventListener('change', _handleInput);
+    if (inputEl) {inputEl.removeEventListener('click', _togglePanel);}
+    if (inputEl) {inputEl.removeEventListener('change', _handleInput);}
     instance.destroy();
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _togglePanel() {
-    if (_open) _closePanel(); else _openPanel();
+    if (_open) {_closePanel();} else {_openPanel();}
   }
 
   function _openPanel() {
     _open = true;
-    if (panelEl) panelEl.style.display = 'block';
+    if (panelEl) {panelEl.style.display = 'block';}
     if (!_docClickBound) {
       document.addEventListener('click', _handleDocClick);
       _docClickBound = true;
@@ -81,7 +81,7 @@ export function Timepicker(options = {}) {
 
   function _closePanel() {
     _open = false;
-    if (panelEl) panelEl.style.display = 'none';
+    if (panelEl) {panelEl.style.display = 'none';}
   }
 
   function _handleDocClick(e) {
@@ -93,21 +93,21 @@ export function Timepicker(options = {}) {
   function _handleInput(e) {
     _value = e.target.value;
     _updateDisplay();
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   function _selectTime(h, m) {
     const hh = String(h).padStart(2, '0');
     const mm = String(m).padStart(2, '0');
     _value = `${hh}:${mm}`;
-    if (inputEl) inputEl.value = _value;
+    if (inputEl) {inputEl.value = _value;}
     _updateDisplay();
     _closePanel();
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   function _updateDisplay() {
-    if (!displayEl) return;
+    if (!displayEl) {return;}
     if (!_value) { displayEl.textContent = '--:--'; return; }
     const parts = _value.split(':');
     let h = parseInt(parts[0]) || 0;
@@ -155,7 +155,7 @@ export function Timepicker(options = {}) {
   const displayEl = container.querySelector('.ds-timepicker__icon');
 
   // Panel starts hidden
-  if (panelEl) panelEl.style.display = 'none';
+  if (panelEl) {panelEl.style.display = 'none';}
 
   let _docClickBound = false;
 
@@ -173,8 +173,8 @@ export function Timepicker(options = {}) {
       let finalH = h;
       if (format === '12h') {
         const isPM = _value && parseInt(_value.split(':')[0]) >= 12;
-        if (isPM && h < 12) finalH = h + 12;
-        else if (!isPM && h === 12) finalH = 0;
+        if (isPM && h < 12) {finalH = h + 12;}
+        else if (!isPM && h === 12) {finalH = 0;}
       }
       _selectTime(finalH, curM);
     });

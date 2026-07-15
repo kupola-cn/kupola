@@ -16,14 +16,14 @@ afterEach(() => {
 
 describe('Menu rendering', () => {
   test('renders a menu wrapper', () => {
-    const view = Menu({ items: [{ label: 'Item' }] });
+    const view = Menu({ items: [ { label: 'Item' } ] });
     document.body.appendChild(view.element);
 
     expect(document.body.querySelector('.ds-menu')).not.toBeNull();
   });
 
   test('renders correct number of items', () => {
-    const view = Menu({ items: [{ label: 'A' }, { label: 'B' }, { label: 'C' }] });
+    const view = Menu({ items: [ { label: 'A' }, { label: 'B' }, { label: 'C' } ] });
     document.body.appendChild(view.element);
 
     const items = document.body.querySelectorAll('.ds-menu__item');
@@ -31,7 +31,7 @@ describe('Menu rendering', () => {
   });
 
   test('renders item labels', () => {
-    const view = Menu({ items: [{ label: 'Edit' }, { label: 'Copy' }] });
+    const view = Menu({ items: [ { label: 'Edit' }, { label: 'Copy' } ] });
     document.body.appendChild(view.element);
 
     const items = document.body.querySelectorAll('.ds-menu__item');
@@ -44,7 +44,7 @@ describe('Menu rendering', () => {
 
 describe('Menu item variants', () => {
   test('renders danger items with danger class', () => {
-    const view = Menu({ items: [{ label: 'Delete', danger: true }] });
+    const view = Menu({ items: [ { label: 'Delete', danger: true } ] });
     document.body.appendChild(view.element);
 
     const item = document.body.querySelector('.ds-menu__item');
@@ -52,7 +52,7 @@ describe('Menu item variants', () => {
   });
 
   test('renders dividers', () => {
-    const view = Menu({ items: [{ label: 'A' }, { type: 'divider' }, { label: 'B' }] });
+    const view = Menu({ items: [ { label: 'A' }, { type: 'divider' }, { label: 'B' } ] });
     document.body.appendChild(view.element);
 
     const divider = document.body.querySelector('.ds-menu__divider');
@@ -60,7 +60,7 @@ describe('Menu item variants', () => {
   });
 
   test('renders shortcut text', () => {
-    const view = Menu({ items: [{ label: 'Copy', shortcut: 'Ctrl+C' }] });
+    const view = Menu({ items: [ { label: 'Copy', shortcut: 'Ctrl+C' } ] });
     document.body.appendChild(view.element);
 
     const shortcut = document.body.querySelector('.ds-menu__shortcut');
@@ -69,7 +69,7 @@ describe('Menu item variants', () => {
   });
 
   test('renders icon when provided', () => {
-    const view = Menu({ items: [{ label: 'Edit', icon: '✏' }] });
+    const view = Menu({ items: [ { label: 'Edit', icon: '✏' } ] });
     document.body.appendChild(view.element);
 
     const icon = document.body.querySelector('.ds-menu__item .icon');
@@ -78,7 +78,7 @@ describe('Menu item variants', () => {
   });
 
   test('disabled items have reduced opacity', () => {
-    const view = Menu({ items: [{ label: 'Disabled', disabled: true }] });
+    const view = Menu({ items: [ { label: 'Disabled', disabled: true } ] });
     document.body.appendChild(view.element);
 
     const item = document.body.querySelector('.ds-menu__item');
@@ -92,7 +92,7 @@ describe('Menu item variants', () => {
 describe('Menu click handling', () => {
   test('item onClick fires', () => {
     const onClick = jest.fn();
-    const view = Menu({ items: [{ label: 'Click', onClick }] });
+    const view = Menu({ items: [ { label: 'Click', onClick } ] });
     document.body.appendChild(view.element);
 
     document.body.querySelector('.ds-menu__item').click();
@@ -102,7 +102,7 @@ describe('Menu click handling', () => {
   test('onSelect fires with item data', () => {
     const onSelect = jest.fn();
     const item = { label: 'Test', onClick: jest.fn() };
-    const view = Menu({ items: [item], onSelect });
+    const view = Menu({ items: [ item ], onSelect });
     document.body.appendChild(view.element);
 
     document.body.querySelector('.ds-menu__item').click();
@@ -111,7 +111,7 @@ describe('Menu click handling', () => {
 
   test('disabled item does not fire onClick', () => {
     const onClick = jest.fn();
-    const view = Menu({ items: [{ label: 'Disabled', disabled: true, onClick }] });
+    const view = Menu({ items: [ { label: 'Disabled', disabled: true, onClick } ] });
     document.body.appendChild(view.element);
 
     document.body.querySelector('.ds-menu__item').click();
@@ -123,7 +123,7 @@ describe('Menu click handling', () => {
 
 describe('Menu destroy', () => {
   test('destroy cleans up', () => {
-    const view = Menu({ items: [{ label: 'A' }] });
+    const view = Menu({ items: [ { label: 'A' } ] });
     document.body.appendChild(view.element);
 
     expect(() => view.destroy()).not.toThrow();

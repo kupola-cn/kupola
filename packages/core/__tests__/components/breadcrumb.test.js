@@ -86,7 +86,7 @@ describe('Breadcrumb links', () => {
 describe('Breadcrumb separator', () => {
   test('renders default separator', () => {
     const view = Breadcrumb({
-      items: [{ label: 'A' }, { label: 'B' }],
+      items: [ { label: 'A' }, { label: 'B' } ],
     });
     document.body.appendChild(view.element);
 
@@ -97,7 +97,7 @@ describe('Breadcrumb separator', () => {
 
   test('renders custom separator', () => {
     const view = Breadcrumb({
-      items: [{ label: 'A' }, { label: 'B' }],
+      items: [ { label: 'A' }, { label: 'B' } ],
       separator: '>',
     });
     document.body.appendChild(view.element);
@@ -111,7 +111,7 @@ describe('Breadcrumb separator', () => {
 
 describe('Breadcrumb destroy', () => {
   test('destroy() cleans up the reactive instance', () => {
-    const view = Breadcrumb({ items: [{ label: 'Test' }] });
+    const view = Breadcrumb({ items: [ { label: 'Test' } ] });
     document.body.appendChild(view.element);
 
     expect(document.body.querySelector('.ds-breadcrumb')).not.toBeNull();

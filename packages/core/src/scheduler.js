@@ -34,7 +34,7 @@ export function flushJobs() {
   // This handles the case where an effect mutates a signal,
   // which queues additional jobs during the flush.
   while (pendingJobs.size > 0) {
-    const jobs = [...pendingJobs];
+    const jobs = [ ...pendingJobs ];
     pendingJobs.clear();
     for (const job of jobs) {
       job();

@@ -27,8 +27,8 @@ const ICONS = {
   info:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
 };
 
-const VALID_TYPES = ['normal', 'success', 'error', 'warning', 'info'];
-const VALID_POSITIONS = ['top', 'top-right', 'top-left', 'bottom', 'bottom-right', 'bottom-left'];
+const VALID_TYPES = [ 'normal', 'success', 'error', 'warning', 'info' ];
+const VALID_POSITIONS = [ 'top', 'top-right', 'top-left', 'bottom', 'bottom-right', 'bottom-left' ];
 
 export function Message(options = {}) {
   const defaultDuration = options.duration ?? 3000;
@@ -39,7 +39,7 @@ export function Message(options = {}) {
   let destroyed = false;
 
   function _getContainer() {
-    if (destroyed) return null;
+    if (destroyed) {return null;}
     if (!container) {
       container = document.createElement('div');
       container.className = `ds-message ds-message--${defaultPosition}`;
@@ -50,7 +50,7 @@ export function Message(options = {}) {
 
   function _show(message, type = 'normal', opts = {}) {
     const ctr = _getContainer();
-    if (!ctr) return null;
+    if (!ctr) {return null;}
 
     const duration = opts.duration ?? defaultDuration;
     const msgType = VALID_TYPES.includes(type) ? type : 'normal';
@@ -69,7 +69,7 @@ export function Message(options = {}) {
       const oldest = existing[0];
       oldest.classList.remove('is-visible');
       oldest.classList.add('is-exiting');
-      setTimeout(() => { if (oldest.parentNode) oldest.remove(); }, 300);
+      setTimeout(() => { if (oldest.parentNode) {oldest.remove();} }, 300);
     }
 
     ctr.appendChild(msg);
@@ -83,16 +83,16 @@ export function Message(options = {}) {
       timer = setTimeout(() => {
         msg.classList.remove('is-visible');
         msg.classList.add('is-exiting');
-        setTimeout(() => { if (msg.parentNode) msg.remove(); }, 300);
+        setTimeout(() => { if (msg.parentNode) {msg.remove();} }, 300);
       }, duration);
     }
 
     return { element: msg, close: () => {
-      if (timer) clearTimeout(timer);
+      if (timer) {clearTimeout(timer);}
       msg.classList.remove('is-visible');
       msg.classList.add('is-exiting');
-      setTimeout(() => { if (msg.parentNode) msg.remove(); }, 300);
-    }};
+      setTimeout(() => { if (msg.parentNode) {msg.remove();} }, 300);
+    } };
   }
 
   function destroy() {

@@ -62,7 +62,7 @@ export function Empty(options = {}) {
 
   // Set icon HTML directly (template escapes HTML strings)
   const iconEl = container.querySelector('.ds-empty__icon');
-  if (iconEl) iconEl.innerHTML = iconHtml;
+  if (iconEl) {iconEl.innerHTML = iconHtml;}
 
   return {
     get element() { return container; },

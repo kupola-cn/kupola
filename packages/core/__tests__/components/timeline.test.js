@@ -51,7 +51,7 @@ describe('Timeline rendering', () => {
 describe('Timeline item content', () => {
   test('renders title text', () => {
     const view = Timeline({
-      items: [{ title: 'Created' }],
+      items: [ { title: 'Created' } ],
     });
     document.body.appendChild(view.element);
 
@@ -62,7 +62,7 @@ describe('Timeline item content', () => {
 
   test('renders time text', () => {
     const view = Timeline({
-      items: [{ time: '2024-01-01' }],
+      items: [ { time: '2024-01-01' } ],
     });
     document.body.appendChild(view.element);
 
@@ -73,7 +73,7 @@ describe('Timeline item content', () => {
 
   test('renders description text', () => {
     const view = Timeline({
-      items: [{ description: 'Something happened' }],
+      items: [ { description: 'Something happened' } ],
     });
     document.body.appendChild(view.element);
 
@@ -84,7 +84,7 @@ describe('Timeline item content', () => {
 
   test('renders marker for each item', () => {
     const view = Timeline({
-      items: [{ title: 'A' }, { title: 'B' }],
+      items: [ { title: 'A' }, { title: 'B' } ],
     });
     document.body.appendChild(view.element);
 
@@ -94,7 +94,7 @@ describe('Timeline item content', () => {
 
   test('omits time element when not provided', () => {
     const view = Timeline({
-      items: [{ title: 'No time' }],
+      items: [ { title: 'No time' } ],
     });
     document.body.appendChild(view.element);
 
@@ -104,7 +104,7 @@ describe('Timeline item content', () => {
 
   test('omits description element when not provided', () => {
     const view = Timeline({
-      items: [{ title: 'No desc' }],
+      items: [ { title: 'No desc' } ],
     });
     document.body.appendChild(view.element);
 
@@ -117,7 +117,7 @@ describe('Timeline item content', () => {
 
 describe('Timeline destroy', () => {
   test('destroy() cleans up the reactive instance', () => {
-    const view = Timeline({ items: [{ title: 'Test' }] });
+    const view = Timeline({ items: [ { title: 'Test' } ] });
     document.body.appendChild(view.element);
 
     expect(document.body.querySelector('.ds-timeline')).not.toBeNull();

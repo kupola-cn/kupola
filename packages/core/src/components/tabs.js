@@ -54,10 +54,10 @@ export function Tabs(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function setActive(key) {
-    if (_activeKey === key) return;
+    if (_activeKey === key) {return;}
     _activeKey = key;
     _syncDOM();
-    if (onChange) onChange(key);
+    if (onChange) {onChange(key);}
   }
 
   function getActive() {
@@ -70,7 +70,7 @@ export function Tabs(options = {}) {
   const elMap = new Map();
 
   function _syncDOM() {
-    for (const [key, { tab, panel }] of elMap) {
+    for (const [ key, { tab, panel } ] of elMap) {
       if (key === _activeKey) {
         tab.classList.add('is-active');
         panel.style.display = '';
@@ -84,7 +84,7 @@ export function Tabs(options = {}) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const tabButtons = tabs.map(
-    (tab) => html`<button class="ds-tab" data-key="${tab.key}">${tab.label}</button>`
+    (tab) => html`<button class="ds-tab" data-key="${tab.key}">${tab.label}</button>`,
   );
 
   const panelEls = tabs.map((tab) => {
@@ -113,9 +113,9 @@ export function Tabs(options = {}) {
 
     tabEls.forEach((tabEl) => {
       const key = tabEl.getAttribute('data-key');
-      if (!key) return;
+      if (!key) {return;}
 
-      const panelEl = [...panelDivs].find((p) => p.getAttribute('data-key') === key);
+      const panelEl = [ ...panelDivs ].find((p) => p.getAttribute('data-key') === key);
       if (panelEl) {
         elMap.set(key, { tab: tabEl, panel: panelEl });
       }

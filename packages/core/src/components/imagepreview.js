@@ -42,20 +42,20 @@ export function ImagePreview(options = {}) {
     _current = index;
     _visible = true;
     _updateImage();
-    if (overlayEl) overlayEl.classList.add('is-visible');
+    if (overlayEl) {overlayEl.classList.add('is-visible');}
     _updateNavButtons();
   }
 
   function close() {
     _visible = false;
-    if (overlayEl) overlayEl.classList.remove('is-visible');
+    if (overlayEl) {overlayEl.classList.remove('is-visible');}
   }
 
   function destroy() {
     close();
-    if (closeBtn) closeBtn.removeEventListener('click', close);
-    if (prevBtn) prevBtn.removeEventListener('click', _prev);
-    if (nextBtn) nextBtn.removeEventListener('click', _next);
+    if (closeBtn) {closeBtn.removeEventListener('click', close);}
+    if (prevBtn) {prevBtn.removeEventListener('click', _prev);}
+    if (nextBtn) {nextBtn.removeEventListener('click', _next);}
     instance.destroy();
   }
 
@@ -70,22 +70,22 @@ export function ImagePreview(options = {}) {
   }
 
   function _updateImage() {
-    if (!imgEl || !images[_current]) return;
+    if (!imgEl || !images[_current]) {return;}
     const img = images[_current];
     imgEl.src = img.src;
     imgEl.alt = img.alt || img.title || '';
-    if (titleEl) titleEl.textContent = img.title || '';
-    if (metaEl) metaEl.textContent = img.meta || '';
+    if (titleEl) {titleEl.textContent = img.title || '';}
+    if (metaEl) {metaEl.textContent = img.meta || '';}
     // Show/hide info section
-    if (infoEl) infoEl.style.display = (img.title || img.meta) ? 'block' : 'none';
+    if (infoEl) {infoEl.style.display = (img.title || img.meta) ? 'block' : 'none';}
   }
 
   function _updateNavButtons() {
-    if (prevBtn) prevBtn.disabled = _current === 0;
-    if (nextBtn) nextBtn.disabled = _current === images.length - 1;
+    if (prevBtn) {prevBtn.disabled = _current === 0;}
+    if (nextBtn) {nextBtn.disabled = _current === images.length - 1;}
     // Hide nav if only one image
     const display = images.length <= 1 ? 'none' : 'flex';
-    if (navEl) navEl.style.display = display;
+    if (navEl) {navEl.style.display = display;}
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -124,14 +124,14 @@ export function ImagePreview(options = {}) {
   const prevBtn = container.querySelector('.ds-image-preview__nav-prev');
   const nextBtn = container.querySelector('.ds-image-preview__nav-next');
 
-  if (closeBtn) closeBtn.addEventListener('click', close);
-  if (prevBtn) prevBtn.addEventListener('click', _prev);
-  if (nextBtn) nextBtn.addEventListener('click', _next);
+  if (closeBtn) {closeBtn.addEventListener('click', close);}
+  if (prevBtn) {prevBtn.addEventListener('click', _prev);}
+  if (nextBtn) {nextBtn.addEventListener('click', _next);}
 
   // Click overlay background to close
   if (overlayEl) {
     overlayEl.addEventListener('click', (e) => {
-      if (e.target === overlayEl) close();
+      if (e.target === overlayEl) {close();}
     });
   }
 

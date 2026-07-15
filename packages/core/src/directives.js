@@ -40,7 +40,7 @@ function createScope(data) {
     {},
     {
       get(_, key) {
-        if (typeof key === 'symbol') return undefined;
+        if (typeof key === 'symbol') {return undefined;}
         const s = signals[key];
         return s ? s.value : undefined;
       },
@@ -66,7 +66,7 @@ function createScope(data) {
         }
         return undefined;
       },
-    }
+    },
   );
 }
 
@@ -192,9 +192,9 @@ function handleOn(el, expr, eventName, modifiers, scope, disposers) {
   const self = modifiers.includes('self');
 
   const handler = (e) => {
-    if (self && e.target !== el) return;
-    if (stop) e.stopPropagation();
-    if (prevent) e.preventDefault();
+    if (self && e.target !== el) {return;}
+    if (stop) {e.stopPropagation();}
+    if (prevent) {e.preventDefault();}
     evaluateStatement(expr, scope);
     flushJobs();
   };
@@ -263,8 +263,8 @@ function isDirective(name) {
  *   @click="x"  → k-on:click="x"
  */
 function normalizeDirective(name) {
-  if (name.startsWith(':')) return 'k-bind:' + name.substring(1);
-  if (name.startsWith('@')) return 'k-on:' + name.substring(1);
+  if (name.startsWith(':')) {return 'k-bind:' + name.substring(1);}
+  if (name.startsWith('@')) {return 'k-on:' + name.substring(1);}
   return name;
 }
 
@@ -272,36 +272,36 @@ function normalizeDirective(name) {
  * Process a single element's directive attributes.
  */
 function processElement(el, scope, disposers) {
-  const attrs = [...el.attributes];
+  const attrs = [ ...el.attributes ];
 
   for (const attr of attrs) {
     const name = attr.name;
     const expr = attr.value;
 
-    if (!isDirective(name)) continue;
+    if (!isDirective(name)) {continue;}
 
     const full = normalizeDirective(name);
     const { base, arg, modifiers } = parseDirective(full);
 
     switch (base) {
-      case 'k-show':
-        handleShow(el, expr, scope, disposers);
-        break;
-      case 'k-text':
-        handleText(el, expr, scope, disposers);
-        break;
-      case 'k-html':
-        handleHtml(el, expr, scope, disposers);
-        break;
-      case 'k-bind':
-        if (arg) handleBind(el, expr, arg, scope, disposers);
-        break;
-      case 'k-on':
-        if (arg) handleOn(el, expr, arg, modifiers, scope, disposers);
-        break;
-      case 'k-model':
-        handleModel(el, expr, scope, disposers);
-        break;
+    case 'k-show':
+      handleShow(el, expr, scope, disposers);
+      break;
+    case 'k-text':
+      handleText(el, expr, scope, disposers);
+      break;
+    case 'k-html':
+      handleHtml(el, expr, scope, disposers);
+      break;
+    case 'k-bind':
+      if (arg) {handleBind(el, expr, arg, scope, disposers);}
+      break;
+    case 'k-on':
+      if (arg) {handleOn(el, expr, arg, modifiers, scope, disposers);}
+      break;
+    case 'k-model':
+      handleModel(el, expr, scope, disposers);
+      break;
       // k-data is handled by the walker
     }
   }
@@ -331,7 +331,7 @@ function processDataElement(el, disposers) {
   try {
     data = evaluate(expr, createScope({})) || {};
   } catch (_) {
-    console.warn(`[kupola] k-data parse error:`, expr);
+    console.warn('[kupola] k-data parse error:', expr);
   }
 
   const scope = createScope(data);

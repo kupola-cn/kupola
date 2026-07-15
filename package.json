@@ -219,7 +219,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "rollup -c",
     "build:rollup": "rollup -c",
     "build:core": "rollup -c --configPlugin @rollup/plugin-commonjs 2>nul || npx rollup -c",
     "lint": "eslint .",
@@ -230,7 +230,7 @@
     "test:coverage": "jest --coverage",
     "size": "size-limit",
     "size:why": "size-limit --why",
-    "prepublishOnly": "npm run build:core && size-limit"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "ui",

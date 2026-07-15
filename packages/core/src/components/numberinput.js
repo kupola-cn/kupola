@@ -55,15 +55,15 @@ export function NumberInput(options = {}) {
 
   function setValue(val) {
     _value = _clamp(Number(val) || 0);
-    if (inputEl) inputEl.value = _value;
+    if (inputEl) {inputEl.value = _value;}
     _updateButtons();
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   function destroy() {
-    if (inputEl) inputEl.removeEventListener('change', _handleChange);
-    if (decBtn) decBtn.removeEventListener('click', _decrease);
-    if (incBtn) incBtn.removeEventListener('click', _increase);
+    if (inputEl) {inputEl.removeEventListener('change', _handleChange);}
+    if (decBtn) {decBtn.removeEventListener('click', _decrease);}
+    if (incBtn) {incBtn.removeEventListener('click', _increase);}
     instance.destroy();
   }
 
@@ -79,7 +79,7 @@ export function NumberInput(options = {}) {
       _value = _clamp(val);
       e.target.value = _value;
       _updateButtons();
-      if (onChange) onChange(_value);
+      if (onChange) {onChange(_value);}
     }
   }
 
@@ -92,8 +92,8 @@ export function NumberInput(options = {}) {
   }
 
   function _updateButtons() {
-    if (decBtn) decBtn.disabled = disabled || _value <= min;
-    if (incBtn) incBtn.disabled = disabled || _value >= max;
+    if (decBtn) {decBtn.disabled = disabled || _value <= min;}
+    if (incBtn) {incBtn.disabled = disabled || _value >= max;}
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────

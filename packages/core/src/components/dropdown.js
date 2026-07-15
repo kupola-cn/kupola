@@ -46,16 +46,16 @@ export function Dropdown(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
-    if (_isOpen) return;
+    if (_isOpen) {return;}
     _isOpen = true;
-    if (menuEl) menuEl.classList.add('is-open');
+    if (menuEl) {menuEl.classList.add('is-open');}
   }
 
   function close() {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
     _isOpen = false;
     _focusIndex = -1;
-    if (menuEl) menuEl.classList.remove('is-open');
+    if (menuEl) {menuEl.classList.remove('is-open');}
     _clearFocus();
   }
 
@@ -66,15 +66,15 @@ export function Dropdown(options = {}) {
   // ── Focus management ───────────────────────────────────────────────────────
 
   function _clearFocus() {
-    if (!menuEl) return;
+    if (!menuEl) {return;}
     const items_ = menuEl.querySelectorAll('.ds-dropdown__item');
     items_.forEach((el) => el.classList.remove('is-focused'));
   }
 
   function _setFocus(idx) {
-    if (!menuEl) return;
+    if (!menuEl) {return;}
     const items_ = menuEl.querySelectorAll('.ds-dropdown__item');
-    if (items_.length === 0) return;
+    if (items_.length === 0) {return;}
     _clearFocus();
     _focusIndex = ((idx % items_.length) + items_.length) % items_.length;
     items_[_focusIndex].classList.add('is-focused');
@@ -83,7 +83,7 @@ export function Dropdown(options = {}) {
   // ── Item selection ─────────────────────────────────────────────────────────
 
   function _selectItem(idx) {
-    if (idx < 0 || idx >= items.length) return;
+    if (idx < 0 || idx >= items.length) {return;}
     const item = items[idx];
     if (onSelect) {
       onSelect({ value: item.value, text: item.text, item });
@@ -111,7 +111,7 @@ export function Dropdown(options = {}) {
 
   // Click outside
   const onDocumentClick = (e) => {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
     if (wrapperEl && !wrapperEl.contains(e.target)) {
       close();
     }
@@ -120,25 +120,25 @@ export function Dropdown(options = {}) {
 
   // Keyboard navigation
   const onKeydown = (e) => {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
 
     switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        _setFocus(_focusIndex + 1);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        _setFocus(_focusIndex - 1);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (_focusIndex >= 0) _selectItem(_focusIndex);
-        break;
-      case 'Escape':
-        e.preventDefault();
-        close();
-        break;
+    case 'ArrowDown':
+      e.preventDefault();
+      _setFocus(_focusIndex + 1);
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      _setFocus(_focusIndex - 1);
+      break;
+    case 'Enter':
+      e.preventDefault();
+      if (_focusIndex >= 0) {_selectItem(_focusIndex);}
+      break;
+    case 'Escape':
+      e.preventDefault();
+      close();
+      break;
     }
   };
   document.addEventListener('keydown', onKeydown);
@@ -147,7 +147,7 @@ export function Dropdown(options = {}) {
 
   const itemTemplates = items.map(
     (item) =>
-      html`<button class="ds-dropdown__item" data-value="${item.value}">${item.text}</button>`
+      html`<button class="ds-dropdown__item" data-value="${item.value}">${item.text}</button>`,
   );
 
   const tpl = html`

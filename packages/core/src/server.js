@@ -32,7 +32,7 @@ import {
 function isInTag(parts) {
   const s = parts.join('');
   const lo = s.lastIndexOf('<');
-  if (lo === -1) return false;
+  if (lo === -1) {return false;}
   return !s.substring(lo).includes('>');
 }
 
@@ -44,7 +44,7 @@ function isInTag(parts) {
 function attrNameAtCursor(parts) {
   const s = parts.join('');
   const lo = s.lastIndexOf('<');
-  if (lo === -1) return null;
+  if (lo === -1) {return null;}
   const tag = s.substring(lo + 1);
   const m = tag.match(/([\w\-@:.]+)\s*=\s*(?:"[^"]*|'[^']*|[^\s>]*?)$/);
   return m ? m[1] : null;
@@ -158,11 +158,11 @@ function processString(str, tagKp, wasInTag, wasInQuote, wasQuoteChar) {
 
     if (inQuote) {
       result += c;
-      if (c === quoteChar) inQuote = false;
+      if (c === quoteChar) {inQuote = false;}
       continue;
     }
 
-    if (c === '"' || c === "'") {
+    if (c === '"' || c === '\'') {
       result += c;
       inQuote = true;
       quoteChar = c;
@@ -199,10 +199,10 @@ function checkInTag(out) {
   for (let i = 0; i < s.length; i++) {
     const c = s[i];
     if (inQ) {
-      if (c === qC) inQ = false;
+      if (c === qC) {inQ = false;}
       continue; // skip < > tracking inside quotes
     }
-    if (c === '"' || c === "'") {
+    if (c === '"' || c === '\'') {
       inQ = true;
       qC = c;
     } else if (c === '<') {
@@ -303,7 +303,7 @@ export function hydrate(tpl, container) {
  * Walk child nodes of a parent, binding reactive effects.
  */
 function _hydrateChildren(parent, values, instance, commentMap) {
-  const children = [...parent.childNodes];
+  const children = [ ...parent.childNodes ];
 
   for (const child of children) {
     if (child.nodeType === 8 /* COMMENT_NODE */) {
@@ -401,7 +401,7 @@ function _hydrateComment(comment, values, parent, instance, commentMap) {
         node.textContent = raw.value != null ? String(raw.value) : '';
       });
       instance.parts.push({
-        destroy() { dispose(); node.remove(); }
+        destroy() { dispose(); node.remove(); },
       });
     } else {
       node.textContent = raw != null ? String(raw) : '';

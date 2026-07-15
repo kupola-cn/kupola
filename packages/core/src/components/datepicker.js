@@ -21,8 +21,8 @@
 import { html } from '../template.js';
 import { render } from '../render.js';
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+const MONTHS = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
+const WEEKDAYS = [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ];
 
 /**
  * Create a Datepicker component instance.
@@ -69,28 +69,28 @@ export function Datepicker(options = {}) {
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   function _parseDate(str) {
-    if (!str) return null;
+    if (!str) {return null;}
     // Try YYYY-MM-DD first
     let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    if (m) {return new Date(+m[1], +m[2] - 1, +m[3]);}
     // Try MM/DD/YYYY
     m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (m) return new Date(+m[3], +m[1] - 1, +m[2]);
+    if (m) {return new Date(+m[3], +m[1] - 1, +m[2]);}
     // Try DD/MM/YYYY
     m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+    if (m) {return new Date(+m[3], +m[2] - 1, +m[1]);}
     return null;
   }
 
   function _formatDate(date) {
-    if (!date) return '';
+    if (!date) {return '';}
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     switch (format) {
-      case 'MM/DD/YYYY': return `${m}/${d}/${y}`;
-      case 'DD/MM/YYYY': return `${d}.${m}.${y}`;
-      default: return `${y}-${m}-${d}`;
+    case 'MM/DD/YYYY': return `${m}/${d}/${y}`;
+    case 'DD/MM/YYYY': return `${d}.${m}.${y}`;
+    default: return `${y}-${m}-${d}`;
     }
   }
 
@@ -102,15 +102,15 @@ export function Datepicker(options = {}) {
   }
 
   function _isSelected(date) {
-    if (!_selectedDate) return false;
+    if (!_selectedDate) {return false;}
     return date.getFullYear() === _selectedDate.getFullYear()
       && date.getMonth() === _selectedDate.getMonth()
       && date.getDate() === _selectedDate.getDate();
   }
 
   function _isDisabled(date) {
-    if (_minDate && date < _minDate) return true;
-    if (_maxDate && date > _maxDate) return true;
+    if (_minDate && date < _minDate) {return true;}
+    if (_maxDate && date > _maxDate) {return true;}
     return false;
   }
 
@@ -167,17 +167,17 @@ export function Datepicker(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
-    if (_isOpen) return;
+    if (_isOpen) {return;}
     _isOpen = true;
     const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
-    if (calEl) calEl.style.display = 'block';
+    if (calEl) {calEl.style.display = 'block';}
   }
 
   function close() {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
     _isOpen = false;
     const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
-    if (calEl) calEl.style.display = 'none';
+    if (calEl) {calEl.style.display = 'none';}
   }
 
   function toggle() {
@@ -201,7 +201,7 @@ export function Datepicker(options = {}) {
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _selectDate(date) {
-    if (_isDisabled(date)) return;
+    if (_isDisabled(date)) {return;}
     _selectedDate = date;
     _viewYear = date.getFullYear();
     _viewMonth = date.getMonth();
@@ -242,7 +242,7 @@ export function Datepicker(options = {}) {
 
   function _rerenderCalendar() {
     const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
-    if (!calEl) return;
+    if (!calEl) {return;}
 
     // Update title
     const titleEl = calEl.querySelector('.ds-datepicker__title');
@@ -252,16 +252,16 @@ export function Datepicker(options = {}) {
 
     // Update days grid
     const daysEl = calEl.querySelector('.ds-datepicker__days');
-    if (!daysEl) return;
+    if (!daysEl) {return;}
     daysEl.innerHTML = '';
 
     const days = _getCalendarDays();
     days.forEach(({ date, outside }) => {
       const btn = document.createElement('button');
       btn.textContent = date.getDate();
-      if (outside) btn.classList.add('is-outside');
-      if (_isToday(date)) btn.classList.add('is-today');
-      if (_isSelected(date)) btn.classList.add('is-selected');
+      if (outside) {btn.classList.add('is-outside');}
+      if (_isToday(date)) {btn.classList.add('is-today');}
+      if (_isSelected(date)) {btn.classList.add('is-selected');}
       if (_isDisabled(date)) {
         btn.disabled = true;
         btn.style.opacity = '0.3';
@@ -288,7 +288,7 @@ export function Datepicker(options = {}) {
   };
 
   const onDocumentClick = (e) => {
-    if (!_isOpen) return;
+    if (!_isOpen) {return;}
     if (wrapEl && !wrapEl.contains(e.target)) {
       close();
     }
@@ -317,8 +317,8 @@ export function Datepicker(options = {}) {
   }
   // Simplify: just use the standard order based on weekStart
   const wdLabels = weekStart === 1
-    ? ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-    : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    ? [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ]
+    : [ 'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa' ];
 
   const weekdaySpans = wdLabels.map((d) => html`<span>${d}</span>`);
 
@@ -372,7 +372,7 @@ export function Datepicker(options = {}) {
     destroy() {
       document.removeEventListener('click', onDocumentClick);
       document.removeEventListener('keydown', onKeydown);
-      if (_lastInstance) _lastInstance.destroy();
+      if (_lastInstance) {_lastInstance.destroy();}
     },
   };
 }

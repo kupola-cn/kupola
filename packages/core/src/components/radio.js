@@ -61,7 +61,7 @@ export function Radio(options = {}) {
         input.checked = input.value === _value;
       });
     }
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   function destroy() {
@@ -78,7 +78,7 @@ export function Radio(options = {}) {
 
   function _handleChange(e) {
     _value = e.target.value;
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ export function Radio(options = {}) {
     input.name = name;
     input.value = opt.value;
     input.checked = opt.value === _value;
-    if (opt.disabled) input.disabled = true;
+    if (opt.disabled) {input.disabled = true;}
     input.addEventListener('change', _handleChange);
 
     const dotEl = document.createElement('span');

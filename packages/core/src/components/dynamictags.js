@@ -40,31 +40,31 @@ export function DynamicTags(options = {}) {
     onChange = null,
   } = options;
 
-  let _tags = [...initialTags];
+  let _tags = [ ...initialTags ];
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function getTags() {
-    return [..._tags];
+    return [ ..._tags ];
   }
 
   function addTag(text) {
     const trimmed = (text || '').trim();
-    if (!trimmed) return false;
-    if (_tags.includes(trimmed)) return false;
-    if (_tags.length >= maxTags) return false;
+    if (!trimmed) {return false;}
+    if (_tags.includes(trimmed)) {return false;}
+    if (_tags.length >= maxTags) {return false;}
     _tags.push(trimmed);
     _renderTags();
-    if (onChange) onChange(_tags);
+    if (onChange) {onChange(_tags);}
     return true;
   }
 
   function removeTag(text) {
     const idx = _tags.indexOf(text);
-    if (idx === -1) return false;
+    if (idx === -1) {return false;}
     _tags.splice(idx, 1);
     _renderTags();
-    if (onChange) onChange(_tags);
+    if (onChange) {onChange(_tags);}
     return true;
   }
 
@@ -99,7 +99,7 @@ export function DynamicTags(options = {}) {
   }
 
   function _renderTags() {
-    if (!tagsContainerEl) return;
+    if (!tagsContainerEl) {return;}
     // Remove existing tag elements (keep input and add button)
     const existing = tagsContainerEl.querySelectorAll('.ds-dynamic-tags__tag');
     existing.forEach((el) => el.remove());
@@ -146,7 +146,7 @@ export function DynamicTags(options = {}) {
 
   if (inputEl) {
     inputEl.placeholder = placeholder;
-    if (disabled) inputEl.disabled = true;
+    if (disabled) {inputEl.disabled = true;}
     inputEl.addEventListener('keydown', _onKeydown);
     inputEl.addEventListener('blur', _onBlur);
   }

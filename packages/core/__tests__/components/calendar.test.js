@@ -61,7 +61,7 @@ describe('Calendar', () => {
     test('renders event dots', () => {
       const cal = Calendar({
         currentDate: new Date(2024, 5, 1),
-        events: [{ date: '2024-06-15', title: 'Test', color: '#ff0000' }],
+        events: [ { date: '2024-06-15', title: 'Test', color: '#ff0000' } ],
       });
       const eventDots = cal.element.querySelectorAll('.ds-calendar__day-event');
       expect(eventDots.length).toBeGreaterThan(0);
@@ -247,7 +247,7 @@ describe('Calendar', () => {
     test('removeEvent() removes by id', () => {
       const cal = Calendar({
         currentDate: new Date(2024, 5, 1),
-        events: [{ id: 'e1', date: '2024-06-15', title: 'Test' }],
+        events: [ { id: 'e1', date: '2024-06-15', title: 'Test' } ],
       });
       cal.removeEvent('e1');
       const dots = cal.element.querySelectorAll('.ds-calendar__day-event');
@@ -258,9 +258,9 @@ describe('Calendar', () => {
     test('setEvents() replaces all events', () => {
       const cal = Calendar({
         currentDate: new Date(2024, 5, 1),
-        events: [{ date: '2024-06-15', title: 'Old' }],
+        events: [ { date: '2024-06-15', title: 'Old' } ],
       });
-      cal.setEvents([{ date: '2024-06-20', title: 'New' }]);
+      cal.setEvents([ { date: '2024-06-20', title: 'New' } ]);
       const dots = cal.element.querySelectorAll('.ds-calendar__day-event');
       expect(dots.length).toBe(1);
       cal.destroy();

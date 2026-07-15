@@ -48,7 +48,7 @@ export function Tooltip(options = {}) {
   // ── Create tooltip element ─────────────────────────────────────────────────
 
   function _createTooltip() {
-    if (_tooltipEl) return;
+    if (_tooltipEl) {return;}
     _tooltipEl = document.createElement('div');
     _tooltipEl.className = `ds-tooltip ds-tooltip--${placement}`;
     _tooltipEl.setAttribute('role', 'tooltip');
@@ -59,29 +59,29 @@ export function Tooltip(options = {}) {
   }
 
   function _positionTooltip() {
-    if (!_tooltipEl || !target) return;
+    if (!_tooltipEl || !target) {return;}
     const rect = target.getBoundingClientRect();
     const tipRect = _tooltipEl.getBoundingClientRect();
     let top, left;
 
     switch (placement) {
-      case 'bottom':
-        top = rect.bottom + 8;
-        left = rect.left + rect.width / 2 - tipRect.width / 2;
-        break;
-      case 'left':
-        top = rect.top + rect.height / 2 - tipRect.height / 2;
-        left = rect.left - tipRect.width - 8;
-        break;
-      case 'right':
-        top = rect.top + rect.height / 2 - tipRect.height / 2;
-        left = rect.right + 8;
-        break;
-      case 'top':
-      default:
-        top = rect.top - tipRect.height - 8;
-        left = rect.left + rect.width / 2 - tipRect.width / 2;
-        break;
+    case 'bottom':
+      top = rect.bottom + 8;
+      left = rect.left + rect.width / 2 - tipRect.width / 2;
+      break;
+    case 'left':
+      top = rect.top + rect.height / 2 - tipRect.height / 2;
+      left = rect.left - tipRect.width - 8;
+      break;
+    case 'right':
+      top = rect.top + rect.height / 2 - tipRect.height / 2;
+      left = rect.right + 8;
+      break;
+    case 'top':
+    default:
+      top = rect.top - tipRect.height - 8;
+      left = rect.left + rect.width / 2 - tipRect.width / 2;
+      break;
     }
 
     _tooltipEl.style.position = 'fixed';
@@ -92,7 +92,7 @@ export function Tooltip(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function show() {
-    if (_isVisible) return;
+    if (_isVisible) {return;}
     _isVisible = true;
     _createTooltip();
     _tooltipEl.classList.add('is-visible');
@@ -101,7 +101,7 @@ export function Tooltip(options = {}) {
   }
 
   function hide() {
-    if (!_isVisible) return;
+    if (!_isVisible) {return;}
     _isVisible = false;
     if (_showTimer) {
       clearTimeout(_showTimer);
@@ -131,7 +131,7 @@ export function Tooltip(options = {}) {
   // ── Event handlers ─────────────────────────────────────────────────────────
 
   function _onMouseEnter() {
-    if (trigger !== 'hover') return;
+    if (trigger !== 'hover') {return;}
     if (delay > 0) {
       _showTimer = setTimeout(show, delay);
     } else {
@@ -140,28 +140,28 @@ export function Tooltip(options = {}) {
   }
 
   function _onMouseLeave() {
-    if (trigger !== 'hover') return;
+    if (trigger !== 'hover') {return;}
     hide();
   }
 
   function _onClick(e) {
-    if (trigger !== 'click') return;
+    if (trigger !== 'click') {return;}
     e.stopPropagation();
     _isVisible ? hide() : show();
   }
 
   function _onFocus() {
-    if (trigger !== 'focus') return;
+    if (trigger !== 'focus') {return;}
     show();
   }
 
   function _onBlur() {
-    if (trigger !== 'focus') return;
+    if (trigger !== 'focus') {return;}
     hide();
   }
 
   function _onDocumentClick() {
-    if (trigger === 'click' && _isVisible) hide();
+    if (trigger === 'click' && _isVisible) {hide();}
   }
 
   // ── Bind events ────────────────────────────────────────────────────────────

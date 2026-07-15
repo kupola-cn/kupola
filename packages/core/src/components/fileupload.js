@@ -53,13 +53,13 @@ export function FileUpload(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function getFiles() {
-    return [..._files];
+    return [ ..._files ];
   }
 
   function clear() {
     _files = [];
     _renderFileList();
-    if (onChange) onChange(_files);
+    if (onChange) {onChange(_files);}
   }
 
   function destroy() {
@@ -68,15 +68,15 @@ export function FileUpload(options = {}) {
       dropzoneEl.removeEventListener('dragleave', _onDragLeave);
       dropzoneEl.removeEventListener('drop', _onDrop);
     }
-    if (inputEl) inputEl.removeEventListener('change', _onInputChange);
+    if (inputEl) {inputEl.removeEventListener('change', _onInputChange);}
     instance.destroy();
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _formatSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024) {return bytes + ' B';}
+    if (bytes < 1024 * 1024) {return (bytes / 1024).toFixed(1) + ' KB';}
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
@@ -84,23 +84,23 @@ export function FileUpload(options = {}) {
     const newFiles = Array.from(fileList);
     for (const file of newFiles) {
       if (maxSize !== Infinity && file.size > maxSize) {
-        if (onError) onError(`File "${file.name}" exceeds max size of ${_formatSize(maxSize)}`);
+        if (onError) {onError(`File "${file.name}" exceeds max size of ${_formatSize(maxSize)}`);}
         continue;
       }
       _files.push(file);
     }
     _renderFileList();
-    if (onChange) onChange(_files);
+    if (onChange) {onChange(_files);}
   }
 
   function _onInputChange(e) {
-    if (e.target.files) _addFiles(e.target.files);
+    if (e.target.files) {_addFiles(e.target.files);}
     e.target.value = '';
   }
 
   function _onDragOver(e) {
     e.preventDefault();
-    if (disabled) return;
+    if (disabled) {return;}
     dropzoneEl.classList.add('is-dragging');
   }
 
@@ -111,12 +111,12 @@ export function FileUpload(options = {}) {
   function _onDrop(e) {
     e.preventDefault();
     dropzoneEl.classList.remove('is-dragging');
-    if (disabled) return;
-    if (e.dataTransfer.files) _addFiles(e.dataTransfer.files);
+    if (disabled) {return;}
+    if (e.dataTransfer.files) {_addFiles(e.dataTransfer.files);}
   }
 
   function _renderFileList() {
-    if (!listEl) return;
+    if (!listEl) {return;}
     listEl.innerHTML = '';
     _files.forEach((file, idx) => {
       const item = document.createElement('div');
@@ -139,7 +139,7 @@ export function FileUpload(options = {}) {
       removeBtn.addEventListener('click', () => {
         _files.splice(idx, 1);
         _renderFileList();
-        if (onChange) onChange(_files);
+        if (onChange) {onChange(_files);}
       });
       item.appendChild(removeBtn);
 
@@ -175,11 +175,11 @@ export function FileUpload(options = {}) {
   const titleEl = container.querySelector('.ds-fileupload__title');
   const subtitleEl = container.querySelector('.ds-fileupload__subtitle');
 
-  if (titleEl) titleEl.textContent = title;
-  if (subtitleEl) subtitleEl.textContent = subtitle;
+  if (titleEl) {titleEl.textContent = title;}
+  if (subtitleEl) {subtitleEl.textContent = subtitle;}
   if (inputEl) {
-    if (accept) inputEl.accept = accept;
-    if (multiple) inputEl.multiple = true;
+    if (accept) {inputEl.accept = accept;}
+    if (multiple) {inputEl.multiple = true;}
     inputEl.addEventListener('change', _onInputChange);
   }
 

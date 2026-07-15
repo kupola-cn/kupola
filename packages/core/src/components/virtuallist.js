@@ -54,24 +54,24 @@ export function VirtualList(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function scrollTo(index) {
-    if (!scrollEl) return;
+    if (!scrollEl) {return;}
     scrollEl.scrollTop = index * itemHeight;
   }
 
   function destroy() {
-    if (scrollEl) scrollEl.removeEventListener('scroll', _onScroll);
+    if (scrollEl) {scrollEl.removeEventListener('scroll', _onScroll);}
     instance.destroy();
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _onScroll() {
-    if (scrollEl) _scrollTop = scrollEl.scrollTop;
+    if (scrollEl) {_scrollTop = scrollEl.scrollTop;}
     _renderVisible();
   }
 
   function _renderVisible() {
-    if (!containerEl || !spacerEl) return;
+    if (!containerEl || !spacerEl) {return;}
 
     const totalHeight = items.length * itemHeight;
     spacerEl.style.height = `${totalHeight}px`;

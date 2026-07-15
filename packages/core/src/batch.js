@@ -52,7 +52,7 @@ export function batch(fn) {
     if (batchDepth === 0) {
       const queue = getBatchQueue();
       // Snapshot + clear so jobs queued *during* flush go to the scheduler.
-      const jobs = [...queue];
+      const jobs = [ ...queue ];
       queue.clear();
 
       for (const job of jobs) {

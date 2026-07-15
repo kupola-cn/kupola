@@ -73,8 +73,8 @@ function confirm(options = {}) {
     };
 
     const onKeydown = (e) => {
-      if (e.key === 'Escape') onCancel();
-      if (e.key === 'Enter') onConfirm();
+      if (e.key === 'Escape') {onCancel();}
+      if (e.key === 'Enter') {onConfirm();}
     };
 
     const tpl = html`
@@ -100,26 +100,26 @@ function confirm(options = {}) {
     // Show the mask
     const maskEl = document.body.querySelector('.ds-modal-mask:last-of-type')
       || document.body.lastElementChild;
-    if (maskEl) maskEl.classList.add('is-visible');
+    if (maskEl) {maskEl.classList.add('is-visible');}
     document.body.style.overflow = 'hidden';
 
     // Bind button clicks
     const confirmBtn = maskEl.querySelector('[data-action="confirm"]');
     const cancelBtn = maskEl.querySelector('[data-action="cancel"]');
-    if (confirmBtn) confirmBtn.addEventListener('click', onConfirm);
-    if (cancelBtn) cancelBtn.addEventListener('click', onCancel);
-    if (maskEl) maskEl.addEventListener('click', onMaskClick);
+    if (confirmBtn) {confirmBtn.addEventListener('click', onConfirm);}
+    if (cancelBtn) {cancelBtn.addEventListener('click', onCancel);}
+    if (maskEl) {maskEl.addEventListener('click', onMaskClick);}
 
     document.addEventListener('keydown', onKeydown);
 
     function cleanup() {
       document.removeEventListener('keydown', onKeydown);
       document.body.style.overflow = '';
-      if (maskEl) maskEl.classList.remove('is-visible');
+      if (maskEl) {maskEl.classList.remove('is-visible');}
       // Small delay for close animation (if any)
       setTimeout(() => {
         instance.destroy();
-        if (maskEl && maskEl.parentNode) maskEl.parentNode.removeChild(maskEl);
+        if (maskEl && maskEl.parentNode) {maskEl.parentNode.removeChild(maskEl);}
       }, 50);
     }
   });

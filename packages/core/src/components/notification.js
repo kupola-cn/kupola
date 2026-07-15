@@ -38,21 +38,21 @@ const POSITION_CLASSES = {
 };
 
 function _ensureContainer() {
-  if (_container && _container.parentNode) return _container;
+  if (_container && _container.parentNode) {return _container;}
 
   _container = document.createElement('div');
   _container.className = 'ds-notification';
   const posClass = POSITION_CLASSES[_position];
-  if (posClass) _container.classList.add(posClass);
+  if (posClass) {_container.classList.add(posClass);}
   document.body.appendChild(_container);
   return _container;
 }
 
 function _updatePosition() {
-  if (!_container) return;
+  if (!_container) {return;}
   _container.className = 'ds-notification';
   const posClass = POSITION_CLASSES[_position];
-  if (posClass) _container.classList.add(posClass);
+  if (posClass) {_container.classList.add(posClass);}
 }
 
 /**
@@ -89,8 +89,8 @@ function _open(options = {}) {
     html_content += `<span class="ds-notification__icon">${iconHtml}</span>`;
   }
   html_content += '<div class="ds-notification__content">';
-  if (title) html_content += `<div class="ds-notification__title">${title}</div>`;
-  if (message) html_content += `<div class="ds-notification__message">${message}</div>`;
+  if (title) {html_content += `<div class="ds-notification__title">${title}</div>`;}
+  if (message) {html_content += `<div class="ds-notification__message">${message}</div>`;}
   html_content += '</div>';
   if (closable) {
     html_content += '<button class="ds-notification__close" aria-label="Close">&times;</button>';
@@ -101,7 +101,7 @@ function _open(options = {}) {
   // Close handler
   let timer = null;
   function close() {
-    if (timer) clearTimeout(timer);
+    if (timer) {clearTimeout(timer);}
     itemEl.classList.add('is-exiting');
     itemEl.addEventListener('animationend', () => {
       itemEl.remove();
@@ -115,7 +115,7 @@ function _open(options = {}) {
 
   // Bind close button
   const closeBtn = itemEl.querySelector('.ds-notification__close');
-  if (closeBtn) closeBtn.addEventListener('click', close);
+  if (closeBtn) {closeBtn.addEventListener('click', close);}
 
   // Auto-close timer
   if (duration > 0) {

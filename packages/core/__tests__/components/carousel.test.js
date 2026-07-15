@@ -16,7 +16,7 @@ afterEach(() => {
 
 describe('Carousel rendering', () => {
   test('renders a carousel wrapper', () => {
-    const view = Carousel({ items: ['A', 'B'] });
+    const view = Carousel({ items: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
 
     const wrapper = document.body.querySelector('.ds-carousel');
@@ -24,7 +24,7 @@ describe('Carousel rendering', () => {
   });
 
   test('renders correct number of slides', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     const slides = document.body.querySelectorAll('.ds-carousel__item');
@@ -32,7 +32,7 @@ describe('Carousel rendering', () => {
   });
 
   test('renders prev and next buttons', () => {
-    const view = Carousel({ items: ['A', 'B'] });
+    const view = Carousel({ items: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
 
     expect(document.body.querySelector('.ds-carousel__prev')).not.toBeNull();
@@ -40,7 +40,7 @@ describe('Carousel rendering', () => {
   });
 
   test('renders indicator dots', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     const dots = document.body.querySelectorAll('.ds-carousel__indicator');
@@ -48,7 +48,7 @@ describe('Carousel rendering', () => {
   });
 
   test('first indicator is active by default', () => {
-    const view = Carousel({ items: ['A', 'B'] });
+    const view = Carousel({ items: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
 
     const firstDot = document.body.querySelector('.ds-carousel__indicator');
@@ -56,7 +56,7 @@ describe('Carousel rendering', () => {
   });
 
   test('track starts at position 0', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     const track = document.body.querySelector('.ds-carousel__track');
@@ -68,7 +68,7 @@ describe('Carousel rendering', () => {
 
 describe('Carousel navigation', () => {
   test('next() moves to next slide', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     view.next();
@@ -77,7 +77,7 @@ describe('Carousel navigation', () => {
   });
 
   test('prev() wraps to last slide from first', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     view.prev();
@@ -86,7 +86,7 @@ describe('Carousel navigation', () => {
   });
 
   test('goTo() navigates to specific slide', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     view.goTo(2);
@@ -95,7 +95,7 @@ describe('Carousel navigation', () => {
   });
 
   test('next() wraps from last to first', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     view.goTo(2);
@@ -106,7 +106,7 @@ describe('Carousel navigation', () => {
 
   test('onChange fires on navigation', () => {
     const onChange = jest.fn();
-    const view = Carousel({ items: ['A', 'B', 'C'], onChange });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ], onChange });
     document.body.appendChild(view.element);
 
     view.next();
@@ -114,7 +114,7 @@ describe('Carousel navigation', () => {
   });
 
   test('clicking next button advances slide', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     document.body.querySelector('.ds-carousel__next').click();
@@ -123,7 +123,7 @@ describe('Carousel navigation', () => {
   });
 
   test('clicking prev button goes back', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     view.goTo(1);
@@ -133,7 +133,7 @@ describe('Carousel navigation', () => {
   });
 
   test('clicking indicator dot navigates to slide', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     const dots = document.body.querySelectorAll('.ds-carousel__indicator');
@@ -147,7 +147,7 @@ describe('Carousel navigation', () => {
 
 describe('Carousel indicators', () => {
   test('indicators update on navigation', () => {
-    const view = Carousel({ items: ['A', 'B', 'C'] });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ] });
     document.body.appendChild(view.element);
 
     view.goTo(1);
@@ -157,7 +157,7 @@ describe('Carousel indicators', () => {
   });
 
   test('indicators hidden when showIndicators=false', () => {
-    const view = Carousel({ items: ['A', 'B'], showIndicators: false });
+    const view = Carousel({ items: [ 'A', 'B' ], showIndicators: false });
     document.body.appendChild(view.element);
 
     const indicators = document.body.querySelector('.ds-carousel__indicators');
@@ -169,7 +169,7 @@ describe('Carousel indicators', () => {
 
 describe('Carousel arrows', () => {
   test('arrows hidden when showArrows=false', () => {
-    const view = Carousel({ items: ['A', 'B'], showArrows: false });
+    const view = Carousel({ items: [ 'A', 'B' ], showArrows: false });
     document.body.appendChild(view.element);
 
     expect(document.body.querySelector('.ds-carousel__prev').style.display).toBe('none');
@@ -182,7 +182,7 @@ describe('Carousel arrows', () => {
 describe('Carousel auto-play', () => {
   test('auto-play advances slide over time', () => {
     jest.useFakeTimers();
-    const view = Carousel({ items: ['A', 'B', 'C'], autoPlay: true, interval: 1000 });
+    const view = Carousel({ items: [ 'A', 'B', 'C' ], autoPlay: true, interval: 1000 });
     document.body.appendChild(view.element);
 
     jest.advanceTimersByTime(1000);
@@ -197,7 +197,7 @@ describe('Carousel auto-play', () => {
 
   test('destroy stops auto-play', () => {
     jest.useFakeTimers();
-    const view = Carousel({ items: ['A', 'B'], autoPlay: true, interval: 1000 });
+    const view = Carousel({ items: [ 'A', 'B' ], autoPlay: true, interval: 1000 });
     document.body.appendChild(view.element);
 
     view.destroy();
@@ -212,7 +212,7 @@ describe('Carousel auto-play', () => {
 
 describe('Carousel destroy', () => {
   test('destroy cleans up', () => {
-    const view = Carousel({ items: ['A', 'B'] });
+    const view = Carousel({ items: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
 
     expect(() => view.destroy()).not.toThrow();

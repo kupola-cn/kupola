@@ -59,8 +59,8 @@ export function Skeleton(options = {}) {
     el.className = `ds-skeleton ${variantClass}${isCircle ? ' ds-skeleton--circle' : ''}`.trim();
 
     // Custom dimensions
-    if (width) el.style.width = width;
-    if (height) el.style.height = height;
+    if (width) {el.style.width = width;}
+    if (height) {el.style.height = height;}
 
     // Last text line is shorter for visual realism
     if (variant === 'text' && count > 1 && i === count - 1) {

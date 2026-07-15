@@ -117,11 +117,11 @@ describe('Validation', () => {
       expect(v.parseRules('required')).toEqual({ required: [] });
     });
     test('parses rule with params', () => {
-      expect(v.parseRules('minLength:5')).toEqual({ minLength: ['5'] });
+      expect(v.parseRules('minLength:5')).toEqual({ minLength: [ '5' ] });
     });
     test('parses multiple rules', () => {
       const result = v.parseRules('required|email|minLength:5');
-      expect(result).toEqual({ required: [], email: [], minLength: ['5'] });
+      expect(result).toEqual({ required: [], email: [], minLength: [ '5' ] });
     });
     test('returns empty for empty string', () => {
       expect(v.parseRules('')).toEqual({});

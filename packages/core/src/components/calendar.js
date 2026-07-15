@@ -22,9 +22,9 @@
  */
 
 const DEFAULT_I18N = {
-  months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
-  shortMonths: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-  weekdays: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+  months: [ 'January','February','March','April','May','June','July','August','September','October','November','December' ],
+  shortMonths: [ 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' ],
+  weekdays: [ 'Sun','Mon','Tue','Wed','Thu','Fri','Sat' ],
   today: 'Today',
 };
 
@@ -40,7 +40,7 @@ function _sameDay(a, b) {
 }
 
 function _inRange(date, start, end) {
-  if (!start || !end) return false;
+  if (!start || !end) {return false;}
   const d = _fmtDate(date);
   return d >= _fmtDate(start) && d <= _fmtDate(end);
 }
@@ -49,9 +49,9 @@ function _eventsForDate(events, date) {
   const ds = _fmtDate(date);
   return events.filter(e => {
     const s = e.date || e.start;
-    if (!s) return false;
+    if (!s) {return false;}
     const startStr = typeof s === 'string' ? s : _fmtDate(s);
-    if (!e.end) return startStr === ds;
+    if (!e.end) {return startStr === ds;}
     const endStr = typeof e.end === 'string' ? e.end : _fmtDate(e.end);
     return ds >= startStr && ds <= endStr;
   });
@@ -120,13 +120,13 @@ export function Calendar(options = {}) {
       btn.className = 'ds-calendar__day';
       btn.textContent = day;
 
-      if (ds === todayStr) btn.classList.add('is-today');
-      if (_sameDay(d, selectedDate)) btn.classList.add('is-selected');
+      if (ds === todayStr) {btn.classList.add('is-today');}
+      if (_sameDay(d, selectedDate)) {btn.classList.add('is-selected');}
 
       if (isRangeMode) {
-        if (_sameDay(d, rangeStart)) btn.classList.add('is-range-start');
-        if (_sameDay(d, rangeEnd)) btn.classList.add('is-range-end');
-        if (_inRange(d, rangeStart, rangeEnd)) btn.classList.add('is-in-range');
+        if (_sameDay(d, rangeStart)) {btn.classList.add('is-range-start');}
+        if (_sameDay(d, rangeEnd)) {btn.classList.add('is-range-end');}
+        if (_inRange(d, rangeStart, rangeEnd)) {btn.classList.add('is-in-range');}
       }
 
       const dayEvents = _eventsForDate(events, d);
@@ -179,8 +179,8 @@ export function Calendar(options = {}) {
       num.textContent = d.getDate();
       btn.appendChild(num);
 
-      if (ds === todayStr) btn.classList.add('is-today');
-      if (_sameDay(d, selectedDate)) btn.classList.add('is-selected');
+      if (ds === todayStr) {btn.classList.add('is-today');}
+      if (_sameDay(d, selectedDate)) {btn.classList.add('is-selected');}
 
       const dayEvents = _eventsForDate(events, d);
       if (dayEvents.length > 0) {
@@ -221,15 +221,15 @@ export function Calendar(options = {}) {
         } else {
           rangeEnd = d;
         }
-        if (onRangeSelect) onRangeSelect({ start: rangeStart, end: rangeEnd });
+        if (onRangeSelect) {onRangeSelect({ start: rangeStart, end: rangeEnd });}
       }
     } else {
       selectedDate = d;
-      if (onSelect) onSelect({ date: d, dateStr: ds });
+      if (onSelect) {onSelect({ date: d, dateStr: ds });}
     }
 
     dayEvents.forEach(ev => {
-      if (onEventClick) onEventClick(ev, d);
+      if (onEventClick) {onEventClick(ev, d);}
     });
 
     _render();
@@ -237,7 +237,7 @@ export function Calendar(options = {}) {
 
   function _render() {
     // Remove old listeners from day buttons only (keep nav buttons)
-    const navEls = new Set([titleEl, daysEl, prevBtn, nextBtn, todayBtn]);
+    const navEls = new Set([ titleEl, daysEl, prevBtn, nextBtn, todayBtn ]);
     _listeners.forEach(({ el, event, handler }) => {
       if (!navEls.has(el)) {
         el.removeEventListener(event, handler);
@@ -343,7 +343,7 @@ export function Calendar(options = {}) {
     _listeners.length = 0;
     titleEl = null;
     daysEl = null;
-    if (root.parentNode) root.remove();
+    if (root.parentNode) {root.remove();}
   }
 
   function setDate(date) {
@@ -365,7 +365,7 @@ export function Calendar(options = {}) {
     rangeStart = start ? new Date(start) : null;
     rangeEnd = end ? new Date(end) : null;
     _render();
-    if (onRangeSelect && rangeStart && rangeEnd) onRangeSelect({ start: rangeStart, end: rangeEnd });
+    if (onRangeSelect && rangeStart && rangeEnd) {onRangeSelect({ start: rangeStart, end: rangeEnd });}
   }
 
   function getRange() { return { start: rangeStart, end: rangeEnd }; }

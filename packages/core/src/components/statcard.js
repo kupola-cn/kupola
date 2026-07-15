@@ -64,10 +64,10 @@ export function Statcard(options = {}) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const classes = ['ds-statcard'];
-  if (hoverLift) classes.push('ds-statcard--hover-lift');
-  if (compact) classes.push('ds-statcard--compact');
-  if (gradient) classes.push('ds-statcard--gradient');
+  const classes = [ 'ds-statcard' ];
+  if (hoverLift) {classes.push('ds-statcard--hover-lift');}
+  if (compact) {classes.push('ds-statcard--compact');}
+  if (gradient) {classes.push('ds-statcard--gradient');}
 
   const classStr = classes.join(' ');
 

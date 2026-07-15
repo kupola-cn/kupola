@@ -51,11 +51,11 @@ export function Avatar(options = {}) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const classes = ['ds-avatar'];
-  if (size === 'sm') classes.push('ds-avatar--sm');
-  if (size === 'lg') classes.push('ds-avatar--lg');
-  if (shape === 'square') classes.push('ds-avatar--square');
-  if (accent) classes.push('ds-avatar--accent');
+  const classes = [ 'ds-avatar' ];
+  if (size === 'sm') {classes.push('ds-avatar--sm');}
+  if (size === 'lg') {classes.push('ds-avatar--lg');}
+  if (shape === 'square') {classes.push('ds-avatar--square');}
+  if (accent) {classes.push('ds-avatar--accent');}
 
   const classStr = classes.join(' ');
 

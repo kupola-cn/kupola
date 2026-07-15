@@ -58,30 +58,30 @@ export function ColorPicker(options = {}) {
   function setValue(color) {
     _value = color;
     _updateUI();
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   function destroy() {
-    if (triggerEl) triggerEl.removeEventListener('click', _toggle);
+    if (triggerEl) {triggerEl.removeEventListener('click', _toggle);}
     instance.destroy();
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _toggle() {
-    if (panelEl) panelEl.classList.toggle('is-visible');
+    if (panelEl) {panelEl.classList.toggle('is-visible');}
   }
 
   function _selectColor(color) {
     _value = color;
     _updateUI();
-    if (panelEl) panelEl.classList.remove('is-visible');
-    if (onChange) onChange(_value);
+    if (panelEl) {panelEl.classList.remove('is-visible');}
+    if (onChange) {onChange(_value);}
   }
 
   function _updateUI() {
-    if (triggerEl) triggerEl.style.backgroundColor = _value || 'transparent';
-    if (valueEl) valueEl.textContent = _value || '';
+    if (triggerEl) {triggerEl.style.backgroundColor = _value || 'transparent';}
+    if (valueEl) {valueEl.textContent = _value || '';}
     // Update selected state on swatches
     if (gridEl) {
       const swatches = gridEl.querySelectorAll('.ds-color-picker__color');
@@ -129,12 +129,12 @@ export function ColorPicker(options = {}) {
 
   // Custom color input
   if (colorInput) {
-    if (!showInput) colorInput.parentElement.style.display = 'none';
+    if (!showInput) {colorInput.parentElement.style.display = 'none';}
     colorInput.addEventListener('input', (e) => _selectColor(e.target.value));
   }
 
-  if (triggerEl) triggerEl.addEventListener('click', _toggle);
-  if (disabled) triggerEl.style.pointerEvents = 'none';
+  if (triggerEl) {triggerEl.addEventListener('click', _toggle);}
+  if (disabled) {triggerEl.style.pointerEvents = 'none';}
 
   _updateUI();
 

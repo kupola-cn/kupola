@@ -54,7 +54,7 @@ describe('Collapse rendering', () => {
   });
 
   test('defaultOpen opens specified panels', () => {
-    const view = Collapse({ items: ITEMS, defaultOpen: ['b'] });
+    const view = Collapse({ items: ITEMS, defaultOpen: [ 'b' ] });
     const container = document.createElement('div');
     container.appendChild(view.element);
     document.body.appendChild(container);
@@ -107,7 +107,7 @@ describe('Collapse toggle', () => {
     document.body.appendChild(container);
 
     view.toggle('a');
-    expect(view.getActiveKeys()).toEqual(['a']);
+    expect(view.getActiveKeys()).toEqual([ 'a' ]);
 
     view.toggle('a');
     expect(view.getActiveKeys()).toEqual([]);
@@ -123,7 +123,7 @@ describe('Collapse toggle', () => {
 
     view.open('a');
     view.open('b');
-    expect(view.getActiveKeys().sort()).toEqual(['a', 'b']);
+    expect(view.getActiveKeys().sort()).toEqual([ 'a', 'b' ]);
 
     view.destroy();
   });
@@ -139,10 +139,10 @@ describe('Collapse accordion mode', () => {
     document.body.appendChild(container);
 
     view.open('a');
-    expect(view.getActiveKeys()).toEqual(['a']);
+    expect(view.getActiveKeys()).toEqual([ 'a' ]);
 
     view.open('b');
-    expect(view.getActiveKeys()).toEqual(['b']);
+    expect(view.getActiveKeys()).toEqual([ 'b' ]);
 
     const items = container.querySelectorAll('.ds-collapse__item');
     expect(items[0].classList.contains('is-active')).toBe(false);
@@ -163,9 +163,9 @@ describe('Collapse open/close API', () => {
   });
 
   test('close() removes panel from active set', () => {
-    const view = Collapse({ items: ITEMS, defaultOpen: ['a', 'b'] });
+    const view = Collapse({ items: ITEMS, defaultOpen: [ 'a', 'b' ] });
     view.close('a');
-    expect(view.getActiveKeys()).toEqual(['b']);
+    expect(view.getActiveKeys()).toEqual([ 'b' ]);
     view.destroy();
   });
 
@@ -173,7 +173,7 @@ describe('Collapse open/close API', () => {
     const view = Collapse({ items: ITEMS });
     view.open('a');
     view.open('a');
-    expect(view.getActiveKeys()).toEqual(['a']);
+    expect(view.getActiveKeys()).toEqual([ 'a' ]);
     view.destroy();
   });
 
@@ -196,10 +196,10 @@ describe('Collapse onChange', () => {
     document.body.appendChild(container);
 
     view.toggle('a');
-    expect(onChange).toHaveBeenCalledWith(['a']);
+    expect(onChange).toHaveBeenCalledWith([ 'a' ]);
 
     view.toggle('b');
-    expect(onChange).toHaveBeenCalledWith(['a', 'b']);
+    expect(onChange).toHaveBeenCalledWith([ 'a', 'b' ]);
 
     view.destroy();
   });

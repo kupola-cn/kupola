@@ -146,7 +146,7 @@ describe('ImagePreview navigation', () => {
   });
 
   test('nav hidden for single image', () => {
-    const view = ImagePreview({ images: [{ src: 'single.jpg' }] });
+    const view = ImagePreview({ images: [ { src: 'single.jpg' } ] });
     document.body.appendChild(view.element);
 
     view.open(0);

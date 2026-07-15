@@ -22,14 +22,14 @@ export function escapeHtml(str) {
 
 /** Check if a value is a reactive signal-like (has a .value getter). */
 export function isSignalLike(v) {
-  if (v == null || typeof v !== 'object') return false;
+  if (v == null || typeof v !== 'object') {return false;}
   // Check own property first, then prototype chain
   const own = Object.getOwnPropertyDescriptor(v, 'value');
-  if (own && typeof own.get === 'function') return true;
+  if (own && typeof own.get === 'function') {return true;}
   const proto = Object.getPrototypeOf(v);
   if (proto) {
     const protoDesc = Object.getOwnPropertyDescriptor(proto, 'value');
-    if (protoDesc && typeof protoDesc.get === 'function') return true;
+    if (protoDesc && typeof protoDesc.get === 'function') {return true;}
   }
   return false;
 }
@@ -107,22 +107,22 @@ function serializeNested(tpl) {
  */
 function classifyPosition(htmlStr, m) {
   const idx = htmlStr.indexOf(m);
-  if (idx === -1) return { type: 'text' };
+  if (idx === -1) {return { type: 'text' };}
 
   // Find the nearest '<' before the marker
   const before = htmlStr.substring(0, idx);
   const lastOpen = before.lastIndexOf('<');
-  if (lastOpen === -1) return { type: 'text' };
+  if (lastOpen === -1) {return { type: 'text' };}
 
   // If there's a '>' between '<' and the marker, the marker is in text content
   const between = htmlStr.substring(lastOpen, idx);
-  if (between.includes('>')) return { type: 'text' };
+  if (between.includes('>')) {return { type: 'text' };}
 
   // Marker is inside a tag — find the attribute name
   // Look backwards from marker for `attrName=`
   const tagStart = htmlStr.substring(lastOpen + 1, idx);
   const attrMatch = tagStart.match(/([\w\-@:.]+)\s*=\s*(?:"[^"]*|'[^']*|[^\s>]*?)$/);
-  if (!attrMatch) return { type: 'text' };
+  if (!attrMatch) {return { type: 'text' };}
 
   const attrName = attrMatch[1];
   if (attrName.startsWith('on') && attrName.length > 2) {
@@ -334,7 +334,7 @@ export function render(tpl, container) {
  */
 function _processNode(node, values, htmlStr, instance) {
   // Process child nodes (snapshot first — we mutate the list)
-  const children = [...node.childNodes];
+  const children = [ ...node.childNodes ];
   for (const child of children) {
     if (child.nodeType === 3 /* TEXT_NODE */) {
       _processTextNode(child, values, htmlStr, instance, node);
@@ -352,12 +352,12 @@ function _processTextNode(textNode, values, htmlStr, instance, parent) {
   for (let i = 0; i < values.length; i++) {
     const m = marker(i);
     const idx = text.indexOf(m);
-    if (idx === -1) continue;
+    if (idx === -1) {continue;}
 
     // Only create a Part if this marker is for TEXT content
     // (attribute markers are handled in _processElement)
     const cls = classifyPosition(htmlStr, m);
-    if (cls.type !== 'text') continue;
+    if (cls.type !== 'text') {continue;}
 
     const before = text.substring(0, idx);
     const after = text.substring(idx + m.length);
@@ -397,11 +397,11 @@ function _processTextNode(textNode, values, htmlStr, instance, parent) {
  * Check an element's attributes for markers.
  */
 function _processElement(element, values, htmlStr, instance) {
-  const attrs = [...element.attributes];
+  const attrs = [ ...element.attributes ];
   for (const attr of attrs) {
     for (let i = 0; i < values.length; i++) {
       const m = marker(i);
-      if (!attr.value.includes(m)) continue;
+      if (!attr.value.includes(m)) {continue;}
 
       const cls = classifyPosition(htmlStr, m);
 

@@ -58,11 +58,11 @@ export function Slider(options = {}) {
   function setValue(val) {
     _value = _clamp(val, min, max);
     _updateUI();
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   function destroy() {
-    if (inputEl) inputEl.removeEventListener('input', _handleInput);
+    if (inputEl) {inputEl.removeEventListener('input', _handleInput);}
     instance.destroy();
   }
 
@@ -71,16 +71,16 @@ export function Slider(options = {}) {
   function _handleInput(e) {
     _value = Number(e.target.value);
     _updateUI();
-    if (onChange) onChange(_value);
+    if (onChange) {onChange(_value);}
   }
 
   function _updateUI() {
-    if (!inputEl || !fillEl || !thumbEl) return;
+    if (!inputEl || !fillEl || !thumbEl) {return;}
     inputEl.value = _value;
     const pct = ((_value - min) / (max - min)) * 100;
     fillEl.style.width = pct + '%';
     thumbEl.style.left = pct + '%';
-    if (valueEl) valueEl.textContent = _value;
+    if (valueEl) {valueEl.textContent = _value;}
   }
 
   function _clamp(val, lo, hi) {

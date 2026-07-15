@@ -51,7 +51,7 @@ export function Collapse(options = {}) {
     if (activeKeys.has(key)) {
       activeKeys.delete(key);
     } else {
-      if (accordion) activeKeys.clear();
+      if (accordion) {activeKeys.clear();}
       activeKeys.add(key);
     }
     _syncDOM();
@@ -59,26 +59,26 @@ export function Collapse(options = {}) {
   }
 
   function open(key) {
-    if (activeKeys.has(key)) return;
-    if (accordion) activeKeys.clear();
+    if (activeKeys.has(key)) {return;}
+    if (accordion) {activeKeys.clear();}
     activeKeys.add(key);
     _syncDOM();
     _notify();
   }
 
   function close(key) {
-    if (!activeKeys.has(key)) return;
+    if (!activeKeys.has(key)) {return;}
     activeKeys.delete(key);
     _syncDOM();
     _notify();
   }
 
   function getActiveKeys() {
-    return [...activeKeys];
+    return [ ...activeKeys ];
   }
 
   function _notify() {
-    if (onChange) onChange(getActiveKeys());
+    if (onChange) {onChange(getActiveKeys());}
   }
 
   // ── DOM sync ───────────────────────────────────────────────────────────────
@@ -87,7 +87,7 @@ export function Collapse(options = {}) {
   const itemEls = new Map();
 
   function _syncDOM() {
-    for (const [key, el] of itemEls) {
+    for (const [ key, el ] of itemEls) {
       if (activeKeys.has(key)) {
         el.classList.add('is-active');
       } else {

@@ -73,7 +73,7 @@ describe('Tree rendering', () => {
   });
 
   test('leaf nodes have is-leaf toggle', () => {
-    const view = Tree({ data: [{ label: 'Leaf' }] });
+    const view = Tree({ data: [ { label: 'Leaf' } ] });
     document.body.appendChild(view.element);
 
     const toggle = document.body.querySelector('.ds-tree__toggle');
@@ -217,7 +217,7 @@ describe('Tree options', () => {
   });
 
   test('badge renders badge text', () => {
-    const view = Tree({ data: [{ label: 'Item', badge: '12' }] });
+    const view = Tree({ data: [ { label: 'Item', badge: '12' } ] });
     document.body.appendChild(view.element);
 
     const badge = document.body.querySelector('.ds-tree__badge');

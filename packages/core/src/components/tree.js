@@ -52,7 +52,7 @@ export function Tree(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function getSelected() {
-    if (!_selectedEl) return null;
+    if (!_selectedEl) {return null;}
     return _selectedEl._treeNode || null;
   }
 
@@ -116,19 +116,19 @@ export function Tree(options = {}) {
       // Toggle click
       toggleEl.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!childrenUl) return;
+        if (!childrenUl) {return;}
         const isOpen = toggleEl.classList.contains('is-open');
         toggleEl.classList.toggle('is-open');
         childrenUl.style.display = isOpen ? 'none' : 'block';
-        if (onToggle) onToggle(node, !isOpen);
+        if (onToggle) {onToggle(node, !isOpen);}
       });
 
       // Item click → select
       itemEl.addEventListener('click', () => {
-        if (_selectedEl) _selectedEl.classList.remove('is-selected');
+        if (_selectedEl) {_selectedEl.classList.remove('is-selected');}
         itemEl.classList.add('is-selected');
         _selectedEl = itemEl;
-        if (onSelect) onSelect(node);
+        if (onSelect) {onSelect(node);}
       });
 
       parentUl.appendChild(li);
@@ -137,9 +137,9 @@ export function Tree(options = {}) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const classes = ['ds-tree'];
-  if (lined) classes.push('ds-tree--lined');
-  if (compact) classes.push('ds-tree--compact');
+  const classes = [ 'ds-tree' ];
+  if (lined) {classes.push('ds-tree--lined');}
+  if (compact) {classes.push('ds-tree--compact');}
 
   const tpl = html`<ul class="${classes.join(' ')}"></ul>`;
   const container = document.createDocumentFragment();

@@ -1,6 +1,6 @@
 /**
  * Kupola Test Setup
- * 
+ *
  * Jest test environment configuration and mocks.
  * Runs after the test framework is installed in the environment.
  */

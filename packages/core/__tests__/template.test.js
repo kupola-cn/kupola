@@ -33,7 +33,7 @@ describe('html tagged template', () => {
     const a = 1;
     const b = 2;
     const tpl = html`<div>${a} and ${b}</div>`;
-    expect(tpl.values).toEqual([1, 2]);
+    expect(tpl.values).toEqual([ 1, 2 ]);
     expect(tpl.strings.length).toBe(3);
   });
 });
@@ -217,7 +217,7 @@ describe('render nested templates', () => {
 describe('render list', () => {
   test('renders array of templates', () => {
     const container = document.createElement('div');
-    const items = ['a', 'b', 'c'];
+    const items = [ 'a', 'b', 'c' ];
     const tpl = html`<ul>${items.map(i => html`<li>${i}</li>`)}</ul>`;
     render(tpl, container);
     const lis = container.querySelectorAll('li');

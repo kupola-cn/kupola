@@ -52,7 +52,7 @@ describe('ColorPicker rendering', () => {
   });
 
   test('renders custom color count', () => {
-    const view = ColorPicker({ colors: ['#ff0000', '#00ff00', '#0000ff'] });
+    const view = ColorPicker({ colors: [ '#ff0000', '#00ff00', '#0000ff' ] });
     document.body.appendChild(view.element);
 
     const swatches = document.body.querySelectorAll('.ds-color-picker__color');
@@ -109,7 +109,7 @@ describe('ColorPicker value', () => {
 
   test('clicking swatch selects color', () => {
     const onChange = jest.fn();
-    const colors = ['#ff0000', '#00ff00', '#0000ff'];
+    const colors = [ '#ff0000', '#00ff00', '#0000ff' ];
     const view = ColorPicker({ colors, onChange });
     document.body.appendChild(view.element);
 
@@ -121,7 +121,7 @@ describe('ColorPicker value', () => {
   });
 
   test('selecting swatch closes panel', () => {
-    const view = ColorPicker({ colors: ['#ff0000'] });
+    const view = ColorPicker({ colors: [ '#ff0000' ] });
     document.body.appendChild(view.element);
 
     // Open panel
@@ -133,7 +133,7 @@ describe('ColorPicker value', () => {
   });
 
   test('selected swatch has is-selected class', () => {
-    const view = ColorPicker({ value: '#ff0000', colors: ['#ff0000', '#00ff00'] });
+    const view = ColorPicker({ value: '#ff0000', colors: [ '#ff0000', '#00ff00' ] });
     document.body.appendChild(view.element);
 
     const swatches = document.body.querySelectorAll('.ds-color-picker__color');

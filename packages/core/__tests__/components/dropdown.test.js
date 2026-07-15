@@ -299,7 +299,7 @@ describe('Dropdown keyboard navigation', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
     expect(onSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ value: 'b', text: 'Option B' })
+      expect.objectContaining({ value: 'b', text: 'Option B' }),
     );
 
     view.destroy();

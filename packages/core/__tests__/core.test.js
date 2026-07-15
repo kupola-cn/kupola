@@ -306,15 +306,15 @@ describe('integration', () => {
     const log = [];
 
     effect(() => { log.push(label.value); });
-    expect(log).toEqual(['Count: 0']);
+    expect(log).toEqual([ 'Count: 0' ]);
 
     count.value = 1;
     flush();
-    expect(log).toEqual(['Count: 0', 'Count: 1']);
+    expect(log).toEqual([ 'Count: 0', 'Count: 1' ]);
 
     count.value = 2;
     flush();
-    expect(log).toEqual(['Count: 0', 'Count: 1', 'Count: 2']);
+    expect(log).toEqual([ 'Count: 0', 'Count: 1', 'Count: 2' ]);
   });
 
   test('batch multiple signals, single effect run', () => {
