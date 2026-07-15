@@ -51,16 +51,18 @@
 
 ## 安装
 
+> **当前版本**：`2.0.0-alpha.1`（预发布版）。请使用 `@next` 标签安装：
+
 ```bash
-npm install @kupola/kupola              # 完整包
+npm install @kupola/kupola@next              # 完整包
 # 或仅核心引擎
-npm install @kupola/kupola/core          # signal + template + render + SSR
+npm install @kupola/kupola/core@next          # signal + template + render + SSR
 ```
 
 ```bash
 # CDN
-https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core.esm.js
-https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core.cjs.js
+https://cdn.jsdelivr.net/npm/@kupola/kupola@next/dist/kupola-core.esm.js
+https://cdn.jsdelivr.net/npm/@kupola/kupola@next/dist/kupola-core.cjs.js
 ```
 
 ---

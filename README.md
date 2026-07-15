@@ -51,16 +51,18 @@ Or use the programmatic API:
 
 ## Installation
 
+> **Current version**: `2.0.0-alpha.1` (pre-release). Use `@next` tag to install:
+
 ```bash
-npm install @kupola/kupola              # Full package
+npm install @kupola/kupola@next              # Full package
 # Or core engine only
-npm install @kupola/kupola/core          # signal + template + render + SSR
+npm install @kupola/kupola/core@next          # signal + template + render + SSR
 ```
 
 ```bash
 # CDN
-https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core.esm.js
-https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core.cjs.js
+https://cdn.jsdelivr.net/npm/@kupola/kupola@next/dist/kupola-core.esm.js
+https://cdn.jsdelivr.net/npm/@kupola/kupola@next/dist/kupola-core.cjs.js
 ```
 
 ---
