@@ -117,9 +117,9 @@ git push origin main --tags
 **命令**：
 
 ```bash
-npm run docs:dev     # 开发
-npm run docs:build   # 构建
-npm run docs:preview # 预览
+npm run docs-site:dev     # 开发
+npm run docs-site:build   # 构建
+npm run docs-site:preview # 预览
 ```
 
 **待改进**：
@@ -145,14 +145,18 @@ npm run docs:preview # 预览
 - [ ] 评估是否有遗漏的常用组件（如 Upload 拖拽排序、Masonry 瀑布流等）
 - [ ] 组件间依赖关系文档（如 Form 包含 Validation）
 
-### 2.4 create-kupola 完善
+### 2.4 create-kupola 完善 ✅ 已完成
 
-**现状**：CLI 可用，4 套模板。
+**CLI 增强**：
 
-- [ ] 添加更多模板选项（如 Next.js SSR、Nuxt 混用）
-- [ ] 模板中添加完整的 CSS 引入（当前仅 JS）
-- [ ] 支持 `--template` 参数跳过交互式选择
+- [x] 支持 `--template=<name>` 参数跳过交互式选择
+- [x] 支持位置参数作为项目名（`npx @kupola/create-kupola my-app --template=flask`）
+- [x] 非交互模式使用默认特性（dark theme）
+
+**待改进**：
+
 - [ ] 添加 `--typescript` 选项生成 TS 项目
+- [ ] 添加更多模板（Next.js SSR、Nuxt 混用）
 
 ---
 
