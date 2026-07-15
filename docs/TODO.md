@@ -219,8 +219,8 @@ npm run docs:preview # 预览
 
 ### 4.1 生态系统扩展
 
-- [ ] Vite 插件 `@kupola/vite-plugin`（自动按需引入、CSS 注入）
-- [ ] Webpack 插件 `@kupola/webpack-plugin`
+- [x] Vite 插件 `plugins/vite-plugin-kupola.js`（自动 CSS 注入）
+- [x] Webpack 插件 `plugins/webpack-plugin-kupola.js`（HTML CSS 注入）
 - [ ] ESLint 插件 `eslint-plugin-kupola`（指令语法检查、组件导入规范）
 - [ ] VS Code 扩展（代码片段、指令自动补全、组件文档悬浮提示）
 - [ ] Figma 设计系统 / 组件库

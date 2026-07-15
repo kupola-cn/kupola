@@ -1,5 +1,7 @@
 # Changelog
 
+## 2.0.0-beta
+
 ## 2.0.0-alpha.1
 
 - Complete rewrite with Signal-based reactivity engine
