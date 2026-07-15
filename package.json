@@ -27,6 +27,9 @@
       "import": "./dist/kupola-core-i18n.esm.js",
       "require": "./dist/kupola-core-i18n.cjs.js"
     },
+    "./css": "./dist/css/index.css",
+    "./css/tokens": "./dist/css/tokens.css",
+    "./css/components": "./dist/css/components.css",
     "./components/modal": {
       "import": "./dist/kupola-core-modal.esm.js",
       "require": "./dist/kupola-core-modal.cjs.js"
@@ -223,8 +226,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "rollup -c",
+    "build": "rollup -c && npm run build:css",
     "build:rollup": "rollup -c",
+    "build:css": "node -e \"require('fs').cpSync('packages/css', 'dist/css', {recursive:true}); console.log('CSS copied to dist/css/')\"",
     "build:core": "rollup -c --configPlugin @rollup/plugin-commonjs 2>nul || npx rollup -c",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -270,6 +274,7 @@
   "files": [
     "dist/",
     "packages/core/",
+    "packages/css/",
     "version.json"
   ],
   "devDependencies": {

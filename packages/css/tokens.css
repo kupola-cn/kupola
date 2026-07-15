@@ -1,0 +1,182 @@
+/**
+ * Kupola Design Tokens
+ * Primitives + semantic aliases for dark/light themes.
+ *
+ * Usage:
+ *   import '@kupola/kupola/css';              // full bundle
+ *   import '@kupola/kupola/css/tokens.css';   // tokens only
+ */
+
+:root {
+  /* ── Primitives: Radius ─────────────────────────────────── */
+  --radius-2: 2px;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --radius-10: 10px;
+  --radius-full: 9999px;
+
+  /* ── Primitives: Spacing ────────────────────────────────── */
+  --spacer-0: 0px;
+  --spacer-4: 4px;
+  --spacer-6: 6px;
+  --spacer-8: 8px;
+  --spacer-12: 12px;
+  --spacer-16: 16px;
+  --spacer-24: 24px;
+  --spacer-32: 32px;
+  --spacer-40: 40px;
+
+  /* ── Typography: Font families ──────────────────────────── */
+  --font-family-default: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family-heading: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* ── Typography: Body ───────────────────────────────────── */
+  --body-xs-font-size: 11px;
+  --body-xs-line-height: 16px;
+  --body-sm-font-size: 12px;
+  --body-sm-line-height: 18px;
+  --body-base-font-size: 13px;
+  --body-base-line-height: 20px;
+
+  /* ── Typography: Heading ────────────────────────────────── */
+  --heading-xs-font-size: 13px;
+  --heading-xs-line-height: 18px;
+  --heading-sm-font-size: 14px;
+  --heading-sm-line-height: 20px;
+  --heading-base-font-size: 16px;
+  --heading-base-line-height: 22px;
+  --heading-md-font-size: 18px;
+  --heading-md-line-height: 28px;
+  --heading-lg-font-size: 24px;
+  --heading-lg-line-height: 32px;
+  --heading-xl-font-size: 28px;
+  --heading-xl-line-height: 36px;
+
+  /* ── Typography: Code ───────────────────────────────────── */
+  --code-editor-font-family: var(--font-family-mono);
+  --code-editor-font-size: 13px;
+  --code-editor-line-height: 20px;
+
+  /* ── Font weights ───────────────────────────────────────── */
+  --font-weight-default: 400;
+  --font-weight-medium: 500;
+  --font-weight-strong: 600;
+
+  /* ── Z-index layers ─────────────────────────────────────── */
+  --z-index-dropdown: 2000;
+  --z-index-modal: 3000;
+  --z-index-drawer: 2500;
+  --z-index-tooltip: 4000;
+  --z-index-notification: 3500;
+
+  /* ── Transitions ────────────────────────────────────────── */
+  --transition-fast: 0.12s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Dark theme (default)
+   ═══════════════════════════════════════════════════════════ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --bg-base-default: #0C0C0D;
+  --bg-base-secondary: #1A1B1D;
+  --bg-base-tertiary: #222427;
+  --bg-overlay-l1: rgba(255, 255, 255, 0.04);
+  --bg-overlay-l2: rgba(255, 255, 255, 0.06);
+  --bg-overlay-l3: rgba(255, 255, 255, 0.08);
+  --bg-overlay-l4: rgba(255, 255, 255, 0.12);
+
+  /* Text */
+  --text-default: #E5E7EB;
+  --text-secondary: #B8BDCA;
+  --text-tertiary: #9CA3AF;
+  --text-disabled: #8B93A1;
+  --text-onbrand: #FFFFFF;
+
+  /* Icons */
+  --icon-default: #E5E7EB;
+  --icon-secondary: #B8BDCA;
+  --icon-tertiary: #9CA3AF;
+  --icon-disabled: #8B93A1;
+
+  /* Borders */
+  --border-neutral-l1: rgba(255, 255, 255, 0.12);
+  --border-neutral-l2: rgba(255, 255, 255, 0.18);
+  --border-neutral-l3: rgba(255, 255, 255, 0.25);
+
+  /* Brand */
+  --bg-brand: #32F08C;
+  --bg-brand-hover: #53F4A2;
+  --bg-brand-disabled: rgba(50, 240, 140, 0.3);
+
+  /* Status */
+  --status-success-default: #32F08C;
+  --status-warning-default: #FFAD5B;
+  --status-error-default: #FF9CA8;
+  --status-info-default: #79B8FF;
+  --status-success-surface-l1: rgba(50, 240, 140, 0.12);
+  --status-warning-surface-l1: rgba(255, 173, 91, 0.12);
+  --status-error-surface-l1: rgba(255, 156, 168, 0.12);
+  --status-info-surface-l1: rgba(121, 184, 255, 0.12);
+
+  /* Semantic aliases */
+  --color-background: var(--bg-base-default);
+  --color-surface: var(--bg-base-secondary);
+  --color-foreground: var(--text-default);
+  --color-border: var(--border-neutral-l1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Light theme
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-base-default: #FFFFFF;
+  --bg-base-secondary: #F5F6F8;
+  --bg-base-tertiary: #EDF0F5;
+  --bg-overlay-l1: rgba(0, 0, 0, 0.04);
+  --bg-overlay-l2: rgba(0, 0, 0, 0.06);
+  --bg-overlay-l3: rgba(0, 0, 0, 0.08);
+  --bg-overlay-l4: rgba(0, 0, 0, 0.12);
+
+  --text-default: #0F1117;
+  --text-secondary: #4B5563;
+  --text-tertiary: #5B6370;
+  --text-disabled: #525A68;
+  --text-onbrand: #FFFFFF;
+
+  --icon-default: #0F1117;
+  --icon-secondary: #4B5563;
+  --icon-tertiary: #5B6370;
+  --icon-disabled: #525A68;
+
+  --border-neutral-l1: rgba(0, 0, 0, 0.12);
+  --border-neutral-l2: rgba(0, 0, 0, 0.18);
+  --border-neutral-l3: rgba(0, 0, 0, 0.25);
+
+  --bg-brand: #22C55E;
+  --bg-brand-hover: #16A34A;
+  --bg-brand-disabled: rgba(34, 197, 94, 0.3);
+
+  --status-success-default: #16A34A;
+  --status-warning-default: #CA8A04;
+  --status-error-default: #DC2626;
+  --status-info-default: #2E69FF;
+  --status-success-surface-l1: rgba(22, 163, 74, 0.08);
+  --status-warning-surface-l1: rgba(202, 138, 4, 0.08);
+  --status-error-surface-l1: rgba(220, 38, 38, 0.08);
+  --status-info-surface-l1: rgba(46, 105, 255, 0.08);
+
+  --color-background: var(--bg-base-default);
+  --color-surface: var(--bg-base-secondary);
+  --color-foreground: var(--text-default);
+  --color-border: var(--border-neutral-l1);
+}
