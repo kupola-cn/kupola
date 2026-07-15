@@ -304,5 +304,11 @@
     "path": "dist/kupola-core-table.esm.js",
     "limit": "8 kB",
     "gzip": true
+  },
+  {
+    "name": "kupola-core-i18n (gzip)",
+    "path": "dist/kupola-core-i18n.esm.js",
+    "limit": "1 kB",
+    "gzip": true
   }
 ]
