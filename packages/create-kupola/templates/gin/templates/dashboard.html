@@ -1,0 +1,25 @@
+{{template "base" .}}
+
+{{define "content"}}
+<h1>Dashboard</h1>
+<p style="color: #666; margin-bottom: 2rem;">Dynamic data rendered by Go Gin.</p>
+
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+    {{range .stats}}
+    <div class="kupola-statcard">
+        <span class="kupola-statcard__label">{{.label}}</span>
+        <span class="kupola-statcard__value">{{.value}}</span>
+        <span class="kupola-statcard__delta is-up">{{.delta}}</span>
+    </div>
+    {{end}}
+</div>
+
+<div class="kupola-card">
+    <div class="kupola-card__title">Quick Actions</div>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <button class="kupola-btn kupola-btn--secondary kupola-btn--sm">New Project</button>
+        <button class="kupola-btn kupola-btn--secondary kupola-btn--sm">Invite Member</button>
+        <button class="kupola-btn kupola-btn--secondary kupola-btn--sm">Generate Report</button>
+    </div>
+</div>
+{{end}}

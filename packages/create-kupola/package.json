@@ -1,0 +1,39 @@
+{
+  "name": "@kupola/create-kupola",
+  "version": "2.0.0-alpha.1",
+  "description": "Scaffold a new Kupola project with one command",
+  "type": "module",
+  "bin": {
+    "create-kupola": "index.js"
+  },
+  "files": [
+    "index.js",
+    "templates/"
+  ],
+  "keywords": [
+    "kupola",
+    "create-kupola",
+    "scaffold",
+    "cli",
+    "boilerplate",
+    "starter-template",
+    "ui-framework",
+    "component-library",
+    "zero-dependency",
+    "vanilla-js",
+    "ssr",
+    "flask",
+    "fastapi",
+    "gin"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kupola-cn/create-kupola.git"
+  },
+  "homepage": "https://github.com/kupola-cn/create-kupola",
+  "dependencies": {
+    "prompts": "^2.4.2",
+    "kleur": "^4.1.5"
+  }
+}

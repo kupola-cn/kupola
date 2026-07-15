@@ -1,0 +1,9 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FastAPI + Kupola UI project",
+  "dependencies": {
+    "@kupola/kupola": "^2.0.0-alpha.1"
+  }
+}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — {{PROJECT_NAME}}{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+<p style="color: #666; margin-bottom: 2rem;">Dynamic data rendered by FastAPI.</p>
+
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+    {% for stat in stats %}
+    <div class="kupola-statcard">
+        <span class="kupola-statcard__label">{{ stat.label }}</span>
+        <span class="kupola-statcard__value">{{ stat.value }}</span>
+        <span class="kupola-statcard__delta is-up">{{ stat.delta }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="kupola-card">
+    <div class="kupola-card__title">Quick Actions</div>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <button class="kupola-btn kupola-btn--secondary kupola-btn--sm">New Project</button>
+        <button class="kupola-btn kupola-btn--secondary kupola-btn--sm">Invite Member</button>
+        <button class="kupola-btn kupola-btn--secondary kupola-btn--sm">Generate Report</button>
+    </div>
+</div>
+{% endblock %}

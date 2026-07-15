@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{PROJECT_NAME}}{% endblock %}</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 0; }
+        [data-theme="dark"] { background: #1a1a1a; color: #fff; }
+        .kupola-header { display: flex; align-items: center; padding: 1rem; gap: 1rem; border-bottom: 1px solid #e5e5e5; }
+        .kupola-header a { text-decoration: none; color: inherit; padding: 0.5rem 1rem; }
+        .kupola-header a.is-active { font-weight: bold; }
+        .kupola-main { padding: 1.5rem; }
+        {% block head %}{% endblock %}
+    </style>
+</head>
+<body>
+    <header class="kupola-header">
+        <strong>{{PROJECT_NAME}}</strong>
+        <nav>
+            <a href="/" class="{% if request.path == '/' %}is-active{% endif %}">Home</a>
+            <a href="/dashboard" class="{% if request.path == '/dashboard' %}is-active{% endif %}">Dashboard</a>
+        </nav>
+        <button class="kupola-btn kupola-btn--sm" style="margin-left: auto;"
+                k-on:click="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">
+            Theme
+        </button>
+    </header>
+    <main class="kupola-main">
+        {% block content %}{% endblock %}
+    </main>
+    <script type="module">
+        import { walk } from '@kupola/kupola/directives';
+        walk(document.body);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

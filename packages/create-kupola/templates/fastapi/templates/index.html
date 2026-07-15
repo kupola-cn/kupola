@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Home — {{PROJECT_NAME}}{% endblock %}
+
+{% block content %}
+<h1>Welcome to {{PROJECT_NAME}}</h1>
+<p style="color: #666; margin-bottom: 2rem;">Built with FastAPI + Kupola.</p>
+
+<section style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Buttons</h2>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button class="kupola-btn kupola-btn--primary">Primary</button>
+        <button class="kupola-btn kupola-btn--secondary">Secondary</button>
+        <button class="kupola-btn kupola-btn--ghost">Ghost</button>
+    </div>
+</section>
+
+<section style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Alerts</h2>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div class="kupola-alert kupola-alert--success">
+            <div class="kupola-alert__title">Success</div>
+            <div class="kupola-alert__desc">FastAPI + Kupola is working!</div>
+        </div>
+        <div class="kupola-alert kupola-alert--info">
+            <div class="kupola-alert__title">Info</div>
+            <div class="kupola-alert__desc">Visit <a href="/dashboard">/dashboard</a> to see dynamic data.</div>
+        </div>
+    </div>
+</section>
+{% endblock %}
