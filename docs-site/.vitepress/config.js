@@ -24,6 +24,7 @@ export default defineConfig({
             { text: '核心概念', link: '/guide/core-concepts' },
             { text: '指令系统', link: '/guide/directives' },
             { text: 'SSR', link: '/guide/ssr' },
+            { text: '模板', link: '/guide/templates' },
             { text: 'FAQ', link: '/guide/faq' },
           ],
         },

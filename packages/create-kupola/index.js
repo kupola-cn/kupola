@@ -81,7 +81,7 @@ async function main() {
   let framework;
   if (templateArg) {
     const templateName = templateArg.split('=')[1];
-    const validTemplates = ['static', 'static-ts', 'flask', 'fastapi', 'gin'];
+    const validTemplates = ['static', 'static-ts', 'flask', 'fastapi', 'gin', 'nextjs', 'nuxt'];
     if (!validTemplates.includes(templateName)) {
       console.log(kleur.red(`\n  Invalid template: ${templateName}`));
       console.log(kleur.gray(`  Valid templates: ${validTemplates.join(', ')}`));
@@ -98,6 +98,8 @@ async function main() {
       choices: [
         { title: 'Static (HTML only)', value: 'static', description: 'No backend, pure static HTML + Kupola' },
         { title: 'Static + TypeScript', value: 'static-ts', description: 'TypeScript + Vite, type-safe Kupola project' },
+        { title: 'Next.js (SSR)', value: 'nextjs', description: 'Next.js App Router + Kupola client hydration' },
+        { title: 'Nuxt (Hybrid)', value: 'nuxt', description: 'Nuxt 3 + Kupola directives via ClientOnly' },
         { title: 'Flask', value: 'flask', description: 'Python Flask with Jinja2 templates' },
         { title: 'FastAPI', value: 'fastapi', description: 'Python FastAPI with Jinja2 templates' },
         { title: 'Gin', value: 'gin', description: 'Go Gin with html/template' },
@@ -208,6 +210,8 @@ async function main() {
   const devCmd = {
     static: 'npx vite',
     'static-ts': 'npx vite',
+    nextjs: 'npx next dev',
+    nuxt: 'npx nuxt dev',
     flask: 'python app.py',
     fastapi: 'uvicorn main:app --reload',
     gin: 'go run main.go',
