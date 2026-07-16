@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PROJECT_NAME}}</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 0; padding: 2rem; max-width: 800px; margin: 0 auto; }
+        h1 { border-bottom: 2px solid #32F08C; padding-bottom: 0.5rem; }
+        h2 { margin-top: 2rem; color: #555; }
+        .section { margin: 1.5rem 0; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .btn { display: inline-flex; align-items: center; padding: 6px 16px; border-radius: 6px;
+               border: 1px solid #ccc; cursor: pointer; font-size: 14px; margin: 2px; }
+        .btn-primary { background: #32F08C; color: #000; border-color: #32F08C; }
+        .btn-ghost { background: transparent; }
+        .input { padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        [data-theme="dark"] { background: #0C0C0D; color: #E5E7EB; }
+        [data-theme="dark"] .section { border-color: #333; }
+        [data-theme="dark"] .btn-ghost { color: #E5E7EB; border-color: #555; }
+        [data-theme="dark"] .input { background: #1A1B1D; color: #E5E7EB; border-color: #333; }
+        [data-theme="dark"] h2 { color: #aaa; }
+        .theme-toggle { position: fixed; top: 16px; right: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Welcome to {{PROJECT_NAME}}</h1>
+    <p>Built with <strong>Kupola 2.0</strong> + <strong>TypeScript</strong>.</p>
+
+    <!-- Theme toggle -->
+    <button class="btn btn-ghost theme-toggle" id="theme-btn">Toggle Theme</button>
+
+    <!-- Counter example -->
+    <h2>Counter</h2>
+    <div class="section" k-data="{ count: 0 }">
+        <p>Count: <strong k-text="count"></strong></p>
+        <button class="btn btn-primary" k-on:click="count++">+1</button>
+        <button class="btn btn-ghost" k-on:click="count--">-1</button>
+        <button class="btn btn-ghost" k-on:click="count = 0">Reset</button>
+    </div>
+
+    <!-- Reactive computed -->
+    <h2>Reactive Computed</h2>
+    <div class="section" k-data="{ price: 100, quantity: 1, tax: 0.1 }">
+        <label>Price: <input class="input" type="number" k-model="price" style="width:80px" /></label>
+        <label>Qty: <input class="input" type="number" k-model="quantity" style="width:60px" /></label>
+        <div style="margin-top:12px; font-size:1.2em;">
+            Total: $<strong k-text="(price * quantity * (1 + Number(tax))).toFixed(2)"></strong>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

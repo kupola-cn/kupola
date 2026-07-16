@@ -12,6 +12,9 @@
 - Performance benchmarks: Signal/VirtualList/Table/SSR (8 tests)
 - VS Code extension: snippets + directive auto-completion + hover docs
 - Storybook: interactive component docs (Modal/Drawer/Table/Select/Alert/Notification)
+- DevTools: Signal reactivity profiler (enableProfiler/getProfileReport/printProfileReport)
+- Lazy loading: async component initialization (lazyComponent/preloadComponent)
+- create-kupola: --typescript flag, static-ts template with Vite + TS
 - FAQ documentation (docs/FAQ.md)
 - create-kupola templates: rich examples (Counter, Todo, Form, Reactive Computed)
 - 922 tests passing (55 suites)

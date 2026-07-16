@@ -10,6 +10,7 @@
  */
 
 import { queueJob } from './scheduler.js';
+import { isProfilerEnabled, profileSignalWrite, profileSignalRead, profileTrigger } from './devtools.js';
 
 // ─── Global dependency-tracking state ────────────────────────────────────────
 
@@ -103,6 +104,7 @@ export class Signal {
    */
   get value() {
     track(this);
+    if (isProfilerEnabled()) {profileSignalRead(this);}
     return this._value;
   }
 
@@ -113,6 +115,7 @@ export class Signal {
   set value(newValue) {
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
+      if (isProfilerEnabled()) {profileSignalWrite(this);}
       trigger(this);
     }
   }

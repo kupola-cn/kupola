@@ -43,3 +43,9 @@ export { setLocale, getLocale, t, addMessages } from './i18n.js';
 
 // ── Error Boundary ───────────────────────────────────────────────────────────
 export { ErrorBoundary } from './errors.js';
+
+// ── DevTools (profiler) ──────────────────────────────────────────────────────
+export { enableProfiler, disableProfiler, resetProfiler, getProfileReport, printProfileReport } from './devtools.js';
+
+// ── Lazy Load ────────────────────────────────────────────────────────────────
+export { lazyComponent, preloadComponent } from './lazy.js';

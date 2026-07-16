@@ -9,6 +9,7 @@
  */
 
 import { pushEffect, popEffect } from './signal.js';
+import { isProfilerEnabled, profileEffectRun } from './devtools.js';
 
 /**
  * @typedef {Object} EffectRecord
@@ -70,7 +71,11 @@ function runEffect(eff) {
 
   pushEffect(eff);
   try {
-    eff._fn();
+    if (isProfilerEnabled()) {
+      profileEffectRun(eff, eff._fn);
+    } else {
+      eff._fn();
+    }
   } finally {
     popEffect();
   }

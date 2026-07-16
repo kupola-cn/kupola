@@ -161,8 +161,8 @@ npm run docs:preview # 预览
 
 **待改进**：
 
-- [ ] 添加 `--typescript` 选项生成 TS 项目
-- [ ] 添加更多模板（Next.js SSR、Nuxt 混用）
+- [x] 添加 `--typescript` 选项生成 TS 项目（`--ts` 或 `--template=static-ts`）
+- [ ] 添加更多模板（Next.js SSR、Nuxt 混用）（不需要）
 
 ---
 
@@ -202,8 +202,8 @@ npm run docs:preview # 预览
 - [x] 各组件 bundle 体积分析：核心 12KB，最大组件 table 14KB，均在限制内
 - [x] Tree-shaking 验证：core 导出 21 个 API，组件在独立 bundle
 - [x] 大列表组件（Table / VirtualList）虚拟滚动性能基准测试（8 个测试，全部通过）
-- [ ] Signal 响应式更新性能 profiling
-- [ ] 懒加载支持：组件按需异步初始化
+- [x] Signal 响应式更新性能 profiling — `devtools.js`（enableProfiler/getProfileReport/printProfileReport）
+- [x] 懒加载支持：组件按需异步初始化 — `lazy.js`（lazyComponent/preloadComponent）
 
 ### 3.4 测试增强 ✅ 基础完成
 
@@ -252,7 +252,7 @@ npm run docs:preview # 预览
 | TypeScript | ✅ 完成 | types.d.ts 覆盖全部 48 个组件 |
 | 单元测试 | ✅ 922 个 | 55 套件，全部通过 |
 | 构建系统 | ✅ 完成 | 54 个入口，ESM + CJS |
-| npm 发布 | ✅ 已发布 | @next tag，2.0.0-beta.6 |
+| npm 发布 | ✅ 已发布 | @next tag，2.0.0-beta.7 |
 | GitHub | ✅ 已清理 | 无 1.0 历史，全新提交 |
 | create-kupola | ✅ 已发布 | 4 套模板（static/flask/fastapi/gin） |
 | 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
@@ -263,7 +263,7 @@ npm run docs:preview # 预览
 | 性能优化 | ✅ 基准测试 | Tree-shaking + 8 个性能基准（Signal/VirtualList/Table/SSR） |
 | 集成测试 | ✅ 39 个 | SSR水合/指令场景/ErrorBoundary/内存泄漏/性能基准 |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
-| 正式版 | ⏳ beta.6 | 2.0.0-beta.6 已发布 @next |
+| 正式版 | ⏳ beta.7 | 2.0.0-beta.7 已发布 @next |
 
 ---
 

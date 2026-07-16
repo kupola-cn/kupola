@@ -42,6 +42,7 @@ async function main() {
   const args = process.argv.slice(2);
   const templateArg = args.find(a => a.startsWith('--template='));
   const nameArg = args.find(a => !a.startsWith('--'));
+  const useTS = args.includes('--typescript') || args.includes('--ts');
 
   // 1. Project name
   let name = nameArg;
@@ -80,13 +81,15 @@ async function main() {
   let framework;
   if (templateArg) {
     const templateName = templateArg.split('=')[1];
-    const validTemplates = ['static', 'flask', 'fastapi', 'gin'];
+    const validTemplates = ['static', 'static-ts', 'flask', 'fastapi', 'gin'];
     if (!validTemplates.includes(templateName)) {
       console.log(kleur.red(`\n  Invalid template: ${templateName}`));
       console.log(kleur.gray(`  Valid templates: ${validTemplates.join(', ')}`));
       process.exit(1);
     }
     framework = templateName;
+  } else if (useTS) {
+    framework = 'static-ts';
   } else {
     const { framework: promptedFramework } = await prompts({
       type: 'select',
@@ -94,6 +97,7 @@ async function main() {
       message: 'Backend framework:',
       choices: [
         { title: 'Static (HTML only)', value: 'static', description: 'No backend, pure static HTML + Kupola' },
+        { title: 'Static + TypeScript', value: 'static-ts', description: 'TypeScript + Vite, type-safe Kupola project' },
         { title: 'Flask', value: 'flask', description: 'Python Flask with Jinja2 templates' },
         { title: 'FastAPI', value: 'fastapi', description: 'Python FastAPI with Jinja2 templates' },
         { title: 'Gin', value: 'gin', description: 'Go Gin with html/template' },
@@ -152,7 +156,7 @@ async function main() {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {findTemplateFiles(full);}
-      else if (/\.(html|go|mod)$/.test(entry.name)) {templateFiles.push(full);}
+      else if (/\.(html|go|mod|ts|js|json)$/.test(entry.name)) {templateFiles.push(full);}
     }
   }
   findTemplateFiles(targetDir);
@@ -203,6 +207,7 @@ async function main() {
 
   const devCmd = {
     static: 'npx vite',
+    'static-ts': 'npx vite',
     flask: 'python app.py',
     fastapi: 'uvicorn main:app --reload',
     gin: 'go run main.go',
