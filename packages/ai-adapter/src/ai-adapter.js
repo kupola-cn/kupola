@@ -1,27 +1,11 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/ai-adapter — Main Adapter Class
+ * @kupola/ai-adapter — Main Adapter Class (v1.1)
  *
- * Orchestrates IntentParser + QueryEngine + ActionEngine + FlowEngine.
- * Provides a unified API for natural language → structured operations.
- *
- * ## Usage
- *
- * ```js
- * import { AIAdapter } from '@kupola/ai-adapter';
- *
- * const adapter = new AIAdapter({
- *   ai: async (prompt, context) => { ... }, // optional AI backend
- * });
- *
- * // Register handlers
- * adapter.query.register('employee', async (params) => api.get('/employees', params));
- * adapter.action.register('addEmployee', { handler: async (p) => api.post('/employees', p), confirm: true });
- * adapter.flow.define('发工资条', { steps: [...] });
- *
- * // Process input
- * const result = await adapter.process('查询张三上个月出勤');
- * ```
+ * Enhancements:
+ * - Middleware system: adapter.use(fn) for extensible processing pipeline
+ * - Confidence display in response messages
+ * - Slot filling support (ask for missing params)
  */
 
 import { IntentParser, RuleBasedParser } from './intent-parser.js';
@@ -50,15 +34,130 @@ export class AIAdapter {
     // Message log
     this.messages = [];
     this.maxMessages = options.maxMessages || 50;
+
+    // Middleware pipeline
+    this.middlewares = [];
+  }
+
+  /**
+   * Add a middleware to the processing pipeline.
+   * Middleware signature: async (ctx, next) => { ... }
+   *
+   * ctx = { input, command?, result?, adapter }
+   *
+   * Example:
+   *   adapter.use(async (ctx, next) => {
+   *     console.log('Before:', ctx.input);
+   *     await next();
+   *     console.log('After:', ctx.result);
+   *   });
+   *
+   * @param {Function} middleware
+   * @returns {AIAdapter} this (for chaining)
+   */
+  use(middleware) {
+    this.middlewares.push(middleware);
+    return this;
   }
 
   /**
    * Process natural language input end-to-end.
-   * @param {string} input — User's text or voice transcription
-   * @param {object} context — Extra context for parsing
-   * @returns {Promise<{type, engine, result, message}>}
+   * Runs through middleware pipeline, then routes to engine.
    */
   async process(input, context = {}) {
+    const ctx = {
+      input,
+      context,
+      command: null,
+      result: null,
+      adapter: this,
+    };
+
+    // Build middleware chain
+    const chain = this._buildMiddlewareChain(ctx);
+    await chain();
+
+    // If middleware didn't produce a result, do normal processing
+    if (!ctx.result) {
+      ctx.result = await this._processCore(input, context);
+    }
+
+    return ctx.result;
+  }
+
+  /**
+   * Undo the last action.
+   */
+  async undo() {
+    const result = await this.action.undo();
+    const msg = result.success ? `✅ ${result.message}` : `❌ ${result.message || result.error}`;
+    this._addMessage('system', msg);
+    return result;
+  }
+
+  /**
+   * Get the UI panel component (for Kupola integration).
+   */
+  getPanelHTML() {
+    return `
+      <div class="kupola-ai-panel" k-data="{ aiInput: '', aiMessages: [] }">
+        <div class="kupola-ai-messages">
+          <template k-for="msg in aiMessages">
+            <div k-bind:class="'kupola-ai-msg kupola-ai-msg-' + msg.role" k-text="msg.text"></div>
+          </template>
+        </div>
+        <div class="kupola-ai-input">
+          <input k-model="aiInput" placeholder="输入指令..."
+                 k-on:keydown="if(event.key==='Enter' && aiInput.trim()) { submitAI(aiInput); aiInput='' }" />
+          <button k-on:click="if(aiInput.trim()) { submitAI(aiInput); aiInput='' }">发送</button>
+        </div>
+      </div>
+    `;
+  }
+
+  getMessages() {
+    return [...this.messages];
+  }
+
+  clearConversation() {
+    this.messages = [];
+    this.parser.clearContext();
+    this.query.clearHistory();
+    this.flow.clearHistory();
+  }
+
+  on(event, callback) {
+    if (!this.listeners.has(event)) this.listeners.set(event, []);
+    this.listeners.get(event).push(callback);
+    return () => this.off(event, callback);
+  }
+
+  off(event, callback) {
+    const list = this.listeners.get(event);
+    if (list) {
+      const idx = list.indexOf(callback);
+      if (idx >= 0) list.splice(idx, 1);
+    }
+  }
+
+  // ── Private ────────────────────────────────────────
+
+  _buildMiddlewareChain(ctx) {
+    const middlewares = this.middlewares;
+    let index = 0;
+
+    const next = async () => {
+      if (index >= middlewares.length) return;
+      const mw = middlewares[index++];
+      await mw(ctx, next);
+    };
+
+    return async () => {
+      await next();
+    };
+  }
+
+  async _processCore(input, context = {}) {
     // Add user message
     this._addMessage('user', input);
     this._emit('input', { input });
@@ -70,6 +169,13 @@ export class AIAdapter {
       const msg = command.error || 'I didn\'t understand that. Try: 查询..., 添加..., 执行...';
       this._addMessage('system', msg);
       return { type: 'error', engine: 'unknown', result: command, message: msg };
+    }
+
+    // Slot filling: ask for missing params
+    if (command.missingSlots && command.missingSlots.length > 0) {
+      const question = command.slotQuestion || `请提供: ${command.missingSlots.join(', ')}`;
+      this._addMessage('system', question);
+      return { type: 'slot-fill', engine: command.engine, result: command, message: question, missingSlots: command.missingSlots };
     }
 
     this._emit('parsed', command);
@@ -84,7 +190,6 @@ export class AIAdapter {
         result = await this.action.execute(command, {
           onConfirm: context.onConfirm || this._defaultConfirm.bind(this),
         });
-        // Track for auto-learn
         const suggestion = this.flow.trackAction(command);
         if (suggestion.suggest) {
           this._addMessage('suggestion', suggestion.message);
@@ -111,80 +216,8 @@ export class AIAdapter {
     this._addMessage('system', message);
     this._emit('result', { command, result });
 
-    return { type: command.engine, engine: command.engine, result, message };
+    return { type: command.engine, engine: command.engine, result, message, confidence: command.confidence };
   }
-
-  /**
-   * Undo the last action.
-   */
-  async undo() {
-    const result = await this.action.undo();
-    const msg = result.success ? `✅ ${result.message}` : `❌ ${result.message || result.error}`;
-    this._addMessage('system', msg);
-    return result;
-  }
-
-  /**
-   * Get the UI panel component (for Kupola integration).
-   * Returns an HTML string with the AI panel structure.
-   */
-  getPanelHTML() {
-    return `
-      <div class="kupola-ai-panel" k-data="{ aiInput: '', aiMessages: [] }">
-        <div class="kupola-ai-messages">
-          <template k-for="msg in aiMessages">
-            <div k-bind:class="'kupola-ai-msg kupola-ai-msg-' + msg.role" k-text="msg.text"></div>
-          </template>
-        </div>
-        <div class="kupola-ai-input">
-          <input k-model="aiInput" placeholder="输入指令..."
-                 k-on:keydown="if(event.key==='Enter' && aiInput.trim()) { submitAI(aiInput); aiInput='' }" />
-          <button k-on:click="if(aiInput.trim()) { submitAI(aiInput); aiInput='' }">发送</button>
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * Get conversation messages.
-   */
-  getMessages() {
-    return [...this.messages];
-  }
-
-  /**
-   * Clear conversation.
-   */
-  clearConversation() {
-    this.messages = [];
-    this.parser.clearContext();
-    this.query.clearHistory();
-    this.flow.clearHistory();
-  }
-
-  /**
-   * Register an event listener.
-   * @param {string} event — 'input' | 'parsed' | 'result' | 'flowStep'
-   * @param {Function} callback
-   */
-  on(event, callback) {
-    if (!this.listeners.has(event)) this.listeners.set(event, []);
-    this.listeners.get(event).push(callback);
-    return () => this.off(event, callback);
-  }
-
-  /**
-   * Remove an event listener.
-   */
-  off(event, callback) {
-    const list = this.listeners.get(event);
-    if (list) {
-      const idx = list.indexOf(callback);
-      if (idx >= 0) list.splice(idx, 1);
-    }
-  }
-
-  // ── Private ────────────────────────────────────────
 
   _emit(event, data) {
     const list = this.listeners.get(event);
@@ -204,11 +237,13 @@ export class AIAdapter {
       return `❌ ${result.error || 'Operation failed.'}`;
     }
 
+    const conf = command.confidence < 0.7 ? ` (confidence: ${Math.round(command.confidence * 100)}%)` : '';
+
     switch (command.engine) {
       case 'query':
-        return `🔍 ${result.summary}`;
+        return `🔍 ${result.summary}${conf}${result.cached ? ' (cached)' : ''}`;
       case 'action':
-        return `✅ Action "${command.type}" completed.${result.undoable ? ' (undoable)' : ''}`;
+        return `✅ Action "${command.type}" completed.${result.undoable ? ' (undoable)' : ''}${conf}`;
       case 'flow':
         if (result.logs) {
           const done = result.logs.filter(l => l.status === 'success').length;
@@ -221,7 +256,6 @@ export class AIAdapter {
   }
 
   async _defaultConfirm(label, params) {
-    // Default: auto-confirm (override via options or context)
     return true;
   }
 }

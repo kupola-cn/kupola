@@ -1,12 +1,13 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
- * @kupola/ai-adapter — Flow Engine
+ * @kupola/ai-adapter 鈥?Flow Engine (v1.1)
  *
- * Handles repeatable multi-step workflows:
- * - Define flows as tagged templates (name + steps)
- * - Execute flows with variable data
- * - Storage: localStorage (default) or custom adapter
- * - Auto-learn: suggest flow creation after N repeated actions
+ * Enhancements:
+ * - Conditional branches (step.condition)
+ * - Parallel steps (step.parallel group)
+ * - Variable substitution ({{variable}} in params)
+ * - Nested flows (step.flow references another flow)
+ * - Resume from failure (resumeAt option)
  */
 
 export class FlowEngine {
@@ -15,16 +16,13 @@ export class FlowEngine {
     this.executions = [];
     this.storage = options.storage || new LocalStorageAdapter('kupola-ai-flows');
     this.autoLearnThreshold = options.autoLearnThreshold || 3;
-    this.actionPatterns = []; // track repeated actions for auto-learn
+    this.actionPatterns = [];
 
-    // Load persisted flows
     this._loadFlows();
   }
 
   /**
    * Define a new flow.
-   * @param {string} name — Flow name (e.g. '发工资条')
-   * @param {object} config — { steps, description?, variables? }
    */
   define(name, config) {
     const flow = {
@@ -43,12 +41,12 @@ export class FlowEngine {
 
   /**
    * Execute a flow by name.
-   * @param {string} name — Flow name
-   * @param {object} data — Variable values for this execution
-   * @param {object} callbacks — { onStep?, onComplete?, onError? }
-   * @returns {Promise<{success, results, logs}>}
+   * @param {string} name
+   * @param {object} data 鈥?variable values
+   * @param {object} callbacks 鈥?{ onStep?, onComplete?, onError? }
+   * @param {object} options 鈥?{ resumeAt?: number }
    */
-  async execute(name, data = {}, callbacks = {}) {
+  async execute(name, data = {}, callbacks = {}, options = {}) {
     const flow = this.flows.get(name);
     if (!flow) {
       return {
@@ -60,17 +58,83 @@ export class FlowEngine {
 
     const results = [];
     const logs = [];
+    const startAt = options.resumeAt || 0;
 
-    for (let i = 0; i < flow.steps.length; i++) {
+    for (let i = startAt; i < flow.steps.length; i++) {
       const step = flow.steps[i];
       const stepLabel = step.label || `Step ${i + 1}`;
 
+      // Conditional branch: skip if condition returns false
+      if (typeof step.condition === 'function') {
+        const shouldRun = step.condition(data, results);
+        if (!shouldRun) {
+          results.push({ step: stepLabel, success: true, data: { skipped: true, reason: 'condition not met' } });
+          logs.push({ step: stepLabel, status: 'skipped', timestamp: Date.now() });
+          continue;
+        }
+      }
+
+      // Parallel group: execute multiple steps concurrently
+      if (step.parallel && Array.isArray(step.parallel)) {
+        try {
+          if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'running');
+
+          const parallelResults = await Promise.all(
+            step.parallel.map(async (pStep) => {
+              if (typeof pStep.handler === 'function') {
+                const subData = this._substituteVars(pStep.params || {}, data);
+                return await pStep.handler(subData, results);
+              }
+              return { skipped: true };
+            })
+          );
+
+          results.push({ step: stepLabel, success: true, data: parallelResults });
+          logs.push({ step: stepLabel, status: 'success', timestamp: Date.now() });
+          if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'done');
+          continue;
+        } catch (err) {
+          results.push({ step: stepLabel, success: false, error: err.message });
+          logs.push({ step: stepLabel, status: 'error', error: err.message, timestamp: Date.now() });
+          if (callbacks.onError) callbacks.onError(i, stepLabel, err);
+          return { success: false, results, logs, failedAt: i };
+        }
+      }
+
+      // Nested flow: call another flow
+      if (step.flow) {
+        try {
+          if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'running');
+
+          const subData = this._substituteVars(step.params || {}, data);
+          const subResult = await this.execute(step.flow, subData, {}, {});
+
+          results.push({ step: stepLabel, success: subResult.success, data: subResult });
+          logs.push({ step: stepLabel, status: subResult.success ? 'success' : 'error', timestamp: Date.now() });
+
+          if (!subResult.success) {
+            if (callbacks.onError) callbacks.onError(i, stepLabel, new Error(subResult.error));
+            return { success: false, results, logs, failedAt: i };
+          }
+
+          if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'done');
+          continue;
+        } catch (err) {
+          results.push({ step: stepLabel, success: false, error: err.message });
+          logs.push({ step: stepLabel, status: 'error', error: err.message, timestamp: Date.now() });
+          if (callbacks.onError) callbacks.onError(i, stepLabel, err);
+          return { success: false, results, logs, failedAt: i };
+        }
+      }
+
+      // Normal step
       try {
         if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'running');
 
         let result;
         if (typeof step.handler === 'function') {
-          result = await step.handler(data, results);
+          const subData = step.params ? this._substituteVars(step.params, data) : data;
+          result = await step.handler(subData, results);
         } else {
           result = { skipped: true, reason: 'No handler defined' };
         }
@@ -101,17 +165,18 @@ export class FlowEngine {
   }
 
   /**
-   * Remove a flow.
+   * Resume a failed flow from the failed step.
    */
+  async resume(name, data = {}, failedAt, callbacks = {}) {
+    return this.execute(name, data, callbacks, { resumeAt: failedAt + 1 });
+  }
+
   remove(name) {
     const existed = this.flows.delete(name);
     if (existed) this._saveFlows();
     return existed;
   }
 
-  /**
-   * Get all defined flows.
-   */
   list() {
     return [...this.flows.values()].map(f => ({
       name: f.name,
@@ -122,15 +187,10 @@ export class FlowEngine {
     }));
   }
 
-  /**
-   * Track an action pattern for auto-learn suggestions.
-   * Returns a suggested flow name if threshold is met.
-   */
   trackAction(command) {
     const key = `${command.type}:${JSON.stringify(Object.keys(command.params || {}))}`;
     this.actionPatterns.push({ key, command, timestamp: Date.now() });
 
-    // Count occurrences
     const count = this.actionPatterns.filter(p => p.key === key).length;
     if (count >= this.autoLearnThreshold) {
       return {
@@ -143,20 +203,32 @@ export class FlowEngine {
     return { suggest: false };
   }
 
-  /**
-   * Clear all execution history.
-   */
   clearHistory() {
     this.executions = [];
     this.actionPatterns = [];
   }
 
-  // ── Storage ────────────────────────────────────────
+  // 鈹€鈹€ Private 鈹€鈹€
+
+  _substituteVars(obj, data) {
+    if (!obj || typeof obj !== 'object') return obj;
+
+    const result = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === 'string') {
+        result[key] = value.replace(/\{\{(\w+)\}\}/g, (_, varName) => {
+          return data[varName] !== undefined ? data[varName] : `{{${varName}}}`;
+        });
+      } else {
+        result[key] = value;
+      }
+    }
+    return result;
+  }
 
   _saveFlows() {
     const data = {};
     for (const [name, flow] of this.flows) {
-      // Only persist metadata + step definitions (not functions)
       data[name] = {
         description: flow.description,
         variables: flow.variables,
@@ -166,6 +238,8 @@ export class FlowEngine {
           label: s.label,
           action: s.action,
           params: s.params,
+          flow: s.flow,
+          parallel: s.parallel ? s.parallel.map(p => ({ label: p.label, params: p.params })) : undefined,
         })),
       };
     }
@@ -185,9 +259,6 @@ export class FlowEngine {
   }
 }
 
-/**
- * Default localStorage adapter.
- */
 class LocalStorageAdapter {
   constructor(key) {
     this.key = key;
@@ -206,7 +277,7 @@ class LocalStorageAdapter {
     try {
       localStorage.setItem(this.key, JSON.stringify(data));
     } catch {
-      // Storage full or unavailable — silently fail
+      // silently fail
     }
   }
 }

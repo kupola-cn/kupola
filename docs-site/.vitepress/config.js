@@ -9,6 +9,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '指南', link: '/guide/getting-started' },
+      { text: 'AI Adapter', link: '/ai-adapter/introduction' },
       { text: '组件', link: '/components/overview' },
       { text: '插件', link: '/plugins/vite' },
       { text: '扩展', link: '/extensions/vscode' },
@@ -26,6 +27,19 @@ export default defineConfig({
             { text: 'SSR', link: '/guide/ssr' },
             { text: '模板', link: '/guide/templates' },
             { text: 'FAQ', link: '/guide/faq' },
+          ],
+        },
+      ],
+      '/ai-adapter/': [
+        {
+          text: 'AI Adapter',
+          items: [
+            { text: '简介', link: '/ai-adapter/introduction' },
+            { text: '三引擎架构', link: '/ai-adapter/engines' },
+            { text: '意图解析', link: '/ai-adapter/intent-parser' },
+            { text: '中间件', link: '/ai-adapter/middleware' },
+            { text: 'Kupola 集成', link: '/ai-adapter/kupola-integration' },
+            { text: 'API 参考', link: '/ai-adapter/api' },
           ],
         },
       ],
@@ -55,7 +69,6 @@ export default defineConfig({
           text: '扩展',
           items: [
             { text: 'VS Code 扩展', link: '/extensions/vscode' },
-            { text: 'AI Adapter', link: '/extensions/ai-adapter' },
             { text: 'AI Agent 技能', link: '/extensions/skill' },
           ],
         },
