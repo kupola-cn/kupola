@@ -20,6 +20,7 @@
 
 import { html } from '../template.js';
 import { render } from '../render.js';
+import { t } from '../i18n.js';
 
 const MONTHS = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
 const WEEKDAYS = [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ];
@@ -39,7 +40,7 @@ const WEEKDAYS = [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ];
  */
 export function Datepicker(options = {}) {
   const {
-    placeholder = 'Select date',
+    placeholder = null,
     format = 'YYYY-MM-DD',
     value: initialValue = '',
     weekStart = 1,
@@ -47,6 +48,10 @@ export function Datepicker(options = {}) {
     maxDate: maxDateStr = null,
     onChange = null,
   } = options;
+
+  const _placeholder = placeholder || t('datepicker.placeholder');
+  const _MONTHS = t('datepicker.months').split(',');
+  const _WEEKDAYS = t('datepicker.weekdays').split(',');
 
   let _isOpen = false;
   let _viewYear = new Date().getFullYear();
@@ -247,7 +252,7 @@ export function Datepicker(options = {}) {
     // Update title
     const titleEl = calEl.querySelector('.ds-datepicker__title');
     if (titleEl) {
-      titleEl.textContent = `${MONTHS[_viewMonth]} ${_viewYear}`;
+      titleEl.textContent = `${_MONTHS[_viewMonth]} ${_viewYear}`;
     }
 
     // Update days grid
@@ -305,7 +310,7 @@ export function Datepicker(options = {}) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const displayValue = _selectedDate ? _formatDate(_selectedDate) : '';
-  const titleText = `${MONTHS[_viewMonth]} ${_viewYear}`;
+  const titleText = `${_MONTHS[_viewMonth]} ${_viewYear}`;
 
   // Adjusted weekday labels based on weekStart
   const adjustedWeekdays = [];
@@ -317,8 +322,8 @@ export function Datepicker(options = {}) {
   }
   // Simplify: just use the standard order based on weekStart
   const wdLabels = weekStart === 1
-    ? [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ]
-    : [ 'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa' ];
+    ? _WEEKDAYS
+    : [ _WEEKDAYS[6], ..._WEEKDAYS.slice(0, 6) ];
 
   const weekdaySpans = wdLabels.map((d) => html`<span>${d}</span>`);
 
@@ -328,7 +333,7 @@ export function Datepicker(options = {}) {
   const tpl = html`
     <div class="ds-datepicker">
       <div class="ds-datepicker__input-wrap" onclick="${onInputClick}">
-        <input class="ds-datepicker__input" type="text" readonly placeholder="${placeholder}" value="${displayValue}" />
+        <input class="ds-datepicker__input" type="text" readonly placeholder="${_placeholder}" value="${displayValue}" />
         <button class="ds-datepicker__icon" onclick="${onIconClick}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>

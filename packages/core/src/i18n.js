@@ -19,6 +19,9 @@ const _messages = {
     'fileupload.drag': 'Drag files here or',
     'fileupload.browse': 'Browse',
     'empty.text': 'No data',
+    'datepicker.months': 'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec',
+    'datepicker.weekdays': 'Mo,Tu,We,Th,Fr,Sa,Su',
+    'timepicker.placeholder': 'Select time',
   },
   'zh-CN': {
     'modal.close': '关闭',
@@ -29,6 +32,8 @@ const _messages = {
     'pagination.of': '/',
     'select.placeholder': '请选择',
     'datepicker.placeholder': '选择日期',
+    'datepicker.months': '1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月',
+    'datepicker.weekdays': '一,二,三,四,五,六,日',
     'timepicker.placeholder': '选择时间',
     'fileupload.drag': '拖拽文件到此处或',
     'fileupload.browse': '浏览',

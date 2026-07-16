@@ -20,6 +20,7 @@
 
 import { html } from '../template.js';
 import { render } from '../render.js';
+import { t } from '../i18n.js';
 
 /**
  * Create a Timepicker component instance.
@@ -126,7 +127,7 @@ export function Timepicker(options = {}) {
   const tpl = html`
     <div class="ds-timepicker">
       <div class="ds-timepicker__input-wrap">
-        <input class="ds-timepicker__input" type="text" readonly placeholder="Select time..." />
+        <input class="ds-timepicker__input" type="text" readonly placeholder="${t('timepicker.placeholder')}" />
         <span class="ds-timepicker__icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </span>

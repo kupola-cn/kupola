@@ -133,11 +133,20 @@ export function Dropdown(options = {}) {
       e.preventDefault();
       _setFocus(_focusIndex - 1);
       break;
+    case 'Home':
+      e.preventDefault();
+      _setFocus(0);
+      break;
+    case 'End':
+      e.preventDefault();
+      _setFocus(items.length - 1);
+      break;
     case 'Enter':
       e.preventDefault();
       if (_focusIndex >= 0) {_selectItem(_focusIndex);}
       break;
     case 'Escape':
+    case 'Tab':
       e.preventDefault();
       close();
       break;

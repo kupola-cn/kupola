@@ -237,6 +237,14 @@ export function Select(options = {}) {
       e.preventDefault();
       _setFocus(_focusIndex - 1);
       break;
+    case 'Home':
+      e.preventDefault();
+      _setFocus(0);
+      break;
+    case 'End':
+      e.preventDefault();
+      _setFocus(_filteredItems().length - 1);
+      break;
     case 'Enter':
       e.preventDefault();
       {
@@ -247,6 +255,7 @@ export function Select(options = {}) {
       }
       break;
     case 'Escape':
+    case 'Tab':
       e.preventDefault();
       close();
       break;
