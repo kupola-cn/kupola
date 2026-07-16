@@ -78,6 +78,12 @@
   --transition-fast: 0.12s ease;
   --transition-normal: 0.2s ease;
   --transition-slow: 0.3s ease;
+
+  /* ── Breakpoints ────────────────────────────────────────── */
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
 }
 
 /* ═══════════════════════════════════════════════════════════

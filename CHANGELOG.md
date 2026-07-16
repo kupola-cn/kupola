@@ -3,21 +3,17 @@
 ## 2.0.0-beta
 
 - Accessibility: ARIA for Modal/Drawer/Dialog/Dropdown, focus trap, label association, keyboard navigation (Home/End/Tab)
-- i18n: component integration (Table/Dialog/Select/DatePicker/TimePicker), months & weekdays
-- CSS design system: tokens + components + dark/light themes
+- i18n/tokens + components + dark/light themes
 - Plugins: Vite & Webpack auto CSS injection
 - ESLint plugin: 3 rules (no-invalid-directives, prefer-t-function, no-innerhtml-user-input)
 - ErrorBoundary utility for graceful error handling
-- XSS fix: notification component HTML escaping
-- Performance benchmarks: Signal/VirtualList/Table/SSR (8 tests)
 - VS Code extension: snippets + directive auto-completion + hover docs
-- Storybook: interactive component docs (Modal/Drawer/Table/Select/Alert/Notification)
+- Storybook: interactive component docs (Modal/Drawer/Table/Select/Alert/Notification/FAQ)
 - DevTools: Signal reactivity profiler (enableProfiler/getProfileReport/printProfileReport)
 - Lazy loading: async component initialization (lazyComponent/preloadComponent)
-- create-kupola: --typescript flag, static-ts template with Vite + TS
 - Anti-FOUC: themePreload/setTheme/toggleTheme + [k-cloak] CSS rule + inline preload script
-- create-kupola templates: inline theme preload + localStorage persistence
-- create-kupola templates: rich examples (Counter, Todo, Form, Reactive Computed)
+- Responsive: 4 breakpoints (sm/md/lg/xl) + ds-hide/show utilities + component mobile adaptations
+- CSS minify: clean-css build pipeline (55.9KB → 27.6KB, 50.5% saved)
 - 922 tests passing (55 suites)
 
 ## 2.0.0-alpha.1

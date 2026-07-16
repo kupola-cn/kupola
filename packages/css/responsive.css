@@ -1,0 +1,153 @@
+/**
+ * Kupola CSS — Responsive utilities & component adaptations.
+ *
+ * Breakpoints:
+ *   sm: 576px  (phones landscape)
+ *   md: 768px  (tablets)
+ *   lg: 1024px (laptops)
+ *   xl: 1280px (desktops)
+ *
+ * Usage:
+ *   <div class="ds-hide-sm">Hidden on phones</div>
+ *   <div class="ds-show-md">Only visible on tablets+</div>
+ *   <div class="ds-hide-lg">Hidden below laptops</div>
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive display utilities
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── sm: < 576px (phones) ─────────────────────────────── */
+@media (max-width: 575.98px) {
+  .ds-hide-sm { display: none !important; }
+  .ds-hide-below-sm { display: none !important; }
+}
+@media (min-width: 576px) {
+  .ds-show-sm { display: none !important; }
+}
+
+/* ── md: < 768px (below tablets) ──────────────────────── */
+@media (max-width: 767.98px) {
+  .ds-hide-md { display: none !important; }
+  .ds-hide-below-md { display: none !important; }
+}
+@media (min-width: 768px) {
+  .ds-show-md { display: none !important; }
+}
+
+/* ── lg: < 1024px (below laptops) ─────────────────────── */
+@media (max-width: 1023.98px) {
+  .ds-hide-lg { display: none !important; }
+  .ds-hide-below-lg { display: none !important; }
+}
+@media (min-width: 1024px) {
+  .ds-show-lg { display: none !important; }
+}
+
+/* ── xl: < 1280px (below desktops) ────────────────────── */
+@media (max-width: 1279.98px) {
+  .ds-hide-xl { display: none !important; }
+  .ds-hide-below-xl { display: none !important; }
+}
+@media (min-width: 1280px) {
+  .ds-show-xl { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive spacing utilities
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767.98px) {
+  .ds-padding-responsive { padding: var(--spacing-3, 12px) !important; }
+  .ds-margin-responsive { margin: var(--spacing-3, 12px) !important; }
+  .ds-text-responsive { font-size: var(--font-size-sm, 13px) !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Component responsive adaptations
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Modal: full-screen on phones ─────────────────────────── */
+@media (max-width: 575.98px) {
+  .ds-modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .ds-modal-mask {
+    padding: 0 !important;
+  }
+}
+
+/* ── Drawer: full-width/height on phones ──────────────────── */
+@media (max-width: 575.98px) {
+  .ds-drawer-right,
+  .ds-drawer-left {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .ds-drawer-bottom,
+  .ds-drawer-top {
+    height: 90vh !important;
+    max-height: 90vh !important;
+  }
+}
+
+/* ── Dialog: full-width on phones ─────────────────────────── */
+@media (max-width: 575.98px) {
+  .ds-dialog {
+    width: calc(100% - 32px) !important;
+    max-width: 100% !important;
+    margin: 16px !important;
+  }
+}
+
+/* ── Table: horizontal scroll on small screens ────────────── */
+@media (max-width: 767.98px) {
+  .ds-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ds-table {
+    min-width: 600px;
+  }
+  .ds-table th,
+  .ds-table td {
+    white-space: nowrap;
+    padding: var(--spacing-2, 8px) var(--spacing-3, 12px);
+    font-size: var(--font-size-sm, 13px);
+  }
+}
+
+/* ── Select: full-width on phones ─────────────────────────── */
+@media (max-width: 575.98px) {
+  .ds-select-dropdown {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 50vh;
+    border-radius: 12px 12px 0 0;
+    z-index: var(--z-index-modal, 3000);
+  }
+}
+
+/* ── DatePicker: full-width on phones ─────────────────────── */
+@media (max-width: 575.98px) {
+  .ds-datepicker-panel {
+    width: calc(100vw - 32px) !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ── Notification: stack full-width on phones ─────────────── */
+@media (max-width: 575.98px) {
+  .ds-notification {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    right: 12px !important;
+    left: 12px !important;
+  }
+}
