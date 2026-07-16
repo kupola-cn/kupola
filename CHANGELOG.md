@@ -2,14 +2,16 @@
 
 ## 2.0.0-beta
 
-- Accessibility: ARIA for Modal/Drawer/Dialog/Dropdown, focus trap, label association
+- Accessibility: ARIA for Modal/Drawer/Dialog/Dropdown, focus trap, label association, keyboard navigation (Home/End/Tab)
 - i18n: component integration (Table/Dialog/Select/DatePicker/TimePicker), months & weekdays
 - CSS design system: tokens + components + dark/light themes
 - Plugins: Vite & Webpack auto CSS injection
+- ESLint plugin: 3 rules (no-invalid-directives, prefer-t-function, no-innerhtml-user-input)
 - ErrorBoundary utility for graceful error handling
 - XSS fix: notification component HTML escaping
-- 914 tests passing (54 suites)
-- Vite/Webpack plugins for auto CSS import
+- Performance benchmarks: Signal/VirtualList/Table/SSR (8 tests)
+- create-kupola templates: rich examples (Counter, Todo, Form, Reactive Computed)
+- 922 tests passing (55 suites)
 
 ## 2.0.0-alpha.1
 

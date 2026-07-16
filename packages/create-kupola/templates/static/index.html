@@ -5,26 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{PROJECT_NAME}}</title>
     <style>
-        body { font-family: system-ui, sans-serif; margin: 0; padding: 2rem; }
-        [data-theme="dark"] { background: #1a1a1a; color: #fff; }
+        body { font-family: system-ui, sans-serif; margin: 0; padding: 2rem; max-width: 800px; margin: 0 auto; }
+        h1 { border-bottom: 2px solid #32F08C; padding-bottom: 0.5rem; }
+        h2 { margin-top: 2rem; color: #555; }
+        .section { margin: 1.5rem 0; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .btn { display: inline-flex; align-items: center; padding: 6px 16px; border-radius: 6px;
+               border: 1px solid #ccc; cursor: pointer; font-size: 14px; margin: 2px; }
+        .btn-primary { background: #32F08C; color: #000; border-color: #32F08C; }
+        .btn-ghost { background: transparent; }
+        .btn-danger { background: #ff4444; color: #fff; border-color: #ff4444; }
+        .input { padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .todo-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+        .todo-item.done span { text-decoration: line-through; opacity: 0.5; }
+        [data-theme="dark"] { background: #0C0C0D; color: #E5E7EB; }
+        [data-theme="dark"] .section { border-color: #333; }
+        [data-theme="dark"] .btn-ghost { color: #E5E7EB; border-color: #555; }
+        [data-theme="dark"] .input { background: #1A1B1D; color: #E5E7EB; border-color: #333; }
+        [data-theme="dark"] h2 { color: #aaa; }
+        .theme-toggle { position: fixed; top: 16px; right: 16px; }
     </style>
 </head>
 <body>
     <h1>Welcome to {{PROJECT_NAME}}</h1>
-    <p>Built with Kupola — a zero-dependency declarative UI system.</p>
-
-    <!-- Counter example with directives -->
-    <div k-data="{ count: 0 }">
-        <p>Count: <span k-text="count"></span></p>
-        <button class="kupola-btn kupola-btn--primary" k-on:click="count++">+1</button>
-        <button class="kupola-btn kupola-btn--ghost" k-on:click="count = 0">Reset</button>
-    </div>
+    <p>Built with <strong>Kupola 2.0</strong> — a zero-dependency declarative UI system.</p>
 
     <!-- Theme toggle -->
-    <button class="kupola-btn kupola-btn--sm" style="position: fixed; top: 16px; right: 16px;"
+    <button class="btn btn-ghost theme-toggle"
             k-on:click="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">
         Toggle Theme
     </button>
+
+    <!-- Counter example -->
+    <h2>Counter</h2>
+    <div class="section" k-data="{ count: 0 }">
+        <p>Count: <strong k-text="count"></strong></p>
+        <button class="btn btn-primary" k-on:click="count++">+1</button>
+        <button class="btn btn-ghost" k-on:click="count--">-1</button>
+        <button class="btn btn-ghost" k-on:click="count = 0">Reset</button>
+    </div>
+
+    <!-- Todo list example -->
+    <h2>Todo List</h2>
+    <div class="section" k-data="{ todos: [], newTodo: '' }">
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <input class="input" k-model="newTodo" placeholder="What needs to be done?"
+                   k-on:keydown="if(event.key==='Enter' && newTodo.trim()){todos.push({text:newTodo.trim(),done:false});newTodo=''}" />
+            <button class="btn btn-primary"
+                    k-on:click="if(newTodo.trim()){todos.push({text:newTodo.trim(),done:false});newTodo=''}">Add</button>
+        </div>
+        <div>
+            <template k-for="todo in todos">
+                <div class="todo-item" k-bind:class="todo.done ? 'todo-item done' : 'todo-item'">
+                    <input type="checkbox" k-model="todo.done" />
+                    <span k-text="todo.text"></span>
+                    <button class="btn btn-ghost" style="margin-left:auto; padding:2px 8px;"
+                            k-on:click="todos.splice(todos.indexOf(todo),1)">×</button>
+                </div>
+            </template>
+            <p k-show="todos.length === 0" style="opacity:0.5; margin:0;">No todos yet. Add one above!</p>
+            <p k-show="todos.length > 0" style="opacity:0.7; margin-top:8px;">
+                <span k-text="todos.filter(t=>t.done).length"></span> of <span k-text="todos.length"></span> completed
+            </p>
+        </div>
+    </div>
+
+    <!-- Form example -->
+    <h2>Form Binding</h2>
+    <div class="section" k-data="{ name: '', email: '', role: 'user' }">
+        <div style="display:grid; gap:8px; margin-bottom:12px;">
+            <label>Name: <input class="input" k-model="name" placeholder="Your name" /></label>
+            <label>Email: <input class="input" k-model="email" placeholder="you@example.com" /></label>
+            <label>Role:
+                <select class="input" k-model="role">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="viewer">Viewer</option>
+                </select>
+            </label>
+        </div>
+        <div style="padding:8px; background:#f5f5f5; border-radius:4px; font-family:monospace; font-size:13px;">
+            <div>Name: <strong k-text="name || '(empty)'"></strong></div>
+            <div>Email: <strong k-text="email || '(empty)'"></strong></div>
+            <div>Role: <strong k-text="role"></strong></div>
+        </div>
+    </div>
+
+    <!-- Signal reactivity example -->
+    <h2>Reactive Computed</h2>
+    <div class="section" k-data="{ price: 100, quantity: 1, tax: 0.1 }">
+        <label>Price: <input class="input" type="number" k-model="price" style="width:80px" /></label>
+        <label>Qty: <input class="input" type="number" k-model="quantity" style="width:60px" /></label>
+        <label>Tax: <input class="input" type="number" k-model="tax" step="0.01" style="width:60px" /></label>
+        <div style="margin-top:12px; font-size:1.2em;">
+            Subtotal: $<strong k-text="(price * quantity).toFixed(2)"></strong>
+            &nbsp;|&nbsp;
+            Tax: $<strong k-text="(price * quantity * tax).toFixed(2)"></strong>
+            &nbsp;|&nbsp;
+            Total: $<strong k-text="(price * quantity * (1 + Number(tax))).toFixed(2)"></strong>
+        </div>
+    </div>
 
     <script type="module">
         import { walk } from '@kupola/kupola/directives';
