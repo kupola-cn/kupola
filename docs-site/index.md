@@ -45,7 +45,7 @@ adapter.query.register('employee', handler);
 await adapter.process('查询张三');
 ```
 
-<a href="/ai-adapter/engines#查询引擎-queryengine" style="display: inline-block; background: var(--vp-c-brand-1); color: #fff; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">More →</a>
+<a href="/ai-adapter/engines#查询引擎-queryengine" style="display: inline-block; color: #ccc; text-decoration: none; font-size: 12px; font-weight: 500;">more</a>
 
 </div>
 
@@ -61,7 +61,7 @@ adapter.action.register('delete', {
 });
 ```
 
-<a href="/ai-adapter/engines#执行引擎-actionengine" style="display: inline-block; background: var(--vp-c-brand-1); color: #fff; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">More →</a>
+<a href="/ai-adapter/engines#执行引擎-actionengine" style="display: inline-block; color: #ccc; text-decoration: none; font-size: 12px; font-weight: 500;">more</a>
 
 </div>
 
@@ -77,7 +77,7 @@ adapter.flow.define('月末统计', {
 });
 ```
 
-<a href="/ai-adapter/engines#流程引擎-flowengine" style="display: inline-block; background: var(--vp-c-brand-1); color: #fff; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">More →</a>
+<a href="/ai-adapter/engines#流程引擎-flowengine" style="display: inline-block; color: #ccc; text-decoration: none; font-size: 12px; font-weight: 500;">more</a>
 
 </div>
 
@@ -93,7 +93,7 @@ new AIAdapter({
 });
 ```
 
-<a href="/ai-adapter/intent-parser" style="display: inline-block; background: var(--vp-c-brand-1); color: #fff; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">More →</a>
+<a href="/ai-adapter/intent-parser" style="display: inline-block; color: #ccc; text-decoration: none; font-size: 12px; font-weight: 500;">more</a>
 
 </div>
 
@@ -109,7 +109,7 @@ adapter.use(async (ctx, next) => {
 });
 ```
 
-<a href="/ai-adapter/middleware" style="display: inline-block; background: var(--vp-c-brand-1); color: #fff; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">More →</a>
+<a href="/ai-adapter/middleware" style="display: inline-block; color: #ccc; text-decoration: none; font-size: 12px; font-weight: 500;">more</a>
 
 </div>
 
@@ -125,7 +125,7 @@ adapter.on('result', ({ result }) => {
 });
 ```
 
-<a href="/ai-adapter/kupola-integration" style="display: inline-block; background: var(--vp-c-brand-1); color: #fff; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">More →</a>
+<a href="/ai-adapter/kupola-integration" style="display: inline-block; color: #ccc; text-decoration: none; font-size: 12px; font-weight: 500;">more</a>
 
 </div>
 
@@ -133,7 +133,7 @@ adapter.on('result', ({ result }) => {
 
 <div style="text-align: center; margin: 40px 0;">
 
-<a href="/ai-adapter/introduction" style="display: inline-block; background: var(--vp-c-brand-1); color: #fff; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 15px; font-weight: 500; margin: 0 8px;">查看完整文档 →</a> <a href="/ai-adapter/api" style="display: inline-block; background: var(--vp-c-brand-soft); color: var(--vp-c-brand-1); padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 15px; font-weight: 500; margin: 0 8px;">API Info →</a>
+<a href="/ai-adapter/introduction" style="display: inline-block; background: var(--vp-c-brand-soft); color: #fff; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 15px; font-weight: 500; margin: 0 8px;">查看完整文档</a> <a href="/ai-adapter/api" style="display: inline-block; background: var(--vp-c-brand-soft); color: var(--vp-c-brand-1); padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 15px; font-weight: 500; margin: 0 8px;">API Info</a>
 
 </div>
 
@@ -144,12 +144,12 @@ adapter.on('result', ({ result }) => {
 48+ 开箱即用的 UI 组件，零框架依赖。
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 24px 0;">
-<div><strong>Modal</strong> — 模态弹窗</div>
-<div><strong>Table</strong> — 数据表格</div>
-<div><strong>Form</strong> — 表单系统</div>
-<div><strong>Dropdown</strong> — 下拉菜单</div>
-<div><strong>Notification</strong> — 通知提示</div>
-<div><strong>Dialog</strong> — 确认对话框</div>
+<div style="border: 1px solid #264d88ff;padding: 4px 0;text-align: center;border-radius: 10px;"><strong>Modal</strong> — 模态弹窗</div>
+<div style="border: 1px solid #264d88ff;padding: 4px 0;text-align: center;border-radius: 10px;"><strong>Table</strong> — 数据表格</div>
+<div style="border: 1px solid #264d88ff;padding: 4px 0;text-align: center;border-radius: 10px;"><strong>Form</strong> — 表单系统</div>
+<div style="border: 1px solid #264d88ff;padding: 4px 0;text-align: center;border-radius: 10px;"><strong>Dropdown</strong> — 下拉菜单</div>
+<div style="border: 1px solid #264d88ff;padding: 4px 0;text-align: center;border-radius: 10px;"><strong>Notification</strong> — 通知提示</div>
+<div style="border: 1px solid #264d88ff;padding: 4px 0;text-align: center;border-radius: 10px;"><strong>Dialog</strong> — 确认对话框</div>
 </div>
 
-<a href="/components/overview" style="display: inline-block; background: var(--vp-c-brand-1); color: #fff; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 15px; font-weight: 500;">查看全部组件 →</a>
+<a href="/components/overview" style="display: inline-block; background: var(--vp-c-brand-soft); color: #fff; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 15px; font-weight: 500;">查看全部组件</a>
