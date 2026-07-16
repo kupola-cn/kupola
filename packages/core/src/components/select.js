@@ -30,6 +30,7 @@ import { t } from '../i18n.js';
  * Create a Select component instance.
  *
  * @param {Object}  [options]
+ * @param {string}  [options.label]          Label text (creates <label> linked to select)
  * @param {Array<{value:string, text:string}>} [options.items]      Option list
  * @param {string}  [options.placeholder]    Placeholder text
  * @param {boolean} [options.searchable]     Enable search filter
@@ -42,6 +43,7 @@ import { t } from '../i18n.js';
  */
 export function Select(options = {}) {
   const {
+    label = '',
     items = [],
     placeholder = null,
     searchable = false,
@@ -53,6 +55,8 @@ export function Select(options = {}) {
   } = options;
 
   const _placeholder = placeholder || t('select.placeholder');
+  const _id = label ? `ds-select-${Math.random().toString(36).slice(2, 8)}` : '';
+  const _hasLabel = !!label;
 
   let _isOpen = false;
   let _focusIndex = -1;
@@ -277,8 +281,9 @@ export function Select(options = {}) {
   // are serialized as static text by the render system.
 
   const tpl = html`
-    <div class="ds-select">
-      <div class="ds-select__trigger">
+    ${_hasLabel ? html`<label class="ds-form-label" for="${_id}">${label}</label>` : ''}
+    <div class="ds-select" ${!label ? 'aria-label="Select"' : ''}>
+      <div class="ds-select__trigger" id="${_id}">
         <span class="ds-select__value${!displayText ? ' ds-select__value--placeholder' : ''}">${displayText || _placeholder}</span>
         ${clearable ? html`<button class="ds-select__clear">&times;</button>` : ''}
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

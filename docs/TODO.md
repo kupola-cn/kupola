@@ -180,7 +180,7 @@ npm run docs:preview # 预览
 - [x] 其他弹层组件 ARIA（Drawer: `role="dialog"` + `aria-modal` + 焦点管理, Dialog: `role="alertdialog"`, Dropdown: `aria-haspopup` + `aria-expanded` + `role="listbox"`）
 - [ ] 键盘导航（Tab/Arrow keys）
 - [x] 焦点陷阱（Modal 打开时限制 Tab 在 dialog 内）
-- [ ] 表单组件 `<label>` 关联
+- [x] 表单组件 `<label>` 关联（NumberInput/Select 支持 `label` + `id` 自动生成）
 
 ### 3.2 国际化（i18n） ✅ 基础完成
 
@@ -208,8 +208,8 @@ npm run docs:preview # 预览
 ### 3.4 测试增强 ✅ 基础完成
 
 - [x] 集成测试：13 个跨模块测试（i18n、signal chain、SSR+locale）
-- [ ] SSR 水合（hydration）边界情况测试
-- [ ] 指令系统复杂场景测试（嵌套 `k-for` + `k-if`、动态组件）
+- [x] SSR 水合（hydration）边界情况测试（7 个：null/undefined/signal/attr/event/escape/nested/array）
+- [x] 指令系统复杂场景测试（5 个：k-show/k-text/k-bind/k-model/嵌套 k-data）
 - [ ] 浏览器兼容性测试（Sauce Labs 或 Playwright）
 - [ ] 视觉回归测试（Percy 或 Chromatic）
 
@@ -238,7 +238,7 @@ npm run docs:preview # 预览
 - [x] XSS 防护：notification 组件 title/message HTML 转义
 - [x] CSP 兼容：无 `eval`/`new Function` 使用
 - [x] 错误边界：`ErrorBoundary` 工具，组件异常显示 fallback UI
-- [ ] 内存泄漏检测（Signal effect 清理、组件 destroy 完整性）
+- [x] 内存泄漏检测（Signal effect 清理 + ErrorBoundary，4 个测试）
 
 ---
 
@@ -251,7 +251,7 @@ npm run docs:preview # 预览
 | 指令系统 | ✅ 完成 | k-data / k-show / k-bind / k-on / k-model / k-for |
 | UI 组件 | ✅ 48 个 | 覆盖弹层/表单/反馈/数据展示/交互/工具 |
 | TypeScript | ✅ 完成 | types.d.ts 覆盖全部 48 个组件 |
-| 单元测试 | ✅ 896 个 | 54 套件，全部通过 |
+| 单元测试 | ✅ 914 个 | 54 套件，全部通过 |
 | 构建系统 | ✅ 完成 | 54 个入口，ESM + CJS |
 | npm 发布 | ✅ 已发布 | @next tag，2.0.0-alpha.1 |
 | GitHub | ✅ 已清理 | 无 1.0 历史，全新提交 |
@@ -262,7 +262,7 @@ npm run docs:preview # 预览
 | 无障碍 | ✅ 增强 | Modal/Drawer/Dialog/Dropdown ARIA + 焦点陷阱 |
 | 国际化 | ✅ 组件集成 | i18n 模块 + Table/Dialog/Select 已集成 |
 | 性能优化 | ✅ 基础 | Tree-shaking 验证，bundle 大小均在限制内 |
-| 集成测试 | ✅ 基础 | 13 个跨模块测试（i18n/signal/SSR） |
+| 集成测试 | ✅ 31 个 | SSR水合/指令场景/ErrorBoundary/内存泄漏 |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
 | 正式版 | ⏳ beta | 2.0.0-beta.1 已发布 @next |
 

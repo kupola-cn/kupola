@@ -27,6 +27,8 @@ import { render } from '../render.js';
  * Create a NumberInput component instance.
  *
  * @param {Object}   [options]
+ * @param {string}   [options.label]     Label text (creates <label> linked to input)
+ * @param {string}   [options.id]        Input id (auto-generated if label is set)
  * @param {number}   [options.min]       Minimum value (default -Infinity)
  * @param {number}   [options.max]       Maximum value (default Infinity)
  * @param {number}   [options.step]      Step increment (default 1)
@@ -37,6 +39,8 @@ import { render } from '../render.js';
  */
 export function NumberInput(options = {}) {
   const {
+    label = '',
+    id = '',
     min = -Infinity,
     max = Infinity,
     step = 1,
@@ -44,6 +48,10 @@ export function NumberInput(options = {}) {
     disabled = false,
     onChange = null,
   } = options;
+
+  // Generate unique id for label association
+  const _id = id || (label ? `ds-numinput-${Math.random().toString(36).slice(2, 8)}` : '');
+  const _hasLabel = !!label;
 
   let _value = _clamp(initialValue);
 
@@ -99,10 +107,11 @@ export function NumberInput(options = {}) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const tpl = html`
+    ${_hasLabel ? html`<label class="ds-form-label" for="${_id}">${label}</label>` : ''}
     <div class="ds-number-input">
-      <button class="ds-number-input__btn ds-number-input__btn--decrease" type="button">−</button>
-      <input class="ds-number-input__input" type="number" />
-      <button class="ds-number-input__btn ds-number-input__btn--increase" type="button">+</button>
+      <button class="ds-number-input__btn ds-number-input__btn--decrease" type="button" aria-label="Decrease">−</button>
+      <input class="ds-number-input__input" type="number" id="${_id}" ${!label ? 'aria-label="Number input"' : ''} />
+      <button class="ds-number-input__btn ds-number-input__btn--increase" type="button" aria-label="Increase">+</button>
     </div>
   `;
 
