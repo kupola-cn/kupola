@@ -4,6 +4,7 @@ export default defineConfig({
   title: 'Kupola',
   description: '现代模块化 UI 组件库',
   lang: 'zh-CN',
+  base: '/kupola/',
   
   themeConfig: {
     nav: [

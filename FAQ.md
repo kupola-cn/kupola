@@ -193,7 +193,7 @@ Vite/Webpack 用户可使用自动注入插件，无需手动导入 CSS。
 
 ## 国际化 (i18n)
 
-### Q: 支持哪些语言？
+### Q: 如何使用？
 
 当前内置 `en-US` 和 `zh-CN`。
 
@@ -311,7 +311,7 @@ const { KupolaPlugin } = require('@kupola/kupola/plugins/webpack');
 module.exports = { plugins: [new KupolaPlugin()] };
 ```
 
-### Q: 可以通过 CDN 使用吗？
+### Q: CDN link？
 
 ```html
 <script src="https://unpkg.com/@kupola/kupola/dist/kupola-core.umd.js"></script>
@@ -330,9 +330,9 @@ module.exports = { plugins: [new KupolaPlugin()] };
 | 组件数 | 48 | 48（完全重写） |
 | 依赖 | jQuery-like | 零依赖 |
 | 大小 | ~80KB | < 5KB 核心 |
-| SSR | 无 | renderToString + hydrate |
+| SSR | 简洁 | renderToString + hydrate |
 | i18n | 无 | en-US / zh-CN |
-| TypeScript | 无 | 完整类型定义 |
+| TypeScript | 部分 | 完整类型定义 |
 
 ### Q: 如何从 1.x 升级到 2.0？
 
