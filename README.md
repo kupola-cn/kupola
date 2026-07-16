@@ -325,7 +325,8 @@ const options: ModalOptions = {
 | Project | Description |
 |---------|-------------|
 | `@kupola/kupola` | Core engine + 48 UI components |
-| `create-kupola` | Project scaffolding CLI |
+| `@kupola/ai-adapter` | AI operation engine — natural language → structured commands |
+| `create-kupola` | Project scaffolding CLI (7 templates) |
 | `his-sys` | HIS medical system built on Kupola |
 
 ---

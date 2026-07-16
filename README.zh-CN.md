@@ -325,7 +325,8 @@ const options: ModalOptions = {
 | 项目 | 说明 |
 |------|------|
 | `@kupola/kupola` | 核心引擎 + 48 个 UI 组件 |
-| `create-kupola` | 项目脚手架 CLI |
+| `@kupola/ai-adapter` | AI 操作引擎 — 自然语言 → 结构化命令 |
+| `create-kupola` | 项目脚手架 CLI（7 套模板） |
 | `his-sys` | 基于 Kupola 的 HIS 医疗系统 |
 
 ---

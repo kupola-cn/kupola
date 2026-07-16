@@ -1,8 +1,8 @@
 # Kupola 2.0 后续工作清单
 
-> 基于当前项目状态（2026-07-15）梳理，按优先级排列。
+> 基于当前项目状态（2026-07-16）梳理，按优先级排列。
 >
-> **已完成基线**：48 个 UI 组件 | 883 测试全部通过 | 53 测试套件 | npm 发布 `@next` tag | GitHub 无 1.0 历史
+> **已完成基线**：48 个 UI 组件 | 1019 测试全部通过 | 60 测试套件 | npm `@kupola/kupola@2.0.0` latest | `@kupola/ai-adapter@1.0.1` latest
 
 ---
 
@@ -294,3 +294,25 @@ Phase 4（6-8 周）
 ├── 安全审计
 └── 正式版 2.0.0 发布
 ```
+
+---
+
+## 七、@kupola/ai-adapter ✅ v1.0.1 已发布
+
+**已完成**：
+
+- [x] 核心三引擎：QueryEngine / ActionEngine / FlowEngine
+- [x] IntentParser：AI 后端 + RuleBasedParser 双模式
+- [x] 主类 AIAdapter：编排 + 事件系统 + 消息日志
+- [x] 97 个测试，5 个测试套件
+- [x] rollup 构建（esm + cjs）
+- [x] TypeScript 类型定义
+- [x] npm 发布 `@kupola/ai-adapter@1.0.1`
+- [x] docs-site 页面 + README 生态入口
+
+**后续路线**（见 `dgc/ai-adapter-todo.md`）：
+
+- [ ] P1：意图解析增强（模糊匹配 / Slot Filling / 置信度）
+- [ ] P2：UI Panel 组件化 + 语音交互 + 图表集成
+- [ ] P3：OpenAI 适配器 + REST 数据源 + 流程导入导出
+- [ ] P4：智能学习 + AI 摘要 + 多人协作

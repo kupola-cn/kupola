@@ -55,6 +55,7 @@ export default defineConfig({
           text: '扩展',
           items: [
             { text: 'VS Code 扩展', link: '/extensions/vscode' },
+            { text: 'AI Adapter', link: '/extensions/ai-adapter' },
             { text: 'AI Agent 技能', link: '/extensions/skill' },
           ],
         },

@@ -255,14 +255,26 @@ packages/core/
 │   ├── i18n.js         # Internationalization
 │   ├── errors.js       # ErrorBoundary
 │   └── index.js        # Public API entry
-└── __tests__/
-    └── components/     # Component tests
+├── __tests__/
+│   └── components/     # Component tests
+
+packages/ai-adapter/
+├── src/
+│   ├── query-engine.js   # Read-only query engine
+│   ├── action-engine.js  # Write operations with undo
+│   ├── flow-engine.js    # Multi-step workflow engine
+│   ├── intent-parser.js  # NLP → structured commands
+│   ├── ai-adapter.js     # Main orchestrator
+│   ├── types.d.ts        # TypeScript definitions
+│   └── index.js          # Public API entry
+├── __tests__/            # 97 tests
+└── package.json          # peerDep: @kupola/kupola ^2.0.0
 ```
 
 ## Testing
 
 ```bash
-npm run test          # Run all 922 tests
+npm run test          # Run all 1019 tests
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report
 ```
