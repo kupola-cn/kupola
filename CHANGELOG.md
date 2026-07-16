@@ -16,6 +16,7 @@
 - Lazy loading: async component initialization (lazyComponent/preloadComponent)
 - create-kupola: --typescript flag, static-ts template with Vite + TS
 - FAQ documentation (docs/FAQ.md)
+- Fix: CJS require extension conflict (.cjs.js → .cjs) — all package.json exports now use proper .cjs
 - create-kupola templates: rich examples (Counter, Todo, Form, Reactive Computed)
 - 922 tests passing (55 suites)
 

@@ -18,7 +18,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core.cjs.js',
+        file: 'dist/kupola-core.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -53,7 +53,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-server.cjs.js',
+        file: 'dist/kupola-core-server.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -88,7 +88,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-directives.cjs.js',
+        file: 'dist/kupola-core-directives.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -123,7 +123,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-i18n.cjs.js',
+        file: 'dist/kupola-core-i18n.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -158,7 +158,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-modal.cjs.js',
+        file: 'dist/kupola-core-modal.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -193,7 +193,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-dropdown.cjs.js',
+        file: 'dist/kupola-core-dropdown.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -228,7 +228,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-drawer.cjs.js',
+        file: 'dist/kupola-core-drawer.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -263,7 +263,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-collapse.cjs.js',
+        file: 'dist/kupola-core-collapse.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -298,7 +298,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-tabs.cjs.js',
+        file: 'dist/kupola-core-tabs.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -333,7 +333,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-select.cjs.js',
+        file: 'dist/kupola-core-select.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -368,7 +368,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-pagination.cjs.js',
+        file: 'dist/kupola-core-pagination.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -403,7 +403,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-datepicker.cjs.js',
+        file: 'dist/kupola-core-datepicker.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -438,7 +438,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-dialog.cjs.js',
+        file: 'dist/kupola-core-dialog.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -473,7 +473,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-notification.cjs.js',
+        file: 'dist/kupola-core-notification.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -508,7 +508,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-tooltip.cjs.js',
+        file: 'dist/kupola-core-tooltip.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -543,7 +543,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-alert.cjs.js',
+        file: 'dist/kupola-core-alert.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -578,7 +578,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-switch.cjs.js',
+        file: 'dist/kupola-core-switch.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -613,7 +613,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-progress.cjs.js',
+        file: 'dist/kupola-core-progress.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -648,7 +648,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-tag.cjs.js',
+        file: 'dist/kupola-core-tag.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -683,7 +683,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-badge.cjs.js',
+        file: 'dist/kupola-core-badge.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -718,7 +718,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-divider.cjs.js',
+        file: 'dist/kupola-core-divider.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -753,7 +753,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-skeleton.cjs.js',
+        file: 'dist/kupola-core-skeleton.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -788,7 +788,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-spin.cjs.js',
+        file: 'dist/kupola-core-spin.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -823,7 +823,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-empty.cjs.js',
+        file: 'dist/kupola-core-empty.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -858,7 +858,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-timeline.cjs.js',
+        file: 'dist/kupola-core-timeline.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -893,7 +893,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-kbd.cjs.js',
+        file: 'dist/kupola-core-kbd.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -928,7 +928,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-countdown.cjs.js',
+        file: 'dist/kupola-core-countdown.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -963,7 +963,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-breadcrumb.cjs.js',
+        file: 'dist/kupola-core-breadcrumb.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -998,7 +998,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-checkbox.cjs.js',
+        file: 'dist/kupola-core-checkbox.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1033,7 +1033,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-radio.cjs.js',
+        file: 'dist/kupola-core-radio.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1068,7 +1068,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-input.cjs.js',
+        file: 'dist/kupola-core-input.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1103,7 +1103,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-avatar.cjs.js',
+        file: 'dist/kupola-core-avatar.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1138,7 +1138,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-slider.cjs.js',
+        file: 'dist/kupola-core-slider.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1173,7 +1173,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-numberinput.cjs.js',
+        file: 'dist/kupola-core-numberinput.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1208,7 +1208,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-textarea.cjs.js',
+        file: 'dist/kupola-core-textarea.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1243,7 +1243,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-statcard.cjs.js',
+        file: 'dist/kupola-core-statcard.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1278,7 +1278,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-timepicker.cjs.js',
+        file: 'dist/kupola-core-timepicker.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1313,7 +1313,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-carousel.cjs.js',
+        file: 'dist/kupola-core-carousel.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1348,7 +1348,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-tree.cjs.js',
+        file: 'dist/kupola-core-tree.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1383,7 +1383,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-menu.cjs.js',
+        file: 'dist/kupola-core-menu.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1418,7 +1418,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-fileupload.cjs.js',
+        file: 'dist/kupola-core-fileupload.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1453,7 +1453,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-dynamictags.cjs.js',
+        file: 'dist/kupola-core-dynamictags.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1488,7 +1488,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-imagepreview.cjs.js',
+        file: 'dist/kupola-core-imagepreview.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1523,7 +1523,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-colorpicker.cjs.js',
+        file: 'dist/kupola-core-colorpicker.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1558,7 +1558,7 @@ module.exports = [
         })]
       },
       {
-        file: 'dist/kupola-core-virtuallist.cjs.js',
+        file: 'dist/kupola-core-virtuallist.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1593,7 +1593,7 @@ file: 'dist/kupola-core-icons.esm.js',
         })]
       },
       {
-file: 'dist/kupola-core-icons.cjs.js',
+file: 'dist/kupola-core-icons.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1628,7 +1628,7 @@ file: 'dist/kupola-core-message.esm.js',
         })]
       },
       {
-file: 'dist/kupola-core-message.cjs.js',
+file: 'dist/kupola-core-message.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1663,7 +1663,7 @@ file: 'dist/kupola-core-heatmap.esm.js',
         })]
       },
       {
-file: 'dist/kupola-core-heatmap.cjs.js',
+file: 'dist/kupola-core-heatmap.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1698,7 +1698,7 @@ file: 'dist/kupola-core-calendar.esm.js',
         })]
       },
       {
-file: 'dist/kupola-core-calendar.cjs.js',
+file: 'dist/kupola-core-calendar.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1733,7 +1733,7 @@ file: 'dist/kupola-core-validation.esm.js',
         })]
       },
       {
-file: 'dist/kupola-core-validation.cjs.js',
+file: 'dist/kupola-core-validation.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1768,7 +1768,7 @@ file: 'dist/kupola-core-form.esm.js',
         })]
       },
       {
-file: 'dist/kupola-core-form.cjs.js',
+file: 'dist/kupola-core-form.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
@@ -1803,7 +1803,7 @@ file: 'dist/kupola-core-table.esm.js',
         })]
       },
       {
-file: 'dist/kupola-core-table.cjs.js',
+file: 'dist/kupola-core-table.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',

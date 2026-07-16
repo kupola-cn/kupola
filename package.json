@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "2.0.0-beta.7",
+  "version": "2.0.0-beta.8",
   "description": "A modern, modular UI component library for any web project. Zero framework dependencies, tree-shakeable imports. 这是一个现代、模块化的 UI 组件库，适用于任何 Web 项目。零框架依赖，支持按需引入（tree-shakeable）。",
   "main": "dist/kupola-core.esm.js",
   "module": "dist/kupola-core.esm.js",
@@ -15,212 +15,212 @@
   "exports": {
     ".": {
       "import": "./dist/kupola-core.esm.js",
-      "require": "./dist/kupola-core.cjs.js",
+      "require": "./dist/kupola-core.cjs",
       "types": "./packages/core/src/components/types.d.ts"
     },
     "./core": {
       "import": "./dist/kupola-core.esm.js",
-      "require": "./dist/kupola-core.cjs.js",
+      "require": "./dist/kupola-core.cjs",
       "types": "./packages/core/src/components/types.d.ts"
     },
     "./i18n": {
       "import": "./dist/kupola-core-i18n.esm.js",
-      "require": "./dist/kupola-core-i18n.cjs.js"
+      "require": "./dist/kupola-core-i18n.cjs"
     },
     "./css": "./dist/css/index.css",
     "./css/tokens": "./dist/css/tokens.css",
     "./css/components": "./dist/css/components.css",
     "./components/modal": {
       "import": "./dist/kupola-core-modal.esm.js",
-      "require": "./dist/kupola-core-modal.cjs.js"
+      "require": "./dist/kupola-core-modal.cjs"
     },
     "./components/dropdown": {
       "import": "./dist/kupola-core-dropdown.esm.js",
-      "require": "./dist/kupola-core-dropdown.cjs.js"
+      "require": "./dist/kupola-core-dropdown.cjs"
     },
     "./components/drawer": {
       "import": "./dist/kupola-core-drawer.esm.js",
-      "require": "./dist/kupola-core-drawer.cjs.js"
+      "require": "./dist/kupola-core-drawer.cjs"
     },
     "./components/collapse": {
       "import": "./dist/kupola-core-collapse.esm.js",
-      "require": "./dist/kupola-core-collapse.cjs.js"
+      "require": "./dist/kupola-core-collapse.cjs"
     },
     "./components/tabs": {
       "import": "./dist/kupola-core-tabs.esm.js",
-      "require": "./dist/kupola-core-tabs.cjs.js"
+      "require": "./dist/kupola-core-tabs.cjs"
     },
     "./components/select": {
       "import": "./dist/kupola-core-select.esm.js",
-      "require": "./dist/kupola-core-select.cjs.js"
+      "require": "./dist/kupola-core-select.cjs"
     },
     "./components/pagination": {
       "import": "./dist/kupola-core-pagination.esm.js",
-      "require": "./dist/kupola-core-pagination.cjs.js"
+      "require": "./dist/kupola-core-pagination.cjs"
     },
     "./components/datepicker": {
       "import": "./dist/kupola-core-datepicker.esm.js",
-      "require": "./dist/kupola-core-datepicker.cjs.js"
+      "require": "./dist/kupola-core-datepicker.cjs"
     },
     "./components/dialog": {
       "import": "./dist/kupola-core-dialog.esm.js",
-      "require": "./dist/kupola-core-dialog.cjs.js"
+      "require": "./dist/kupola-core-dialog.cjs"
     },
     "./components/notification": {
       "import": "./dist/kupola-core-notification.esm.js",
-      "require": "./dist/kupola-core-notification.cjs.js"
+      "require": "./dist/kupola-core-notification.cjs"
     },
     "./components/tooltip": {
       "import": "./dist/kupola-core-tooltip.esm.js",
-      "require": "./dist/kupola-core-tooltip.cjs.js"
+      "require": "./dist/kupola-core-tooltip.cjs"
     },
     "./components/alert": {
       "import": "./dist/kupola-core-alert.esm.js",
-      "require": "./dist/kupola-core-alert.cjs.js"
+      "require": "./dist/kupola-core-alert.cjs"
     },
     "./components/switch": {
       "import": "./dist/kupola-core-switch.esm.js",
-      "require": "./dist/kupola-core-switch.cjs.js"
+      "require": "./dist/kupola-core-switch.cjs"
     },
     "./components/progress": {
       "import": "./dist/kupola-core-progress.esm.js",
-      "require": "./dist/kupola-core-progress.cjs.js"
+      "require": "./dist/kupola-core-progress.cjs"
     },
     "./components/tag": {
       "import": "./dist/kupola-core-tag.esm.js",
-      "require": "./dist/kupola-core-tag.cjs.js"
+      "require": "./dist/kupola-core-tag.cjs"
     },
     "./components/badge": {
       "import": "./dist/kupola-core-badge.esm.js",
-      "require": "./dist/kupola-core-badge.cjs.js"
+      "require": "./dist/kupola-core-badge.cjs"
     },
     "./components/divider": {
       "import": "./dist/kupola-core-divider.esm.js",
-      "require": "./dist/kupola-core-divider.cjs.js"
+      "require": "./dist/kupola-core-divider.cjs"
     },
     "./components/skeleton": {
       "import": "./dist/kupola-core-skeleton.esm.js",
-      "require": "./dist/kupola-core-skeleton.cjs.js"
+      "require": "./dist/kupola-core-skeleton.cjs"
     },
     "./components/spin": {
       "import": "./dist/kupola-core-spin.esm.js",
-      "require": "./dist/kupola-core-spin.cjs.js"
+      "require": "./dist/kupola-core-spin.cjs"
     },
     "./components/empty": {
       "import": "./dist/kupola-core-empty.esm.js",
-      "require": "./dist/kupola-core-empty.cjs.js"
+      "require": "./dist/kupola-core-empty.cjs"
     },
     "./components/timeline": {
       "import": "./dist/kupola-core-timeline.esm.js",
-      "require": "./dist/kupola-core-timeline.cjs.js"
+      "require": "./dist/kupola-core-timeline.cjs"
     },
     "./components/kbd": {
       "import": "./dist/kupola-core-kbd.esm.js",
-      "require": "./dist/kupola-core-kbd.cjs.js"
+      "require": "./dist/kupola-core-kbd.cjs"
     },
     "./components/countdown": {
       "import": "./dist/kupola-core-countdown.esm.js",
-      "require": "./dist/kupola-core-countdown.cjs.js"
+      "require": "./dist/kupola-core-countdown.cjs"
     },
     "./components/breadcrumb": {
       "import": "./dist/kupola-core-breadcrumb.esm.js",
-      "require": "./dist/kupola-core-breadcrumb.cjs.js"
+      "require": "./dist/kupola-core-breadcrumb.cjs"
     },
     "./components/checkbox": {
       "import": "./dist/kupola-core-checkbox.esm.js",
-      "require": "./dist/kupola-core-checkbox.cjs.js"
+      "require": "./dist/kupola-core-checkbox.cjs"
     },
     "./components/radio": {
       "import": "./dist/kupola-core-radio.esm.js",
-      "require": "./dist/kupola-core-radio.cjs.js"
+      "require": "./dist/kupola-core-radio.cjs"
     },
     "./components/input": {
       "import": "./dist/kupola-core-input.esm.js",
-      "require": "./dist/kupola-core-input.cjs.js"
+      "require": "./dist/kupola-core-input.cjs"
     },
     "./components/avatar": {
       "import": "./dist/kupola-core-avatar.esm.js",
-      "require": "./dist/kupola-core-avatar.cjs.js"
+      "require": "./dist/kupola-core-avatar.cjs"
     },
     "./components/slider": {
       "import": "./dist/kupola-core-slider.esm.js",
-      "require": "./dist/kupola-core-slider.cjs.js"
+      "require": "./dist/kupola-core-slider.cjs"
     },
     "./components/numberinput": {
       "import": "./dist/kupola-core-numberinput.esm.js",
-      "require": "./dist/kupola-core-numberinput.cjs.js"
+      "require": "./dist/kupola-core-numberinput.cjs"
     },
     "./components/textarea": {
       "import": "./dist/kupola-core-textarea.esm.js",
-      "require": "./dist/kupola-core-textarea.cjs.js"
+      "require": "./dist/kupola-core-textarea.cjs"
     },
     "./components/statcard": {
       "import": "./dist/kupola-core-statcard.esm.js",
-      "require": "./dist/kupola-core-statcard.cjs.js"
+      "require": "./dist/kupola-core-statcard.cjs"
     },
     "./components/timepicker": {
       "import": "./dist/kupola-core-timepicker.esm.js",
-      "require": "./dist/kupola-core-timepicker.cjs.js"
+      "require": "./dist/kupola-core-timepicker.cjs"
     },
     "./components/carousel": {
       "import": "./dist/kupola-core-carousel.esm.js",
-      "require": "./dist/kupola-core-carousel.cjs.js"
+      "require": "./dist/kupola-core-carousel.cjs"
     },
     "./components/tree": {
       "import": "./dist/kupola-core-tree.esm.js",
-      "require": "./dist/kupola-core-tree.cjs.js"
+      "require": "./dist/kupola-core-tree.cjs"
     },
     "./components/menu": {
       "import": "./dist/kupola-core-menu.esm.js",
-      "require": "./dist/kupola-core-menu.cjs.js"
+      "require": "./dist/kupola-core-menu.cjs"
     },
     "./components/fileupload": {
       "import": "./dist/kupola-core-fileupload.esm.js",
-      "require": "./dist/kupola-core-fileupload.cjs.js"
+      "require": "./dist/kupola-core-fileupload.cjs"
     },
     "./components/dynamictags": {
       "import": "./dist/kupola-core-dynamictags.esm.js",
-      "require": "./dist/kupola-core-dynamictags.cjs.js"
+      "require": "./dist/kupola-core-dynamictags.cjs"
     },
     "./components/imagepreview": {
       "import": "./dist/kupola-core-imagepreview.esm.js",
-      "require": "./dist/kupola-core-imagepreview.cjs.js"
+      "require": "./dist/kupola-core-imagepreview.cjs"
     },
     "./components/colorpicker": {
       "import": "./dist/kupola-core-colorpicker.esm.js",
-      "require": "./dist/kupola-core-colorpicker.cjs.js"
+      "require": "./dist/kupola-core-colorpicker.cjs"
     },
     "./components/virtuallist": {
       "import": "./dist/kupola-core-virtuallist.esm.js",
-      "require": "./dist/kupola-core-virtuallist.cjs.js"
+      "require": "./dist/kupola-core-virtuallist.cjs"
     },
     "./components/icons": {
       "import": "./dist/kupola-core-icons.esm.js",
-      "require": "./dist/kupola-core-icons.cjs.js"
+      "require": "./dist/kupola-core-icons.cjs"
     },
     "./components/message": {
       "import": "./dist/kupola-core-message.esm.js",
-      "require": "./dist/kupola-core-message.cjs.js"
+      "require": "./dist/kupola-core-message.cjs"
     },
     "./components/heatmap": {
       "import": "./dist/kupola-core-heatmap.esm.js",
-      "require": "./dist/kupola-core-heatmap.cjs.js"
+      "require": "./dist/kupola-core-heatmap.cjs"
     },
     "./components/calendar": {
       "import": "./dist/kupola-core-calendar.esm.js",
-      "require": "./dist/kupola-core-calendar.cjs.js"
+      "require": "./dist/kupola-core-calendar.cjs"
     },
     "./components/validation": {
       "import": "./dist/kupola-core-validation.esm.js",
-      "require": "./dist/kupola-core-validation.cjs.js"
+      "require": "./dist/kupola-core-validation.cjs"
     },
     "./components/form": {
       "import": "./dist/kupola-core-form.esm.js",
-      "require": "./dist/kupola-core-form.cjs.js"
+      "require": "./dist/kupola-core-form.cjs"
     },
     "./components/table": {
       "import": "./dist/kupola-core-table.esm.js",
-      "require": "./dist/kupola-core-table.cjs.js"
+      "require": "./dist/kupola-core-table.cjs"
     },
     "./version.json": "./version.json"
   },
