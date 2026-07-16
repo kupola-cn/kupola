@@ -1823,5 +1823,40 @@ file: 'dist/kupola-core-table.cjs',
       })
     ],
     external: ['@babel/runtime']
+  },
+  // ── @kupola/ai-adapter (AI operation engine) ─────────────────────────
+  {
+    input: 'packages/ai-adapter/src/index.js',
+    output: [
+      {
+        file: 'dist/ai-adapter.esm.js',
+        format: 'esm',
+        sourcemap: false,
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      },
+      {
+        file: 'dist/ai-adapter.cjs',
+        format: 'cjs',
+        sourcemap: false,
+        exports: 'named',
+        plugins: [terser({
+          compress: { drop_console: true, drop_debugger: true },
+          mangle: { properties: { regex: /^_/ } }
+        })]
+      }
+    ],
+    plugins: [
+      nodeResolve({ browser: true }),
+      commonjs({ include: ['packages/ai-adapter/src/**/*.js'], requireReturnsDefault: 'auto' }),
+      babel({
+        babelHelpers: 'runtime',
+        exclude: 'node_modules/**',
+        extensions: ['.js'],
+      })
+    ],
+    external: ['@babel/runtime']
   }
 ];
