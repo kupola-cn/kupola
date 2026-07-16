@@ -9,12 +9,14 @@ import { walk } from '@kupola/kupola/directives';
 // ── Initialize directives ────────────────────────────────────────────────────
 walk(document.body);
 
-// ── Theme toggle ─────────────────────────────────────────────────────────────
+// ── Theme toggle (with localStorage persistence) ─────────────────────────────
 const themeBtn = document.getElementById('theme-btn');
 if (themeBtn) {
   themeBtn.addEventListener('click', () => {
     const html = document.documentElement;
-    html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    html.dataset.theme = next;
+    localStorage.setItem('kupola-theme', next);
   });
 }
 

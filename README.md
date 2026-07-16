@@ -1,4 +1,4 @@
-[中文文档](./README.zh-CN.md)
+[中文文档](./README.zh-CN.md)  | [Pages](https://kupola-cn.github.io/kupola/)
 
 ![npm](https://img.shields.io/npm/v/@kupola/kupola)
 ![bundlephobia](https://img.shields.io/bundlephobia/minzip/@kupola/kupola)

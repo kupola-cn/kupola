@@ -49,3 +49,6 @@ export { enableProfiler, disableProfiler, resetProfiler, getProfileReport, print
 
 // ── Lazy Load ────────────────────────────────────────────────────────────────
 export { lazyComponent, preloadComponent } from './lazy.js';
+
+// ── Theme (anti-FOUC) ────────────────────────────────────────────────────────
+export { themePreload, getPreferredTheme, setTheme, toggleTheme, onThemeChange, getThemeInlineScript } from './theme.js';

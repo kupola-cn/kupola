@@ -4,6 +4,7 @@
 .qoder/
 
 # Internal / sync
+dgc/
 his-sys/
 sync-to-his.ps1
 
