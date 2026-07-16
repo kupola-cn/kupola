@@ -222,7 +222,7 @@ npm run docs:preview # 预览
 - [x] Vite 插件 `plugins/vite-plugin-kupola.js`（自动 CSS 注入）
 - [x] Webpack 插件 `plugins/webpack-plugin-kupola.js`（HTML CSS 注入）
 - [x] ESLint 插件 `plugins/eslint-plugin-kupola.js`（3 个规则：no-invalid-directives/prefer-t-function/no-innerhtml-user-input）
-- [ ] VS Code 扩展（代码片段、指令自动补全、组件文档悬浮提示）
+- [x] VS Code 扩展（代码片段、指令自动补全、组件文档悬浮提示）— `packages/vscode-kupola/`
 - [ ] Figma 设计系统 / 组件库
 
 ### 4.2 开发者体验
@@ -230,7 +230,7 @@ npm run docs:preview # 预览
 - [ ] StackBlitz / CodeSandbox 在线 playground
 - [ ] 组件交互式文档（类似 Storybook）
 - [x] `create-kupola` 生成的项目内置示例代码（Counter/Todo/Form/Reactive Computed）
-- [ ] 常见问题 FAQ 页面
+- [x] 常见问题 FAQ 页面 — `docs/FAQ.md`
 
 ### 4.3 安全与健壮性 ✅ XSS 基础修复 + 错误边界
 
@@ -252,7 +252,7 @@ npm run docs:preview # 预览
 | TypeScript | ✅ 完成 | types.d.ts 覆盖全部 48 个组件 |
 | 单元测试 | ✅ 922 个 | 55 套件，全部通过 |
 | 构建系统 | ✅ 完成 | 54 个入口，ESM + CJS |
-| npm 发布 | ✅ 已发布 | @next tag，2.0.0-beta.4 |
+| npm 发布 | ✅ 已发布 | @next tag，2.0.0-beta.5 |
 | GitHub | ✅ 已清理 | 无 1.0 历史，全新提交 |
 | create-kupola | ✅ 已发布 | 4 套模板（static/flask/fastapi/gin） |
 | 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
@@ -263,7 +263,7 @@ npm run docs:preview # 预览
 | 性能优化 | ✅ 基准测试 | Tree-shaking + 8 个性能基准（Signal/VirtualList/Table/SSR） |
 | 集成测试 | ✅ 39 个 | SSR水合/指令场景/ErrorBoundary/内存泄漏/性能基准 |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
-| 正式版 | ⏳ beta.4 | 2.0.0-beta.4 已发布 @next |
+| 正式版 | ⏳ beta.5 | 2.0.0-beta.5 已发布 @next |
 
 ---
 

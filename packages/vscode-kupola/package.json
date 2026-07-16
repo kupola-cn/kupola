@@ -1,0 +1,55 @@
+{
+  "name": "vscode-kupola",
+  "displayName": "Kupola UI",
+  "description": "Snippets, directive auto-completion, and hover docs for Kupola UI framework",
+  "version": "1.0.0",
+  "publisher": "kupola",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Snippets",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "kupola",
+    "ui",
+    "components",
+    "directives",
+    "snippets"
+  ],
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kupola-cn/kupola"
+  },
+  "contributes": {
+    "snippets": [
+      {
+        "language": "html",
+        "path": "./snippets/kupola.json"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/kupola-js.json"
+      }
+    ],
+    "html": {
+      "customData": [
+        "./html-custom-data.json"
+      ]
+    }
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:html",
+    "onLanguage:javascript"
+  ],
+  "scripts": {
+    "package": "npx vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0"
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "Kupola: import component": {
+    "prefix": "kimport",
+    "body": "import { ${1:ComponentName} } from '@kupola/kupola';",
+    "description": "Import a Kupola component"
+  },
+  "Kupola: import multiple": {
+    "prefix": "kimports",
+    "body": [
+      "import {",
+      "  ${1:Modal},",
+      "  ${2:Button},",
+      "  ${3:Table}",
+      "} from '@kupola/kupola';"
+    ],
+    "description": "Import multiple Kupola components"
+  },
+  "Kupola: import walk (directives)": {
+    "prefix": "kwalk",
+    "body": [
+      "import { walk } from '@kupola/kupola/directives';",
+      "walk(document.body);"
+    ],
+    "description": "Import and initialize Kupola directive system"
+  },
+  "Kupola: import signal": {
+    "prefix": "ksignal",
+    "body": "import { signal, computed, effect } from '@kupola/kupola';",
+    "description": "Import Kupola reactivity primitives"
+  },
+  "Kupola: signal usage": {
+    "prefix": "ksig",
+    "body": [
+      "const ${1:count} = signal(${2:0});",
+      "effect(() => console.log(${1:count}.value));"
+    ],
+    "description": "Create a Kupola signal with effect"
+  },
+  "Kupola: computed": {
+    "prefix": "kcomputed",
+    "body": "const ${1:name} = computed(() => ${2:expression});",
+    "description": "Create a Kupola computed value"
+  },
+  "Kupola: effect": {
+    "prefix": "keffect",
+    "body": [
+      "const dispose = effect(() => {",
+      "  ${1:// side effect}",
+      "});"
+    ],
+    "description": "Create a Kupola effect with dispose"
+  },
+  "Kupola: Modal usage": {
+    "prefix": "kmodal",
+    "body": [
+      "import { Modal } from '@kupola/kupola';",
+      "",
+      "const modal = Modal({",
+      "  title: '${1:Title}',",
+      "  content: '${2:Content}',",
+      "  onClose: () => {},",
+      "});",
+      "modal.open();"
+    ],
+    "description": "Create and open a Kupola Modal"
+  },
+  "Kupola: Dialog usage": {
+    "prefix": "kdialog",
+    "body": [
+      "import { Dialog } from '@kupola/kupola';",
+      "",
+      "Dialog({",
+      "  title: '${1:Confirm}',",
+      "  content: '${2:Are you sure?}',",
+      "  onConfirm: () => { ${3:// confirmed} },",
+      "});"
+    ],
+    "description": "Create a Kupola confirmation dialog"
+  },
+  "Kupola: Table usage": {
+    "prefix": "ktable",
+    "body": [
+      "import { Table } from '@kupola/kupola';",
+      "",
+      "Table({",
+      "  columns: [",
+      "    { key: '${1:id}', title: '${2:ID}' },",
+      "    { key: '${3:name}', title: '${4:Name}' },",
+      "  ],",
+      "  data: ${5:[]},",
+      "});"
+    ],
+    "description": "Create a Kupola data table"
+  },
+  "Kupola: Notification usage": {
+    "prefix": "knotify",
+    "body": [
+      "import { Notification } from '@kupola/kupola';",
+      "",
+      "Notification({",
+      "  title: '${1:Title}',",
+      "  message: '${2:Message}',",
+      "  type: '${3|success,error,warning,info|}',",
+      "});"
+    ],
+    "description": "Show a Kupola notification"
+  },
+  "Kupola: i18n setup": {
+    "prefix": "ki18n",
+    "body": [
+      "import { setLocale, t } from '@kupola/kupola/i18n';",
+      "",
+      "setLocale('${1|en-US,zh-CN|}');"
+    ],
+    "description": "Set up Kupola i18n locale"
+  },
+  "Kupola: ErrorBoundary": {
+    "prefix": "kerror",
+    "body": [
+      "import { ErrorBoundary } from '@kupola/kupola';",
+      "",
+      "ErrorBoundary(() => ${1:componentFactory}(), {",
+      "  fallback: '${2:Something went wrong}',",
+      "  onError: (err) => console.error(err),",
+      "});"
+    ],
+    "description": "Wrap component with ErrorBoundary"
+  },
+  "Kupola: renderToString (SSR)": {
+    "prefix": "kssr",
+    "body": [
+      "import { renderToString } from '@kupola/kupola/ssr';",
+      "",
+      "const html = renderToString(${1:template});"
+    ],
+    "description": "Server-side render to string"
+  },
+  "Kupola: hydrate": {
+    "prefix": "khydrate",
+    "body": [
+      "import { hydrate } from '@kupola/kupola';",
+      "",
+      "hydrate(${1:template}, ${2:container});"
+    ],
+    "description": "Hydrate server-rendered HTML"
+  },
+  "Kupola: theme setup": {
+    "prefix": "ktheme",
+    "body": [
+      "import '@kupola/kupola/css/tokens.css';",
+      "import '@kupola/kupola/css/components.css';",
+      "import '@kupola/kupola/css/theme.css';"
+    ],
+    "description": "Import Kupola CSS design system"
+  }
+}

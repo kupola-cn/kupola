@@ -1,0 +1,95 @@
+{
+  "version": 1.1,
+  "tags": [],
+  "globalAttributes": [
+    {
+      "name": "k-data",
+      "description": "Creates a reactive data scope. The value is a JS object literal that becomes the local scope for child directives.\n\n```html\n<div k-data=\"{ count: 0, name: 'world' }\">\n  <span k-text=\"count\"></span>\n</div>\n```"
+    },
+    {
+      "name": "k-text",
+      "description": "Sets the element's textContent from a JS expression.\n\n```html\n<span k-text=\"user.name\"></span>\n```"
+    },
+    {
+      "name": "k-html",
+      "description": "Sets the element's innerHTML from a JS expression.\n\n**⚠️ Warning:** Only use with sanitized/trusted content. User input may cause XSS.\n\n```html\n<div k-html=\"trustedContent\"></div>\n```"
+    },
+    {
+      "name": "k-show",
+      "description": "Toggles element visibility via display:none. The element remains in the DOM.\n\n```html\n<div k-show=\"isVisible\">Visible when true</div>\n```"
+    },
+    {
+      "name": "k-if",
+      "description": "Conditionally renders the element. Removed from DOM when falsy.\n\n```html\n<div k-if=\"isLoggedIn\">Welcome!</div>\n```"
+    },
+    {
+      "name": "k-else",
+      "description": "Marks the else branch of a k-if. Must immediately follow a k-if element.\n\n```html\n<div k-if=\"isLoggedIn\">Welcome!</div>\n<div k-else>Please log in.</div>\n```"
+    },
+    {
+      "name": "k-for",
+      "description": "List rendering. Use on `<template>` for best performance.\n\n```html\n<template k-for=\"item in items\">\n  <li k-text=\"item.name\"></li>\n</template>\n```\n\nWith index:\n```html\n<template k-for=\"(item, index) in items\">\n  ...\n</template>\n```"
+    },
+    {
+      "name": "k-model",
+      "description": "Two-way data binding for form inputs (input, select, textarea, checkbox).\n\n```html\n<input k-model=\"username\" />\n<select k-model=\"role\">...</select>\n<input type=\"checkbox\" k-model=\"agree\" />\n```"
+    },
+    {
+      "name": "k-cloak",
+      "description": "Hides the element until Kupola directives are initialized. Prevents flash of unstyled content.\n\n```html\n<div k-data=\"...\" k-cloak>...</div>\n```"
+    },
+    {
+      "name": "k-bind:class",
+      "description": "Dynamically binds the class attribute.\n\n```html\n<div k-bind:class=\"active ? 'active' : ''\"></div>\n```"
+    },
+    {
+      "name": "k-bind:style",
+      "description": "Dynamically binds the style attribute.\n\n```html\n<div k-bind:style=\"'color:' + color\"></div>\n```"
+    },
+    {
+      "name": "k-bind:disabled",
+      "description": "Dynamically binds the disabled attribute.\n\n```html\n<button k-bind:disabled=\"isLoading\">Submit</button>\n```"
+    },
+    {
+      "name": "k-bind:value",
+      "description": "Dynamically binds the value attribute.\n\n```html\n<input k-bind:value=\"currentValue\" />\n```"
+    },
+    {
+      "name": "k-on:click",
+      "description": "Click event handler.\n\n```html\n<button k-on:click=\"count++\">Click me</button>\n```"
+    },
+    {
+      "name": "k-on:submit",
+      "description": "Form submit event handler.\n\n```html\n<form k-on:submit=\"handleSubmit(event)\">...</form>\n```"
+    },
+    {
+      "name": "k-on:keydown",
+      "description": "Keydown event handler.\n\n```html\n<input k-on:keydown=\"if(event.key==='Enter') submit()\" />\n```"
+    },
+    {
+      "name": "k-on:change",
+      "description": "Change event handler.\n\n```html\n<select k-on:change=\"update()\">...</select>\n```"
+    },
+    {
+      "name": "k-on:input",
+      "description": "Input event handler.\n\n```html\n<input k-on:input=\"search(query)\" />\n```"
+    },
+    {
+      "name": "k-on:focus",
+      "description": "Focus event handler.\n\n```html\n<input k-on:focus=\"showHelper = true\" />\n```"
+    },
+    {
+      "name": "k-on:blur",
+      "description": "Blur event handler.\n\n```html\n<input k-on:blur=\"validate()\" />\n```"
+    },
+    {
+      "name": "k-on:mouseenter",
+      "description": "Mouseenter event handler.\n\n```html\n<div k-on:mouseenter=\"hovered = true\">...</div>\n```"
+    },
+    {
+      "name": "k-on:mouseleave",
+      "description": "Mouseleave event handler.\n\n```html\n<div k-on:mouseleave=\"hovered = false\">...</div>\n```"
+    }
+  ],
+  "valueSets": []
+}

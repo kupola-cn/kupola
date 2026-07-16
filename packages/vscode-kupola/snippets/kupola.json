@@ -1,0 +1,182 @@
+{
+  "Kupola: k-data scope": {
+    "prefix": "k-data",
+    "body": [
+      "<div k-data=\"{ ${1:key}: ${2:value} }\">",
+      "  $0",
+      "</div>"
+    ],
+    "description": "Kupola data scope — creates a reactive data context"
+  },
+  "Kupola: k-text binding": {
+    "prefix": "k-text",
+    "body": "<${1:span} k-text=\"${2:expression}\"></${1:span}>",
+    "description": "Kupola text binding — sets textContent from expression"
+  },
+  "Kupola: k-show directive": {
+    "prefix": "k-show",
+    "body": "<${1:div} k-show=\"${2:condition}\">$0</${1:div}>",
+    "description": "Kupola show/hide — toggles display based on condition"
+  },
+  "Kupola: k-if directive": {
+    "prefix": "k-if",
+    "body": [
+      "<${1:div} k-if=\"${2:condition}\">",
+      "  $0",
+      "</${1:div}>"
+    ],
+    "description": "Kupola conditional rendering"
+  },
+  "Kupola: k-if / k-else": {
+    "prefix": "k-ifelse",
+    "body": [
+      "<${1:div} k-if=\"${2:condition}\">",
+      "  ${3:<!-- true branch -->}",
+      "</${1:div}>",
+      "<${1:div} k-else>",
+      "  ${4:<!-- false branch -->}",
+      "</${1:div}>"
+    ],
+    "description": "Kupola if/else conditional rendering"
+  },
+  "Kupola: k-for loop": {
+    "prefix": "k-for",
+    "body": [
+      "<template k-for=\"${1:item} in ${2:items}\">",
+      "  <${3:div} k-text=\"${1:item}\"></${3:div}>",
+      "</template>"
+    ],
+    "description": "Kupola list rendering with k-for"
+  },
+  "Kupola: k-for with index": {
+    "prefix": "k-fori",
+    "body": [
+      "<template k-for=\"(${1:item}, ${2:index}) in ${3:items}\">",
+      "  <${4:div}>",
+      "    <span k-text=\"${2:index}\"></span>: <span k-text=\"${1:item}\"></span>",
+      "  </${4:div}>",
+      "</template>"
+    ],
+    "description": "Kupola list rendering with index"
+  },
+  "Kupola: k-bind attribute": {
+    "prefix": "k-bind",
+    "body": "k-bind:${1:class}=\"${2:expression}\"",
+    "description": "Kupola attribute binding"
+  },
+  "Kupola: k-bind:class": {
+    "prefix": "k-class",
+    "body": "k-bind:class=\"${1:condition} ? '${2:class-a}' : '${3:class-b}'\"",
+    "description": "Kupola dynamic class binding"
+  },
+  "Kupola: k-bind:style": {
+    "prefix": "k-style",
+    "body": "k-bind:style=\"${1:condition} ? '${2:style-a}' : '${3:style-b}'\"",
+    "description": "Kupola dynamic style binding"
+  },
+  "Kupola: k-bind:disabled": {
+    "prefix": "k-disabled",
+    "body": "k-bind:disabled=\"${1:condition}\"",
+    "description": "Kupola dynamic disabled binding"
+  },
+  "Kupola: k-on event": {
+    "prefix": "k-on",
+    "body": "k-on:${1:click}=\"${2:expression}\"",
+    "description": "Kupola event handler"
+  },
+  "Kupola: k-on:click": {
+    "prefix": "k-click",
+    "body": "k-on:click=\"${1:expression}\"",
+    "description": "Kupola click event handler"
+  },
+  "Kupola: k-on:submit": {
+    "prefix": "k-submit",
+    "body": "k-on:submit=\"${1:expression}\"",
+    "description": "Kupola form submit event handler"
+  },
+  "Kupola: k-on:keydown": {
+    "prefix": "k-keydown",
+    "body": "k-on:keydown=\"${1:expression}\"",
+    "description": "Kupola keydown event handler"
+  },
+  "Kupola: k-model input": {
+    "prefix": "k-model",
+    "body": "<input k-model=\"${1:variable}\" placeholder=\"${2:placeholder}\" />",
+    "description": "Kupola two-way data binding on input"
+  },
+  "Kupola: k-model select": {
+    "prefix": "k-model-select",
+    "body": [
+      "<select k-model=\"${1:variable}\">",
+      "  <option value=\"${2:a}\">${3:Option A}</option>",
+      "  <option value=\"${4:b}\">${5:Option B}</option>",
+      "</select>"
+    ],
+    "description": "Kupola two-way data binding on select"
+  },
+  "Kupola: k-model checkbox": {
+    "prefix": "k-model-check",
+    "body": "<input type=\"checkbox\" k-model=\"${1:variable}\" />",
+    "description": "Kupola two-way data binding on checkbox"
+  },
+  "Kupola: k-html directive": {
+    "prefix": "k-html",
+    "body": "<${1:div} k-html=\"${2:expression}\"></${1:div}>",
+    "description": "Kupola HTML content binding (use with sanitized content only)"
+  },
+  "Kupola: k-cloak": {
+    "prefix": "k-cloak",
+    "body": "k-cloak",
+    "description": "Kupola cloak — hides element until directives are initialized"
+  },
+  "Kupola: counter example": {
+    "prefix": "kupola-counter",
+    "body": [
+      "<div k-data=\"{ count: 0 }\">",
+      "  <p>Count: <strong k-text=\"count\"></strong></p>",
+      "  <button k-on:click=\"count++\">+1</button>",
+      "  <button k-on:click=\"count--\">-1</button>",
+      "  <button k-on:click=\"count = 0\">Reset</button>",
+      "</div>"
+    ],
+    "description": "Kupola counter example"
+  },
+  "Kupola: todo list example": {
+    "prefix": "kupola-todo",
+    "body": [
+      "<div k-data=\"{ todos: [], newTodo: '' }\">",
+      "  <input k-model=\"newTodo\" k-on:keydown=\"if(event.key==='Enter' && newTodo.trim()){todos.push({text:newTodo.trim(),done:false});newTodo=''}\" />",
+      "  <template k-for=\"todo in todos\">",
+      "    <div>",
+      "      <input type=\"checkbox\" k-model=\"todo.done\" />",
+      "      <span k-text=\"todo.text\"></span>",
+      "    </div>",
+      "  </template>",
+      "  <p k-show=\"todos.length === 0\">No todos yet.</p>",
+      "</div>"
+    ],
+    "description": "Kupola todo list example"
+  },
+  "Kupola: form example": {
+    "prefix": "kupola-form",
+    "body": [
+      "<div k-data=\"{ name: '', email: '', role: 'user' }\">",
+      "  <label>Name: <input k-model=\"name\" /></label>",
+      "  <label>Email: <input k-model=\"email\" /></label>",
+      "  <label>Role:",
+      "    <select k-model=\"role\">",
+      "      <option value=\"user\">User</option>",
+      "      <option value=\"admin\">Admin</option>",
+      "    </select>",
+      "  </label>",
+      "  <pre k-text=\"JSON.stringify({name, email, role}, null, 2)\"></pre>",
+      "</div>"
+    ],
+    "description": "Kupola form binding example"
+  },
+  "Kupola: theme toggle": {
+    "prefix": "kupola-theme",
+    "body": "<button k-on:click=\"document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'\">Toggle Theme</button>",
+    "description": "Kupola dark/light theme toggle"
+  }
+}
