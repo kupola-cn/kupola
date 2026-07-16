@@ -5,7 +5,7 @@ Kupola 提供 48+ 个 UI 组件，按需引入。
 ## 安装
 
 ```bash
-npm install @kupola/kupola@next
+npm install @kupola/kupola
 ```
 
 ## 引入方式

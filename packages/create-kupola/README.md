@@ -4,16 +4,16 @@ Scaffold a new [Kupola](https://github.com/kupola-cn/kupola) project with one co
 
 ## Usage
 
-> **Current version**: `2.0.0-beta.10` (pre-release). Use `@next` tag:
+> **Current version**: `2.0.0` (stable):
 
 ```bash
 # Interactive mode
-npm create @kupola/kupola@next
+npm create @kupola/kupola
 # or
-npx @kupola/create-kupola@next
+npx @kupola/create-kupola
 
 # Non-interactive mode
-npx @kupola/create-kupola@next my-app --template=flask
+npx @kupola/create-kupola my-app --template=flask
 ```
 
 ### CLI Options
@@ -89,7 +89,7 @@ my-kupola-app/
 If you prefer not to use the CLI, you can install Kupola directly:
 
 ```bash
-npm install @kupola/kupola@next
+npm install @kupola/kupola
 ```
 
 Then import in your code:

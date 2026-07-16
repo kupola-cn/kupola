@@ -3,7 +3,7 @@
 ## 安装
 
 ```bash
-npm install @kupola/kupola@next
+npm install @kupola/kupola
 ```
 
 ## 基础用法

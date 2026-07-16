@@ -124,8 +124,8 @@ npm run docs:preview # 预览
 
 **待改进**：
 
-- [ ] 补充更多组件文档（按需添加）
-- [ ] 部署到 GitHub Pages
+- [ ] 补充更多组件文档（按需添加）（暂时忽略）
+- [x] 部署到 GitHub Pages
 
 ### 2.2 CSS / 主题系统 ✅ 基础完成
 
@@ -140,7 +140,7 @@ npm run docs:preview # 预览
 **待改进**：
 
 - [x] 响应式断点规范 — `responsive.css`（sm:576 / md:768 / lg:1024 / xl:1280 + ds-hide/show 工具类 + Modal/Drawer/Table 小屏适配）
-- [ ] 更多组件样式细节（如 ColorPicker、DatePicker 复杂组件）
+- [ ] 更多组件样式细节（如 ColorPicker、DatePicker 复杂组件）（暂时忽略）
 - [x] CSS 压缩构建（minify）— `scripts/build-css.cjs`（clean-css，50.5% 压缩率）
 
 ### 2.3 组件补全
@@ -162,7 +162,7 @@ npm run docs:preview # 预览
 **待改进**：
 
 - [x] 添加 `--typescript` 选项生成 TS 项目（`--ts` 或 `--template=static-ts`）
-- [ ] 添加更多模板（Next.js SSR、Nuxt 混用）（不需要）
+- [x] 添加更多模板（Next.js SSR、Nuxt 混用）
 
 ---
 
@@ -254,16 +254,16 @@ npm run docs:preview # 预览
 | 构建系统 | ✅ 完成 | 54 个入口，ESM + CJS |
 | npm 发布 | ✅ 已发布 | @next tag，2.0.0-beta.10 |
 | GitHub | ✅ 已清理 | 无 1.0 历史，全新提交 |
-| create-kupola | ✅ 已发布 | 4 套模板（static/flask/fastapi/gin） |
-| 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
+| create-kupola | ✅ 已发布 | 7 套模板（static/static-ts/nextjs/nuxt/flask/fastapi/gin） |
+| 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件 + 插件 + 扩展 + 模板 |
 | CI/CD | ✅ 已修复 | lint 0 errors, 922 tests, 覆盖率 86%+ |
-| CSS 体系 | ✅ 基础 | design tokens + 明暗主题 + ds-* 组件样式 |
+| CSS 体系 | ✅ 完成 | design tokens + 明暗主题 + ds-* 组件样式 + 响应式 + minify |
 | 无障碍 | ✅ 增强 | Modal/Drawer/Dialog/Dropdown ARIA + 焦点陷阱 |
 | 国际化 | ✅ 组件集成 | i18n 模块 + Table/Dialog/Select/DatePicker/TimePicker |
 | 性能优化 | ✅ 基准测试 | Tree-shaking + 8 个性能基准（Signal/VirtualList/Table/SSR） |
 | 集成测试 | ✅ 39 个 | SSR水合/指令场景/ErrorBoundary/内存泄漏/性能基准 |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
-| 正式版 | ⏳ beta.10 | 2.0.0-beta.10 已发布 @next |
+| 正式版 | ⏳ 正式版 | 2.0.0 发布中 |
 
 ---
 

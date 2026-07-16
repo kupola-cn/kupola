@@ -6,10 +6,10 @@
 
 ```bash
 # 交互式选择模板
-npm create @kupola/kupola@next
+npm create @kupola/kupola
 
 # 非交互式指定模板
-npx @kupola/create-kupola@next my-app --template=nextjs
+npx @kupola/create-kupola my-app --template=nextjs
 ```
 
 ## 模板一览

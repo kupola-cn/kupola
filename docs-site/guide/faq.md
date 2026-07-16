@@ -5,10 +5,10 @@
 ### Q: 如何安装 Kupola 2.0？
 
 ```bash
-npm install @kupola/kupola@next
+npm install @kupola/kupola
 ```
 
-> 当前为 beta 阶段，使用 `@next` tag 安装。正式版发布后可直接 `npm install @kupola/kupola`。
+> 正式版已发布，可直接 `npm install @kupola/kupola`。
 
 ### Q: Kupola 依赖 React 或 Vue 吗？
 
@@ -336,7 +336,7 @@ module.exports = { plugins: [new KupolaPlugin()] };
 
 ### Q: 如何从 1.x 升级到 2.0？
 
-1. 安装 2.0：`npm install @kupola/kupola@next`
+1. 安装：`npm install @kupola/kupola`
 2. 指令语法基本兼容（`k-data`、`k-show`、`k-bind` 等）
 3. 组件 API 有变化，参考组件文档更新调用方式
 4. 移除旧的 CSS 引用，使用新的 CSS 设计令牌系统

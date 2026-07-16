@@ -1,5 +1,40 @@
 # Changelog
 
+## 2.0.0 (2026-07-15)
+
+First stable release of Kupola 2.0 — a zero-dependency, modular UI component library.
+
+### Core
+- **Signal-based reactivity**: `signal`, `computed`, `effect`, `batch`
+- **Template literals**: `html` tagged template + `render()`
+- **SSR**: `renderToString` + `hydrate`
+- **Directive system**: `k-data`, `k-show`, `k-bind`, `k-on`, `k-model`, `k-for`
+- **48 UI components**: Modal, Table, Form, Select, DatePicker, Drawer, Dialog, Dropdown, etc.
+- **TypeScript**: `types.d.ts` covering all 48 components
+
+### Enhancements
+- Accessibility: ARIA for Modal/Drawer/Dialog/Dropdown, focus trap, keyboard navigation
+- i18n: `setLocale`/`getLocale`/`t`/`addMessages`, component integration (Table/Dialog/Select/DatePicker/TimePicker)
+- CSS design system: tokens + components + dark/light themes + responsive breakpoints + minify
+- Plugins: Vite & Webpack auto CSS injection, ESLint 3 rules
+- DevTools: Signal profiler, lazy loading, ErrorBoundary
+- Anti-FOUC: `themePreload`/`setTheme`/`toggleTheme` + `[k-cloak]` + inline preload script
+- VS Code extension: snippets + directive auto-completion + hover docs
+- Storybook: interactive component docs
+
+### Templates (create-kupola)
+- 7 templates: static, static-ts, nextjs, nuxt, flask, fastapi, gin
+- Built-in examples: Counter, Todo List, Form Binding, Reactive Computed
+- Anti-FOUC theme preload in all templates
+
+### Quality
+- 922 tests passing (55 suites)
+- Coverage: Statements 86% | Branches 70% | Functions 87% | Lines 89%
+- 8 performance benchmarks (Signal/VirtualList/Table/SSR)
+- CI/CD: GitHub Actions (lint + test + coverage + build)
+
+---
+
 ## 2.0.0-beta
 
 - Accessibility: ARIA for Modal/Drawer/Dialog/Dropdown, focus trap, label association, keyboard navigation (Home/End/Tab)
