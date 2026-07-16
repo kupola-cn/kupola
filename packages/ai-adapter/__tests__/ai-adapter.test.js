@@ -261,4 +261,87 @@ describe('AIAdapter', () => {
       expect(result.message).toContain('❌');
     });
   });
+
+  describe('EventBus integration', () => {
+    it('should emit input event on process', async () => {
+      const fn = jest.fn();
+      adapter.on('input', fn);
+      await adapter.process('查询 something');
+      expect(fn).toHaveBeenCalledWith(expect.objectContaining({ input: '查询 something' }));
+    });
+
+    it('should support once() listener', async () => {
+      const fn = jest.fn();
+      adapter.once('input', fn);
+      await adapter.process('查询 a');
+      await adapter.process('查询 b');
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should support wildcard() for flow:* events', async () => {
+      const fn = jest.fn();
+      adapter.wildcard('flow:*', fn);
+
+      adapter.flow.define('test-flow', {
+        steps: [{ label: 'step1', handler: async () => ({}) }],
+      });
+      await adapter.process('执行 test-flow');
+
+      // Should have received flow:step and flow:complete
+      const eventNames = fn.mock.calls.map(c => c[0]);
+      expect(eventNames).toContain('flow:step');
+    });
+
+    it('should emit action:before and action:after for action commands', async () => {
+      const before = jest.fn();
+      const after = jest.fn();
+      adapter.on('action:before', before);
+      adapter.on('action:after', after);
+
+      adapter.action.register('test', { handler: async () => ({}), confirm: false });
+      await adapter.process('添加 test');
+
+      expect(before).toHaveBeenCalled();
+      expect(after).toHaveBeenCalled();
+    });
+  });
+
+  describe('getDevToolsSnapshot', () => {
+    it('should return a complete snapshot structure', () => {
+      adapter.query.register('q1', async () => ({}));
+      adapter.action.register('a1', { handler: async () => ({}), confirm: false });
+      adapter.use(async (ctx, next) => next());
+
+      const snap = adapter.getDevToolsSnapshot();
+
+      expect(snap.version).toBe('1.2.0');
+      expect(snap.messages).toEqual([]);
+      expect(snap.middlewares).toBe(1);
+      expect(snap.query.registered).toBe(1);
+      expect(snap.action.registered).toBe(1);
+      expect(snap.flow.defined).toBe(0);
+      expect(snap.events).toEqual(expect.any(Array));
+    });
+
+    it('should reflect message history after process', async () => {
+      adapter.query.register('search', async () => [{ id: 1 }]);
+      await adapter.process('查询 q');
+
+      const snap = adapter.getDevToolsSnapshot();
+      expect(snap.messages.length).toBeGreaterThanOrEqual(2); // user + system
+      expect(snap.query.history).toBe(1);
+    });
+  });
+
+  describe('middleware pipeline', () => {
+    it('should allow middleware to short-circuit with result', async () => {
+      adapter.use(async (ctx, next) => {
+        ctx.result = { type: 'intercepted', message: 'blocked by middleware' };
+        // don't call next()
+      });
+
+      const result = await adapter.process('查询 something');
+      expect(result.type).toBe('intercepted');
+    });
+  });
 });

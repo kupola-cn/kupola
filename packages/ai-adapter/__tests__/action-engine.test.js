@@ -194,9 +194,82 @@ describe('ActionEngine', () => {
       const actions = engine.getActions();
 
       expect(actions).toEqual([
-        { name: 'add', label: '添加', confirm: false },
-        { name: 'del', label: 'del', confirm: true },
+        { name: 'add', label: '添加', confirm: false, dependsOn: [] },
+        { name: 'del', label: 'del', confirm: true, dependsOn: [] },
       ]);
+    });
+  });
+
+  describe('dependsOn', () => {
+    it('should block action when dependency not met', async () => {
+      engine.register('query', { handler: jest.fn().mockResolvedValue({}), confirm: false });
+      engine.register('adjust', {
+        handler: jest.fn().mockResolvedValue({}),
+        confirm: false,
+        dependsOn: ['query'],
+      });
+
+      const result = await engine.execute({ type: 'adjust', params: {} });
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Dependency not met.*query/);
+      expect(result.dependenciesMet).toBe(false);
+    });
+
+    it('should allow action when dependency has succeeded', async () => {
+      engine.register('query', { handler: jest.fn().mockResolvedValue({}), confirm: false });
+      engine.register('adjust', {
+        handler: jest.fn().mockResolvedValue({ ok: true }),
+        confirm: false,
+        dependsOn: ['query'],
+      });
+
+      // Run dependency first
+      await engine.execute({ type: 'query', params: {} });
+      // Now run the dependent action
+      const result = await engine.execute({ type: 'adjust', params: {} });
+      expect(result.success).toBe(true);
+    });
+
+    it('should support multiple dependencies', async () => {
+      engine.register('a', { handler: jest.fn().mockResolvedValue({}), confirm: false });
+      engine.register('b', { handler: jest.fn().mockResolvedValue({}), confirm: false });
+      engine.register('c', {
+        handler: jest.fn().mockResolvedValue({}),
+        confirm: false,
+        dependsOn: ['a', 'b'],
+      });
+
+      // Only a succeeded, b not yet
+      await engine.execute({ type: 'a', params: {} });
+      let result = await engine.execute({ type: 'c', params: {} });
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/b/);
+
+      // Now b also succeeds
+      await engine.execute({ type: 'b', params: {} });
+      result = await engine.execute({ type: 'c', params: {} });
+      expect(result.success).toBe(true);
+    });
+
+    it('should detect circular dependencies', () => {
+      engine.register('x', {
+        handler: jest.fn(), confirm: false, dependsOn: ['y'],
+      });
+      engine.register('y', {
+        handler: jest.fn(), confirm: false, dependsOn: ['x'],
+      });
+
+      const err = engine.checkDependencies('x');
+      expect(err).toMatch(/Circular dependency/);
+    });
+
+    it('checkDependencies returns null when no dependencies', () => {
+      engine.register('solo', { handler: jest.fn(), confirm: false });
+      expect(engine.checkDependencies('solo')).toBeNull();
+    });
+
+    it('checkDependencies returns null for unknown action', () => {
+      expect(engine.checkDependencies('nonexistent')).toBeNull();
     });
   });
 });

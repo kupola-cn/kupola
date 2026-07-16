@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/ai-adapter — Main Adapter Class (v1.1)
+ * @kupola/ai-adapter — Main Adapter Class (v1.2)
  *
- * Enhancements:
- * - Middleware system: adapter.use(fn) for extensible processing pipeline
- * - Confidence display in response messages
- * - Slot filling support (ask for missing params)
+ * Enhancements over v1.1:
+ * - EventBus: replaces internal Map-based listeners with full pub/sub (once, wildcard)
+ * - DevTools: getDevToolsSnapshot() + createDevToolsLogger middleware
+ * - Normalized event names: input / parsed / result / flow:step / flow:complete / action:before / action:after
  */
 
 import { IntentParser, RuleBasedParser } from './intent-parser.js';
 import { QueryEngine } from './query-engine.js';
 import { ActionEngine } from './action-engine.js';
 import { FlowEngine } from './flow-engine.js';
+import { EventBus } from './event-bus.js';
 
 export class AIAdapter {
   constructor(options = {}) {
-    // Initialize engines
+    // Initialize engines — pass bus so they can emit directly
     this.query = new QueryEngine(options.query);
     this.action = new ActionEngine(options.action);
     this.flow = new FlowEngine(options.flow);
@@ -28,8 +29,8 @@ export class AIAdapter {
       maxContext: options.maxContext,
     });
 
-    // Event listeners
-    this.listeners = new Map();
+    // EventBus (replaces the old Map-based listeners)
+    this.bus = options.bus || new EventBus();
 
     // Message log
     this.messages = [];
@@ -43,7 +44,7 @@ export class AIAdapter {
    * Add a middleware to the processing pipeline.
    * Middleware signature: async (ctx, next) => { ... }
    *
-   * ctx = { input, command?, result?, adapter }
+   * ctx = { input, context, command?, result?, adapter }
    *
    * Example:
    *   adapter.use(async (ctx, next) => {
@@ -126,21 +127,54 @@ export class AIAdapter {
     this.flow.clearHistory();
   }
 
+  // ── EventBus proxy methods ─────────────────────────────
+
   on(event, callback) {
-    if (!this.listeners.has(event)) this.listeners.set(event, []);
-    this.listeners.get(event).push(callback);
-    return () => this.off(event, callback);
+    return this.bus.on(event, callback);
   }
 
   off(event, callback) {
-    const list = this.listeners.get(event);
-    if (list) {
-      const idx = list.indexOf(callback);
-      if (idx >= 0) list.splice(idx, 1);
-    }
+    this.bus.off(event, callback);
   }
 
-  // ── Private ────────────────────────────────────────
+  once(event, callback) {
+    return this.bus.once(event, callback);
+  }
+
+  wildcard(pattern, callback) {
+    return this.bus.wildcard(pattern, callback);
+  }
+
+  // ── DevTools ───────────────────────────────────────────
+
+  /**
+   * Return a snapshot of the adapter's full runtime state.
+   * Useful for DevTools panels, debugging, and telemetry.
+   */
+  getDevToolsSnapshot() {
+    return {
+      version: '1.2.0',
+      messages: [...this.messages],
+      middlewares: this.middlewares.length,
+      query: {
+        registered: this.query.handlers.size,
+        history: this.query.history.length,
+        cache: (this.query.cache || new Map()).size,
+      },
+      action: {
+        registered: this.action.handlers.size,
+        undoStack: this.action.undoStack.length,
+        audit: this.action.auditLog.length,
+      },
+      flow: {
+        defined: this.flow.flows.size,
+        executions: this.flow.executions.length,
+      },
+      events: this.bus.eventNames(),
+    };
+  }
+
+  // ── Private ────────────────────────────────────────────
 
   _buildMiddlewareChain(ctx) {
     const middlewares = this.middlewares;
@@ -160,7 +194,7 @@ export class AIAdapter {
   async _processCore(input, context = {}) {
     // Add user message
     this._addMessage('user', input);
-    this._emit('input', { input });
+    this.bus.emit('input', { input });
 
     // Parse intent
     const command = await this.parser.parse(input, context);
@@ -178,7 +212,7 @@ export class AIAdapter {
       return { type: 'slot-fill', engine: command.engine, result: command, message: question, missingSlots: command.missingSlots };
     }
 
-    this._emit('parsed', command);
+    this.bus.emit('parsed', command);
 
     // Route to appropriate engine
     let result;
@@ -187,9 +221,11 @@ export class AIAdapter {
         result = await this.query.execute(command);
         break;
       case 'action':
+        this.bus.emit('action:before', { type: command.type, params: command.params });
         result = await this.action.execute(command, {
           onConfirm: context.onConfirm || this._defaultConfirm.bind(this),
         });
+        this.bus.emit('action:after', { type: command.type, result });
         const suggestion = this.flow.trackAction(command);
         if (suggestion.suggest) {
           this._addMessage('suggestion', suggestion.message);
@@ -199,7 +235,8 @@ export class AIAdapter {
       case 'flow':
         if (command.type === 'execute') {
           result = await this.flow.execute(command.params.name, command.params.data || {}, {
-            onStep: (i, label, status) => this._emit('flowStep', { step: i, label, status }),
+            onStep: (i, label, status) => this.bus.emit('flow:step', { step: i, label, status }),
+            onComplete: () => this.bus.emit('flow:complete', { flow: command.params.name }),
           });
         } else if (command.type === 'define') {
           result = { success: true, message: `Flow "${command.params.name}" defined.`, data: command.params };
@@ -214,14 +251,9 @@ export class AIAdapter {
     // Format response message
     const message = this._formatResponse(command, result);
     this._addMessage('system', message);
-    this._emit('result', { command, result });
+    this.bus.emit('result', { command, result });
 
     return { type: command.engine, engine: command.engine, result, message, confidence: command.confidence };
-  }
-
-  _emit(event, data) {
-    const list = this.listeners.get(event);
-    if (list) list.forEach(cb => cb(data));
   }
 
   _addMessage(role, text) {

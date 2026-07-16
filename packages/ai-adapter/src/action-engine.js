@@ -31,15 +31,24 @@ export class ActionEngine {
 
   /**
    * Register an action handler.
+   * @param {string} name
+   * @param {object} config
+   * @param {Function} config.handler
+   * @param {boolean}  [config.confirm]
+   * @param {Function} [config.undo]
+   * @param {string}   [config.label]
+   * @param {number}   [config.retries]
+   * @param {string[]} [config.dependsOn] — prerequisite action types that must have succeeded before this action runs
    */
   register(name, config) {
-    const { handler, confirm, undo, label, retries } = config;
+    const { handler, confirm, undo, label, retries, dependsOn } = config;
     this.handlers.set(name, {
       handler,
       confirm: confirm !== undefined ? confirm : this.requireConfirm,
       undo: undo || null,
       label: label || name,
       retries: retries !== undefined ? retries : this.defaultRetries,
+      dependsOn: Array.isArray(dependsOn) ? dependsOn : [],
     });
   }
 
@@ -82,6 +91,12 @@ export class ActionEngine {
         error: `Unknown action: "${type}"`,
         available: [...this.handlers.keys()],
       };
+    }
+
+    // Dependency check: all dependsOn actions must have succeeded previously
+    const depError = this.checkDependencies(type);
+    if (depError) {
+      return { success: false, error: depError, dependenciesMet: false };
     }
 
     // Permission hooks
@@ -208,7 +223,34 @@ export class ActionEngine {
       name,
       label: this.handlers.get(name).label,
       confirm: this.handlers.get(name).confirm,
+      dependsOn: this.handlers.get(name).dependsOn,
     }));
+  }
+
+  /**
+   * Check whether all prerequisite actions for `type` have succeeded.
+   * Returns null if OK, or an error string if a dependency is unmet.
+   * Also detects circular dependencies.
+   */
+  checkDependencies(type, _visited = new Set()) {
+    if (_visited.has(type)) return `Circular dependency detected: ${type}`;
+    _visited.add(type);
+
+    const action = this.handlers.get(type);
+    if (!action || !action.dependsOn || action.dependsOn.length === 0) return null;
+
+    for (const dep of action.dependsOn) {
+      // Recursive circular check
+      const circularErr = this.checkDependencies(dep, new Set(_visited));
+      if (circularErr && circularErr.startsWith('Circular')) return circularErr;
+
+      // Check audit log for at least one success record of this dep
+      const satisfied = this.auditLog.some(e => e.action === dep && e.status === 'success');
+      if (!satisfied) {
+        return `Dependency not met: "${dep}" must succeed before "${type}"`;
+      }
+    }
+    return null;
   }
 
   /**
