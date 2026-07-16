@@ -11,6 +11,7 @@
 - XSS fix: notification component HTML escaping
 - Performance benchmarks: Signal/VirtualList/Table/SSR (8 tests)
 - VS Code extension: snippets + directive auto-completion + hover docs
+- Storybook: interactive component docs (Modal/Drawer/Table/Select/Alert/Notification)
 - FAQ documentation (docs/FAQ.md)
 - create-kupola templates: rich examples (Counter, Todo, Form, Reactive Computed)
 - 922 tests passing (55 suites)

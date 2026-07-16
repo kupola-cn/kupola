@@ -147,9 +147,9 @@ npm run docs:preview # 预览
 
 **现状**：48 个组件，SlideCaptcha 已跳过。
 
-- [ ] SlideCaptcha 滑块验证码组件（如需要）
-- [ ] 评估是否有遗漏的常用组件（如 Upload 拖拽排序、Masonry 瀑布流等）
-- [ ] 组件间依赖关系文档（如 Form 包含 Validation）
+- [ ] SlideCaptcha 滑块验证码组件（如需要）（暂时忽略）
+- [ ] 评估是否有遗漏的常用组件（如 Upload 拖拽排序、Masonry 瀑布流等）（暂时忽略）
+- [ ] 组件间依赖关系文档（如 Form 包含 Validation）（暂时忽略）
 
 ### 2.4 create-kupola 完善 ✅ 已完成
 
@@ -210,8 +210,8 @@ npm run docs:preview # 预览
 - [x] 集成测试：13 个跨模块测试（i18n、signal chain、SSR+locale）
 - [x] SSR 水合（hydration）边界情况测试（7 个：null/undefined/signal/attr/event/escape/nested/array）
 - [x] 指令系统复杂场景测试（5 个：k-show/k-text/k-bind/k-model/嵌套 k-data）
-- [ ] 浏览器兼容性测试（Sauce Labs 或 Playwright）
-- [ ] 视觉回归测试（Percy 或 Chromatic）
+- [ ] 浏览器兼容性测试（Sauce Labs 或 Playwright）（暂时忽略）
+- [ ] 视觉回归测试（Percy 或 Chromatic）（暂时忽略）
 
 ---
 
@@ -223,12 +223,12 @@ npm run docs:preview # 预览
 - [x] Webpack 插件 `plugins/webpack-plugin-kupola.js`（HTML CSS 注入）
 - [x] ESLint 插件 `plugins/eslint-plugin-kupola.js`（3 个规则：no-invalid-directives/prefer-t-function/no-innerhtml-user-input）
 - [x] VS Code 扩展（代码片段、指令自动补全、组件文档悬浮提示）— `packages/vscode-kupola/`
-- [ ] Figma 设计系统 / 组件库
+- [ ] Figma 设计系统 / 组件库（暂时忽略）
 
 ### 4.2 开发者体验
 
-- [ ] StackBlitz / CodeSandbox 在线 playground
-- [ ] 组件交互式文档（类似 Storybook）
+- [ ] StackBlitz / CodeSandbox 在线 playground（暂时忽略）
+- [x] 组件交互式文档（Storybook — `npm run storybook`，5 个 Stories 文件）
 - [x] `create-kupola` 生成的项目内置示例代码（Counter/Todo/Form/Reactive Computed）
 - [x] 常见问题 FAQ 页面 — `docs/FAQ.md`
 
@@ -252,7 +252,7 @@ npm run docs:preview # 预览
 | TypeScript | ✅ 完成 | types.d.ts 覆盖全部 48 个组件 |
 | 单元测试 | ✅ 922 个 | 55 套件，全部通过 |
 | 构建系统 | ✅ 完成 | 54 个入口，ESM + CJS |
-| npm 发布 | ✅ 已发布 | @next tag，2.0.0-beta.5 |
+| npm 发布 | ✅ 已发布 | @next tag，2.0.0-beta.6 |
 | GitHub | ✅ 已清理 | 无 1.0 历史，全新提交 |
 | create-kupola | ✅ 已发布 | 4 套模板（static/flask/fastapi/gin） |
 | 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
@@ -263,7 +263,7 @@ npm run docs:preview # 预览
 | 性能优化 | ✅ 基准测试 | Tree-shaking + 8 个性能基准（Signal/VirtualList/Table/SSR） |
 | 集成测试 | ✅ 39 个 | SSR水合/指令场景/ErrorBoundary/内存泄漏/性能基准 |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
-| 正式版 | ⏳ beta.5 | 2.0.0-beta.5 已发布 @next |
+| 正式版 | ⏳ beta.6 | 2.0.0-beta.6 已发布 @next |
 
 ---
 

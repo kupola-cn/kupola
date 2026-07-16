@@ -49,6 +49,11 @@ RELEASE_WORKFLOW.md
 USAGE_GUIDE.md
 文档编写指南.md
 
+# Storybook (dev only)
+stories/
+.storybook/
+storybook-static/
+
 # Git
 .gitignore
 .npmignore
