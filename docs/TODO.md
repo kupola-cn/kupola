@@ -196,13 +196,12 @@ npm run docs:preview # 预览
 
 - [x] 组件集成 i18n（Table emptyText, Dialog ok/cancel, Select placeholder 使用 `t()`）
 - [x] DatePicker/TimePicker i18n（月份/星期/placeholder 使用 `t()`）
-- [ ] 更多语言包
 
 ### 3.3 性能优化 ✅ 基础完成
 
 - [x] 各组件 bundle 体积分析：核心 12KB，最大组件 table 14KB，均在限制内
 - [x] Tree-shaking 验证：core 导出 21 个 API，组件在独立 bundle
-- [ ] 大列表组件（Table / VirtualList）虚拟滚动性能基准测试
+- [x] 大列表组件（Table / VirtualList）虚拟滚动性能基准测试（8 个测试，全部通过）
 - [ ] Signal 响应式更新性能 profiling
 - [ ] 懒加载支持：组件按需异步初始化
 
@@ -222,7 +221,7 @@ npm run docs:preview # 预览
 
 - [x] Vite 插件 `plugins/vite-plugin-kupola.js`（自动 CSS 注入）
 - [x] Webpack 插件 `plugins/webpack-plugin-kupola.js`（HTML CSS 注入）
-- [ ] ESLint 插件 `eslint-plugin-kupola`（指令语法检查、组件导入规范）
+- [x] ESLint 插件 `plugins/eslint-plugin-kupola.js`（3 个规则：no-invalid-directives/prefer-t-function/no-innerhtml-user-input）
 - [ ] VS Code 扩展（代码片段、指令自动补全、组件文档悬浮提示）
 - [ ] Figma 设计系统 / 组件库
 
@@ -231,7 +230,6 @@ npm run docs:preview # 预览
 - [ ] StackBlitz / CodeSandbox 在线 playground
 - [ ] 组件交互式文档（类似 Storybook）
 - [ ] `create-kupola` 生成的项目内置示例代码
-- [ ] 迁移指南：1.0 → 2.0（API 对照表）
 - [ ] 常见问题 FAQ 页面
 
 ### 4.3 安全与健壮性 ✅ XSS 基础修复 + 错误边界
@@ -252,7 +250,7 @@ npm run docs:preview # 预览
 | 指令系统 | ✅ 完成 | k-data / k-show / k-bind / k-on / k-model / k-for |
 | UI 组件 | ✅ 48 个 | 覆盖弹层/表单/反馈/数据展示/交互/工具 |
 | TypeScript | ✅ 完成 | types.d.ts 覆盖全部 48 个组件 |
-| 单元测试 | ✅ 914 个 | 54 套件，全部通过 |
+| 单元测试 | ✅ 922 个 | 55 套件，全部通过 |
 | 构建系统 | ✅ 完成 | 54 个入口，ESM + CJS |
 | npm 发布 | ✅ 已发布 | @next tag，2.0.0-alpha.1 |
 | GitHub | ✅ 已清理 | 无 1.0 历史，全新提交 |
