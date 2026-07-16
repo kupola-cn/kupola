@@ -15,7 +15,6 @@
 - DevTools: Signal reactivity profiler (enableProfiler/getProfileReport/printProfileReport)
 - Lazy loading: async component initialization (lazyComponent/preloadComponent)
 - create-kupola: --typescript flag, static-ts template with Vite + TS
-- FAQ documentation (FAQ.md)
 - Anti-FOUC: themePreload/setTheme/toggleTheme + [k-cloak] CSS rule + inline preload script
 - create-kupola templates: inline theme preload + localStorage persistence
 - create-kupola templates: rich examples (Counter, Todo, Form, Reactive Computed)

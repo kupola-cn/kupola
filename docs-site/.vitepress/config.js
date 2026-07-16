@@ -10,6 +10,7 @@ export default defineConfig({
     nav: [
       { text: '指南', link: '/guide/getting-started' },
       { text: '组件', link: '/components/overview' },
+      { text: 'FAQ', link: '/guide/faq' },
     ],
     
     sidebar: {
@@ -21,6 +22,7 @@ export default defineConfig({
             { text: '核心概念', link: '/guide/core-concepts' },
             { text: '指令系统', link: '/guide/directives' },
             { text: 'SSR', link: '/guide/ssr' },
+            { text: 'FAQ', link: '/guide/faq' },
           ],
         },
       ],
