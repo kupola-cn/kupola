@@ -18,7 +18,8 @@
     },
     "./directives": {
       "import": "./dist/kupola-core-directives.esm.js",
-      "require": "./dist/kupola-core-directives.cjs"
+      "require": "./dist/kupola-core-directives.cjs",
+      "types": "./src/directives.d.ts"
     },
     "./components/modal": {
       "import": "./dist/kupola-core-modal.esm.js",

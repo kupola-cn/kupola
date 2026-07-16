@@ -27,6 +27,11 @@
       "import": "./dist/kupola-core-i18n.esm.js",
       "require": "./dist/kupola-core-i18n.cjs"
     },
+    "./directives": {
+      "import": "./dist/kupola-core-directives.esm.js",
+      "require": "./dist/kupola-core-directives.cjs",
+      "types": "./packages/core/src/directives.d.ts"
+    },
     "./css": "./dist/css/index.css",
     "./css/tokens": "./dist/css/tokens.css",
     "./css/components": "./dist/css/components.css",
