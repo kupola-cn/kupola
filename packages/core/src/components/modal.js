@@ -68,9 +68,28 @@ export function Modal(options = {}, children = null) {
 
   // ── Event handlers ─────────────────────────────────────────────────────────
 
+  /** Focus trap: keep Tab within the dialog when open. */
+  const FOCUSABLE = 'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
   const onKeydown = (e) => {
-    if (escClose && e.key === 'Escape' && _isOpen) {
+    if (!_isOpen) {return;}
+    if (escClose && e.key === 'Escape') {
       close();
+      return;
+    }
+    // Focus trap
+    if (e.key === 'Tab' && maskEl) {
+      const dialogEl = maskEl.querySelector('.ds-modal');
+      if (!dialogEl) {return;}
+      const focusable = Array.from(dialogEl.querySelectorAll(FOCUSABLE));
+      if (focusable.length === 0) { e.preventDefault(); return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     }
   };
   document.addEventListener('keydown', onKeydown);

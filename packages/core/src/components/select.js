@@ -24,6 +24,7 @@
 
 import { html } from '../template.js';
 import { render } from '../render.js';
+import { t } from '../i18n.js';
 
 /**
  * Create a Select component instance.
@@ -42,7 +43,7 @@ import { render } from '../render.js';
 export function Select(options = {}) {
   const {
     items = [],
-    placeholder = 'Select...',
+    placeholder = null,
     searchable = false,
     clearable = false,
     multiple = false,
@@ -50,6 +51,8 @@ export function Select(options = {}) {
     values: initialValues = null,
     onChange = null,
   } = options;
+
+  const _placeholder = placeholder || t('select.placeholder');
 
   let _isOpen = false;
   let _focusIndex = -1;
@@ -158,7 +161,7 @@ export function Select(options = {}) {
       valueEl.textContent = `${_selectedValues.size} selected`;
       valueEl.classList.remove('ds-select__value--placeholder');
     } else {
-      valueEl.textContent = placeholder;
+      valueEl.textContent = _placeholder;
       valueEl.classList.add('ds-select__value--placeholder');
     }
   }
@@ -276,7 +279,7 @@ export function Select(options = {}) {
   const tpl = html`
     <div class="ds-select">
       <div class="ds-select__trigger">
-        <span class="ds-select__value${!displayText ? ' ds-select__value--placeholder' : ''}">${displayText || placeholder}</span>
+        <span class="ds-select__value${!displayText ? ' ds-select__value--placeholder' : ''}">${displayText || _placeholder}</span>
         ${clearable ? html`<button class="ds-select__clear">&times;</button>` : ''}
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="6 9 12 15 18 9"/>

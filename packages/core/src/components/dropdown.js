@@ -49,6 +49,7 @@ export function Dropdown(options = {}) {
     if (_isOpen) {return;}
     _isOpen = true;
     if (menuEl) {menuEl.classList.add('is-open');}
+    if (triggerEl) {triggerEl.setAttribute('aria-expanded', 'true');}
   }
 
   function close() {
@@ -56,6 +57,7 @@ export function Dropdown(options = {}) {
     _isOpen = false;
     _focusIndex = -1;
     if (menuEl) {menuEl.classList.remove('is-open');}
+    if (triggerEl) {triggerEl.setAttribute('aria-expanded', 'false');}
     _clearFocus();
   }
 
@@ -147,18 +149,18 @@ export function Dropdown(options = {}) {
 
   const itemTemplates = items.map(
     (item) =>
-      html`<button class="ds-dropdown__item" data-value="${item.value}">${item.text}</button>`,
+      html`<button class="ds-dropdown__item" data-value="${item.value}" role="option">${item.text}</button>`,
   );
 
   const tpl = html`
     <div class="ds-dropdown">
-      <button class="ds-dropdown__trigger" onclick="${onTriggerClick}">
+      <button class="ds-dropdown__trigger" onclick="${onTriggerClick}" aria-haspopup="listbox" aria-expanded="false">
         <span>${placeholder}</span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="6 9 12 15 18 9"/>
         </svg>
       </button>
-      <div class="ds-dropdown__menu">${itemTemplates}</div>
+      <div class="ds-dropdown__menu" role="listbox">${itemTemplates}</div>
     </div>
   `;
 
@@ -168,6 +170,7 @@ export function Dropdown(options = {}) {
   // Grab references to key elements
   const wrapperEl = container.querySelector('.ds-dropdown');
   const menuEl = container.querySelector('.ds-dropdown__menu');
+  const triggerEl = container.querySelector('.ds-dropdown__trigger');
 
   // Bind item click handlers (after render, directly on DOM)
   if (menuEl) {

@@ -52,6 +52,8 @@ export function Drawer(options = {}, children = null) {
     if (maskEl) {maskEl.classList.add('is-visible');}
     if (drawerEl) {drawerEl.classList.add('is-visible');}
     document.body.style.overflow = 'hidden';
+    // Focus management: focus the drawer panel
+    if (drawerEl) {drawerEl.focus();}
   }
 
   function close() {
@@ -90,10 +92,10 @@ export function Drawer(options = {}, children = null) {
 
   const tpl = html`
     <div class="ds-drawer-mask" onclick="${onMaskClick}">
-      <div class="${drawerClass}" style="${styleAttr}">
+      <div class="${drawerClass}" style="${styleAttr}" role="dialog" aria-modal="true" aria-labelledby="drawer-title" tabindex="-1">
         <div class="ds-drawer__header">
-          <span class="ds-drawer__title">${title}</span>
-          <button class="ds-drawer__close" onclick="${close}" aria-label="Close">
+          <span class="ds-drawer__title" id="drawer-title">${title}</span>
+          <button class="ds-drawer__close" onclick="${close}" aria-label="Close" type="button">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>

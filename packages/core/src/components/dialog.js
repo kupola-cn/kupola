@@ -22,6 +22,7 @@
 
 import { html } from '../template.js';
 import { render } from '../render.js';
+import { t } from '../i18n.js';
 
 const ICONS = {
   success: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
@@ -48,10 +49,12 @@ function confirm(options = {}) {
     title = '',
     content = '',
     type = 'normal',
-    confirmText = 'OK',
-    cancelText = 'Cancel',
+    confirmText = null,
+    cancelText = null,
     showCancel = true,
   } = options;
+  const _confirmText = confirmText || t('dialog.ok');
+  const _cancelText = cancelText || t('dialog.cancel');
 
   return new Promise((resolve) => {
     const iconHtml = ICONS[type] || ICONS.normal;
@@ -79,13 +82,13 @@ function confirm(options = {}) {
 
     const tpl = html`
       <div class="ds-modal-mask">
-        <div class="ds-dialog">
+        <div class="ds-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-content" tabindex="-1">
           <div class="ds-dialog__icon ds-dialog__icon--${type}">${iconHtml}</div>
-          <div class="ds-dialog__title">${title}</div>
-          <div class="ds-dialog__content">${content}</div>
+          <div class="ds-dialog__title" id="dialog-title">${title}</div>
+          <div class="ds-dialog__content" id="dialog-content">${content}</div>
           <div class="ds-dialog__actions">
-            ${showCancel ? html`<button class="ds-btn ds-btn--ghost" data-action="cancel">${cancelText}</button>` : ''}
-            <button class="ds-btn ds-btn--primary" data-action="confirm">${confirmText}</button>
+            ${showCancel ? html`<button class="ds-btn ds-btn--ghost" data-action="cancel" type="button">${_cancelText}</button>` : ''}
+            <button class="ds-btn ds-btn--primary" data-action="confirm" type="button">${_confirmText}</button>
           </div>
         </div>
       </div>
@@ -102,6 +105,10 @@ function confirm(options = {}) {
       || document.body.lastElementChild;
     if (maskEl) {maskEl.classList.add('is-visible');}
     document.body.style.overflow = 'hidden';
+
+    // Focus the dialog
+    const dialogEl = maskEl?.querySelector('.ds-dialog');
+    if (dialogEl) {dialogEl.focus();}
 
     // Bind button clicks
     const confirmBtn = maskEl.querySelector('[data-action="confirm"]');

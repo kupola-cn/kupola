@@ -8,6 +8,8 @@
  * @module Table
  */
 
+import { t } from '../i18n.js';
+
 /**
  * @typedef {Object} TableColumn
  * @property {string} key - Column data key
@@ -382,7 +384,7 @@ export function Table(options = {}) {
       const td = document.createElement('td');
       td.colSpan = _getTotalColCount();
       td.className = 'kupola-table-empty';
-      td.textContent = options.emptyText || 'No data';
+      td.textContent = options.emptyText || t('table.empty');
       tr.appendChild(td);
       tbody.appendChild(tr);
     } else {

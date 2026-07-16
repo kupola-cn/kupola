@@ -177,9 +177,9 @@ npm run docs:preview # 预览
 
 **待改进**：
 
-- [ ] 其他弹层组件 ARIA（Drawer, Dialog, Dropdown）
+- [x] 其他弹层组件 ARIA（Drawer: `role="dialog"` + `aria-modal` + 焦点管理, Dialog: `role="alertdialog"`, Dropdown: `aria-haspopup` + `aria-expanded` + `role="listbox"`）
 - [ ] 键盘导航（Tab/Arrow keys）
-- [ ] 焦点陷阱（Modal 打开时限制 Tab 在 dialog 内）
+- [x] 焦点陷阱（Modal 打开时限制 Tab 在 dialog 内）
 - [ ] 表单组件 `<label>` 关联
 
 ### 3.2 国际化（i18n） ✅ 基础完成
@@ -194,7 +194,7 @@ npm run docs:preview # 预览
 
 **待改进**：
 
-- [ ] 组件集成 i18n（Table, Pagination, DatePicker 等）
+- [x] 组件集成 i18n（Table emptyText, Dialog ok/cancel, Select placeholder 使用 `t()`）
 - [ ] 更多语言包
 
 ### 3.3 性能优化 ✅ 基础完成
@@ -233,11 +233,11 @@ npm run docs:preview # 预览
 - [ ] 迁移指南：1.0 → 2.0（API 对照表）
 - [ ] 常见问题 FAQ 页面
 
-### 4.3 安全与健壮性 ✅ XSS 基础修复
+### 4.3 安全与健壮性 ✅ XSS 基础修复 + 错误边界
 
 - [x] XSS 防护：notification 组件 title/message HTML 转义
 - [x] CSP 兼容：无 `eval`/`new Function` 使用
-- [ ] 错误边界：组件内部异常不导致全局崩溃
+- [x] 错误边界：`ErrorBoundary` 工具，组件异常显示 fallback UI
 - [ ] 内存泄漏检测（Signal effect 清理、组件 destroy 完整性）
 
 ---
@@ -259,8 +259,8 @@ npm run docs:preview # 预览
 | 文档网站 | ✅ 已建 | VitePress 精简版，指南 + 组件文档 |
 | CI/CD | ✅ 已修复 | lint 0 errors, 896 tests, 覆盖率 86%+ |
 | CSS 体系 | ✅ 基础 | design tokens + 明暗主题 + ds-* 组件样式 |
-| 无障碍 | ✅ 基础 | Modal ARIA/焦点管理，其他组件待完善 |
-| 国际化 | ✅ 基础 | i18n 模块，en-US/zh-CN，组件集成待做 |
+| 无障碍 | ✅ 增强 | Modal/Drawer/Dialog/Dropdown ARIA + 焦点陷阱 |
+| 国际化 | ✅ 组件集成 | i18n 模块 + Table/Dialog/Select 已集成 |
 | 性能优化 | ✅ 基础 | Tree-shaking 验证，bundle 大小均在限制内 |
 | 集成测试 | ✅ 基础 | 13 个跨模块测试（i18n/signal/SSR） |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
