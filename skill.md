@@ -301,8 +301,3 @@ Avoid wasting tokens/credits:
 | Theme API | `packages/core/src/theme.js` |
 | Responsive CSS | `packages/css/responsive.css` |
 | CSS build | `scripts/build-css.cjs` |
-
-
-## 文件
-
-见仓库根目录 [`SKILL.md`](https://github.com/kupola-cn/kupola/blob/main/skill.md)。
