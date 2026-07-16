@@ -145,7 +145,95 @@ adapter.use(async (ctx, next) => {
 });
 ```
 
+---
+
+## 内置中间件工厂
+
+AI Adapter 提供三个开箱即用的中间件工厂，从 `@kupola/ai-adapter` 直接导入：
+
+### createRateLimiter
+
+滑动窗口速率限制，防止 API 被滥用：
+
+```js
+import { createRateLimiter } from '@kupola/ai-adapter';
+
+// 每分钟最多 30 次请求
+adapter.use(createRateLimiter({ maxRequests: 30, windowMs: 60000 }));
+
+// 超限时返回：
+// { type: 'error', message: 'Rate limit exceeded', retryAfter: 42000 }
+```
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `maxRequests` | `30` | 窗口内最大请求数 |
+| `windowMs` | `60000` | 窗口时间（毫秒） |
+
+### createDevToolsLogger
+
+自动记录每次 process 的耗时和结果到 `window.__KUPOLA_AI_DEVTOOLS__`：
+
+```js
+import { createDevToolsLogger } from '@kupola/ai-adapter';
+
+adapter.use(createDevToolsLogger({ maxEntries: 100 }));
+
+// 在浏览器控制台中检查：
+// window.__KUPOLA_AI_DEVTOOLS__
+// => [{ input, engine, duration, result, timestamp }, ...]
+```
+
+### createAuthGuard
+
+基于角色的操作拦截，防止未授权用户执行敏感操作：
+
+```js
+import { createAuthGuard } from '@kupola/ai-adapter';
+
+// 只允许 admin 执行删除操作
+adapter.use(createAuthGuard({
+  restrictedTypes: ['delete', '调薪'],
+  roleField: 'role',           // ctx.context 中的角色字段
+  allowedRoles: ['admin', 'hr'],
+}));
+
+// 调用时传入用户角色：
+await adapter.process('删除员工李四', { role: 'user' });
+// => { type: 'error', message: 'Unauthorized: role "user" not allowed' }
+```
+
+### 组合使用
+
+```js
+import { createRateLimiter, createAuthGuard, createDevToolsLogger } from '@kupola/ai-adapter';
+
+adapter
+  .use(createDevToolsLogger())               // 第一层：记录所有请求
+  .use(createRateLimiter({ maxRequests: 20 }))  // 第二层：速率限制
+  .use(createAuthGuard({ restrictedTypes: ['delete'] })); // 第三层：权限检查
+```
+
+---
+
+## DevTools 快照
+
+除了中间件日志，AIAdapter 还提供 `getDevToolsSnapshot()` 方法，返回完整运行时状态：
+
+```js
+const snap = adapter.getDevToolsSnapshot();
+// {
+//   version: '1.3.0',
+//   messages: [...],
+//   middlewares: 3,
+//   query: { registered: 5, history: 12, cache: 3 },
+//   action: { registered: 4, undoStack: 2, audit: 18 },
+//   flow: { defined: 3, executions: 7 },
+//   events: ['input', 'parsed', 'result', 'flow:step', 'action:before', 'action:after'],
+// }
+```
+
 ## 下一步
 
-- [Kupola 集成](./kupola-integration) — 将处理结果渲染到 UI
+- [Kupola 集成](./kupola-integration) — AIPanel 面板、AIDashboard 看板、语音交互
 - [API 参考](./api) — 完整 API 文档

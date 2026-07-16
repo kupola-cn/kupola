@@ -166,6 +166,38 @@ const batch = await adapter.action.executeBatch([
 // { success: true, results: [...], failed: 0, total: 3 }
 ```
 
+### 操作依赖
+
+声明操作之间的依赖关系，确保某些操作必须在其他操作成功之后才能执行：
+
+```js
+adapter.action.register('调薪', {
+  handler: adjustSalary,
+  dependsOn: ['查询员工'],  // 必须先成功执行过"查询员工"
+});
+
+// 如果依赖未满足，execute() 返回错误：
+// { success: false, error: 'Dependency not met: "查询员工" must succeed before "调薪"' }
+```
+
+检查依赖状态：
+
+```js
+// 返回 null 表示依赖已满足，返回错误字符串表示未满足
+adapter.action.checkDependencies('调薪');
+// => 'Dependency not met: "查询员工" must succeed before "调薪"'
+
+// 支持多依赖
+adapter.action.register('发工资', {
+  handler: paySalary,
+  dependsOn: ['查询员工', '调薪'],  // 必须两个都成功
+});
+
+// 自动检测循环依赖
+adapter.action.checkDependencies('A');
+// => 'Circular dependency detected: A'
+```
+
 ---
 
 ## 流程引擎（FlowEngine）

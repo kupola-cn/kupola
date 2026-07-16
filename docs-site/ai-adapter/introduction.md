@@ -55,6 +55,20 @@ AI Adapter 是 Kupola 的独立扩展包，提供**自然语言 → 结构化命
 
 <div style="text-align: center; color: var(--vp-c-text-3); font-size: 18px; margin: 4px 0;">↓</div>
 
+<!-- 基础设施层 -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+  <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 14px 16px; text-align: center;">
+    <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">📡 EventBus</div>
+    <div style="font-size: 11px; color: var(--vp-c-text-3);">on / once / wildcard / emit</div>
+  </div>
+  <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 14px 16px; text-align: center;">
+    <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">🔧 Middleware</div>
+    <div style="font-size: 11px; color: var(--vp-c-text-3);">RateLimiter · AuthGuard · DevTools</div>
+  </div>
+</div>
+
+<div style="text-align: center; color: var(--vp-c-text-3); font-size: 18px; margin: 4px 0;">↓</div>
+
 <!-- UI 输出层 -->
 <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 16px 24px;">
   <div style="font-weight: 600; font-size: 14px; text-align: center; margin-bottom: 10px;">🎨 Kupola UI 组件</div>
@@ -62,9 +76,27 @@ AI Adapter 是 Kupola 的独立扩展包，提供**自然语言 → 结构化命
     <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Table</span>
     <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Modal</span>
     <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Form</span>
-    <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Dialog</span>
     <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Notification</span>
     <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Timeline</span>
+    <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Progress</span>
+  </div>
+</div>
+
+<div style="text-align: center; color: var(--vp-c-text-3); font-size: 18px; margin: 4px 0;">↓</div>
+
+<!-- 独立 UI 组件 -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+  <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 14px; text-align: center;">
+    <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">💬 AIPanel</div>
+    <div style="font-size: 11px; color: var(--vp-c-text-3);">对话面板 · 进度条 · 时间线</div>
+  </div>
+  <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 14px; text-align: center;">
+    <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">📊 AIDashboard</div>
+    <div style="font-size: 11px; color: var(--vp-c-text-3);">数据卡片 · 聚合 · 自动刷新</div>
+  </div>
+  <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 14px; text-align: center;">
+    <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">🎙️ VoiceController</div>
+    <div style="font-size: 11px; color: var(--vp-c-text-3);">唤醒词 · 指令映射 · TTS</div>
   </div>
 </div>
 
@@ -114,9 +146,11 @@ console.log(result.message); // 🔍 Found 1 employee record(s).
 |------|------|--------|
 | **意图解析** | 将自然语言转为结构化命令 | `IntentParser` / `RuleBasedParser` |
 | **查询引擎** | 处理只读数据查询，支持缓存、分页、聚合 | `QueryEngine` |
-| **执行引擎** | 处理写操作（增删改），支持确认、撤销、审计 | `ActionEngine` |
+| **执行引擎** | 处理写操作（增删改），支持确认、撤销、审计、**操作依赖** | `ActionEngine` |
 | **流程引擎** | 处理多步骤可重复流程，支持持久化、自动学习 | `FlowEngine` |
-| **中间件** | 可扩展的处理管道，插入自定义逻辑 | `adapter.use()` |
+| **事件总线** | 标准化 pub/sub，支持 `once()` / `wildcard()` | `EventBus` |
+| **中间件** | 可扩展的处理管道，内置速率限制、权限守卫、DevTools 日志 | `adapter.use()` |
+| **UI 组件** | 对话面板、数据看板、语音交互 | `AIPanel` / `AIDashboard` / `VoiceController` |
 
 ## 双语支持
 
@@ -138,6 +172,6 @@ await adapter.process('run monthly report');
 
 - [三引擎详解](./engines) — 深入了解 Query、Action、Flow 引擎
 - [意图解析](./intent-parser) — 了解 AI 后端接入和规则引擎
-- [中间件](./middleware) — 扩展处理管道
-- [Kupola 集成](./kupola-integration) — 与 Kupola UI 组件联动
+- [中间件](./middleware) — 扩展处理管道 + 内置中间件工厂
+- [Kupola 集成](./kupola-integration) — AIPanel 面板、AIDashboard 看板、语音交互
 - [API 参考](./api) — 完整 API 文档

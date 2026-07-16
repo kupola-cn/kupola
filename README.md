@@ -320,6 +320,109 @@ const options: ModalOptions = {
 
 ---
 
+## AI Adapter
+
+`@kupola/ai-adapter` is an AI operation engine that converts natural language into structured commands — bridging human intent with your application's data layer.
+
+```bash
+npm install @kupola/ai-adapter
+```
+
+### Three Engines, One Pipeline
+
+| Engine | Purpose | Example |
+|--------|---------|--------|
+| **QueryEngine** | Read-only data retrieval | `"查询员工张三的考勤"` → `{ engine: 'query', type: 'attendance', params: { name: '张三' } }` |
+| **ActionEngine** | Write operations with undo | `"给张三发工资条"` → `{ engine: 'action', type: '发工资条', params: { name: '张三' } }` |
+| **FlowEngine** | Multi-step workflows | `"运行月底结算流程"` → executes 5 steps sequentially with retry & resume |
+
+### Quick Start
+
+```javascript
+import { AIAdapter, AIPanel } from '@kupola/ai-adapter';
+
+const adapter = new AIAdapter();
+
+// Register query handlers
+adapter.query.register('employee', async (params) => {
+  return await api.getEmployees(params);
+});
+
+// Register action handlers with undo support
+adapter.action.register('调整薪资', {
+  handler: async (params) => await api.adjustSalary(params),
+  undo: async (params) => await api.rollbackSalary(params),
+  dependsOn: ['查询员工'],  // dependency enforcement
+});
+
+// Define multi-step flows
+adapter.flow.define('月底结算', {
+  steps: [
+    { label: '汇总考勤', handler: async (data) => ({ ...data, attendance: 'ok' }) },
+    { label: '计算薪资', handler: async (data) => ({ ...data, salary: 'ok' }) },
+    { label: '生成报表', handler: async (data) => ({ ...data, report: 'done' }) },
+  ],
+});
+
+// Process natural language — the adapter routes to the right engine
+const result = await adapter.process('查询员工张三的信息');
+// => { engine: 'query', type: 'employee', result: [...], message: '...' }
+```
+
+### Middleware System
+
+Koa-style middleware for cross-cutting concerns:
+
+```javascript
+import { createRateLimiter, createAuthGuard } from '@kupola/ai-adapter';
+
+adapter.use(createRateLimiter({ maxRequests: 30, windowMs: 60000 }));
+adapter.use(createAuthGuard({ restrictedTypes: ['删除'], allowedRoles: ['admin'] }));
+adapter.use(async (ctx, next) => {
+  console.log(`[${ctx.command.engine}] ${ctx.input}`);
+  await next();
+  console.log(`=> ${ctx.result.message}`);
+});
+```
+
+### UI Components
+
+| Component | Description |
+|-----------|-------------|
+| **AIPanel** | Conversation panel with message list, input, progress bar & flow timeline |
+| **AIDashboard** | Data dashboard with stat cards, aggregate functions & auto-refresh |
+| **VoiceController** | Web Speech API integration with wake word detection & command mapping |
+
+```javascript
+import { AIPanel, AIDashboard, VoiceController } from '@kupola/ai-adapter';
+
+// Mount AI conversation panel
+const panel = new AIPanel(adapter, { title: 'AI 助手' });
+panel.mount(document.getElementById('ai-panel'));
+
+// Create data dashboard
+const dashboard = new AIDashboard(adapter);
+dashboard.addCard('headcount', 'employee', { label: '员工总数', aggregate: 'count' });
+dashboard.addCard('salary', 'salary', { label: '薪资总额', aggregate: 'sum:amount' });
+dashboard.mount(document.getElementById('dashboard'));
+
+// Enable voice control
+const voice = new VoiceController(adapter, { wakeWord: '小库' });
+voice.start();
+```
+
+### Event System
+
+```javascript
+adapter.on('result', (data) => console.log('Result:', data));
+adapter.once('flow:complete', (data) => notify('流程完成', data));
+adapter.wildcard('action:*', (event, data) => audit.log(event, data));
+```
+
+> 📖 Full documentation: [AI Adapter Docs](https://kupola-cn.github.io/kupola/ai-adapter/introduction)
+
+---
+
 ## Ecosystem
 
 | Project | Description |
