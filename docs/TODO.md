@@ -178,7 +178,7 @@ npm run docs:preview # 预览
 **待改进**：
 
 - [x] 其他弹层组件 ARIA（Drawer: `role="dialog"` + `aria-modal` + 焦点管理, Dialog: `role="alertdialog"`, Dropdown: `aria-haspopup` + `aria-expanded` + `role="listbox"`）
-- [ ] 键盘导航（Tab/Arrow keys）
+- [x] 键盘导航（Home/End/Tab — Dropdown/Select 支持）
 - [x] 焦点陷阱（Modal 打开时限制 Tab 在 dialog 内）
 - [x] 表单组件 `<label>` 关联（NumberInput/Select 支持 `label` + `id` 自动生成）
 
@@ -195,6 +195,7 @@ npm run docs:preview # 预览
 **待改进**：
 
 - [x] 组件集成 i18n（Table emptyText, Dialog ok/cancel, Select placeholder 使用 `t()`）
+- [x] DatePicker/TimePicker i18n（月份/星期/placeholder 使用 `t()`）
 - [ ] 更多语言包
 
 ### 3.3 性能优化 ✅ 基础完成
@@ -264,7 +265,7 @@ npm run docs:preview # 预览
 | 性能优化 | ✅ 基础 | Tree-shaking 验证，bundle 大小均在限制内 |
 | 集成测试 | ✅ 31 个 | SSR水合/指令场景/ErrorBoundary/内存泄漏 |
 | 覆盖率 | ✅ 86%+ | Statements 86%, Branches 70%, Functions 87%, Lines 89% |
-| 正式版 | ⏳ beta | 2.0.0-beta.1 已发布 @next |
+| 正式版 | ⏳ beta.3 | 2.0.0-beta.3 已发布 @next |
 
 ---
 
