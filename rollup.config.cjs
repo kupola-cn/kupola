@@ -1829,7 +1829,7 @@ file: 'dist/kupola-core-table.cjs',
     input: 'packages/ai-adapter/src/index.js',
     output: [
       {
-        file: 'dist/ai-adapter.esm.js',
+        file: 'packages/ai-adapter/dist/ai-adapter.esm.js',
         format: 'esm',
         sourcemap: false,
         plugins: [terser({
@@ -1838,7 +1838,7 @@ file: 'dist/kupola-core-table.cjs',
         })]
       },
       {
-        file: 'dist/ai-adapter.cjs',
+        file: 'packages/ai-adapter/dist/ai-adapter.cjs',
         format: 'cjs',
         sourcemap: false,
         exports: 'named',
