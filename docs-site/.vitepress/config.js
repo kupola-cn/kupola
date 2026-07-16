@@ -10,6 +10,8 @@ export default defineConfig({
     nav: [
       { text: '指南', link: '/guide/getting-started' },
       { text: '组件', link: '/components/overview' },
+      { text: '插件', link: '/plugins/vite' },
+      { text: '扩展', link: '/extensions/vscode' },
       { text: 'FAQ', link: '/guide/faq' },
     ],
     
@@ -34,6 +36,24 @@ export default defineConfig({
             { text: 'Modal', link: '/components/modal' },
             { text: 'Table', link: '/components/table' },
             { text: 'Form', link: '/components/form' },
+          ],
+        },
+      ],
+      '/plugins/': [
+        {
+          text: '插件',
+          items: [
+            { text: 'Vite 插件', link: '/plugins/vite' },
+            { text: 'Webpack 插件', link: '/plugins/webpack' },
+            { text: 'ESLint 插件', link: '/plugins/eslint' },
+          ],
+        },
+      ],
+      '/extensions/': [
+        {
+          text: '扩展',
+          items: [
+            { text: 'VS Code 扩展', link: '/extensions/vscode' },
           ],
         },
       ],

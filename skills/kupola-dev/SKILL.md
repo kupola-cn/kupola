@@ -156,6 +156,58 @@ import { renderToString, hydrate } from '@kupola/kupola/server';
 
 // Directives
 import { walk } from '@kupola/kupola/directives';
+
+// Theme (anti-FOUC)
+import { themePreload, setTheme, toggleTheme, getPreferredTheme, onThemeChange, getThemeInlineScript } from '@kupola/kupola';
+
+// Lazy loading
+import { lazyComponent, preloadComponent } from '@kupola/kupola';
+
+// DevTools
+import { enableProfiler, getProfileReport } from '@kupola/kupola';
+
+// i18n
+import { setLocale, getLocale, t, addMessages } from '@kupola/kupola';
+
+// CSS
+import '@kupola/kupola/css';              // full bundle
+import '@kupola/kupola/css/tokens';        // tokens only
+import '@kupola/kupola/css/components';    // components only
+import '@kupola/kupola/css/responsive';     // responsive utilities
+```
+
+## Theme System (Anti-FOUC)
+
+```javascript
+// Blocking preload — call in <head> before first paint
+themePreload(); // reads localStorage('kupola-theme') + prefers-color-scheme, sets data-theme, removes [k-cloak]
+
+// Programmatic control
+setTheme('dark');        // set + persist to localStorage
+toggleTheme();           // toggle dark ↔ light
+getPreferredTheme();     // returns 'light' | 'dark'
+onThemeChange(theme => { /* callback */ });
+getThemeInlineScript();  // returns <script> string for SSR injection
+```
+
+CSS: `[k-cloak] { display: none !important; }` — hides elements until JS removes the attribute.
+
+## Responsive Breakpoints
+
+| Breakpoint | Value | Device |
+|------------|-------|--------|
+| `sm` | 576px | Phone landscape |
+| `md` | 768px | Tablet |
+| `lg` | 1024px | Laptop |
+| `xl` | 1280px | Desktop |
+
+```html
+<!-- Display utilities -->
+<div class="ds-hide-sm">Hidden on phones</div>
+<div class="ds-show-md">Only visible on tablets+</div>
+
+<!-- Component auto-adaptations (< 576px) -->
+<!-- Modal → fullscreen, Drawer → full-width, Table → horizontal scroll, Select → bottom sheet -->
 ```
 
 ## Anti-Patterns
@@ -168,6 +220,7 @@ import { walk } from '@kupola/kupola/directives';
 | `count = 5` to write signal | `count.value = 5` |
 | Raw `innerHTML = ...` | Use `html` template + `render()` |
 | Direct DOM manipulation in effects | Let template handle DOM updates |
+| Hardcode `data-theme` without preload | Use `themePreload()` or inline script in `<head>` |
 
 ## Adding a New Component
 
@@ -196,6 +249,11 @@ packages/core/
 │   ├── render.js       # DOM renderer
 │   ├── server.js       # SSR (renderToString + hydrate)
 │   ├── directives.js   # k-* directive system
+│   ├── theme.js        # Theme utilities (anti-FOUC)
+│   ├── lazy.js         # Lazy component loading
+│   ├── devtools.js     # Signal profiler
+│   ├── i18n.js         # Internationalization
+│   ├── errors.js       # ErrorBoundary
 │   └── index.js        # Public API entry
 └── __tests__/
     └── components/     # Component tests
@@ -204,7 +262,7 @@ packages/core/
 ## Testing
 
 ```bash
-npm run test          # Run all 883 tests
+npm run test          # Run all 922 tests
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report
 ```
@@ -239,4 +297,7 @@ Avoid wasting tokens/credits:
 | Component test | `packages/core/__tests__/components/{name}.test.js` |
 | Build config | `rollup.config.cjs` (line ~1600-1800 for component entries) |
 | Type definitions | `packages/core/src/components/types.d.ts` |
-| Core API | `packages/core/src/index.js` (40 lines) |
+| Core API | `packages/core/src/index.js` (55 lines) |
+| Theme API | `packages/core/src/theme.js` |
+| Responsive CSS | `packages/css/responsive.css` |
+| CSS build | `scripts/build-css.cjs` |
