@@ -15,21 +15,58 @@ AI Adapter 是 Kupola 的独立扩展包，提供**自然语言 → 结构化命
 
 ## 架构总览
 
-```
-用户输入（文本 / 语音转文字）
-         ↓
-    意图解析（IntentParser）
-    ┌──── AI 后端（可选）
-    └──── 规则引擎（内置 fallback）
-         ↓
-┌────────────┬──────────────┬────────────┐
-│  查询引擎    │  执行引擎     │  流程引擎    │
-│  QueryEngine │  ActionEngine │  FlowEngine  │
-│  (只读查询)  │  (单次写操作) │  (多步流程)  │
-└──────┬─────┴──────┬──────┴──────┬─────┘
-       ↓            ↓             ↓
-  Table / Dialog  Modal / Form  Timeline / Notification
-```
+<!-- 输入层 -->
+<div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 20px 24px; margin-bottom: 8px; text-align: center;">
+  <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">🗣️ 用户输入</div>
+  <div style="font-size: 12px; color: var(--vp-c-text-2);">文本 / 语音转文字</div>
+</div>
+
+<div style="text-align: center; color: var(--vp-c-text-3); font-size: 18px; margin: 4px 0;">↓</div>
+
+<!-- 解析层 -->
+<div style="background: var(--vp-c-brand-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 20px 24px; margin-bottom: 8px;">
+  <div style="font-weight: 600; font-size: 15px; text-align: center; margin-bottom: 12px;">🧠 意图解析 IntentParser</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+    <div style="background: var(--vp-c-bg); border-radius: 6px; padding: 8px 12px; text-align: center; font-size: 13px;">AI 后端 <span style="color: var(--vp-c-text-2);">（可选）</span></div>
+    <div style="background: var(--vp-c-bg); border-radius: 6px; padding: 8px 12px; text-align: center; font-size: 13px;">规则引擎 <span style="color: var(--vp-c-text-2);">（内置）</span></div>
+  </div>
+</div>
+
+<div style="text-align: center; color: var(--vp-c-text-3); font-size: 18px; margin: 4px 0;">↓</div>
+
+<!-- 引擎层 -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px;">
+  <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 16px; text-align: center;">
+    <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">🔍 查询引擎</div>
+    <div style="font-size: 12px; color: var(--vp-c-text-2); margin-bottom: 8px;">QueryEngine</div>
+    <div style="font-size: 11px; color: var(--vp-c-text-3);">只读查询 · 缓存 · 分页</div>
+  </div>
+  <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 16px; text-align: center;">
+    <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">⚙️ 执行引擎</div>
+    <div style="font-size: 12px; color: var(--vp-c-text-2); margin-bottom: 8px;">ActionEngine</div>
+    <div style="font-size: 11px; color: var(--vp-c-text-3);">增删改 · 确认 · 撤销</div>
+  </div>
+  <div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 16px; text-align: center;">
+    <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">🔁 流程引擎</div>
+    <div style="font-size: 12px; color: var(--vp-c-text-2); margin-bottom: 8px;">FlowEngine</div>
+    <div style="font-size: 11px; color: var(--vp-c-text-3);">多步骤 · 持久化 · 学习</div>
+  </div>
+</div>
+
+<div style="text-align: center; color: var(--vp-c-text-3); font-size: 18px; margin: 4px 0;">↓</div>
+
+<!-- UI 输出层 -->
+<div style="background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 10px; padding: 16px 24px;">
+  <div style="font-weight: 600; font-size: 14px; text-align: center; margin-bottom: 10px;">🎨 Kupola UI 组件</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;">
+    <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Table</span>
+    <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Modal</span>
+    <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Form</span>
+    <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Dialog</span>
+    <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Notification</span>
+    <span style="background: var(--vp-c-brand-soft); padding: 3px 10px; border-radius: 4px; font-size: 12px;">Timeline</span>
+  </div>
+</div>
 
 ## 安装
 
