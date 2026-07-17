@@ -5,7 +5,7 @@
  * A full-featured AI conversation panel built with Kupola native components.
  *
  * Features:
- * - Modal container (draggable, closable)
+ * - Drawer or floating panel container (closable)
  * - Message list with three styles: user / system / suggestion
  * - Input area with send button
  * - Quick action buttons rendered from system suggestions
@@ -28,7 +28,8 @@ export class AIPanel {
    * @param {import('./ai-adapter.js').AIAdapter} adapter
    * @param {object} [options]
    * @param {string} [options.title]        — panel title (default: 'AI Assistant')
-   * @param {string} [options.width]        — modal width (default: '520px')
+   * @param {string} [options.layout]       — 'drawer' | 'floating' (default: 'drawer')
+   * @param {string} [options.width]        — panel width (default: '520px')
    * @param {string} [options.height]       — messages area max-height (default: '400px')
    * @param {string} [options.placeholder]  — input placeholder text
    * @param {boolean} [options.showTimestamp] — show timestamps on messages
@@ -38,6 +39,7 @@ export class AIPanel {
     this.adapter = adapter;
     this.options = {
       title: 'AI Assistant',
+      layout: 'drawer',
       width: '520px',
       height: '400px',
       placeholder: '输入指令... (查询/添加/执行)',
@@ -70,8 +72,15 @@ export class AIPanel {
   mount(parent) {
     if (this._container) this.destroy();
 
+    const isFloating = this.options.layout === 'floating';
     this._container = document.createElement('div');
-    this._container.className = 'ds-ai-panel';
+    this._container.className = isFloating
+      ? 'ds-ai-panel ds-ai-panel--floating'
+      : 'ds-ai-panel ds-ai-panel--drawer ds-drawer ds-drawer--right';
+    if (this.options.width) {
+      this._container.style.width = this.options.width;
+    }
+    this._container.style.display = 'none';
     this._container.innerHTML = this._buildHTML();
 
     // Cache DOM refs
@@ -109,6 +118,7 @@ export class AIPanel {
   open() {
     if (!this._container) return;
     this._container.style.display = 'flex';
+    this._container.classList.add('is-visible');
     this._isOpen = true;
     this._scrollToBottom();
     this._inputEl.focus();
@@ -117,6 +127,7 @@ export class AIPanel {
   /** Hide the panel. */
   close() {
     if (!this._container) return;
+    this._container.classList.remove('is-visible');
     this._container.style.display = 'none';
     this._isOpen = false;
   }

@@ -4,7 +4,7 @@ AI Adapter 提供三个独立 UI 组件 + 丰富的事件系统，与 Kupola UI 
 
 ## AIPanel — 对话面板
 
-`AIPanel` 是基于 Kupola 原生组件构建的完整 AI 对话面板，支持消息列表、输入框、进度条和流程时间线。
+`AIPanel` 是基于 Kupola 原生组件构建的完整 AI 对话面板，默认以右侧抽屉展示，支持消息列表、输入框、进度条和流程时间线。需要旧版右下角悬浮面板时，可以传 `layout: 'floating'`。
 
 ### 基本用法
 
@@ -14,7 +14,7 @@ import { AIAdapter, AIPanel } from '@kupola/ai-adapter';
 const adapter = new AIAdapter({ /* ... */ });
 const panel = new AIPanel(adapter, {
   title: 'AI 助手',
-  width: '400px',
+  width: '420px',
   height: '600px',
   placeholder: '输入指令...',
   showTimestamp: true,
@@ -26,7 +26,7 @@ const panel = new AIPanel(adapter, {
 });
 
 // 挂载到 DOM
-panel.mount(document.getElementById('ai-panel'));
+panel.mount(document.body);
 panel.open();
 ```
 
@@ -360,7 +360,7 @@ const panel = new AIPanel(adapter, {
     permissions: currentUser.permissions,
   }),
 });
-panel.mount(document.getElementById('ai-panel'));
+panel.mount(document.body);
 
 // 挂载数据看板
 const dashboard = new AIDashboard(adapter);

@@ -43,9 +43,24 @@ describe('AIPanel', () => {
   it('should mount into a DOM container', () => {
     panel.mount(container);
     expect(container.querySelector('.ds-ai-panel')).not.toBeNull();
+    const panelEl = container.querySelector('.ds-ai-panel');
+    expect(panelEl.classList.contains('ds-ai-panel--drawer')).toBe(true);
+    expect(panelEl.classList.contains('ds-drawer')).toBe(true);
+    expect(panelEl.classList.contains('ds-drawer--right')).toBe(true);
+    expect(panelEl.style.display).toBe('none');
     expect(container.querySelector('.ds-ai-messages')).not.toBeNull();
     expect(container.querySelector('.ds-ai-input')).not.toBeNull();
     expect(container.querySelector('.ds-ai-send-btn')).not.toBeNull();
+  });
+
+  it('should support floating layout and configured width', () => {
+    panel.destroy();
+    panel = new AIPanel(adapter, { layout: 'floating', width: '420px' });
+    panel.mount(container);
+
+    const panelEl = container.querySelector('.ds-ai-panel');
+    expect(panelEl.classList.contains('ds-ai-panel--floating')).toBe(true);
+    expect(panelEl.style.width).toBe('420px');
   });
 
   it('should display title in header', () => {
@@ -59,8 +74,10 @@ describe('AIPanel', () => {
     panel.open();
     const panelEl = container.querySelector('.ds-ai-panel');
     expect(panelEl.style.display).toBe('flex');
+    expect(panelEl.classList.contains('is-visible')).toBe(true);
 
     panel.close();
+    expect(panelEl.classList.contains('is-visible')).toBe(false);
     expect(panelEl.style.display).toBe('none');
   });
 

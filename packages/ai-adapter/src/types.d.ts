@@ -282,6 +282,7 @@ export declare function createAuthGuard(options?: AuthGuardOptions): (ctx: any, 
 
 export interface AIPanelOptions {
   title?: string;
+  layout?: 'drawer' | 'floating';
   width?: string;
   height?: string;
   placeholder?: string;
@@ -622,6 +623,7 @@ export declare function createAuthGuard(options?: AuthGuardOptions): (ctx: any, 
 
 export interface AIPanelOptions {
   title?: string;
+  layout?: 'drawer' | 'floating';
   width?: string;
   height?: string;
   placeholder?: string;

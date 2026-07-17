@@ -163,6 +163,9 @@ import { AIPanel } from '@kupola/ai-adapter';
 
 const panel = new AIPanel(adapter, {
   title: 'AI Assistant',
+  // Default layout is a right-side drawer.
+  // Use layout: 'floating' only when a compact corner panel is preferred.
+  layout: 'drawer',
   context: () => ({
     token: localStorage.getItem('token'),
     role: currentUser.role,

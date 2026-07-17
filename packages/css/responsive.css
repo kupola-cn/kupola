@@ -157,6 +157,12 @@
 /* ── AI Panel / Result Viewer ─────────────────────────────── */
 @media (max-width: 575.98px) {
   .ds-ai-panel {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  .ds-ai-panel--floating,
+  .ds-ai-panel.is-minimized {
     right: var(--spacer-8) !important;
     left: var(--spacer-8) !important;
     bottom: var(--spacer-32) !important;

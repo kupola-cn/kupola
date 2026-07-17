@@ -243,26 +243,43 @@ body {
 /* ── AI Panel ──────────────────────────────────────────────── */
 .ds-ai-panel {
   position: fixed;
-  right: var(--spacer-16);
-  bottom: var(--spacer-40);
+  top: 0;
+  right: 0;
+  bottom: 0;
   z-index: 9999;
-  width: 480px;
-  max-height: 80vh;
+  width: min(520px, 100vw);
+  max-height: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-base-secondary);
   color: var(--text-default);
-  border: 1px solid var(--border-neutral-l1);
-  border-radius: var(--radius-8);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.18);
+  border-left: 1px solid var(--border-neutral-l1);
+  box-shadow: -18px 0 48px rgba(0, 0, 0, 0.28);
   font-family: var(--font-family-default);
   font-size: var(--body-base-font-size);
 }
 
+.ds-ai-panel--floating {
+  top: auto;
+  right: var(--spacer-16);
+  bottom: var(--spacer-40);
+  width: 480px;
+  max-height: 80vh;
+  border: 1px solid var(--border-neutral-l1);
+  border-radius: var(--radius-8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
 .ds-ai-panel.is-minimized {
+  top: auto;
+  right: var(--spacer-16);
+  bottom: var(--spacer-24);
+  width: min(360px, calc(100vw - 32px));
   height: auto !important;
   max-height: none;
+  border: 1px solid var(--border-neutral-l1);
+  border-radius: var(--radius-8);
 }
 
 .ds-ai-panel.is-minimized .ds-ai-messages,
@@ -327,10 +344,15 @@ body {
 
 .ds-ai-messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--spacer-12) var(--spacer-16);
   scrollbar-width: thin;
   scrollbar-color: var(--border-neutral-l2) transparent;
+}
+
+.ds-ai-panel--drawer .ds-ai-messages {
+  max-height: none !important;
 }
 
 .ds-ai-messages::-webkit-scrollbar,

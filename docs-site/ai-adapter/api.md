@@ -297,8 +297,9 @@ new AIPanel(adapter, options?)
 | 选项 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `title` | `string` | `'AI Assistant'` | 面板标题 |
-| `width` | `string` | `'380px'` | 面板宽度 |
-| `height` | `string` | `'520px'` | 面板高度 |
+| `layout` | `'drawer' \| 'floating'` | `'drawer'` | 展示方式，默认右侧抽屉；传 `'floating'` 可使用旧的右下角悬浮面板 |
+| `width` | `string` | `'520px'` | 面板宽度 |
+| `height` | `string` | `'400px'` | 消息区域最大高度；抽屉布局会自动撑满可用高度 |
 | `placeholder` | `string` | `'输入指令...'` | 输入框占位符 |
 | `showTimestamp` | `boolean` | `false` | 是否显示消息时间戳 |
 | `context` | `object \| (input) => object \| Promise<object>` | `{}` | 每次发送时传给 `adapter.process(input, context)` 的用户上下文 |
