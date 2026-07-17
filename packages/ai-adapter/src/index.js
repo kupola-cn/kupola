@@ -27,6 +27,7 @@ export { ActionEngine } from './action-engine.js';
 export { FlowEngine } from './flow-engine.js';
 export { IntentParser, RuleBasedParser } from './intent-parser.js';
 export { EventBus } from './event-bus.js';
+export { CapabilityRegistry, CapabilityError } from './capability-registry.js';
 export { createRateLimiter, createDevToolsLogger, createAuthGuard } from './middlewares.js';
 export { AIPanel } from './panel.js';
 export { AIDashboard } from './dashboard.js';

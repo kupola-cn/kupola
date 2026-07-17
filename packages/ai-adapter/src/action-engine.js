@@ -132,6 +132,20 @@ export class ActionEngine {
           ? await action.handler(params)
           : await action.handler(params, context);
 
+        if (result && result.success === false) {
+          const message = result.error || result.message || 'Action failed.';
+          this._addAudit(type, params, 'failed', message, attempt);
+          if (callbacks.onError) callbacks.onError(new Error(message));
+          return {
+            success: false,
+            error: message,
+            data: result,
+            code: result.code,
+            denied: result.denied,
+            details: result.details,
+          };
+        }
+
         // Store undo info
         if (action.undo) {
           this.undoStack.push({
@@ -175,7 +189,13 @@ export class ActionEngine {
     // All attempts failed
     this._addAudit(type, params, 'failed', lastError.message, maxAttempts);
     if (callbacks.onError) callbacks.onError(lastError);
-    return { success: false, error: lastError.message };
+    return {
+      success: false,
+      error: lastError.message,
+      code: lastError.code,
+      denied: lastError.denied,
+      details: lastError.details,
+    };
   }
 
   /**

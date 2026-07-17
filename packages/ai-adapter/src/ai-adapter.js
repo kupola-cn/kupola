@@ -13,6 +13,7 @@ import { QueryEngine } from './query-engine.js';
 import { ActionEngine } from './action-engine.js';
 import { FlowEngine } from './flow-engine.js';
 import { EventBus } from './event-bus.js';
+import { CapabilityRegistry } from './capability-registry.js';
 
 export class AIAdapter {
   constructor(options = {}) {
@@ -31,6 +32,9 @@ export class AIAdapter {
 
     // EventBus (replaces the old Map-based listeners)
     this.bus = options.bus || new EventBus();
+
+    // Centralized AI-facing capability registry
+    this.capability = new CapabilityRegistry(this, options.capability || {});
 
     // Message log
     this.messages = [];
@@ -162,7 +166,7 @@ export class AIAdapter {
    */
   getDevToolsSnapshot() {
     return {
-      version: '2.0.2',
+      version: '2.0.3',
       messages: [...this.messages],
       middlewares: this.middlewares.length,
       query: {
@@ -174,6 +178,10 @@ export class AIAdapter {
         registered: this.action.handlers.size,
         undoStack: this.action.undoStack.length,
         audit: this.action.auditLog.length,
+      },
+      capability: {
+        registered: this.capability.list().length,
+        ai: this.capability.getAICapabilities().length,
       },
       flow: {
         defined: this.flow.flows.size,

@@ -92,7 +92,13 @@ export class QueryEngine {
 
       return output;
     } catch (err) {
-      return { success: false, error: err.message };
+      return {
+        success: false,
+        error: err.message,
+        code: err.code,
+        denied: err.denied,
+        details: err.details,
+      };
     }
   }
 

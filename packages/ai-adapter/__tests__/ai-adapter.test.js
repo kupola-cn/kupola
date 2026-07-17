@@ -315,7 +315,7 @@ describe('AIAdapter', () => {
 
       const snap = adapter.getDevToolsSnapshot();
 
-      expect(snap.version).toBe('2.0.2');
+      expect(snap.version).toBe('2.0.3');
       expect(snap.messages).toEqual([]);
       expect(snap.middlewares).toBe(1);
       expect(snap.query.registered).toBe(1);
@@ -421,6 +421,130 @@ describe('AIAdapter', () => {
 
       expect(result.result.cancelled).toBe(true);
       expect(handler).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('capability registry', () => {
+    it('should register query capability and filter result fields', async () => {
+      const secured = new AIAdapter({
+        ai: async () => ({
+          engine: 'query',
+          type: 'roles',
+          params: { keyword: 'admin', extra: 'ignored' },
+        }),
+      });
+      const handler = jest.fn().mockResolvedValue([
+        { id: 1, name: 'Admin', code: 'admin', password: 'secret', internal: 'hidden' },
+      ]);
+
+      secured.capability.register({
+        engine: 'query',
+        type: 'roles',
+        roles: ['admin'],
+        paramsSchema: { keyword: 'string' },
+        resultFields: ['id', 'name', 'code', 'password'],
+        handler,
+      });
+
+      const result = await secured.process('查询角色', { role: 'admin' });
+
+      expect(result.engine).toBe('query');
+      expect(result.result.success).toBe(true);
+      expect(handler).toHaveBeenCalledWith({ keyword: 'admin' }, expect.objectContaining({ role: 'admin' }));
+      expect(result.result.data).toEqual([
+        { id: 1, name: 'Admin', code: 'admin', password: '[REDACTED]' },
+      ]);
+    });
+
+    it('should block capability without permission before handler execution', async () => {
+      const secured = new AIAdapter({
+        ai: async () => ({
+          engine: 'action',
+          type: 'delete_user',
+          params: { id: 1 },
+        }),
+        action: { requireConfirm: false },
+      });
+      const handler = jest.fn().mockResolvedValue({ ok: true });
+
+      secured.capability.register({
+        engine: 'action',
+        type: 'delete_user',
+        roles: ['admin'],
+        paramsSchema: { id: 'number' },
+        handler,
+      });
+      secured.use(secured.capability.middleware());
+
+      const result = await secured.process('删除用户', { role: 'user' });
+
+      expect(result.engine).toBe('capability');
+      expect(result.code).toBe('PERMISSION_DENIED');
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('should reject invalid capability params', async () => {
+      const secured = new AIAdapter({
+        ai: async () => ({
+          engine: 'action',
+          type: 'update_status',
+          params: { status: 'invalid' },
+        }),
+        action: { requireConfirm: false },
+      });
+      const handler = jest.fn().mockResolvedValue({ ok: true });
+
+      secured.capability.register({
+        engine: 'action',
+        type: 'update_status',
+        paramsSchema: { status: { type: 'string', enum: ['enabled', 'disabled'] } },
+        handler,
+      });
+      secured.use(secured.capability.middleware());
+
+      const result = await secured.process('修改状态');
+
+      expect(result.engine).toBe('capability');
+      expect(result.code).toBe('INVALID_PARAMS');
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('should expose only accessible AI capabilities for context', () => {
+      const secured = new AIAdapter();
+      secured.capability.registerMany([
+        { engine: 'query', type: 'roles', roles: ['admin'], handler: async () => [] },
+        { engine: 'query', type: 'materials', roles: ['user'], handler: async () => [] },
+      ]);
+
+      const caps = secured.capability.getAICapabilities({ role: 'user' });
+
+      expect(caps.map(item => item.type)).toEqual(['materials']);
+      expect(caps[0]).not.toHaveProperty('handler');
+
+      const allCaps = secured.capability.getAICapabilities({ history: [] });
+      expect(allCaps.map(item => item.type)).toEqual(['roles', 'materials']);
+    });
+
+    it('should keep handler-level failure as failure', async () => {
+      const secured = new AIAdapter({
+        ai: async () => ({
+          engine: 'action',
+          type: 'create_order',
+          params: {},
+        }),
+        action: { requireConfirm: false },
+      });
+
+      secured.capability.register({
+        engine: 'action',
+        type: 'create_order',
+        handler: async () => ({ success: false, error: 'blocked' }),
+      });
+
+      const result = await secured.process('创建采购单');
+
+      expect(result.result.success).toBe(false);
+      expect(result.result.error).toBe('blocked');
     });
   });
 });

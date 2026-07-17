@@ -19,6 +19,7 @@ new AIAdapter(options?)
 | `query` | `object` | `{}` | QueryEngine 配置 |
 | `action` | `object` | `{}` | ActionEngine 配置 |
 | `flow` | `object` | `{}` | FlowEngine 配置 |
+| `capability` | `object` | `{}` | CapabilityRegistry 配置 |
 
 ### 方法
 
@@ -45,6 +46,7 @@ new AIAdapter(options?)
 | `flow` | `FlowEngine` | 流程引擎实例 |
 | `parser` | `IntentParser` | 意图解析器实例 |
 | `bus` | `EventBus` | 事件总线实例 |
+| `capability` | `CapabilityRegistry` | 集中式能力注册表 |
 
 ### 事件
 
@@ -122,6 +124,57 @@ new AIAdapter(options?)
 | `onConfirm` | `async (label, params) => boolean` | `null` | 确认回调；没有可用确认器时默认拒绝需要确认的操作 |
 | `retries` | `number` | `0` | 默认重试次数 |
 | `maxAuditLog` | `number` | `200` | 审计日志最大条数 |
+
+---
+
+## CapabilityRegistry
+
+集中管理 AI 能力、权限、参数规则和返回字段过滤。
+
+### 方法
+
+| 方法 | 返回值 | 说明 |
+|------|--------|------|
+| `register(config)` | `CapabilityConfig` | 注册单个能力 |
+| `registerMany(configs)` | `CapabilityRegistry` | 批量注册能力 |
+| `unregister(engine, type)` | `boolean` | 移除能力 |
+| `get(engine, type)` | `CapabilityConfig \| null` | 获取能力定义 |
+| `has(engine, type)` | `boolean` | 是否已注册 |
+| `canAccess(engine, type, context?)` | `boolean` | 仅做权限判断 |
+| `list(filter?)` | `CapabilityConfig[]` | 列出能力 |
+| `toAuthRules()` | `AuthGuardRule[]` | 转为权限规则 |
+| `getAICapabilities(context?)` | `AICapabilityDescription[]` | 返回安全的 AI 可见能力清单 |
+| `middleware(options?)` | `Function` | 生成能力拦截中间件 |
+
+### 能力配置
+
+| 字段 | 说明 |
+|------|------|
+| `engine` | `query` / `action` / `flow` |
+| `type` | 能力类型 |
+| `resource` | 资源名 |
+| `roles` / `permissions` | 权限要求 |
+| `paramsSchema` | 参数白名单和类型规则 |
+| `resultFields` | 仅返回的字段 |
+| `sensitiveFields` | 额外脱敏字段 |
+| `confirm` | 是否确认 |
+| `handler` | 真正执行的业务处理函数 |
+
+### 示例
+
+```js
+adapter.capability.register({
+  engine: 'query',
+  type: 'users',
+  resource: 'users',
+  label: '用户',
+  roles: ['admin'],
+  permissions: ['system:user'],
+  paramsSchema: { keyword: 'string' },
+  resultFields: ['id', 'username', 'real_name'],
+  handler: async (params, context) => api.get('/api/users', params, context),
+});
+```
 
 ---
 

@@ -4,7 +4,7 @@
 
 Convert user input (text or voice) into structured operations using three engines: **Query**, **Action**, and **Flow**.
 
-Version 2.0.2 adds a safer execution pipeline: commands are parsed before middleware runs, so permission guards can inspect the structured command before any query/action/flow handler executes.
+Version 2.0.3 adds a centralized capability registry: projects can declare resources, permissions, parameter rules, result field filters, and handlers in one place.
 
 ## Install
 
@@ -139,6 +139,30 @@ Additional safety defaults:
 - Confirm-required actions are rejected by default if no confirmation UI is available.
 - DevTools logs redact common sensitive fields such as `password`, `token`, `secret`, and `authorization`.
 
+## Capabilities
+
+For app integrations, register AI-facing capabilities centrally and let the adapter handle permission checks, parameter validation, and result filtering:
+
+```js
+const adapter = new AIAdapter({ parser });
+
+adapter.capability.register({
+  engine: 'query',
+  type: 'users',
+  resource: 'users',
+  label: '用户',
+  roles: ['super_admin', 'group_admin'],
+  permissions: ['system:user'],
+  paramsSchema: { keyword: 'string' },
+  resultFields: ['id', 'username', 'real_name', 'status'],
+  handler: async (params, context) => api.get('/api/users', params, context),
+});
+
+adapter.use(adapter.capability.middleware());
+```
+
+`getAICapabilities(context)` returns a safe capability list for AI backends or UI hints. It excludes handlers and sensitive implementation details.
+
 ## AI Backend
 
 By default, a **rule-based parser** handles common Chinese/English patterns. For better accuracy, provide your own AI backend:
@@ -196,6 +220,8 @@ import type { AIAdapterOptions, ParsedCommand, ProcessResult } from '@kupola/ai-
 | `adapter.getMessages()` | Get conversation log |
 | `adapter.clearConversation()` | Reset all state |
 | `adapter.getPanelHTML()` | Get Kupola UI panel |
+| `adapter.capability.register(config)` | Register a centralized capability |
+| `adapter.capability.getAICapabilities(context?)` | Get safe AI-facing capability metadata |
 | `adapter.on(event, cb)` | Subscribe to events |
 | `adapter.query.register(name, fn)` | Register query |
 | `adapter.action.register(name, config)` | Register action |

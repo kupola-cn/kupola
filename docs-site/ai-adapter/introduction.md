@@ -155,7 +155,21 @@ console.log(result.message); // 🔍 Found 1 employee record(s).
 
 ## 安全模型
 
-`2.0.2` 之后，AI Adapter 会先把输入解析为结构化命令，再进入中间件管道。这意味着 `createAuthGuard` 可以在任何 handler 执行前，基于 `engine`、`type`、flow name、角色和权限码集中拦截。
+`2.0.3` 之后，AI Adapter 还提供集中式 capability 注册：项目可以一次性声明资源、权限、参数规则、返回字段和 handler，让权限校验、参数过滤和结果脱敏都围绕同一份能力定义执行。
+
+```js
+adapter.capability.register({
+  engine: 'query',
+  type: 'roles',
+  roles: ['admin'],
+  permissions: ['role:read'],
+  paramsSchema: { keyword: 'string' },
+  resultFields: ['id', 'name', 'code'],
+  handler: async (params, context) => api.get('/api/roles', params, context),
+});
+```
+
+`2.0.3` 之后，AI Adapter 会先把输入解析为结构化命令，再进入中间件管道。这意味着 `createAuthGuard` 可以在任何 handler 执行前，基于 `engine`、`type`、flow name、角色和权限码集中拦截。
 
 ```js
 adapter.use(createAuthGuard({
