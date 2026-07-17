@@ -232,7 +232,7 @@ export function onBrandColorChange(callback) {
 /**
  * Attach a default brand color picker popover to a trigger button.
  * @param {HTMLElement} trigger
- * @param {{ colors?: Array<{ id?: string, label?: string, color: string }>, title?: string, custom?: boolean }} [options]
+ * @param {{ colors?: Array<{ id?: string, label?: string, color: string }>, title?: string, custom?: boolean, customLabel?: string }} [options]
  * @returns {{ open: Function, close: Function, toggle: Function, destroy: Function }}
  */
 export function attachBrandColorPicker(trigger, options = {}) {
@@ -244,6 +244,7 @@ export function attachBrandColorPicker(trigger, options = {}) {
     colors = DEFAULT_BRAND_COLORS,
     title = 'Brand color',
     custom = true,
+    customLabel = '自定义颜色',
   } = options;
 
   let isOpen = false;
@@ -257,7 +258,7 @@ export function attachBrandColorPicker(trigger, options = {}) {
       <button class="ds-brand-picker__close" type="button" aria-label="Close">x</button>
     </div>
     <div class="ds-brand-picker__grid"></div>
-    ${custom ? '<label class="ds-brand-picker__custom"><span>Custom</span><input class="ds-brand-picker__input" type="color"></label>' : ''}
+    ${custom ? `<label class="ds-brand-picker__custom"><span>${_escapeHtml(customLabel)}</span><input class="ds-brand-picker__input" type="color"></label>` : ''}
   `;
   document.body.appendChild(panel);
 
@@ -269,6 +270,11 @@ export function attachBrandColorPicker(trigger, options = {}) {
     const brand = setBrandColor(value);
     _syncSelected(brand);
     close();
+  }
+
+  function preview(value) {
+    const brand = setBrandColor(value);
+    _syncSelected(brand);
   }
 
   colors.forEach(item => {
@@ -287,7 +293,8 @@ export function attachBrandColorPicker(trigger, options = {}) {
 
   if (input) {
     input.value = getPreferredBrandColor().color;
-    input.addEventListener('input', e => select(e.target.value));
+    input.addEventListener('input', e => preview(e.target.value));
+    input.addEventListener('change', e => preview(e.target.value));
   }
 
   function open() {

@@ -3147,6 +3147,12 @@ body.ds-dashboard-page {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.ds-dropdown__trigger svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  pointer-events: none;
+}
 .ds-drawer__close {
   width: 28px;
   height: 28px;

@@ -67,6 +67,29 @@ describe('brand color theme utilities', () => {
     expect(document.body.querySelector('.ds-brand-picker')).toBeNull();
   });
 
+  test('attachBrandColorPicker keeps popover open while picking custom color', () => {
+    const trigger = document.createElement('button');
+    document.body.appendChild(trigger);
+    const picker = attachBrandColorPicker(trigger, {
+      colors: [{ id: 'test', label: 'Test', color: '#F97316' }],
+    });
+
+    trigger.click();
+    const panel = document.body.querySelector('.ds-brand-picker');
+    const input = panel.querySelector('.ds-brand-picker__input');
+
+    expect(panel.textContent).toContain('自定义颜色');
+
+    input.value = '#3b82f6';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(panel.classList.contains('is-open')).toBe(true);
+    expect(document.documentElement.dataset.brand).toBe('blue');
+    expect(document.documentElement.style.getPropertyValue('--bg-brand')).toBe('#3B82F6');
+
+    picker.destroy();
+  });
+
   test('resetBrandColor clears persisted brand color', () => {
     setBrandColor('#F97316');
     resetBrandColor();
