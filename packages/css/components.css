@@ -188,10 +188,12 @@ body {
 .ds-message {
   position: fixed; top: var(--spacer-24); left: 50%; transform: translateX(-50%);
   z-index: var(--z-index-notification);
-  padding: var(--spacer-8) var(--spacer-16);
-  background: var(--bg-base-secondary); border: 1px solid var(--border-neutral-l1);
-  border-radius: var(--radius-4); box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  font-size: var(--body-sm-font-size); color: var(--text-default);
+  display: grid;
+  gap: var(--spacer-8);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  font-size: var(--body-sm-font-size);
+  color: var(--text-default);
 }
 
 /* ── Progress ─────────────────────────────────────────────── */
@@ -745,7 +747,38 @@ body {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 18px; height: 18px; padding: 0 var(--spacer-4);
   border-radius: var(--radius-full); font-size: 11px; font-weight: 600;
-  background: var(--status-error-default); color: #fff;
+  background: var(--bg-overlay-l2);
+  color: var(--text-secondary);
+}
+
+.ds-badge--brand {
+  background: var(--bg-brand);
+  color: var(--text-onbrand);
+}
+
+.ds-badge--success {
+  background: var(--status-success-surface-l1);
+  color: var(--status-success-default);
+}
+
+.ds-badge--warning {
+  background: var(--status-warning-surface-l1);
+  color: var(--status-warning-default);
+}
+
+.ds-badge--error {
+  background: var(--status-error-surface-l1);
+  color: var(--status-error-default);
+}
+
+.ds-badge--info {
+  background: var(--status-info-surface-l1);
+  color: var(--status-info-default);
+}
+
+.ds-badge--neutral {
+  background: var(--bg-overlay-l2);
+  color: var(--text-secondary);
 }
 
 /* ── Collapse ─────────────────────────────────────────────── */
@@ -1425,6 +1458,7 @@ body {
   padding: var(--spacer-12);
   background: var(--bg-base-secondary);
   border: 1px solid var(--border-neutral-l1);
+  border-left-width: 3px;
   border-radius: var(--radius-6);
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.24);
   color: var(--text-default);
@@ -1434,14 +1468,21 @@ body {
   align-items: center;
 }
 
+.ds-message--top { top: var(--spacer-24); right: auto; bottom: auto; left: 50%; transform: translateX(-50%); }
+.ds-message--top-right { top: var(--spacer-24); right: var(--spacer-24); bottom: auto; left: auto; transform: none; }
+.ds-message--top-left { top: var(--spacer-24); right: auto; bottom: auto; left: var(--spacer-24); transform: none; }
+.ds-message--bottom { top: auto; right: auto; bottom: var(--spacer-24); left: 50%; transform: translateX(-50%); }
+.ds-message--bottom-right { top: auto; right: var(--spacer-24); bottom: var(--spacer-24); left: auto; transform: none; }
+.ds-message--bottom-left { top: auto; right: auto; bottom: var(--spacer-24); left: var(--spacer-24); transform: none; }
+
 .ds-notification__item--success,
-.ds-message__item--success { border-color: var(--status-success-default); }
+.ds-message__item--success { border-left-color: var(--status-success-default); }
 .ds-notification__item--warning,
-.ds-message__item--warning { border-color: var(--status-warning-default); }
+.ds-message__item--warning { border-left-color: var(--status-warning-default); }
 .ds-notification__item--error,
-.ds-message__item--error { border-color: var(--status-error-default); }
+.ds-message__item--error { border-left-color: var(--status-error-default); }
 .ds-notification__item--info,
-.ds-message__item--info { border-color: var(--status-info-default); }
+.ds-message__item--info { border-left-color: var(--status-info-default); }
 
 .ds-notification__icon,
 .ds-message__icon {
