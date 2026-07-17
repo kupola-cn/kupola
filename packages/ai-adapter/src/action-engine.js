@@ -54,7 +54,7 @@ export class ActionEngine {
 
   /**
    * Add a before-execute hook (e.g. permission check).
-   * @param {Function} fn — async (actionName, params) => void (throw to block)
+   * @param {Function} fn — async (actionName, params, context) => void (throw to block)
    * @returns {Function} unsubscribe
    */
   beforeExecute(fn) {
@@ -67,7 +67,7 @@ export class ActionEngine {
 
   /**
    * Add an after-execute hook (e.g. logging).
-   * @param {Function} fn — async (actionName, params, result) => void
+   * @param {Function} fn — async (actionName, params, result, context) => void
    * @returns {Function} unsubscribe
    */
   afterExecute(fn) {
@@ -82,7 +82,7 @@ export class ActionEngine {
    * Execute a parsed action command.
    */
   async execute(command, callbacks = {}) {
-    const { type, params } = command;
+    const { type, params, context } = command;
     const action = this.handlers.get(type);
 
     if (!action) {
@@ -102,7 +102,8 @@ export class ActionEngine {
     // Permission hooks
     for (const hook of this.beforeHooks) {
       try {
-        await hook(type, params);
+        if (context === undefined) await hook(type, params);
+        else await hook(type, params, context);
       } catch (err) {
         this._addAudit(type, params, 'blocked', err.message);
         return { success: false, error: `Permission denied: ${err.message}` };
@@ -127,7 +128,9 @@ export class ActionEngine {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const result = await action.handler(params);
+        const result = context === undefined
+          ? await action.handler(params)
+          : await action.handler(params, context);
 
         // Store undo info
         if (action.undo) {
@@ -147,7 +150,10 @@ export class ActionEngine {
 
         // After hooks
         for (const hook of this.afterHooks) {
-          try { await hook(type, params, result); } catch { /* ignore hook errors */ }
+          try {
+            if (context === undefined) await hook(type, params, result);
+            else await hook(type, params, result, context);
+          } catch { /* ignore hook errors */ }
         }
 
         if (callbacks.onSuccess) callbacks.onSuccess(result);

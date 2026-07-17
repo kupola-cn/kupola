@@ -32,6 +32,7 @@ export class AIPanel {
    * @param {string} [options.height]       — messages area max-height (default: '400px')
    * @param {string} [options.placeholder]  — input placeholder text
    * @param {boolean} [options.showTimestamp] — show timestamps on messages
+   * @param {object|Function} [options.context] — process context or async input => context
    */
   constructor(adapter, options = {}) {
     this.adapter = adapter;
@@ -44,6 +45,7 @@ export class AIPanel {
       resultViewer: true,
       resultPageSize: 20,
       maxTableColumns: 12,
+      context: {},
       ...options,
     };
 
@@ -218,7 +220,8 @@ export class AIPanel {
     this._appendMessage('user', input);
 
     try {
-      const result = await this.adapter.process(input);
+      const context = await this._resolveContext(input);
+      const result = await this.adapter.process(input, context);
 
       // If it's a batch operation, show progress
       if (result.result && result.result.total) {
@@ -517,7 +520,7 @@ export class AIPanel {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${command?.type || 'query'}-${Date.now()}.csv`;
+    link.download = `${this._safeFilename(command?.type || 'query')}-${Date.now()}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -533,6 +536,17 @@ export class AIPanel {
   _csvCell(value) {
     const text = String(value ?? '');
     return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  async _resolveContext(input) {
+    if (typeof this.options.context === 'function') {
+      return (await this.options.context(input)) || {};
+    }
+    return this.options.context || {};
+  }
+
+  _safeFilename(value) {
+    return String(value || 'query').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80) || 'query';
   }
 
   _showProgress(batchResult) {

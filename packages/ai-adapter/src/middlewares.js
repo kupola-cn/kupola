@@ -55,10 +55,14 @@ export function createRateLimiter(options = {}) {
  *
  * @param {object}  [options]
  * @param {number}  [options.maxEntries=200]
+ * @param {string[]} [options.redactFields] — field names to redact in command/result logs
  * @returns {Function} middleware
  */
 export function createDevToolsLogger(options = {}) {
-  const { maxEntries = 200 } = options;
+  const {
+    maxEntries = 200,
+    redactFields = ['password', 'passwd', 'token', 'secret', 'authorization', 'accessToken', 'refreshToken'],
+  } = options;
   const entries = [];
 
   const getStore = () => {
@@ -76,8 +80,8 @@ export function createDevToolsLogger(options = {}) {
 
     const record = {
       input: ctx.input,
-      command: ctx.command,
-      result: ctx.result,
+      command: _redactValue(ctx.command, redactFields),
+      result: _redactValue(ctx.result, redactFields),
       duration,
       timestamp: Date.now(),
     };
@@ -88,41 +92,201 @@ export function createDevToolsLogger(options = {}) {
   };
 }
 
+function _redactValue(value, redactFields) {
+  const fields = new Set((redactFields || []).map(field => String(field).toLowerCase()));
+  const seen = new WeakMap();
+
+  const visit = (item, key = '') => {
+    if (fields.has(String(key).toLowerCase())) return '[REDACTED]';
+    if (!item || typeof item !== 'object') return item;
+    if (seen.has(item)) return seen.get(item);
+
+    const output = Array.isArray(item) ? [] : {};
+    seen.set(item, output);
+
+    for (const [childKey, childValue] of Object.entries(item)) {
+      output[childKey] = visit(childValue, childKey);
+    }
+    return output;
+  };
+
+  return visit(value);
+}
+
 /**
- * Action auth guard middleware.
- * Blocks commands whose engine is 'action' and whose type matches the
- * restricted list unless the context carries the required role.
+ * Auth guard middleware.
+ * Blocks parsed commands before execution unless the context carries an
+ * allowed role or permission. Supports action/query/flow rules.
  *
  * @param {object}    options
- * @param {string[]}  options.restrictedTypes — action types to guard
+ * @param {string[]}  options.restrictedTypes — action types to guard (legacy)
+ * @param {string[]}  [options.restrictedQueries] — query types to guard
+ * @param {string[]}  [options.restrictedFlows] — flow names to guard
+ * @param {Array}     [options.rules] — centralized access rules
+ * @param {object}    [options.permissions] — map like { 'query:roles': ['admin'] }
  * @param {string}    [options.roleField='role'] — context field to check
+ * @param {string}    [options.permissionsField='permissions'] — context field to check
  * @param {string[]}  [options.allowedRoles=['admin']]
  * @returns {Function} middleware
  */
 export function createAuthGuard(options = {}) {
   const {
     restrictedTypes = [],
+    restrictedQueries = [],
+    restrictedFlows = [],
+    rules = [],
+    permissions = null,
     roleField = 'role',
+    permissionsField = 'permissions',
     allowedRoles = ['admin'],
+    message = null,
   } = options;
 
+  const accessRules = _normalizeAuthRules({
+    restrictedTypes,
+    restrictedQueries,
+    restrictedFlows,
+    rules,
+    permissions,
+    allowedRoles,
+  });
+
   return async (ctx, next) => {
-    // Only guard action commands — we detect intent via a pre-parsed ctx.command
-    // or by matching the input pattern (best-effort before parsing)
-    const cmdType = ctx.command && ctx.command.type;
-    if (cmdType && restrictedTypes.includes(cmdType)) {
-      const userRole = ctx.context && ctx.context[roleField];
-      if (!userRole || !allowedRoles.includes(userRole)) {
+    const command = ctx.command;
+    const rule = accessRules.find(item => _matchesAuthRule(item, command, ctx));
+
+    if (rule) {
+      const context = ctx.context || {};
+      const userRoles = _asArray(context[roleField]);
+      const userPermissions = _asArray(context[permissionsField]);
+      const requiredRoles = rule.allowedRoles || rule.roles || allowedRoles;
+      const requiredPermissions = _asArray(rule.permissions || rule.permission);
+
+      if (!_hasAccess(userRoles, userPermissions, requiredRoles, requiredPermissions)) {
+        const requiredText = _formatRequired(requiredRoles, requiredPermissions);
+        const commandText = _formatCommand(command);
+        const customMessage = _resolveMessage(rule.message || message, {
+          command,
+          requiredRoles,
+          requiredPermissions,
+          context,
+        });
+
         ctx.result = {
           type: 'error',
           engine: 'auth-guard',
           success: false,
-          error: `Action "${cmdType}" requires role: ${allowedRoles.join('|')}`,
-          message: `Permission denied. Required role: ${allowedRoles.join(' or ')}.`,
+          code: 'PERMISSION_DENIED',
+          denied: true,
+          command,
+          requiredRoles,
+          requiredPermissions,
+          error: `${commandText} requires role/permission: ${requiredText}`,
+          message: customMessage || `无权限执行该操作，需要${requiredText}。`,
         };
         return;
       }
     }
+
     await next();
   };
+}
+
+function _normalizeAuthRules(options) {
+  const normalized = [];
+
+  if (options.restrictedTypes.length > 0) {
+    normalized.push({
+      engine: 'action',
+      types: options.restrictedTypes,
+      allowedRoles: options.allowedRoles,
+    });
+  }
+
+  if (options.restrictedQueries.length > 0) {
+    normalized.push({
+      engine: 'query',
+      types: options.restrictedQueries,
+      allowedRoles: options.allowedRoles,
+    });
+  }
+
+  if (options.restrictedFlows.length > 0) {
+    normalized.push({
+      engine: 'flow',
+      type: 'execute',
+      names: options.restrictedFlows,
+      allowedRoles: options.allowedRoles,
+    });
+  }
+
+  for (const rule of options.rules || []) {
+    normalized.push(rule);
+  }
+
+  for (const [key, value] of Object.entries(options.permissions || {})) {
+    const [engine, type, name] = key.split(':');
+    const rule = Array.isArray(value) ? { roles: value } : { ...value };
+    normalized.push({ engine, type, name, ...rule });
+  }
+
+  return normalized;
+}
+
+function _matchesAuthRule(rule, command, ctx) {
+  if (!command) return false;
+  if (typeof rule.match === 'function') return !!rule.match(command, ctx);
+
+  const typeRule = rule.types || rule.type;
+  const nameRule = rule.names || rule.name;
+
+  return _matchesValue(rule.engine, command.engine)
+    && _matchesValue(typeRule, command.type)
+    && _matchesValue(nameRule, command.params && command.params.name);
+}
+
+function _matchesValue(ruleValue, actualValue) {
+  if (ruleValue === undefined || ruleValue === null) return true;
+  if (ruleValue === '*') return true;
+  if (typeof ruleValue === 'function') return !!ruleValue(actualValue);
+  if (Array.isArray(ruleValue)) return ruleValue.includes(actualValue) || ruleValue.includes('*');
+  return ruleValue === actualValue;
+}
+
+function _hasAccess(userRoles, userPermissions, requiredRoles, requiredPermissions) {
+  const roleAllowed = _asArray(requiredRoles).some(role => userRoles.includes(role));
+  const permissionsRequired = _asArray(requiredPermissions);
+  const permissionAllowed = permissionsRequired.some(permission => userPermissions.includes(permission));
+
+  if (permissionsRequired.length > 0) {
+    return roleAllowed || permissionAllowed;
+  }
+  return roleAllowed;
+}
+
+function _asArray(value) {
+  if (value === undefined || value === null || value === '') return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function _formatRequired(roles, permissions) {
+  const parts = [];
+  const roleList = _asArray(roles);
+  const permissionList = _asArray(permissions);
+  if (roleList.length > 0) parts.push(`角色：${roleList.join(' 或 ')}`);
+  if (permissionList.length > 0) parts.push(`权限：${permissionList.join(' 或 ')}`);
+  return parts.join('，') || '授权';
+}
+
+function _formatCommand(command) {
+  if (!command) return 'Command';
+  const suffix = command.engine === 'flow' && command.params && command.params.name
+    ? `:${command.params.name}`
+    : `:${command.type}`;
+  return `${command.engine}${suffix}`;
+}
+
+function _resolveMessage(message, payload) {
+  if (typeof message === 'function') return message(payload);
+  return message;
 }

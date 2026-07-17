@@ -7,6 +7,7 @@
 
 import { AIAdapter } from '../src/ai-adapter.js';
 import { AIPanel } from '../src/panel.js';
+import { createAuthGuard } from '../src/middlewares.js';
 
 function createMockStorage() {
   let data = null;
@@ -134,6 +135,23 @@ describe('AIPanel', () => {
     expect(viewer.textContent).toContain('查询结果：search');
     expect(viewer.textContent).toContain('Admin');
     expect(viewer.textContent).toContain('Operator');
+  });
+
+  it('should pass panel context into adapter permissions', async () => {
+    adapter.query.register('search', jest.fn().mockResolvedValue([{ id: 1 }]));
+    adapter.use(createAuthGuard({ restrictedQueries: ['search'], allowedRoles: ['admin'] }));
+    panel.destroy();
+    panel = new AIPanel(adapter, { context: () => ({ role: 'user' }) });
+    panel.mount(container);
+
+    const input = container.querySelector('.ds-ai-input');
+    input.value = '查询 roles';
+    container.querySelector('.ds-ai-send-btn').click();
+
+    await new Promise(r => setTimeout(r, 100));
+
+    const text = container.textContent;
+    expect(text).toContain('无权限');
   });
 
   it('should destroy cleanly', () => {

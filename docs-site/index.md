@@ -1,7 +1,7 @@
 ---
 layout: home
 hero:
-  name: Kupola
+  name: Kupola 2.0
   text: 现代模块化 UI 组件库
   tagline: 零框架依赖 · 48+ 组件 · Tree-shakeable
   actions:

@@ -4,6 +4,8 @@
 
 Convert user input (text or voice) into structured operations using three engines: **Query**, **Action**, and **Flow**.
 
+Version 2.0.2 adds a safer execution pipeline: commands are parsed before middleware runs, so permission guards can inspect the structured command before any query/action/flow handler executes.
+
 ## Install
 
 ```bash
@@ -23,13 +25,15 @@ const adapter = new AIAdapter({
 });
 
 // Register query handlers
-adapter.query.register('employee', async (params) => {
-  return await api.get('/employees', params);
+adapter.query.register('employee', async (params, context) => {
+  return await api.get('/employees', params, {
+    headers: { Authorization: `Bearer ${context.token}` },
+  });
 });
 
 // Register action handlers
 adapter.action.register('addEmployee', {
-  handler: async (params) => await api.post('/employees', params),
+  handler: async (params, context) => await api.post('/employees', params, context),
   confirm: true,
   undo: async (params) => await api.delete(`/employees/${params.id}`),
 });
@@ -43,7 +47,10 @@ adapter.flow.define('发工资条', {
 });
 
 // Process natural language
-const result = await adapter.process('查询张三出勤');
+const result = await adapter.process('查询张三出勤', {
+  role: 'admin',
+  permissions: ['employee:read'],
+});
 // → { engine: 'query', result: { success: true, data: [...], table: {...} }, message: '🔍 Found 5 employee record(s).' }
 ```
 
@@ -57,7 +64,7 @@ const r = await adapter.process('查询...');  // Chinese
 const r = await adapter.process('search employees');  // English
 ```
 
-Features: result history, auto Table formatting, summary generation.
+Features: result history, context-aware cache isolation, auto Table formatting, summary generation.
 
 ### Action Engine (Write)
 
@@ -73,7 +80,7 @@ await adapter.process('添加...');
 await adapter.undo();  // undo last action
 ```
 
-Features: confirmation flow, undo stack, auto-learn suggestions.
+Features: confirmation flow, undo stack, audit log, context-aware permission hooks, auto-learn suggestions.
 
 ### Flow Engine (Repeatable Workflows)
 
@@ -91,7 +98,46 @@ await adapter.process('执行 payroll');
 adapter.flow.list();  // [{ name, description, steps, executionCount }]
 ```
 
-Features: localStorage persistence, execution tracking, auto-learn (suggest flow after 3 repeated actions).
+Features: localStorage persistence, execution tracking, context propagation into steps, auto-learn (suggest flow after 3 repeated actions).
+
+## Security and Permissions
+
+AI Adapter provides front-end interaction guards. These guards prevent accidental or unauthorized UI operations and return visible messages such as `无权限执行该操作，需要角色：admin。`, but they do not replace server-side authorization.
+
+Your API must still verify the authenticated user on every sensitive endpoint and return `401` or `403` when access is denied.
+
+```js
+import { AIAdapter, createAuthGuard, createRateLimiter } from '@kupola/ai-adapter';
+
+const adapter = new AIAdapter();
+
+adapter
+  .use(createRateLimiter({ maxRequests: 30, windowMs: 60000 }))
+  .use(createAuthGuard({
+    roleField: 'role',
+    permissionsField: 'permissions',
+    rules: [
+      { engine: 'query', type: 'roles', roles: ['admin'], permissions: ['role:read'] },
+      { engine: 'query', type: 'permissions', roles: ['admin'], permissions: ['permission:read'] },
+      { engine: 'action', types: ['create_user', 'delete_user'], roles: ['admin'] },
+      { engine: 'flow', type: 'execute', names: ['发工资条'], roles: ['admin', 'hr'] },
+    ],
+  }));
+
+await adapter.process('查询所有角色', {
+  role: 'user',
+  permissions: [],
+});
+// => { success: false, engine: 'auth-guard', code: 'PERMISSION_DENIED', message: '无权限...' }
+```
+
+Additional safety defaults:
+
+- Middleware receives `ctx.command` after parsing and before execution.
+- Query cache keys include `context`, reducing cross-user cache leakage.
+- Action and flow handlers receive `context` for business-level checks.
+- Confirm-required actions are rejected by default if no confirmation UI is available.
+- DevTools logs redact common sensitive fields such as `password`, `token`, `secret`, and `authorization`.
 
 ## AI Backend
 
@@ -113,13 +159,18 @@ const adapter = new AIAdapter({
 ## Kupola UI Integration
 
 ```js
-// Get panel HTML with Kupola directives
-const html = adapter.getPanelHTML();
-document.getElementById('ai-panel').innerHTML = html;
+import { AIPanel } from '@kupola/ai-adapter';
 
-// Re-activate directives
-import { walk } from '@kupola/kupola/directives';
-walk(document.getElementById('ai-panel'));
+const panel = new AIPanel(adapter, {
+  title: 'AI Assistant',
+  context: () => ({
+    token: localStorage.getItem('token'),
+    role: currentUser.role,
+    permissions: currentUser.permissions,
+  }),
+});
+
+panel.mount(document.body);
 
 // Listen to events
 adapter.on('result', ({ command, result }) => {
@@ -137,7 +188,7 @@ import type { AIAdapterOptions, ParsedCommand, ProcessResult } from '@kupola/ai-
 
 | Method | Description |
 |--------|-------------|
-| `adapter.process(input, context?)` | Parse + route + execute |
+| `adapter.process(input, context?)` | Parse + middleware guards + route + execute |
 | `adapter.undo()` | Undo last action |
 | `adapter.getMessages()` | Get conversation log |
 | `adapter.clearConversation()` | Reset all state |

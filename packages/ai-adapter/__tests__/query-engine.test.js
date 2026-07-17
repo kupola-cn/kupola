@@ -136,4 +136,19 @@ describe('QueryEngine', () => {
       expect(engine.history.length).toBe(0);
     });
   });
+
+  describe('cache security', () => {
+    it('should isolate cached query results by execution context', async () => {
+      const handler = jest.fn(async (_params, context) => [{ role: context.role }]);
+      engine.register('roles', handler);
+
+      const admin = await engine.execute({ type: 'roles', params: {}, context: { role: 'admin' } });
+      const user = await engine.execute({ type: 'roles', params: {}, context: { role: 'user' } });
+
+      expect(admin.data).toEqual([{ role: 'admin' }]);
+      expect(user.data).toEqual([{ role: 'user' }]);
+      expect(user.cached).toBeUndefined();
+      expect(handler).toHaveBeenCalledTimes(2);
+    });
+  });
 });

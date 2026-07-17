@@ -51,7 +51,7 @@ export class QueryEngine {
     }
 
     // Check cache
-    const cacheKey = `${type}:${JSON.stringify(params)}`;
+    const cacheKey = this._makeCacheKey(type, params, context);
     if (this.cacheEnabled) {
       const cached = this._getCache(cacheKey);
       if (cached) {
@@ -228,5 +228,21 @@ export class QueryEngine {
       const oldest = this.cache.keys().next().value;
       this.cache.delete(oldest);
     }
+  }
+
+  _makeCacheKey(type, params, context) {
+    return `${type}:${this._safeStringify(params)}:${this._safeStringify(context)}`;
+  }
+
+  _safeStringify(value) {
+    const seen = new WeakSet();
+    return JSON.stringify(value || {}, (key, val) => {
+      if (typeof val === 'function' || typeof val === 'symbol') return undefined;
+      if (val && typeof val === 'object') {
+        if (seen.has(val)) return '[Circular]';
+        seen.add(val);
+      }
+      return val;
+    });
   }
 }

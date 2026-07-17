@@ -63,24 +63,33 @@ export class AIAdapter {
 
   /**
    * Process natural language input end-to-end.
-   * Runs through middleware pipeline, then routes to engine.
+   * Parses first, then runs middleware around the execution step so guards can
+   * inspect the structured command before anything is executed.
    */
   async process(input, context = {}) {
+    this._addMessage('user', input);
+    this.bus.emit('input', { input });
+
+    const command = await this.parser.parse(input, context);
+    command.context = this._mergeContext(command.context, context);
+
     const ctx = {
       input,
       context,
-      command: null,
+      command,
       result: null,
       adapter: this,
+      finalized: false,
     };
 
-    // Build middleware chain
-    const chain = this._buildMiddlewareChain(ctx);
+    const chain = this._buildMiddlewareChain(ctx, async () => {
+      ctx.result = await this._processCommand(ctx.command, ctx.context);
+      ctx.finalized = true;
+    });
     await chain();
 
-    // If middleware didn't produce a result, do normal processing
-    if (!ctx.result) {
-      ctx.result = await this._processCore(input, context);
+    if (!ctx.finalized) {
+      this._finalizeMiddlewareResult(ctx);
     }
 
     return ctx.result;
@@ -153,7 +162,7 @@ export class AIAdapter {
    */
   getDevToolsSnapshot() {
     return {
-      version: '1.2.0',
+      version: '2.0.2',
       messages: [...this.messages],
       middlewares: this.middlewares.length,
       query: {
@@ -176,12 +185,15 @@ export class AIAdapter {
 
   // ── Private ────────────────────────────────────────────
 
-  _buildMiddlewareChain(ctx) {
+  _buildMiddlewareChain(ctx, terminal = async () => {}) {
     const middlewares = this.middlewares;
     let index = 0;
 
     const next = async () => {
-      if (index >= middlewares.length) return;
+      if (index >= middlewares.length) {
+        await terminal();
+        return;
+      }
       const mw = middlewares[index++];
       await mw(ctx, next);
     };
@@ -191,28 +203,25 @@ export class AIAdapter {
     };
   }
 
-  async _processCore(input, context = {}) {
-    // Add user message
-    this._addMessage('user', input);
-    this.bus.emit('input', { input });
-
-    // Parse intent
-    const command = await this.parser.parse(input, context);
-
+  async _processCommand(command, context = {}) {
     if (command.engine === 'unknown') {
       const msg = command.error || 'I didn\'t understand that. Try: 查询..., 添加..., 执行...';
       this._addMessage('system', msg);
-      return { type: 'error', engine: 'unknown', result: command, message: msg };
+      const output = { type: 'error', engine: 'unknown', result: command, message: msg };
+      this.bus.emit('result', { command, result: output });
+      return output;
     }
+
+    this.bus.emit('parsed', command);
 
     // Slot filling: ask for missing params
     if (command.missingSlots && command.missingSlots.length > 0) {
       const question = command.slotQuestion || `请提供: ${command.missingSlots.join(', ')}`;
       this._addMessage('system', question);
-      return { type: 'slot-fill', engine: command.engine, result: command, message: question, missingSlots: command.missingSlots };
+      const output = { type: 'slot-fill', engine: command.engine, result: command, message: question, missingSlots: command.missingSlots };
+      this.bus.emit('result', { command, result: output });
+      return output;
     }
-
-    this.bus.emit('parsed', command);
 
     // Route to appropriate engine
     let result;
@@ -237,7 +246,7 @@ export class AIAdapter {
           result = await this.flow.execute(command.params.name, command.params.data || {}, {
             onStep: (i, label, status) => this.bus.emit('flow:step', { step: i, label, status }),
             onComplete: () => this.bus.emit('flow:complete', { flow: command.params.name }),
-          });
+          }, { context: command.context || context });
         } else if (command.type === 'define') {
           result = { success: true, message: `Flow "${command.params.name}" defined.`, data: command.params };
         } else {
@@ -261,6 +270,35 @@ export class AIAdapter {
     if (this.messages.length > this.maxMessages) {
       this.messages.shift();
     }
+  }
+
+  _finalizeMiddlewareResult(ctx) {
+    if (!ctx.result) {
+      ctx.result = {
+        type: 'error',
+        engine: 'middleware',
+        success: false,
+        error: 'Middleware stopped processing without returning a result.',
+      };
+    }
+
+    const message = ctx.result.message || ctx.result.error || 'Operation stopped.';
+    ctx.result.message = ctx.result.message || message;
+
+    const displayMessage = ctx.result.success === false && !/^[❌⚠️]/.test(message)
+      ? `❌ ${message}`
+      : message;
+
+    this._addMessage('system', displayMessage);
+    this.bus.emit('result', { command: ctx.command, result: ctx.result });
+    ctx.finalized = true;
+  }
+
+  _mergeContext(commandContext, processContext) {
+    return {
+      ...(commandContext || {}),
+      ...(processContext || {}),
+    };
   }
 
   _formatResponse(command, result) {
@@ -288,6 +326,14 @@ export class AIAdapter {
   }
 
   async _defaultConfirm(label, params) {
-    return true;
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      if (String(window.confirm).includes('notImplemented')) return false;
+      try {
+        return !!window.confirm(`确认执行「${label}」？\n${JSON.stringify(params || {}, null, 2)}`);
+      } catch {
+        return false;
+      }
+    }
+    return false;
   }
 }

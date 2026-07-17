@@ -127,7 +127,7 @@ export interface ActionEngineOptions {
 }
 
 export interface ActionConfig {
-  handler: (params: any) => Promise<any>;
+  handler: (params: any, context?: any) => Promise<any>;
   confirm?: boolean;
   undo?: (params: any) => Promise<void>;
   label?: string;
@@ -170,8 +170,8 @@ export declare class ActionEngine {
   undo(): Promise<{ success: boolean; message?: string; error?: string }>;
   canUndo(): boolean;
   getActions(): Array<{ name: string; label: string; confirm: boolean; dependsOn: string[] }>;
-  beforeExecute(fn: (actionName: string, params: any) => Promise<void>): () => void;
-  afterExecute(fn: (actionName: string, params: any, result: any) => Promise<void>): () => void;
+  beforeExecute(fn: (actionName: string, params: any, context?: any) => Promise<void>): () => void;
+  afterExecute(fn: (actionName: string, params: any, result: any, context?: any) => Promise<void>): () => void;
   getAuditLog(filter?: { type?: string; status?: string; limit?: number }): AuditEntry[];
   checkDependencies(type: string): string | null;
 }
@@ -187,8 +187,8 @@ export interface FlowStep {
   label?: string;
   action?: string;
   params?: Record<string, any>;
-  handler?: (data: any, previousResults: any[]) => Promise<any>;
-  condition?: (data: any, results: any[]) => boolean;
+  handler?: (data: any, previousResults: any[], context?: any) => Promise<any>;
+  condition?: (data: any, results: any[], context?: any) => boolean;
   parallel?: FlowStep[];
   flow?: string;
 }
@@ -211,7 +211,7 @@ export interface FlowResult {
 export declare class FlowEngine {
   constructor(options?: FlowEngineOptions);
   define(name: string, config: FlowConfig): any;
-  execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>, options?: { resumeAt?: number }): Promise<FlowResult>;
+  execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>, options?: { resumeAt?: number; context?: any }): Promise<FlowResult>;
   resume(name: string, data?: Record<string, any>, failedAt: number, callbacks?: Record<string, Function>): Promise<FlowResult>;
   remove(name: string): boolean;
   list(): Array<{ name: string; description: string; steps: number; variables: string[]; executionCount: number }>;
@@ -245,12 +245,33 @@ export interface RateLimiterOptions {
 
 export interface DevToolsLoggerOptions {
   maxEntries?: number;
+  redactFields?: string[];
 }
 
 export interface AuthGuardOptions {
   restrictedTypes?: string[];
+  restrictedQueries?: string[];
+  restrictedFlows?: string[];
+  rules?: AuthGuardRule[];
+  permissions?: Record<string, string[] | AuthGuardRule>;
   roleField?: string;
+  permissionsField?: string;
   allowedRoles?: string[];
+  message?: string | ((payload: { command: ParsedCommand; requiredRoles: string[]; requiredPermissions: string[]; context: any }) => string);
+}
+
+export interface AuthGuardRule {
+  engine?: string | string[] | ((engine: string) => boolean);
+  type?: string | string[] | ((type: string) => boolean);
+  types?: string[];
+  name?: string | string[] | ((name: string) => boolean);
+  names?: string[];
+  roles?: string[];
+  allowedRoles?: string[];
+  permission?: string | string[];
+  permissions?: string[];
+  message?: string | ((payload: { command: ParsedCommand; requiredRoles: string[]; requiredPermissions: string[]; context: any }) => string);
+  match?: (command: ParsedCommand, ctx: any) => boolean;
 }
 
 export declare function createRateLimiter(options?: RateLimiterOptions): (ctx: any, next: () => Promise<void>) => Promise<void>;
@@ -268,6 +289,7 @@ export interface AIPanelOptions {
   resultViewer?: boolean;
   resultPageSize?: number;
   maxTableColumns?: number;
+  context?: Record<string, any> | ((input: string) => Record<string, any> | Promise<Record<string, any>>);
 }
 
 export declare class AIPanel {
@@ -459,7 +481,7 @@ export interface ActionEngineOptions {
 }
 
 export interface ActionConfig {
-  handler: (params: any) => Promise<any>;
+  handler: (params: any, context?: any) => Promise<any>;
   confirm?: boolean;
   undo?: (params: any) => Promise<void>;
   label?: string;
@@ -502,8 +524,8 @@ export declare class ActionEngine {
   undo(): Promise<{ success: boolean; message?: string; error?: string }>;
   canUndo(): boolean;
   getActions(): Array<{ name: string; label: string; confirm: boolean; dependsOn: string[] }>;
-  beforeExecute(fn: (actionName: string, params: any) => Promise<void>): () => void;
-  afterExecute(fn: (actionName: string, params: any, result: any) => Promise<void>): () => void;
+  beforeExecute(fn: (actionName: string, params: any, context?: any) => Promise<void>): () => void;
+  afterExecute(fn: (actionName: string, params: any, result: any, context?: any) => Promise<void>): () => void;
   getAuditLog(filter?: { type?: string; status?: string; limit?: number }): AuditEntry[];
   checkDependencies(type: string): string | null;
 }
@@ -519,8 +541,8 @@ export interface FlowStep {
   label?: string;
   action?: string;
   params?: Record<string, any>;
-  handler?: (data: any, previousResults: any[]) => Promise<any>;
-  condition?: (data: any, results: any[]) => boolean;
+  handler?: (data: any, previousResults: any[], context?: any) => Promise<any>;
+  condition?: (data: any, results: any[], context?: any) => boolean;
   parallel?: FlowStep[];
   flow?: string;
 }
@@ -543,7 +565,7 @@ export interface FlowResult {
 export declare class FlowEngine {
   constructor(options?: FlowEngineOptions);
   define(name: string, config: FlowConfig): any;
-  execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>, options?: { resumeAt?: number }): Promise<FlowResult>;
+  execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>, options?: { resumeAt?: number; context?: any }): Promise<FlowResult>;
   resume(name: string, data?: Record<string, any>, failedAt: number, callbacks?: Record<string, Function>): Promise<FlowResult>;
   remove(name: string): boolean;
   list(): Array<{ name: string; description: string; steps: number; variables: string[]; executionCount: number }>;
@@ -577,12 +599,19 @@ export interface RateLimiterOptions {
 
 export interface DevToolsLoggerOptions {
   maxEntries?: number;
+  redactFields?: string[];
 }
 
 export interface AuthGuardOptions {
   restrictedTypes?: string[];
+  restrictedQueries?: string[];
+  restrictedFlows?: string[];
+  rules?: AuthGuardRule[];
+  permissions?: Record<string, string[] | AuthGuardRule>;
   roleField?: string;
+  permissionsField?: string;
   allowedRoles?: string[];
+  message?: string | ((payload: { command: ParsedCommand; requiredRoles: string[]; requiredPermissions: string[]; context: any }) => string);
 }
 
 export declare function createRateLimiter(options?: RateLimiterOptions): (ctx: any, next: () => Promise<void>) => Promise<void>;
@@ -600,6 +629,7 @@ export interface AIPanelOptions {
   resultViewer?: boolean;
   resultPageSize?: number;
   maxTableColumns?: number;
+  context?: Record<string, any> | ((input: string) => Record<string, any> | Promise<Record<string, any>>);
 }
 
 export declare class AIPanel {
@@ -785,7 +815,7 @@ export interface ActionEngineOptions {
 }
 
 export interface ActionConfig {
-  handler: (params: any) => Promise<any>;
+  handler: (params: any, context?: any) => Promise<any>;
   confirm?: boolean;
   undo?: (params: any) => Promise<void>;
   label?: string;
@@ -828,8 +858,8 @@ export declare class ActionEngine {
   undo(): Promise<{ success: boolean; message?: string; error?: string }>;
   canUndo(): boolean;
   getActions(): Array<{ name: string; label: string; confirm: boolean; dependsOn: string[] }>;
-  beforeExecute(fn: (actionName: string, params: any) => Promise<void>): () => void;
-  afterExecute(fn: (actionName: string, params: any, result: any) => Promise<void>): () => void;
+  beforeExecute(fn: (actionName: string, params: any, context?: any) => Promise<void>): () => void;
+  afterExecute(fn: (actionName: string, params: any, result: any, context?: any) => Promise<void>): () => void;
   getAuditLog(filter?: { type?: string; status?: string; limit?: number }): AuditEntry[];
   checkDependencies(type: string): string | null;
 }
@@ -845,8 +875,8 @@ export interface FlowStep {
   label?: string;
   action?: string;
   params?: Record<string, any>;
-  handler?: (data: any, previousResults: any[]) => Promise<any>;
-  condition?: (data: any, results: any[]) => boolean;
+  handler?: (data: any, previousResults: any[], context?: any) => Promise<any>;
+  condition?: (data: any, results: any[], context?: any) => boolean;
   parallel?: FlowStep[];
   flow?: string;
 }
@@ -869,7 +899,7 @@ export interface FlowResult {
 export declare class FlowEngine {
   constructor(options?: FlowEngineOptions);
   define(name: string, config: FlowConfig): any;
-  execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>, options?: { resumeAt?: number }): Promise<FlowResult>;
+  execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>, options?: { resumeAt?: number; context?: any }): Promise<FlowResult>;
   resume(name: string, data?: Record<string, any>, failedAt: number, callbacks?: Record<string, Function>): Promise<FlowResult>;
   remove(name: string): boolean;
   list(): Array<{ name: string; description: string; steps: number; variables: string[]; executionCount: number }>;
@@ -903,12 +933,19 @@ export interface RateLimiterOptions {
 
 export interface DevToolsLoggerOptions {
   maxEntries?: number;
+  redactFields?: string[];
 }
 
 export interface AuthGuardOptions {
   restrictedTypes?: string[];
+  restrictedQueries?: string[];
+  restrictedFlows?: string[];
+  rules?: AuthGuardRule[];
+  permissions?: Record<string, string[] | AuthGuardRule>;
   roleField?: string;
+  permissionsField?: string;
   allowedRoles?: string[];
+  message?: string | ((payload: { command: ParsedCommand; requiredRoles: string[]; requiredPermissions: string[]; context: any }) => string);
 }
 
 export declare function createRateLimiter(options?: RateLimiterOptions): (ctx: any, next: () => Promise<void>) => Promise<void>;
@@ -995,7 +1032,7 @@ export interface ActionEngineOptions {
 }
 
 export interface ActionConfig {
-  handler: (params: any) => Promise<any>;
+  handler: (params: any, context?: any) => Promise<any>;
   confirm?: boolean;
   undo?: (params: any) => Promise<void>;
   label?: string;
@@ -1036,7 +1073,10 @@ export interface FlowStep {
   label?: string;
   action?: string;
   params?: Record<string, any>;
-  handler?: (data: any, previousResults: any[]) => Promise<any>;
+  handler?: (data: any, previousResults: any[], context?: any) => Promise<any>;
+  condition?: (data: any, results: any[], context?: any) => boolean;
+  parallel?: FlowStep[];
+  flow?: string;
 }
 
 export interface FlowConfig {
@@ -1057,7 +1097,8 @@ export interface FlowResult {
 export declare class FlowEngine {
   constructor(options?: FlowEngineOptions);
   define(name: string, config: FlowConfig): any;
-  execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>): Promise<FlowResult>;
+  execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>, options?: { resumeAt?: number; context?: any }): Promise<FlowResult>;
+  resume(name: string, data?: Record<string, any>, failedAt: number, callbacks?: Record<string, Function>): Promise<FlowResult>;
   remove(name: string): boolean;
   list(): Array<{ name: string; description: string; steps: number; variables: string[]; executionCount: number }>;
   trackAction(command: ParsedCommand): FlowSuggestion;

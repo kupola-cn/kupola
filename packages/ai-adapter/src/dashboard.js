@@ -171,10 +171,10 @@ export class AIDashboard {
     el.style.cssText = 'background:var(--vp-c-bg-soft,#f9fafb);border:1px solid var(--vp-c-divider,#e5e7eb);border-radius:10px;padding:16px 20px;';
     el.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span style="font-size:20px;">${card.icon}</span>
+        <span style="font-size:20px;">${_esc(card.icon)}</span>
         <span style="font-size:13px;color:var(--vp-c-text-2,#6b7280);font-weight:500;">${_esc(card.label)}</span>
       </div>
-      <div style="font-size:28px;font-weight:700;color:var(--vp-c-text-1,#111827);">${card.lastError ? `<span style="color:#ef4444;font-size:14px;">${_esc(card.lastError)}</span>` : value}</div>
+      <div style="font-size:28px;font-weight:700;color:var(--vp-c-text-1,#111827);">${card.lastError ? `<span style="color:#ef4444;font-size:14px;">${_esc(card.lastError)}</span>` : _esc(value)}</div>
       ${card.lastData && card.lastData.table ? this._renderMiniTable(card.lastData.table) : ''}
     `;
   }
@@ -204,7 +204,7 @@ export class AIDashboard {
     }
 
     // Default: show summary or data count
-    if (data.summary) return _esc(data.summary);
+    if (data.summary) return data.summary;
     if (Array.isArray(data.data)) return data.data.length;
     return '—';
   }

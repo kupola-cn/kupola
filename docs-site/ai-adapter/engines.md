@@ -36,7 +36,7 @@ const result = await adapter.process('查询张三');
 
 ### 缓存机制
 
-查询结果自动缓存（默认 TTL 30 秒），重复查询直接返回缓存数据：
+查询结果自动缓存（默认 TTL 30 秒），重复查询直接返回缓存数据。缓存 key 会包含 `context`，避免不同用户、角色或权限上下文复用同一份敏感查询结果：
 
 ```js
 const adapter = new AIAdapter({
@@ -126,17 +126,19 @@ const adapter = new AIAdapter({
 在执行前检查权限，抛出异常可阻止执行：
 
 ```js
-adapter.action.beforeExecute(async (actionName, params) => {
-  if (actionName === 'deleteEmployee' && !currentUser.isAdmin) {
+adapter.action.beforeExecute(async (actionName, params, context) => {
+  if (actionName === 'deleteEmployee' && context.role !== 'admin') {
     throw new Error('需要管理员权限');
   }
 });
 
 // 执行后回调
-adapter.action.afterExecute(async (actionName, params, result) => {
-  analytics.track('action_executed', { action: actionName });
+adapter.action.afterExecute(async (actionName, params, result, context) => {
+  analytics.track('action_executed', { action: actionName, userId: context.userId });
 });
 ```
+
+如果需要跨 query/action/flow 做统一权限控制，优先使用中间件 `createAuthGuard`。`beforeExecute` 更适合 action 内部的业务级二次校验。
 
 ### 审计日志
 
@@ -238,8 +240,8 @@ const result = await adapter.flow.execute('月末统计', { month: '2026-07' }, 
 ```js
 {
   label: '发送提醒',
-  condition: (data, results) => data.urgent === true,
-  handler: async (data) => sendReminder(data),
+  condition: (data, results, context) => data.urgent === true && context.permissions?.includes('notice:send'),
+  handler: async (data, results, context) => sendReminder(data, context),
 }
 ```
 

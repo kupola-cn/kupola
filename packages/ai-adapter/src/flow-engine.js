@@ -59,6 +59,7 @@ export class FlowEngine {
     const results = [];
     const logs = [];
     const startAt = options.resumeAt || 0;
+    const context = options.context || {};
 
     for (let i = startAt; i < flow.steps.length; i++) {
       const step = flow.steps[i];
@@ -66,7 +67,7 @@ export class FlowEngine {
 
       // Conditional branch: skip if condition returns false
       if (typeof step.condition === 'function') {
-        const shouldRun = step.condition(data, results);
+        const shouldRun = step.condition(data, results, context);
         if (!shouldRun) {
           results.push({ step: stepLabel, success: true, data: { skipped: true, reason: 'condition not met' } });
           logs.push({ step: stepLabel, status: 'skipped', timestamp: Date.now() });
@@ -83,7 +84,7 @@ export class FlowEngine {
             step.parallel.map(async (pStep) => {
               if (typeof pStep.handler === 'function') {
                 const subData = this._substituteVars(pStep.params || {}, data);
-                return await pStep.handler(subData, results);
+                return await pStep.handler(subData, results, context);
               }
               return { skipped: true };
             })
@@ -107,7 +108,7 @@ export class FlowEngine {
           if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'running');
 
           const subData = this._substituteVars(step.params || {}, data);
-          const subResult = await this.execute(step.flow, subData, {}, {});
+          const subResult = await this.execute(step.flow, subData, {}, { context });
 
           results.push({ step: stepLabel, success: subResult.success, data: subResult });
           logs.push({ step: stepLabel, status: subResult.success ? 'success' : 'error', timestamp: Date.now() });
@@ -134,7 +135,7 @@ export class FlowEngine {
         let result;
         if (typeof step.handler === 'function') {
           const subData = step.params ? this._substituteVars(step.params, data) : data;
-          result = await step.handler(subData, results);
+          result = await step.handler(subData, results, context);
         } else {
           result = { skipped: true, reason: 'No handler defined' };
         }

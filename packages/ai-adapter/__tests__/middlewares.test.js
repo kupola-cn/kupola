@@ -61,6 +61,26 @@ describe('createDevToolsLogger', () => {
     await logger(ctx, async () => { nextCalled = true; });
     expect(nextCalled).toBe(true);
   });
+
+  it('should redact sensitive command and result fields', async () => {
+    const logger = createDevToolsLogger();
+    const ctx = {
+      input: 'test',
+      context: {},
+      command: { params: { token: 'abc', keyword: 'roles' } },
+      result: null,
+      adapter: {},
+    };
+
+    await logger(ctx, async () => {
+      ctx.result = { data: { password: 'secret', name: 'safe' } };
+    });
+
+    const entry = window.__KUPOLA_AI_DEVTOOLS__.at(-1);
+    expect(entry.command.params.token).toBe('[REDACTED]');
+    expect(entry.result.data.password).toBe('[REDACTED]');
+    expect(entry.result.data.name).toBe('safe');
+  });
 });
 
 describe('createAuthGuard', () => {
@@ -107,6 +127,41 @@ describe('createAuthGuard', () => {
     const guard = createAuthGuard({ restrictedTypes: ['delete'] });
     const ctx = makeCtx(null);
     await guard(ctx, passNext);
+    expect(ctx.result).toBeNull();
+  });
+
+  it('should guard query commands with centralized rules', async () => {
+    const guard = createAuthGuard({
+      rules: [{ engine: 'query', type: 'roles', roles: ['admin'] }],
+    });
+    const ctx = {
+      input: '',
+      context: { role: 'user' },
+      command: { engine: 'query', type: 'roles', params: {} },
+      result: null,
+      adapter: {},
+    };
+
+    await guard(ctx, passNext);
+
+    expect(ctx.result.code).toBe('PERMISSION_DENIED');
+    expect(ctx.result.message).toContain('无权限');
+  });
+
+  it('should allow access by explicit permission', async () => {
+    const guard = createAuthGuard({
+      rules: [{ engine: 'query', type: 'roles', roles: ['admin'], permissions: ['roles:read'] }],
+    });
+    const ctx = {
+      input: '',
+      context: { role: 'user', permissions: ['roles:read'] },
+      command: { engine: 'query', type: 'roles', params: {} },
+      result: null,
+      adapter: {},
+    };
+
+    await guard(ctx, passNext);
+
     expect(ctx.result).toBeNull();
   });
 });

@@ -377,7 +377,14 @@ Koa-style middleware for cross-cutting concerns:
 import { createRateLimiter, createAuthGuard } from '@kupola/ai-adapter';
 
 adapter.use(createRateLimiter({ maxRequests: 30, windowMs: 60000 }));
-adapter.use(createAuthGuard({ restrictedTypes: ['删除'], allowedRoles: ['admin'] }));
+adapter.use(createAuthGuard({
+  roleField: 'role',
+  permissionsField: 'permissions',
+  rules: [
+    { engine: 'query', type: 'roles', roles: ['admin'], permissions: ['role:read'] },
+    { engine: 'action', types: ['删除'], roles: ['admin'] },
+  ],
+}));
 adapter.use(async (ctx, next) => {
   console.log(`[${ctx.command.engine}] ${ctx.input}`);
   await next();
@@ -410,6 +417,8 @@ dashboard.mount(document.getElementById('dashboard'));
 const voice = new VoiceController(adapter, { wakeWord: '小库' });
 voice.start();
 ```
+
+AI Adapter permissions run in the front-end interaction layer and provide immediate denial messages. They are not a replacement for server-side authorization; APIs must still validate users, roles, menus and data scopes, returning `401` or `403` when access is denied.
 
 ### Event System
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { AIAdapter } from '../src/ai-adapter.js';
+import { createAuthGuard } from '../src/middlewares.js';
 
 function createMockStorage() {
   let data = null;
@@ -314,7 +315,7 @@ describe('AIAdapter', () => {
 
       const snap = adapter.getDevToolsSnapshot();
 
-      expect(snap.version).toBe('1.2.0');
+      expect(snap.version).toBe('2.0.2');
       expect(snap.messages).toEqual([]);
       expect(snap.middlewares).toBe(1);
       expect(snap.query.registered).toBe(1);
@@ -342,6 +343,84 @@ describe('AIAdapter', () => {
 
       const result = await adapter.process('查询 something');
       expect(result.type).toBe('intercepted');
+    });
+
+    it('should block restricted actions after parsing and before execution', async () => {
+      const handler = jest.fn().mockResolvedValue({ deleted: true });
+      adapter.action.register('delete', { handler, confirm: false });
+      adapter.use(createAuthGuard({ restrictedTypes: ['delete'], allowedRoles: ['admin'] }));
+
+      const result = await adapter.process('删除员工张三', { role: 'user' });
+
+      expect(result.engine).toBe('auth-guard');
+      expect(result.code).toBe('PERMISSION_DENIED');
+      expect(handler).not.toHaveBeenCalled();
+      expect(adapter.getMessages().at(-1).text).toContain('无权限');
+    });
+
+    it('should allow restricted actions for allowed roles', async () => {
+      const handler = jest.fn().mockResolvedValue({ deleted: true });
+      adapter.action.register('delete', { handler, confirm: false });
+      adapter.use(createAuthGuard({ restrictedTypes: ['delete'], allowedRoles: ['admin'] }));
+
+      const result = await adapter.process('删除员工张三', { role: 'admin' });
+
+      expect(result.engine).toBe('action');
+      expect(result.result.success).toBe(true);
+      expect(handler).toHaveBeenCalled();
+    });
+
+    it('should block restricted queries with centralized rules', async () => {
+      const handler = jest.fn().mockResolvedValue([{ id: 1, name: 'admin' }]);
+      adapter.query.register('search', handler);
+      adapter.use(createAuthGuard({
+        rules: [{ engine: 'query', type: 'search', roles: ['admin'] }],
+      }));
+
+      const result = await adapter.process('查询所有角色', { role: 'user' });
+
+      expect(result.engine).toBe('auth-guard');
+      expect(result.command.engine).toBe('query');
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('should block restricted flow names', async () => {
+      const step = jest.fn().mockResolvedValue('ok');
+      adapter.flow.define('发工资条', {
+        steps: [{ label: '发送', handler: step }],
+      });
+      adapter.use(createAuthGuard({ restrictedFlows: ['发工资条'], allowedRoles: ['admin'] }));
+
+      const result = await adapter.process('执行发工资条', { role: 'user' });
+
+      expect(result.engine).toBe('auth-guard');
+      expect(step).not.toHaveBeenCalled();
+    });
+
+    it('should pass process context to query and action handlers', async () => {
+      const query = jest.fn().mockResolvedValue([]);
+      const action = jest.fn().mockResolvedValue({});
+      adapter.query.register('search', query);
+      adapter.action.register('create', { handler: action, confirm: false });
+
+      await adapter.process('查询角色', { userId: 7, role: 'admin' });
+      await adapter.process('添加员工', { userId: 7, role: 'admin' });
+
+      expect(query).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ userId: 7 }));
+      expect(action).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ userId: 7 }));
+    });
+
+    it('should cancel confirm-required actions when no confirmer is available', async () => {
+      const secured = new AIAdapter({
+        flow: { storage: createMockStorage() },
+      });
+      const handler = jest.fn().mockResolvedValue({ ok: true });
+      secured.action.register('create', { handler, confirm: true });
+
+      const result = await secured.process('添加员工张三');
+
+      expect(result.result.cancelled).toBe(true);
+      expect(handler).not.toHaveBeenCalled();
     });
   });
 });

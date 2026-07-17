@@ -24,7 +24,7 @@ new AIAdapter(options?)
 
 | 方法 | 返回值 | 说明 |
 |------|--------|------|
-| `process(input, ctx?)` | `Promise<ProcessResult>` | 解析 + 路由 + 执行（核心方法） |
+| `process(input, ctx?)` | `Promise<ProcessResult>` | 解析 + 中间件拦截 + 路由 + 执行（核心方法） |
 | `undo()` | `Promise<UndoResult>` | 撤销上一步操作 |
 | `use(middleware)` | `this` | 添加中间件 |
 | `getMessages()` | `Message[]` | 获取对话记录 |
@@ -66,7 +66,7 @@ new AIAdapter(options?)
 
 | 方法 | 返回值 | 说明 |
 |------|--------|------|
-| `register(name, handler)` | `void` | 注册查询处理器 |
+| `register(name, handler)` | `void` | 注册查询处理器，`handler(params, context?)` |
 | `execute(command)` | `Promise<QueryResult>` | 执行查询 |
 | `followUp(overrides)` | `Promise<QueryResult>` | 上下文追问 |
 | `aggregate(op, field?)` | `AggResult` | 聚合运算（count/sum/avg/min/max） |
@@ -80,6 +80,8 @@ new AIAdapter(options?)
 | `cacheTTL` | `number` | `30000` | 缓存过期时间（ms） |
 | `cacheEnabled` | `boolean` | `true` | 是否启用缓存 |
 | `maxHistory` | `number` | `20` | 历史记录最大条数 |
+
+查询缓存会把 `context` 纳入 cache key，避免不同用户或角色复用同一份缓存数据。
 
 ---
 
@@ -104,7 +106,7 @@ new AIAdapter(options?)
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `handler` | `async (params) => result` | 操作处理函数 |
+| `handler` | `async (params, context?) => result` | 操作处理函数 |
 | `confirm` | `boolean` | 是否需要确认 |
 | `undo` | `async (params) => void` | 撤销函数 |
 | `label` | `string` | 显示名称 |
@@ -117,7 +119,7 @@ new AIAdapter(options?)
 |------|------|--------|------|
 | `maxUndo` | `number` | `10` | 撤销栈深度 |
 | `requireConfirm` | `boolean` | `true` | 默认是否需要确认 |
-| `onConfirm` | `async (label, params) => boolean` | `null` | 确认回调 |
+| `onConfirm` | `async (label, params) => boolean` | `null` | 确认回调；没有可用确认器时默认拒绝需要确认的操作 |
 | `retries` | `number` | `0` | 默认重试次数 |
 | `maxAuditLog` | `number` | `200` | 审计日志最大条数 |
 
@@ -150,8 +152,8 @@ new AIAdapter(options?)
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `label` | `string` | 步骤名称 |
-| `handler` | `async (data, results) => result` | 处理函数 |
-| `condition` | `(data, results) => boolean` | 条件函数（跳过步骤） |
+| `handler` | `async (data, results, context?) => result` | 处理函数 |
+| `condition` | `(data, results, context?) => boolean` | 条件函数（跳过步骤） |
 | `parallel` | `Step[]` | 并行步骤组 |
 | `flow` | `string` | 嵌套流程名 |
 | `params` | `object` | 步骤参数（支持 `{{var}}` 替换） |
@@ -235,7 +237,8 @@ function createRateLimiter(options?: {
 
 ```ts
 function createDevToolsLogger(options?: {
-  maxEntries?: number;    // 默认 100
+  maxEntries?: number;    // 默认 200
+  redactFields?: string[]; // 默认脱敏 password/token/secret/authorization 等字段
 }): Middleware;
 ```
 
@@ -245,13 +248,39 @@ function createDevToolsLogger(options?: {
 
 ```ts
 function createAuthGuard(options?: {
-  restrictedTypes?: string[];  // 受限操作类型
-  roleField?: string;          // ctx.context 中的角色字段，默认 'role'
-  allowedRoles?: string[];     // 允许的角色列表
+  restrictedTypes?: string[];      // 受限 action type，兼容旧用法
+  restrictedQueries?: string[];    // 受限 query type
+  restrictedFlows?: string[];      // 受限 flow name
+  rules?: AuthGuardRule[];         // 集中规则
+  permissions?: Record<string, string[] | AuthGuardRule>;
+  roleField?: string;              // 默认 'role'
+  permissionsField?: string;       // 默认 'permissions'
+  allowedRoles?: string[];         // 默认 ['admin']
+  message?: string | ((payload) => string);
 }): Middleware;
 ```
 
-基于角色的操作拦截中间件。未授权时设置错误结果并阻止后续处理。
+基于角色和权限的命令拦截中间件。未授权时设置错误结果并阻止后续处理，结果包含 `engine: 'auth-guard'`、`code: 'PERMISSION_DENIED'`、`message`。
+
+```ts
+interface AuthGuardRule {
+  engine?: string | string[] | ((engine: string) => boolean);
+  type?: string | string[] | ((type: string) => boolean);
+  types?: string[];
+  name?: string | string[] | ((name: string) => boolean);
+  names?: string[];
+  roles?: string[];
+  allowedRoles?: string[];
+  permission?: string | string[];
+  permissions?: string[];
+  message?: string | ((payload) => string);
+  match?: (command: ParsedCommand, ctx: any) => boolean;
+}
+```
+
+::: warning 安全边界
+AI Adapter 的权限守卫是前端交互拦截和提示，不能替代服务端鉴权。API 必须基于登录态、角色、菜单权限和数据权限做最终判断；无权限时服务端应返回 `401` 或 `403`。
+:::
 
 ---
 
@@ -272,6 +301,10 @@ new AIPanel(adapter, options?)
 | `height` | `string` | `'520px'` | 面板高度 |
 | `placeholder` | `string` | `'输入指令...'` | 输入框占位符 |
 | `showTimestamp` | `boolean` | `false` | 是否显示消息时间戳 |
+| `context` | `object \| (input) => object \| Promise<object>` | `{}` | 每次发送时传给 `adapter.process(input, context)` 的用户上下文 |
+| `resultViewer` | `boolean` | `true` | 查询结果是否显示“查看数据/复制 JSON/导出 CSV”操作 |
+| `resultPageSize` | `number` | `20` | 结果弹窗分页大小 |
+| `maxTableColumns` | `number` | `12` | 结果弹窗最多显示列数 |
 
 ### 方法
 

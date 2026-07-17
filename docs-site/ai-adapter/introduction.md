@@ -12,6 +12,7 @@ AI Adapter 是 Kupola 的独立扩展包，提供**自然语言 → 结构化命
 - 将用户输入自动路由到对应的**查询**、**操作**或**流程**引擎
 - 无缝集成 Kupola UI 组件（Table、Modal、Form、Notification 等）
 - 接入任意 LLM 后端（OpenAI、Claude、Ollama 等）获得更精准的意图识别
+- 在执行前用中间件集中拦截敏感 query/action/flow，并给用户显示无权限提示
 
 ## 架构总览
 
@@ -151,6 +152,23 @@ console.log(result.message); // 🔍 Found 1 employee record(s).
 | **事件总线** | 标准化 pub/sub，支持 `once()` / `wildcard()` | `EventBus` |
 | **中间件** | 可扩展的处理管道，内置速率限制、权限守卫、DevTools 日志 | `adapter.use()` |
 | **UI 组件** | 对话面板、数据看板、语音交互 | `AIPanel` / `AIDashboard` / `VoiceController` |
+
+## 安全模型
+
+`2.0.2` 之后，AI Adapter 会先把输入解析为结构化命令，再进入中间件管道。这意味着 `createAuthGuard` 可以在任何 handler 执行前，基于 `engine`、`type`、flow name、角色和权限码集中拦截。
+
+```js
+adapter.use(createAuthGuard({
+  rules: [
+    { engine: 'query', type: 'roles', roles: ['admin'], permissions: ['role:read'] },
+    { engine: 'action', types: ['delete_user'], roles: ['admin'] },
+  ],
+}));
+```
+
+::: warning
+前端权限只用于交互拦截和提示，不能替代后端鉴权。业务 API 必须继续校验登录态、角色、菜单权限和数据权限；前端被绕过时，服务端应返回 `401` 或 `403`。
+:::
 
 ## 双语支持
 
