@@ -27,7 +27,7 @@ describe('Table', () => {
   }
 
   function getRows(table) {
-    return table.element.querySelectorAll('tbody tr:not(.kupola-table-expand-row)');
+    return table.element.querySelectorAll('tbody tr:not(.ds-table-expand-row)');
   }
 
   function getHeaders(table) {
@@ -61,37 +61,37 @@ describe('Table', () => {
 
     test('applies wrapper class', () => {
       const table = Table({ data: [], columns });
-      expect(table.element.classList.contains('kupola-table-wrapper')).toBe(true);
+      expect(table.element.classList.contains('ds-table-wrapper')).toBe(true);
     });
 
     test('applies striped class', () => {
       const table = Table({ data: sampleData, columns, striped: true });
       const el = table.element.querySelector('table');
-      expect(el.classList.contains('kupola-table-striped')).toBe(true);
+      expect(el.classList.contains('ds-table-striped')).toBe(true);
     });
 
     test('applies compact class', () => {
       const table = Table({ data: sampleData, columns, compact: true });
       const el = table.element.querySelector('table');
-      expect(el.classList.contains('kupola-table-compact')).toBe(true);
+      expect(el.classList.contains('ds-table-compact')).toBe(true);
     });
 
     test('applies bordered class', () => {
       const table = Table({ data: sampleData, columns, bordered: true });
       const el = table.element.querySelector('table');
-      expect(el.classList.contains('kupola-table-bordered')).toBe(true);
+      expect(el.classList.contains('ds-table-bordered')).toBe(true);
     });
 
     test('applies hoverable class by default', () => {
       const table = Table({ data: sampleData, columns });
       const el = table.element.querySelector('table');
-      expect(el.classList.contains('kupola-table-hover')).toBe(true);
+      expect(el.classList.contains('ds-table-hover')).toBe(true);
     });
 
     test('disables hoverable when set to false', () => {
       const table = Table({ data: sampleData, columns, hoverable: false });
       const el = table.element.querySelector('table');
-      expect(el.classList.contains('kupola-table-hover')).toBe(false);
+      expect(el.classList.contains('ds-table-hover')).toBe(false);
     });
   });
 
@@ -99,21 +99,21 @@ describe('Table', () => {
   describe('empty and loading states', () => {
     test('shows empty text when no data', () => {
       const table = Table({ data: [], columns, emptyText: 'Nothing here' });
-      const empty = table.element.querySelector('.kupola-table-empty');
+      const empty = table.element.querySelector('.ds-table-empty');
       expect(empty).toBeTruthy();
       expect(empty.textContent).toBe('Nothing here');
     });
 
     test('shows default empty text', () => {
       const table = Table({ data: [], columns });
-      const empty = table.element.querySelector('.kupola-table-empty');
+      const empty = table.element.querySelector('.ds-table-empty');
       expect(empty.textContent).toBe('No data');
     });
 
     test('shows loading state', () => {
       const table = Table({ data: sampleData, columns, loadingText: 'Please wait...' });
       table.setLoading(true);
-      const loading = table.element.querySelector('.kupola-table-loading');
+      const loading = table.element.querySelector('.ds-table-loading');
       expect(loading).toBeTruthy();
       expect(loading.textContent).toBe('Please wait...');
     });
@@ -121,9 +121,9 @@ describe('Table', () => {
     test('hides loading when set to false', () => {
       const table = Table({ data: sampleData, columns });
       table.setLoading(true);
-      expect(table.element.querySelector('.kupola-table-loading')).toBeTruthy();
+      expect(table.element.querySelector('.ds-table-loading')).toBeTruthy();
       table.setLoading(false);
-      expect(table.element.querySelector('.kupola-table-loading')).toBeFalsy();
+      expect(table.element.querySelector('.ds-table-loading')).toBeFalsy();
       expect(getRows(table).length).toBe(5);
     });
   });
@@ -175,7 +175,7 @@ describe('Table', () => {
       const cols = [ { key: 'name', title: 'Name', sortable: true } ];
       const table = Table({ data: sampleData, columns: cols });
       const th = getHeaders(table)[0];
-      expect(th.classList.contains('kupola-table-sortable')).toBe(true);
+      expect(th.classList.contains('ds-table-sortable')).toBe(true);
     });
 
     test('sorts ascending on click', () => {
@@ -305,7 +305,7 @@ describe('Table', () => {
     test('shows empty when filter matches nothing', () => {
       const table = Table({ data: sampleData, columns });
       table.setFilterText('zzzzz');
-      expect(table.element.querySelector('.kupola-table-empty')).toBeTruthy();
+      expect(table.element.querySelector('.ds-table-empty')).toBeTruthy();
     });
   });
 
@@ -320,19 +320,19 @@ describe('Table', () => {
 
     test('shows pagination controls', () => {
       const table = Table({ data: bigData, columns, pageSize: 10 });
-      expect(table.element.querySelector('.kupola-table-pagination')).toBeTruthy();
+      expect(table.element.querySelector('.ds-table-pagination')).toBeTruthy();
     });
 
     test('shows page info text', () => {
       const table = Table({ data: bigData, columns, pageSize: 10 });
-      const info = table.element.querySelector('.kupola-table-page-info');
+      const info = table.element.querySelector('.ds-table-page-info');
       expect(info.textContent).toContain('1-10');
       expect(info.textContent).toContain('25');
     });
 
     test('navigates to next page', () => {
       const table = Table({ data: bigData, columns, pageSize: 10 });
-      const nextBtn = table.element.querySelector('.kupola-table-page-btn:last-child');
+      const nextBtn = table.element.querySelector('.ds-table-page-btn:last-child');
       nextBtn.click();
       expect(getRows(table).length).toBe(10);
       expect(getRows(table)[0].querySelector('td').textContent).toBe('User11');
@@ -352,12 +352,12 @@ describe('Table', () => {
 
     test('hides pagination when data fits in one page', () => {
       const table = Table({ data: sampleData, columns, pageSize: 10 });
-      expect(table.element.querySelector('.kupola-table-pagination')).toBeFalsy();
+      expect(table.element.querySelector('.ds-table-pagination')).toBeFalsy();
     });
 
     test('disables prev button on first page', () => {
       const table = Table({ data: bigData, columns, pageSize: 10 });
-      const prevBtn = table.element.querySelector('.kupola-table-page-btn:first-child');
+      const prevBtn = table.element.querySelector('.ds-table-page-btn:first-child');
       expect(prevBtn.disabled).toBe(true);
     });
 
@@ -370,7 +370,7 @@ describe('Table', () => {
 
     test('shows page size selector with pageSizeOptions', () => {
       const table = Table({ data: bigData, columns, pageSize: 10, pageSizeOptions: [ 5, 10, 20 ] });
-      const select = table.element.querySelector('.kupola-table-page-size');
+      const select = table.element.querySelector('.ds-table-page-size');
       expect(select).toBeTruthy();
       expect(select.options.length).toBe(3);
     });
@@ -381,7 +381,7 @@ describe('Table', () => {
     test('renders checkbox column', () => {
       const table = Table({ data: sampleData, columns, selection: 'checkbox' });
       const header = getHeaders(table)[0];
-      expect(header.classList.contains('kupola-table-col-selection')).toBe(true);
+      expect(header.classList.contains('ds-table-col-selection')).toBe(true);
       expect(header.querySelector('input[type="checkbox"]')).toBeTruthy();
     });
 
@@ -396,7 +396,7 @@ describe('Table', () => {
       const table = Table({ data: sampleData, columns, selection: 'checkbox' });
       table.selectRow(1);
       expect(table.getSelectedKeys()).toContain(1);
-      expect(table.element.querySelector('tr[data-row-key="1"]').classList.contains('kupola-table-row-selected')).toBe(true);
+      expect(table.element.querySelector('tr[data-row-key="1"]').classList.contains('ds-table-row-selected')).toBe(true);
     });
 
     test('deselectRow deselects a row', () => {
@@ -450,20 +450,20 @@ describe('Table', () => {
   describe('expand rows', () => {
     test('renders expand column', () => {
       const table = Table({ data: sampleData, columns, expandable: (row) => `<div>Detail: ${row.name}</div>` });
-      const expandHeader = table.element.querySelector('.kupola-table-col-expand');
+      const expandHeader = table.element.querySelector('.ds-table-col-expand');
       expect(expandHeader).toBeTruthy();
     });
 
     test('renders expand buttons', () => {
       const table = Table({ data: sampleData, columns, expandable: (row) => `<div>${row.name}</div>` });
-      const btns = table.element.querySelectorAll('.kupola-table-expand-btn');
+      const btns = table.element.querySelectorAll('.ds-table-expand-btn');
       expect(btns.length).toBe(5);
     });
 
     test('toggleExpand shows expand content', () => {
       const table = Table({ data: sampleData, columns, expandable: (row) => `<div class="detail">${row.name}</div>` });
       table.toggleExpand(1);
-      const expandRow = table.element.querySelector('.kupola-table-expand-row');
+      const expandRow = table.element.querySelector('.ds-table-expand-row');
       expect(expandRow).toBeTruthy();
       expect(expandRow.querySelector('.detail').textContent).toBe('Alice');
     });
@@ -471,15 +471,15 @@ describe('Table', () => {
     test('toggleExpand hides on second call', () => {
       const table = Table({ data: sampleData, columns, expandable: (row) => `<div>${row.name}</div>` });
       table.toggleExpand(1);
-      expect(table.element.querySelector('.kupola-table-expand-row')).toBeTruthy();
+      expect(table.element.querySelector('.ds-table-expand-row')).toBeTruthy();
       table.toggleExpand(1);
-      expect(table.element.querySelector('.kupola-table-expand-row')).toBeFalsy();
+      expect(table.element.querySelector('.ds-table-expand-row')).toBeFalsy();
     });
 
     test('expandAll expands all rows', () => {
       const table = Table({ data: sampleData, columns, expandable: (row) => `<div>${row.name}</div>` });
       table.expandAll();
-      const expandRows = table.element.querySelectorAll('.kupola-table-expand-row');
+      const expandRows = table.element.querySelectorAll('.ds-table-expand-row');
       expect(expandRows.length).toBe(5);
     });
 
@@ -487,7 +487,7 @@ describe('Table', () => {
       const table = Table({ data: sampleData, columns, expandable: (row) => `<div>${row.name}</div>` });
       table.expandAll();
       table.collapseAll();
-      expect(table.element.querySelectorAll('.kupola-table-expand-row').length).toBe(0);
+      expect(table.element.querySelectorAll('.ds-table-expand-row').length).toBe(0);
     });
 
     test('calls onExpand callback', () => {
@@ -502,7 +502,7 @@ describe('Table', () => {
   describe('data API', () => {
     test('setData updates table data', () => {
       const table = Table({ data: [], columns });
-      expect(table.element.querySelector('.kupola-table-empty')).toBeTruthy();
+      expect(table.element.querySelector('.ds-table-empty')).toBeTruthy();
       table.setData(sampleData);
       expect(getRows(table).length).toBe(5);
     });
@@ -517,7 +517,7 @@ describe('Table', () => {
     test('setData with empty array clears table', () => {
       const table = Table({ data: sampleData, columns });
       table.setData([]);
-      expect(table.element.querySelector('.kupola-table-empty')).toBeTruthy();
+      expect(table.element.querySelector('.ds-table-empty')).toBeTruthy();
     });
 
     test('throws on non-object options', () => {
@@ -562,7 +562,7 @@ describe('Table', () => {
       const table = Table({ data: sampleData, columns: cols, editable: true });
       const cell = getRows(table)[0].querySelector('td');
       cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-      expect(table.element.querySelector('.kupola-table-edit-input')).toBeTruthy();
+      expect(table.element.querySelector('.ds-table-edit-input')).toBeTruthy();
     });
 
     test('save edit updates data', () => {
@@ -571,10 +571,10 @@ describe('Table', () => {
       const table = Table({ data: freshData, columns: cols, editable: true });
       const cell = getRows(table)[0].querySelector('td');
       cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-      const input = table.element.querySelector('.kupola-table-edit-input');
+      const input = table.element.querySelector('.ds-table-edit-input');
       input.value = 'Updated';
       input.dispatchEvent(new Event('input'));
-      const saveBtn = table.element.querySelector('.kupola-table-edit-save');
+      const saveBtn = table.element.querySelector('.ds-table-edit-save');
       saveBtn.click();
       expect(table.getData()[0].name).toBe('Updated');
     });
@@ -585,12 +585,12 @@ describe('Table', () => {
       const table = Table({ data: freshData, columns: cols, editable: true });
       const cell = getRows(table)[0].querySelector('td');
       cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-      const input = table.element.querySelector('.kupola-table-edit-input');
+      const input = table.element.querySelector('.ds-table-edit-input');
       input.value = 'Updated';
       input.dispatchEvent(new Event('input'));
-      const cancelBtn = table.element.querySelector('.kupola-table-edit-cancel');
+      const cancelBtn = table.element.querySelector('.ds-table-edit-cancel');
       cancelBtn.click();
-      expect(table.element.querySelector('.kupola-table-edit-input')).toBeFalsy();
+      expect(table.element.querySelector('.ds-table-edit-input')).toBeFalsy();
       expect(table.getData()[0].name).toBe('Alice');
     });
   });

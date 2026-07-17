@@ -265,6 +265,9 @@ export interface AIPanelOptions {
   height?: string;
   placeholder?: string;
   showTimestamp?: boolean;
+  resultViewer?: boolean;
+  resultPageSize?: number;
+  maxTableColumns?: number;
 }
 
 export declare class AIPanel {
@@ -594,6 +597,9 @@ export interface AIPanelOptions {
   height?: string;
   placeholder?: string;
   showTimestamp?: boolean;
+  resultViewer?: boolean;
+  resultPageSize?: number;
+  maxTableColumns?: number;
 }
 
 export declare class AIPanel {

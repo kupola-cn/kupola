@@ -41,6 +41,9 @@ export class AIPanel {
       height: '400px',
       placeholder: '输入指令... (查询/添加/执行)',
       showTimestamp: false,
+      resultViewer: true,
+      resultPageSize: 20,
+      maxTableColumns: 12,
       ...options,
     };
 
@@ -51,6 +54,11 @@ export class AIPanel {
     this._timelineEl = null;
     this._unsubscribers = [];
     this._isOpen = false;
+    this._resultViewerEl = null;
+    this._currentResultView = null;
+    this._resultKeydownHandler = (e) => {
+      if (e.key === 'Escape') this._closeResultViewer();
+    };
   }
 
   /**
@@ -61,17 +69,17 @@ export class AIPanel {
     if (this._container) this.destroy();
 
     this._container = document.createElement('div');
-    this._container.className = 'kupola-ai-panel';
+    this._container.className = 'ds-ai-panel';
     this._container.innerHTML = this._buildHTML();
 
     // Cache DOM refs
-    this._messagesEl = this._container.querySelector('.kai-messages');
-    this._inputEl = this._container.querySelector('.kai-input');
-    this._sendBtn = this._container.querySelector('.kai-send-btn');
-    this._progressEl = this._container.querySelector('.kai-progress');
-    this._timelineEl = this._container.querySelector('.kai-timeline');
-    this._headerCloseBtn = this._container.querySelector('.kai-close-btn');
-    this._headerMinBtn = this._container.querySelector('.kai-min-btn');
+    this._messagesEl = this._container.querySelector('.ds-ai-messages');
+    this._inputEl = this._container.querySelector('.ds-ai-input');
+    this._sendBtn = this._container.querySelector('.ds-ai-send-btn');
+    this._progressEl = this._container.querySelector('.ds-ai-progress');
+    this._timelineEl = this._container.querySelector('.ds-ai-timeline');
+    this._headerCloseBtn = this._container.querySelector('.ds-ai-close-btn');
+    this._headerMinBtn = this._container.querySelector('.ds-ai-min-btn');
 
     // Bind events
     this._sendBtn.addEventListener('click', () => this._handleSend());
@@ -120,6 +128,7 @@ export class AIPanel {
   destroy() {
     this._unsubscribers.forEach(fn => fn());
     this._unsubscribers = [];
+    this._destroyResultViewer();
     if (this._container && this._container.parentNode) {
       this._container.parentNode.removeChild(this._container);
     }
@@ -139,26 +148,24 @@ export class AIPanel {
   _buildHTML() {
     const { title, height, placeholder } = this.options;
     return `
-      <div class="kai-header">
-        <span class="kai-title">${_esc(title)}</span>
-        <div class="kai-header-actions">
-          <button class="kai-min-btn" title="最小化">─</button>
-          <button class="kai-close-btn" title="关闭">✕</button>
+      <div class="ds-ai-header">
+        <span class="ds-ai-title">${_esc(title)}</span>
+        <div class="ds-ai-header-actions">
+          <button class="ds-ai-min-btn" title="最小化">─</button>
+          <button class="ds-ai-close-btn" title="关闭">✕</button>
         </div>
       </div>
-      <div class="kai-messages" style="max-height:${height};overflow-y:auto;padding:12px 16px;">
+      <div class="ds-ai-messages" style="max-height:${height};">
       </div>
-      <div class="kai-progress" style="display:none;padding:4px 16px;">
-        <div class="kai-progress-bar"><div class="kai-progress-fill"></div></div>
-        <span class="kai-progress-text"></span>
+      <div class="ds-ai-progress">
+        <div class="ds-ai-progress-bar"><div class="ds-ai-progress-fill"></div></div>
+        <span class="ds-ai-progress-text"></span>
       </div>
-      <div class="kai-timeline" style="display:none;padding:8px 16px;">
+      <div class="ds-ai-timeline">
       </div>
-      <div class="kai-input-area" style="display:flex;gap:8px;padding:8px 16px;border-top:1px solid var(--vp-c-divider,#e5e7eb);">
-        <input class="kai-input" type="text" placeholder="${_esc(placeholder)}"
-               style="flex:1;padding:8px 12px;border:1px solid var(--vp-c-divider,#d1d5db);border-radius:6px;font-size:14px;outline:none;" />
-        <button class="kai-send-btn"
-                style="padding:8px 16px;background:var(--vp-c-brand-1,#3b82f6);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;">
+      <div class="ds-ai-input-area">
+        <input class="ds-ai-input" type="text" placeholder="${_esc(placeholder)}" />
+        <button class="ds-ai-send-btn">
           发送
         </button>
       </div>
@@ -171,7 +178,9 @@ export class AIPanel {
     // New messages
     const unsubResult = bus.on('result', ({ command, result }) => {
       const msg = this.adapter.getMessages().pop();
-      if (msg) this._appendMessage(msg.role, msg.text);
+      if (msg) {
+        this._appendMessage(msg.role, msg.text, this._buildResultActions(command, result));
+      }
 
       // Show quick actions if there's a suggestion
       if (result && result.suggestion && result.suggestion.suggest) {
@@ -189,7 +198,7 @@ export class AIPanel {
 
     // Flow complete → hide timeline after delay
     const unsubFlowComplete = bus.on('flow:complete', () => {
-      setTimeout(() => { this._timelineEl.style.display = 'none'; }, 3000);
+      setTimeout(() => { this._timelineEl.classList.remove('is-visible'); }, 3000);
     });
 
     this._unsubscribers.push(unsubResult, unsubFlowStep, unsubFlowComplete);
@@ -224,16 +233,7 @@ export class AIPanel {
     if (!this._messagesEl) return;
 
     const div = document.createElement('div');
-    div.className = `kai-msg kai-msg-${role}`;
-
-    // Style
-    const styles = {
-      user: 'background:#eff6ff;color:#1e40af;padding:8px 12px;border-radius:8px 8px 2px 8px;margin-bottom:8px;max-width:80%;margin-left:auto;font-size:14px;',
-      system: 'background:#f3f4f6;color:#374151;padding:8px 12px;border-radius:8px 8px 8px 2px;margin-bottom:8px;max-width:85%;font-size:14px;',
-      suggestion: 'background:#fefce8;color:#854d0e;padding:8px 12px;border-radius:8px;margin-bottom:8px;max-width:85%;border:1px dashed #facc15;font-size:13px;',
-    };
-
-    div.style.cssText = styles[role] || styles.system;
+    div.className = `ds-ai-msg ds-ai-msg-${role}`;
 
     // Render text (support basic markdown-like formatting)
     div.innerHTML = _renderText(text);
@@ -241,7 +241,7 @@ export class AIPanel {
     // Timestamp
     if (this.options.showTimestamp) {
       const ts = document.createElement('span');
-      ts.style.cssText = 'display:block;font-size:11px;color:#9ca3af;margin-top:4px;';
+      ts.className = 'ds-ai-ts';
       ts.textContent = new Date().toLocaleTimeString();
       div.appendChild(ts);
     }
@@ -249,11 +249,11 @@ export class AIPanel {
     // Action buttons
     if (actions && actions.length > 0) {
       const btnGroup = document.createElement('div');
-      btnGroup.style.cssText = 'display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;';
+      btnGroup.className = 'ds-ai-actions';
       for (const act of actions) {
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.textContent = act.label;
-        btn.style.cssText = 'padding:4px 10px;font-size:12px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;';
         btn.addEventListener('click', () => act.action());
         btnGroup.appendChild(btn);
       }
@@ -264,56 +264,312 @@ export class AIPanel {
     this._scrollToBottom();
   }
 
+  _buildResultActions(command, result) {
+    if (!this.options.resultViewer || command?.engine !== 'query' || !this._hasViewableResult(result)) {
+      return null;
+    }
+
+    return [
+      { label: '查看数据', action: () => this._openResultViewer(command, result) },
+      { label: '复制 JSON', action: () => this._copyResultJSON(result) },
+      { label: '导出 CSV', action: () => this._downloadResultCSV(command, result) },
+    ];
+  }
+
+  _hasViewableResult(result) {
+    const rows = this._getResultRows(result);
+    return result?.success && rows.length > 0;
+  }
+
+  _openResultViewer(command, result) {
+    const rows = this._getResultRows(result);
+    const columns = this._getResultColumns(result, rows);
+    const title = this._formatResultTitle(command, rows);
+
+    this._currentResultView = {
+      command,
+      result,
+      rows,
+      columns,
+      title,
+      tab: 'table',
+      page: 1,
+    };
+
+    this._ensureResultViewer();
+    this._renderResultViewer();
+  }
+
+  _ensureResultViewer() {
+    if (this._resultViewerEl) return;
+
+    this._resultViewerEl = document.createElement('div');
+    this._resultViewerEl.className = 'ds-ai-result-viewer';
+    document.body.appendChild(this._resultViewerEl);
+    document.addEventListener('keydown', this._resultKeydownHandler);
+  }
+
+  _renderResultViewer() {
+    if (!this._resultViewerEl || !this._currentResultView) return;
+
+    const view = this._currentResultView;
+    const pageSize = Math.max(1, this.options.resultPageSize || 20);
+    const totalPages = Math.max(1, Math.ceil(view.rows.length / pageSize));
+    view.page = Math.min(Math.max(1, view.page || 1), totalPages);
+
+    this._resultViewerEl.innerHTML = this._buildResultViewerHTML(view, pageSize, totalPages);
+    this._resultViewerEl.classList.add('is-open');
+    this._bindResultViewerEvents();
+  }
+
+  _buildResultViewerHTML(view, pageSize, totalPages) {
+    const pageStart = (view.page - 1) * pageSize;
+    const pageRows = view.rows.slice(pageStart, pageStart + pageSize);
+    const subtitle = `${view.rows.length} 条记录 · ${new Date().toLocaleString()}`;
+    const tableTab = view.tab === 'table' ? 'active' : '';
+    const jsonTab = view.tab === 'json' ? 'active' : '';
+
+    return `
+      <div class="ds-ai-result-backdrop" data-ds-ai-result-action="close"></div>
+      <div class="ds-ai-result-dialog" role="dialog" aria-modal="true" aria-label="${_esc(view.title)}">
+        <div class="ds-ai-result-header">
+          <div class="ds-ai-result-heading">
+            <div class="ds-ai-result-title">${_esc(view.title)}</div>
+            <div class="ds-ai-result-subtitle">${_esc(subtitle)}</div>
+          </div>
+          <button class="ds-ai-result-close" type="button" data-ds-ai-result-action="close">×</button>
+        </div>
+
+        <div class="ds-ai-result-toolbar">
+          <div class="ds-ai-result-tabs">
+            ${this._renderTabButton('table', '表格', tableTab)}
+            ${this._renderTabButton('json', 'JSON', jsonTab)}
+          </div>
+          <div class="ds-ai-result-tools">
+            ${this._renderToolbarButton('copy', '复制 JSON')}
+            ${this._renderToolbarButton('csv', '导出 CSV')}
+          </div>
+        </div>
+
+        <div class="ds-ai-result-body">
+          ${view.tab === 'json' ? this._renderJSONView(view.result.data) : this._renderTableView(view.columns, pageRows)}
+        </div>
+
+        <div class="ds-ai-result-footer">
+          <span>第 ${view.page} / ${totalPages} 页 · 每页 ${pageSize} 条</span>
+          <div class="ds-ai-result-pager">
+            <button class="ds-ai-result-btn" type="button" data-ds-ai-result-action="prev" ${view.page <= 1 ? 'disabled' : ''}>上一页</button>
+            <button class="ds-ai-result-btn" type="button" data-ds-ai-result-action="next" ${view.page >= totalPages ? 'disabled' : ''}>下一页</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderTabButton(tab, label, active) {
+    const selected = active === 'active';
+    return `
+      <button class="ds-ai-result-btn${selected ? ' is-active' : ''}" type="button" data-ds-ai-result-tab="${_esc(tab)}">${_esc(label)}</button>
+    `;
+  }
+
+  _renderToolbarButton(action, label) {
+    return `<button class="ds-ai-result-btn" type="button" data-ds-ai-result-action="${_esc(action)}">${_esc(label)}</button>`;
+  }
+
+  _renderTableView(columns, rows) {
+    if (!rows.length) {
+      return '<div class="ds-ai-result-empty">没有可显示的数据</div>';
+    }
+
+    return `
+      <div class="ds-ai-result-table-wrap">
+        <table class="ds-ai-result-table">
+          <thead>
+            <tr>
+              ${columns.map(col => `<th>${_esc(col.title || col.field)}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(row => `
+              <tr>
+                ${columns.map(col => `<td title="${_esc(this._formatCellValue(row[col.field]))}">${_esc(this._formatCellValue(row[col.field]))}</td>`).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  _renderJSONView(data) {
+    return `
+      <pre class="ds-ai-result-json">${_esc(JSON.stringify(data, null, 2))}</pre>
+    `;
+  }
+
+  _bindResultViewerEvents() {
+    this._resultViewerEl.querySelectorAll('[data-ds-ai-result-action]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.dsAiResultAction;
+        if (action === 'close') this._closeResultViewer();
+        if (action === 'copy') this._copyResultJSON(this._currentResultView.result);
+        if (action === 'csv') this._downloadResultCSV(this._currentResultView.command, this._currentResultView.result);
+        if (action === 'prev') this._changeResultPage(-1);
+        if (action === 'next') this._changeResultPage(1);
+      });
+    });
+
+    this._resultViewerEl.querySelectorAll('[data-ds-ai-result-tab]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        this._currentResultView.tab = e.currentTarget.dataset.dsAiResultTab;
+        this._renderResultViewer();
+      });
+    });
+  }
+
+  _changeResultPage(delta) {
+    if (!this._currentResultView) return;
+    this._currentResultView.page += delta;
+    this._renderResultViewer();
+  }
+
+  _closeResultViewer() {
+    if (this._resultViewerEl) {
+      this._resultViewerEl.classList.remove('is-open');
+    }
+  }
+
+  _destroyResultViewer() {
+    if (this._resultViewerEl && this._resultViewerEl.parentNode) {
+      this._resultViewerEl.parentNode.removeChild(this._resultViewerEl);
+    }
+    document.removeEventListener('keydown', this._resultKeydownHandler);
+    this._resultViewerEl = null;
+    this._currentResultView = null;
+  }
+
+  _getResultRows(result) {
+    if (!result?.success) return [];
+    if (Array.isArray(result.table?.rows)) return result.table.rows;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && typeof result.data === 'object') return [result.data];
+    return [];
+  }
+
+  _getResultColumns(result, rows) {
+    const sourceColumns = Array.isArray(result?.table?.columns) ? result.table.columns : null;
+    const columns = sourceColumns || this._inferColumns(rows);
+    return columns.slice(0, this.options.maxTableColumns || 12);
+  }
+
+  _inferColumns(rows) {
+    const fields = [];
+    for (const row of rows.slice(0, 20)) {
+      Object.keys(row || {}).forEach(key => {
+        if (!fields.includes(key)) fields.push(key);
+      });
+    }
+    return fields.map(field => ({ field, title: field }));
+  }
+
+  _formatCellValue(value) {
+    if (value === null || value === undefined) return '';
+    if (Array.isArray(value)) return `[${value.length} items]`;
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+  }
+
+  _formatResultTitle(command, rows) {
+    const type = command?.type || 'query';
+    return `查询结果：${type} (${rows.length})`;
+  }
+
+  _copyResultJSON(result) {
+    const text = JSON.stringify(result?.data ?? this._getResultRows(result), null, 2);
+    this._copyText(text);
+  }
+
+  _copyText(text) {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => this._fallbackCopyText(text));
+      return;
+    }
+    this._fallbackCopyText(text);
+  }
+
+  _fallbackCopyText(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.className = 'ds-ai-clipboard-proxy';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try { document.execCommand('copy'); } catch {}
+    textarea.remove();
+  }
+
+  _downloadResultCSV(command, result) {
+    const rows = this._getResultRows(result);
+    if (!rows.length) return;
+    const columns = this._getResultColumns(result, rows);
+    const csv = this._toCSV(columns, rows);
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${command?.type || 'query'}-${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  _toCSV(columns, rows) {
+    const header = columns.map(col => this._csvCell(col.title || col.field)).join(',');
+    const body = rows.map(row => columns.map(col => this._csvCell(this._formatCellValue(row[col.field]))).join(','));
+    return [header, ...body].join('\n');
+  }
+
+  _csvCell(value) {
+    const text = String(value ?? '');
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
   _showProgress(batchResult) {
     if (!this._progressEl) return;
-    this._progressEl.style.display = 'flex';
-    const fill = this._progressEl.querySelector('.kai-progress-fill');
-    const text = this._progressEl.querySelector('.kai-progress-text');
+    this._progressEl.classList.add('is-visible');
+    const fill = this._progressEl.querySelector('.ds-ai-progress-fill');
+    const text = this._progressEl.querySelector('.ds-ai-progress-text');
     const done = batchResult.total - batchResult.failed;
     const pct = Math.round((done / batchResult.total) * 100);
     fill.style.width = `${pct}%`;
-    fill.style.cssText = `width:${pct}%;height:6px;background:var(--vp-c-brand-1,#3b82f6);border-radius:3px;transition:width 0.3s;`;
     text.textContent = `${done}/${batchResult.total}`;
-    text.style.cssText = 'font-size:12px;color:#6b7280;margin-left:8px;';
-    this._progressEl.querySelector('.kai-progress-bar').style.cssText = 'flex:1;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;';
-    this._progressEl.style.cssText = 'display:flex;align-items:center;padding:4px 16px;gap:8px;';
 
     if (done === batchResult.total) {
-      setTimeout(() => { this._progressEl.style.display = 'none'; }, 2000);
+      setTimeout(() => { this._progressEl.classList.remove('is-visible'); }, 2000);
     }
   }
 
   _updateTimeline(step, label, status) {
     if (!this._timelineEl) return;
-    this._timelineEl.style.display = 'block';
+    this._timelineEl.classList.add('is-visible');
 
     const icons = { running: '🔄', success: '✅', error: '❌', skipped: '⏭️', done: '✅' };
-    const colors = { running: '#3b82f6', success: '#22c55e', error: '#ef4444', skipped: '#9ca3af', done: '#22c55e' };
-
     // Find or create step element
     let stepEl = this._timelineEl.querySelector(`[data-step="${step}"]`);
     if (!stepEl) {
       stepEl = document.createElement('div');
+      stepEl.className = 'ds-ai-timeline-step';
       stepEl.dataset.step = step;
-      stepEl.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;';
       this._timelineEl.appendChild(stepEl);
     }
 
-    stepEl.innerHTML = `<span>${icons[status] || '⏳'}</span><span style="color:${colors[status] || '#6b7280'}">${_esc(label)}</span>`;
+    stepEl.dataset.status = status;
+    stepEl.innerHTML = `<span class="ds-ai-timeline-icon">${icons[status] || '⏳'}</span><span class="ds-ai-timeline-label">${_esc(label)}</span>`;
   }
 
   _toggleMinimize() {
-    const msgs = this._container.querySelector('.kai-messages');
-    const inputArea = this._container.querySelector('.kai-input-area');
-    const progress = this._container.querySelector('.kai-progress');
-    const timeline = this._container.querySelector('.kai-timeline');
-
-    const isMinimized = msgs.style.display === 'none';
-    const display = isMinimized ? '' : 'none';
-    msgs.style.display = isMinimized ? 'block' : 'none';
-    inputArea.style.display = isMinimized ? 'flex' : 'none';
-    progress.style.display = isMinimized ? 'flex' : 'none';
-    timeline.style.display = isMinimized ? 'block' : 'none';
+    this._container.classList.toggle('is-minimized');
   }
 
   _scrollToBottom() {
@@ -343,6 +599,6 @@ function _renderText(text) {
   // Bold
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   // Inline code
-  s = s.replace(/`(.+?)`/g, '<code style="background:#f3f4f6;padding:1px 4px;border-radius:3px;font-size:13px;">$1</code>');
+  s = s.replace(/`(.+?)`/g, '<code>$1</code>');
   return s;
 }

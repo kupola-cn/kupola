@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A modern, modular UI component library for any web project. Zero framework dependencies, tree-shakeable imports. 这是一个现代、模块化的 UI 组件库，适用于任何 Web 项目。零框架依赖，支持按需引入（tree-shakeable）。",
   "main": "dist/kupola-core.esm.js",
   "module": "dist/kupola-core.esm.js",

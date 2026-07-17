@@ -80,7 +80,7 @@ export class AIDashboard {
     if (this._container) this.destroy();
 
     this._container = document.createElement('div');
-    this._container.className = 'kai-dashboard';
+    this._container.className = 'ds-ai-dashboard';
     this._container.style.cssText = `display:grid;grid-template-columns:${this.options.columns};gap:16px;`;
 
     parent.appendChild(this._container);

@@ -205,7 +205,7 @@ describe('AIAdapter', () => {
     it('should return HTML string with Kupola directives', () => {
       const html = adapter.getPanelHTML();
 
-      expect(html).toContain('kupola-ai-panel');
+      expect(html).toContain('ds-ai-panel');
       expect(html).toContain('k-data');
       expect(html).toContain('k-model');
       expect(html).toContain('k-on:click');

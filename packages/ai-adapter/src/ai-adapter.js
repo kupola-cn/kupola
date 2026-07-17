@@ -101,16 +101,16 @@ export class AIAdapter {
    */
   getPanelHTML() {
     return `
-      <div class="kupola-ai-panel" k-data="{ aiInput: '', aiMessages: [] }">
-        <div class="kupola-ai-messages">
+      <div class="ds-ai-panel" k-data="{ aiInput: '', aiMessages: [] }">
+        <div class="ds-ai-messages">
           <template k-for="msg in aiMessages">
-            <div k-bind:class="'kupola-ai-msg kupola-ai-msg-' + msg.role" k-text="msg.text"></div>
+            <div k-bind:class="'ds-ai-msg ds-ai-msg-' + msg.role" k-text="msg.text"></div>
           </template>
         </div>
-        <div class="kupola-ai-input">
-          <input k-model="aiInput" placeholder="输入指令..."
+        <div class="ds-ai-input-area">
+          <input class="ds-ai-input" k-model="aiInput" placeholder="输入指令..."
                  k-on:keydown="if(event.key==='Enter' && aiInput.trim()) { submitAI(aiInput); aiInput='' }" />
-          <button k-on:click="if(aiInput.trim()) { submitAI(aiInput); aiInput='' }">发送</button>
+          <button class="ds-ai-send-btn" k-on:click="if(aiInput.trim()) { submitAI(aiInput); aiInput='' }">发送</button>
         </div>
       </div>
     `;

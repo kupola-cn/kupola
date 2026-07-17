@@ -69,7 +69,7 @@
 
 /* ── Modal: full-screen on phones ─────────────────────────── */
 @media (max-width: 575.98px) {
-  .ds-modal-content {
+  .ds-modal {
     width: 100% !important;
     max-width: 100% !important;
     min-height: 100vh !important;
@@ -83,13 +83,13 @@
 
 /* ── Drawer: full-width/height on phones ──────────────────── */
 @media (max-width: 575.98px) {
-  .ds-drawer-right,
-  .ds-drawer-left {
+  .ds-drawer,
+  .ds-drawer--right {
     width: 100% !important;
     max-width: 100% !important;
   }
-  .ds-drawer-bottom,
-  .ds-drawer-top {
+  .ds-drawer--bottom,
+  .ds-drawer--top {
     height: 90vh !important;
     max-height: 90vh !important;
   }
@@ -123,7 +123,7 @@
 
 /* ── Select: full-width on phones ─────────────────────────── */
 @media (max-width: 575.98px) {
-  .ds-select-dropdown {
+  .ds-select__menu {
     position: fixed !important;
     bottom: 0;
     left: 0;
@@ -136,7 +136,9 @@
 
 /* ── DatePicker: full-width on phones ─────────────────────── */
 @media (max-width: 575.98px) {
-  .ds-datepicker-panel {
+  .ds-datepicker__calendar,
+  .ds-timepicker__panel,
+  .ds-color-picker__panel {
     width: calc(100vw - 32px) !important;
     max-width: 100% !important;
   }
@@ -149,5 +151,42 @@
     max-width: 100% !important;
     right: 12px !important;
     left: 12px !important;
+  }
+}
+
+/* ── AI Panel / Result Viewer ─────────────────────────────── */
+@media (max-width: 575.98px) {
+  .ds-ai-panel {
+    right: var(--spacer-8) !important;
+    left: var(--spacer-8) !important;
+    bottom: var(--spacer-32) !important;
+    width: auto !important;
+  }
+
+  .ds-ai-input-area {
+    padding: var(--spacer-8) var(--spacer-12);
+  }
+
+  .ds-ai-send-btn {
+    min-width: 56px;
+    padding: 0 var(--spacer-12);
+  }
+
+  .ds-ai-result-dialog {
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  .ds-ai-result-header,
+  .ds-ai-result-toolbar,
+  .ds-ai-result-footer {
+    padding-right: var(--spacer-12);
+    padding-left: var(--spacer-12);
+  }
+
+  .ds-ai-result-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

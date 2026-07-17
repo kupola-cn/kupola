@@ -41,22 +41,22 @@ describe('AIPanel', () => {
 
   it('should mount into a DOM container', () => {
     panel.mount(container);
-    expect(container.querySelector('.kupola-ai-panel')).not.toBeNull();
-    expect(container.querySelector('.kai-messages')).not.toBeNull();
-    expect(container.querySelector('.kai-input')).not.toBeNull();
-    expect(container.querySelector('.kai-send-btn')).not.toBeNull();
+    expect(container.querySelector('.ds-ai-panel')).not.toBeNull();
+    expect(container.querySelector('.ds-ai-messages')).not.toBeNull();
+    expect(container.querySelector('.ds-ai-input')).not.toBeNull();
+    expect(container.querySelector('.ds-ai-send-btn')).not.toBeNull();
   });
 
   it('should display title in header', () => {
     panel.mount(container);
-    const title = container.querySelector('.kai-title');
+    const title = container.querySelector('.ds-ai-title');
     expect(title.textContent).toBe('Test AI');
   });
 
   it('should open and close', () => {
     panel.mount(container);
     panel.open();
-    const panelEl = container.querySelector('.kupola-ai-panel');
+    const panelEl = container.querySelector('.ds-ai-panel');
     expect(panelEl.style.display).toBe('flex');
 
     panel.close();
@@ -66,9 +66,9 @@ describe('AIPanel', () => {
   it('should toggle visibility', () => {
     panel.mount(container);
     panel.toggle(); // open
-    expect(container.querySelector('.kupola-ai-panel').style.display).toBe('flex');
+    expect(container.querySelector('.ds-ai-panel').style.display).toBe('flex');
     panel.toggle(); // close
-    expect(container.querySelector('.kupola-ai-panel').style.display).toBe('none');
+    expect(container.querySelector('.ds-ai-panel').style.display).toBe('none');
   });
 
   it('should add messages programmatically', () => {
@@ -76,7 +76,7 @@ describe('AIPanel', () => {
     panel.addMessage('user', 'Hello');
     panel.addMessage('system', 'Hi there!');
 
-    const msgs = container.querySelectorAll('.kai-msg');
+    const msgs = container.querySelectorAll('.ds-ai-msg');
     expect(msgs.length).toBe(2);
     expect(msgs[0].textContent).toContain('Hello');
     expect(msgs[1].textContent).toContain('Hi there');
@@ -90,7 +90,7 @@ describe('AIPanel', () => {
     ];
     panel.addMessage('suggestion', 'Create a flow?', actions);
 
-    const buttons = container.querySelectorAll('.kai-msg button');
+    const buttons = container.querySelectorAll('.ds-ai-msg button');
     expect(buttons.length).toBe(2);
     expect(buttons[0].textContent).toBe('OK');
   });
@@ -99,21 +99,48 @@ describe('AIPanel', () => {
     adapter.query.register('search', async () => [{ id: 1 }]);
     panel.mount(container);
 
-    const input = container.querySelector('.kai-input');
+    const input = container.querySelector('.ds-ai-input');
     input.value = '查询 test';
-    container.querySelector('.kai-send-btn').click();
+    container.querySelector('.ds-ai-send-btn').click();
 
     // Wait for async process
     await new Promise(r => setTimeout(r, 100));
 
-    const msgs = container.querySelectorAll('.kai-msg');
+    const msgs = container.querySelectorAll('.ds-ai-msg');
     expect(msgs.length).toBeGreaterThanOrEqual(1); // at least user message
+  });
+
+  it('should expose query result data in a global result viewer', async () => {
+    adapter.query.register('search', async () => [
+      { id: 1, name: 'Admin' },
+      { id: 2, name: 'Operator' },
+    ]);
+    panel.mount(container);
+
+    const input = container.querySelector('.ds-ai-input');
+    input.value = '查询 roles';
+    container.querySelector('.ds-ai-send-btn').click();
+
+    await new Promise(r => setTimeout(r, 100));
+
+    const viewButton = [...container.querySelectorAll('.ds-ai-msg button')]
+      .find(btn => btn.textContent === '查看数据');
+    expect(viewButton).toBeTruthy();
+
+    viewButton.click();
+
+    const viewer = document.body.querySelector('.ds-ai-result-viewer');
+    expect(viewer).not.toBeNull();
+    expect(viewer.textContent).toContain('查询结果：search');
+    expect(viewer.textContent).toContain('Admin');
+    expect(viewer.textContent).toContain('Operator');
   });
 
   it('should destroy cleanly', () => {
     panel.mount(container);
     panel.destroy();
-    expect(container.querySelector('.kupola-ai-panel')).toBeNull();
+    expect(container.querySelector('.ds-ai-panel')).toBeNull();
+    expect(document.body.querySelector('.ds-ai-result-viewer')).toBeNull();
   });
 
   it('should render existing adapter messages on mount', () => {
@@ -123,7 +150,7 @@ describe('AIPanel', () => {
     adapter._addMessage('system', 'pre-response');
 
     panel.mount(container);
-    const msgs = container.querySelectorAll('.kai-msg');
+    const msgs = container.querySelectorAll('.ds-ai-msg');
     expect(msgs.length).toBe(2);
   });
 });

@@ -102,7 +102,7 @@ describe('AIDashboard', () => {
     dashboard.addCard('x', 'search');
     dashboard.mount(container);
     dashboard.destroy();
-    expect(container.querySelector('.kai-dashboard')).toBeNull();
+    expect(container.querySelector('.ds-ai-dashboard')).toBeNull();
   });
 
   it('should render mini table when data has table property', () => {

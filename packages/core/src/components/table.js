@@ -106,8 +106,8 @@ export function Table(options = {}) {
   }
 
   // Init
-  element.classList.add('kupola-table-wrapper');
-  if (virtualScroll) {element.classList.add('kupola-table-virtual-wrapper');}
+  element.classList.add('ds-table-wrapper');
+  if (virtualScroll) {element.classList.add('ds-table-virtual-wrapper');}
   _render();
 
   // === Tree helpers ===
@@ -234,7 +234,7 @@ export function Table(options = {}) {
 
     // Table container
     const tableContainer = document.createElement('div');
-    tableContainer.className = 'kupola-table-container';
+    tableContainer.className = 'ds-table-container';
 
     const table = document.createElement('table');
     table.className = _getTableClass();
@@ -255,33 +255,33 @@ export function Table(options = {}) {
   }
 
   function _getTableClass() {
-    const classes = [ 'kupola-table' ];
-    if (options.striped) {classes.push('kupola-table-striped');}
-    if (options.hoverable !== false) {classes.push('kupola-table-hover');}
-    if (options.bordered) {classes.push('kupola-table-bordered');}
-    if (options.compact) {classes.push('kupola-table-compact');}
+    const classes = [ 'ds-table' ];
+    if (options.striped) {classes.push('ds-table-striped');}
+    if (options.hoverable !== false) {classes.push('ds-table-hover');}
+    if (options.bordered) {classes.push('ds-table-bordered');}
+    if (options.compact) {classes.push('ds-table-compact');}
     return classes.join(' ');
   }
 
   function _renderToolbar() {
     const toolbar = document.createElement('div');
-    toolbar.className = 'kupola-table-toolbar';
+    toolbar.className = 'ds-table-toolbar';
 
     const left = document.createElement('div');
     if (selection === 'checkbox' && _selectedKeys.size > 0) {
       const info = document.createElement('span');
-      info.className = 'kupola-table-selection-info';
+      info.className = 'ds-table-selection-info';
       info.textContent = `Selected ${_selectedKeys.size} items`;
       left.appendChild(info);
     }
 
     const right = document.createElement('div');
-    right.className = 'kupola-table-toolbar-right';
+    right.className = 'ds-table-toolbar-right';
 
     if (options.showFilter) {
       const input = document.createElement('input');
       input.type = 'text';
-      input.className = 'kupola-table-filter-input';
+      input.className = 'ds-table-filter-input';
       input.placeholder = 'Filter...';
       input.value = _filterText;
       input.addEventListener('input', () => {
@@ -308,7 +308,7 @@ export function Table(options = {}) {
     if (selection) {_renderSelectionHeader(tr);}
     if (expandable) {
       const th = document.createElement('th');
-      th.className = 'kupola-table-col-expand';
+      th.className = 'ds-table-col-expand';
       tr.appendChild(th);
     }
 
@@ -321,14 +321,14 @@ export function Table(options = {}) {
       if (col.fixed) {th.setAttribute('data-fixed', col.fixed);}
 
       if (col.sortable) {
-        th.classList.add('kupola-table-sortable');
+        th.classList.add('ds-table-sortable');
         const sortInfo = _sorts.find(s => s.key === col.key);
-        if (sortInfo) {th.classList.add(`kupola-table-sort-${sortInfo.order}`);}
+        if (sortInfo) {th.classList.add(`ds-table-sort-${sortInfo.order}`);}
 
         th.addEventListener('click', () => _handleSort(col.key));
 
         const indicator = document.createElement('span');
-        indicator.className = 'kupola-table-sort-icon';
+        indicator.className = 'ds-table-sort-icon';
         if (sortInfo) {
           indicator.textContent = multiSort
             ? ` ${_sorts.indexOf(sortInfo) + 1}${sortInfo.order === 'asc' ? '\u25B2' : '\u25BC'}`
@@ -341,7 +341,7 @@ export function Table(options = {}) {
 
       if (resizable && col.key !== columns[columns.length - 1]?.key) {
         const handle = document.createElement('span');
-        handle.className = 'kupola-table-resize-handle';
+        handle.className = 'ds-table-resize-handle';
         handle.setAttribute('data-col-key', col.key);
         th.appendChild(handle);
       }
@@ -355,7 +355,7 @@ export function Table(options = {}) {
 
   function _renderSelectionHeader(tr) {
     const th = document.createElement('th');
-    th.className = 'kupola-table-col-selection';
+    th.className = 'ds-table-col-selection';
     if (selection === 'checkbox') {
       const cb = document.createElement('input');
       cb.type = 'checkbox';
@@ -375,7 +375,7 @@ export function Table(options = {}) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
       td.colSpan = _getTotalColCount();
-      td.className = 'kupola-table-loading';
+      td.className = 'ds-table-loading';
       td.textContent = options.loadingText || 'Loading...';
       tr.appendChild(td);
       tbody.appendChild(tr);
@@ -383,7 +383,7 @@ export function Table(options = {}) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
       td.colSpan = _getTotalColCount();
-      td.className = 'kupola-table-empty';
+      td.className = 'ds-table-empty';
       td.textContent = options.emptyText || t('table.empty');
       tr.appendChild(td);
       tbody.appendChild(tr);
@@ -400,8 +400,8 @@ export function Table(options = {}) {
 
         const tr = document.createElement('tr');
         tr.setAttribute('data-row-key', key);
-        if (isSelected) {tr.classList.add('kupola-table-row-selected');}
-        if (draggable) { tr.draggable = true; tr.classList.add('kupola-table-draggable'); }
+        if (isSelected) {tr.classList.add('ds-table-row-selected');}
+        if (draggable) { tr.draggable = true; tr.classList.add('ds-table-draggable'); }
 
         if (options.onRowClick) {
           tr.addEventListener('click', () => options.onRowClick(row, key));
@@ -437,7 +437,7 @@ export function Table(options = {}) {
           if (_editingCell && _editingCell.rowKey === key && _editingCell.colKey === col.key) {
             td.appendChild(_renderEditCell(td, row, col, key));
           } else if (col.editable && editable) {
-            td.classList.add('kupola-table-editable-cell');
+            td.classList.add('ds-table-editable-cell');
             td.addEventListener('dblclick', () => _startEdit(key, col.key, value));
             _renderCellValue(td, col, value, row);
           } else if (col.render) {
@@ -456,7 +456,7 @@ export function Table(options = {}) {
         // Expand row
         if (expandable && isExpanded) {
           const expandTr = document.createElement('tr');
-          expandTr.className = 'kupola-table-expand-row';
+          expandTr.className = 'ds-table-expand-row';
           const expandTd = document.createElement('td');
           expandTd.colSpan = _getTotalColCount();
           const content = expandable(row);
@@ -482,7 +482,7 @@ export function Table(options = {}) {
 
   function _renderSelectionCell(tr, key, isSelected) {
     const td = document.createElement('td');
-    td.className = 'kupola-table-col-selection';
+    td.className = 'ds-table-col-selection';
     const input = document.createElement('input');
     input.type = selection === 'radio' ? 'radio' : 'checkbox';
     input.checked = isSelected;
@@ -496,10 +496,10 @@ export function Table(options = {}) {
 
   function _renderExpandCell(tr, key, isExpanded) {
     const td = document.createElement('td');
-    td.className = 'kupola-table-col-expand';
+    td.className = 'ds-table-col-expand';
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'kupola-table-expand-btn';
+    btn.className = 'ds-table-expand-btn';
     btn.textContent = isExpanded ? '\u25BC' : '\u25B6';
     btn.addEventListener('click', () => toggleExpand(key));
     td.appendChild(btn);
@@ -508,25 +508,25 @@ export function Table(options = {}) {
 
   function _renderEditCell(td, row, col, key) {
     const wrap = document.createElement('div');
-    wrap.className = 'kupola-table-edit-cell';
+    wrap.className = 'ds-table-edit-cell';
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'kupola-table-edit-input';
+    input.className = 'ds-table-edit-input';
     input.value = _editBuffer[col.key] ?? row[col.key] ?? '';
     input.addEventListener('input', () => { _editBuffer[col.key] = input.value; });
 
     const actions = document.createElement('div');
-    actions.className = 'kupola-table-edit-actions';
+    actions.className = 'ds-table-edit-actions';
 
     const saveBtn = document.createElement('button');
     saveBtn.type = 'button';
-    saveBtn.className = 'kupola-table-edit-save';
+    saveBtn.className = 'ds-table-edit-save';
     saveBtn.textContent = '\u2713';
     saveBtn.addEventListener('click', () => _saveEdit(key, col.key));
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.className = 'kupola-table-edit-cancel';
+    cancelBtn.className = 'ds-table-edit-cancel';
     cancelBtn.textContent = '\u2717';
     cancelBtn.addEventListener('click', _cancelEdit);
 
@@ -585,21 +585,21 @@ export function Table(options = {}) {
   function _renderPagination(total) {
     const totalPages = Math.ceil(total / _pageSize) || 1;
     const pagination = document.createElement('div');
-    pagination.className = 'kupola-table-pagination';
+    pagination.className = 'ds-table-pagination';
 
     const info = document.createElement('span');
-    info.className = 'kupola-table-page-info';
+    info.className = 'ds-table-page-info';
     const start = (_currentPage - 1) * _pageSize + 1;
     const end = Math.min(_currentPage * _pageSize, total);
     info.textContent = `${start}-${end} / ${total}`;
 
     const pages = document.createElement('div');
-    pages.className = 'kupola-table-pages';
+    pages.className = 'ds-table-pages';
 
     // Prev
     const prevBtn = document.createElement('button');
     prevBtn.type = 'button';
-    prevBtn.className = 'kupola-table-page-btn';
+    prevBtn.className = 'ds-table-page-btn';
     prevBtn.textContent = '\u2039';
     prevBtn.disabled = _currentPage <= 1;
     prevBtn.addEventListener('click', () => { if (_currentPage > 1) { _currentPage--; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} } });
@@ -610,13 +610,13 @@ export function Table(options = {}) {
     pageNumbers.forEach(p => {
       if (p === '...') {
         const ellipsis = document.createElement('span');
-        ellipsis.className = 'kupola-table-page-ellipsis';
+        ellipsis.className = 'ds-table-page-ellipsis';
         ellipsis.textContent = '...';
         pages.appendChild(ellipsis);
       } else {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'kupola-table-page-btn' + (p === _currentPage ? ' active' : '');
+        btn.className = 'ds-table-page-btn' + (p === _currentPage ? ' active' : '');
         btn.textContent = p;
         btn.addEventListener('click', () => { _currentPage = p; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} });
         pages.appendChild(btn);
@@ -626,7 +626,7 @@ export function Table(options = {}) {
     // Next
     const nextBtn = document.createElement('button');
     nextBtn.type = 'button';
-    nextBtn.className = 'kupola-table-page-btn';
+    nextBtn.className = 'ds-table-page-btn';
     nextBtn.textContent = '\u203A';
     nextBtn.disabled = _currentPage >= totalPages;
     nextBtn.addEventListener('click', () => { if (_currentPage < totalPages) { _currentPage++; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} } });
@@ -635,7 +635,7 @@ export function Table(options = {}) {
     // Page size selector
     if (options.pageSizeOptions?.length > 1) {
       const select = document.createElement('select');
-      select.className = 'kupola-table-page-size';
+      select.className = 'ds-table-page-size';
       options.pageSizeOptions.forEach(size => {
         const opt = document.createElement('option');
         opt.value = size;
@@ -674,7 +674,7 @@ export function Table(options = {}) {
 
   // === Column Resize ===
   function _initColumnResize() {
-    const handles = element.querySelectorAll('.kupola-table-resize-handle');
+    const handles = element.querySelectorAll('.ds-table-resize-handle');
     handles.forEach(handle => {
       let startX, startWidth, col;
       const handleMouseDown = (e) => {
@@ -709,25 +709,25 @@ export function Table(options = {}) {
     const rows = element.querySelectorAll('tbody tr[data-row-key]');
     rows.forEach(row => {
       const onDragStart = (e) => {
-        row.classList.add('kupola-table-dragging');
+        row.classList.add('ds-table-dragging');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', row.getAttribute('data-row-key'));
       };
       const onDragOver = (e) => {
         e.preventDefault();
-        row.classList.add('kupola-table-drag-over');
+        row.classList.add('ds-table-drag-over');
       };
-      const onDragLeave = () => row.classList.remove('kupola-table-drag-over');
+      const onDragLeave = () => row.classList.remove('ds-table-drag-over');
       const onDrop = (e) => {
         e.preventDefault();
-        row.classList.remove('kupola-table-drag-over');
+        row.classList.remove('ds-table-drag-over');
         const fromKey = e.dataTransfer.getData('text/plain');
         const toKey = row.getAttribute('data-row-key');
         if (fromKey !== toKey) {_reorderRows(fromKey, toKey);}
       };
       const onDragEnd = () => {
-        row.classList.remove('kupola-table-dragging');
-        rows.forEach(r => r.classList.remove('kupola-table-drag-over'));
+        row.classList.remove('ds-table-dragging');
+        rows.forEach(r => r.classList.remove('ds-table-drag-over'));
       };
 
       row.addEventListener('dragstart', onDragStart);
