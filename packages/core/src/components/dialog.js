@@ -96,13 +96,12 @@ function confirm(options = {}) {
 
     const container = document.createDocumentFragment();
     const instance = render(tpl, container);
+    const maskEl = container.querySelector('.ds-modal-mask');
 
     // Append to body
     document.body.appendChild(container);
 
     // Show the mask
-    const maskEl = document.body.querySelector('.ds-modal-mask:last-of-type')
-      || document.body.lastElementChild;
     if (maskEl) {maskEl.classList.add('is-visible');}
     document.body.style.overflow = 'hidden';
 

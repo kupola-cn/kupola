@@ -2163,9 +2163,40 @@ body.ds-dashboard-page {
 
 .ds-table-empty,
 .ds-table-loading {
-  padding: var(--spacer-24);
+  height: 160px;
+  padding: var(--spacer-32) var(--spacer-24);
+  background: var(--bg-base-secondary);
   color: var(--text-tertiary);
+  font-size: var(--body-sm-font-size);
+  line-height: var(--body-sm-line-height);
   text-align: center;
+}
+
+.ds-table-empty::before {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 28px;
+  margin: 0 auto var(--spacer-8);
+  border: 1px solid var(--border-neutral-l2);
+  border-radius: var(--radius-4);
+  background:
+    linear-gradient(var(--border-neutral-l1), var(--border-neutral-l1)) 8px 9px / 20px 1px no-repeat,
+    linear-gradient(var(--border-neutral-l1), var(--border-neutral-l1)) 8px 16px / 14px 1px no-repeat,
+    var(--bg-overlay-l1);
+  opacity: 0.72;
+}
+
+.ds-table-loading::before {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0 auto var(--spacer-8);
+  border: 2px solid var(--bg-overlay-l3);
+  border-top-color: var(--bg-brand);
+  border-radius: 50%;
+  animation: ds-spin-rotate 0.8s linear infinite;
 }
 
 .ds-table-expand-btn,
