@@ -132,6 +132,7 @@
   --icon-brand-hover: #53F4A2;
   --border-brand: #32F08C;
   --icon-onbrand: #FFFFFF;
+  --icon-filter: brightness(0) saturate(0) invert(0.9);
 
   /* Status */
   --status-success-default: #32F08C;
@@ -196,6 +197,7 @@
   --icon-brand-hover: #16A34A;
   --border-brand: #22C55E;
   --icon-onbrand: #FFFFFF;
+  --icon-filter: none;
 
   --status-success-default: #16A34A;
   --status-warning-default: #CA8A04;

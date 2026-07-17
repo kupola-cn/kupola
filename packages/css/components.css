@@ -110,20 +110,48 @@ img.icon { opacity: 1; filter: var(--icon-filter, none); }
 .ds-drawer__body { padding: var(--spacer-16) var(--spacer-24); flex: 1; overflow-y: auto; }
 
 /* ── Dropdown ─────────────────────────────────────────────── */
-.ds-dropdown { position: relative; display: inline-block; }
+.ds-dropdown {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
 .ds-dropdown__menu {
-  position: absolute; top: calc(100% + 4px); left: 0; min-width: 160px;
-  background: var(--bg-base-secondary); border: 1px solid var(--border-neutral-l2);
-  border-radius: var(--radius-4); box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  z-index: var(--z-index-dropdown); display: none; padding: var(--spacer-4);
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: var(--z-index-dropdown);
+  display: none;
+  width: max(100%, 160px);
+  max-height: min(320px, calc(100vh - 96px));
+  padding: var(--spacer-4);
+  overflow-y: auto;
+  background: var(--bg-base-secondary);
+  border: 1px solid var(--border-neutral-l2);
+  border-radius: var(--radius-4);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28);
 }
 .ds-dropdown__menu.is-open { display: block; }
 .ds-dropdown__item {
-  display: flex; align-items: center; padding: var(--spacer-6) var(--spacer-8);
-  border-radius: var(--radius-2); color: var(--text-default);
-  font-size: var(--body-sm-font-size); cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 30px;
+  padding: var(--spacer-6) var(--spacer-8);
+  color: var(--text-default);
+  font: inherit;
+  font-size: var(--body-sm-font-size);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-2);
 }
-.ds-dropdown__item:hover { background: var(--bg-overlay-l1); }
+.ds-dropdown__item:hover,
+.ds-dropdown__item.is-focused { background: var(--bg-overlay-l1); }
+.ds-dropdown__item.is-selected {
+  color: var(--text-brand);
+  background: var(--bg-brand-popup);
+}
 
 /* ── Tooltip ──────────────────────────────────────────────── */
 .ds-tooltip {
@@ -3107,7 +3135,17 @@ body.ds-dashboard-page {
 .ds-dropdown__trigger {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: var(--spacer-8);
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+.ds-dropdown__trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ds-drawer__close {
   width: 28px;
