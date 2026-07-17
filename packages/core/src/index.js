@@ -51,4 +51,19 @@ export { enableProfiler, disableProfiler, resetProfiler, getProfileReport, print
 export { lazyComponent, preloadComponent } from './lazy.js';
 
 // ── Theme (anti-FOUC) ────────────────────────────────────────────────────────
-export { themePreload, getPreferredTheme, setTheme, toggleTheme, onThemeChange, getThemeInlineScript } from './theme.js';
+export {
+  DEFAULT_BRAND_COLORS,
+  themePreload,
+  getPreferredTheme,
+  setTheme,
+  toggleTheme,
+  onThemeChange,
+  getBrandColors,
+  resolveBrandColor,
+  getPreferredBrandColor,
+  setBrandColor,
+  resetBrandColor,
+  onBrandColorChange,
+  attachBrandColorPicker,
+  getThemeInlineScript,
+} from './theme.js';

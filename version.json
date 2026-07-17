@@ -1,5 +1,5 @@
 {
-  "version": "2.0.3",
+  "version": "2.0.4",
   "name": "Kupola",
   "description": "A lightweight, dependency-free declarative UI component system for any server-side rendered web application",
   "author": "Kupola Team",

@@ -124,6 +124,14 @@
   --bg-brand: #32F08C;
   --bg-brand-hover: #53F4A2;
   --bg-brand-disabled: rgba(50, 240, 140, 0.3);
+  --bg-brand-popup: rgba(50, 240, 140, 0.12);
+  --bg-brand-overlay: rgba(50, 240, 140, 0.12);
+  --text-brand: #32F08C;
+  --text-brand-hover: #53F4A2;
+  --icon-brand: #32F08C;
+  --icon-brand-hover: #53F4A2;
+  --border-brand: #32F08C;
+  --icon-onbrand: #FFFFFF;
 
   /* Status */
   --status-success-default: #32F08C;
@@ -140,6 +148,12 @@
   --color-surface: var(--bg-base-secondary);
   --color-foreground: var(--text-default);
   --color-border: var(--border-neutral-l1);
+  --color-primary: var(--bg-brand);
+  --color-primary-hover: var(--bg-brand-hover);
+  --color-primary-disabled: var(--bg-brand-disabled);
+  --color-primary-soft: var(--bg-brand-popup);
+  --color-accent: var(--bg-brand);
+  --color-on-primary: var(--text-onbrand);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -174,6 +188,14 @@
   --bg-brand: #22C55E;
   --bg-brand-hover: #16A34A;
   --bg-brand-disabled: rgba(34, 197, 94, 0.3);
+  --bg-brand-popup: rgba(34, 197, 94, 0.12);
+  --bg-brand-overlay: rgba(34, 197, 94, 0.12);
+  --text-brand: #22C55E;
+  --text-brand-hover: #16A34A;
+  --icon-brand: #22C55E;
+  --icon-brand-hover: #16A34A;
+  --border-brand: #22C55E;
+  --icon-onbrand: #FFFFFF;
 
   --status-success-default: #16A34A;
   --status-warning-default: #CA8A04;
@@ -188,4 +210,10 @@
   --color-surface: var(--bg-base-secondary);
   --color-foreground: var(--text-default);
   --color-border: var(--border-neutral-l1);
+  --color-primary: var(--bg-brand);
+  --color-primary-hover: var(--bg-brand-hover);
+  --color-primary-disabled: var(--bg-brand-disabled);
+  --color-primary-soft: var(--bg-brand-popup);
+  --color-accent: var(--bg-brand);
+  --color-on-primary: var(--text-onbrand);
 }
