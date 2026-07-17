@@ -1,95 +1,38 @@
 # Form 表单
 
+Kupola 的 `Form` 不是配置字段列表的表单生成器，而是对原生表单的轻量增强：读取数据、统一验证、提交拦截和错误管理。
+
 ## 基础用法
 
 ```js
 import { Form } from '@kupola/kupola/components/form'
 
-const form = new Form({
-  el: '#app',
-  fields: [
-    { name: 'username', label: '用户名', type: 'text', required: true },
-    { name: 'email', label: '邮箱', type: 'email', required: true },
-    { name: 'password', label: '密码', type: 'password', required: true },
-  ],
+const form = Form({
+  element: document.querySelector('#userForm'),
   onSubmit: (data) => console.log(data),
 })
+
+form.setData({ username: 'admin' })
 ```
 
 ## 配置项
 
-| 选项 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| el | string \| Element | - | 挂载元素 |
-| fields | array | - | 字段配置 |
-| onSubmit | function | - | 提交回调 |
-| validateOnBlur | boolean | true | 失焦时验证 |
-| validateOnChange | boolean | false | 变化时验证 |
-
-## 字段配置
-
-```js
-{
-  name: 'username',        // 字段名
-  label: '用户名',         // 标签
-  type: 'text',            // 类型: text/email/password/number/textarea/select/checkbox/radio
-  required: true,          // 必填
-  placeholder: '请输入',   // 占位符
-  rules: [                 // 验证规则
-    { type: 'minLength', value: 3, message: '至少3个字符' },
-    { type: 'pattern', value: /^[a-z]+$/, message: '只能包含小写字母' },
-  ],
-}
-```
+| 选项 | 类型 | 说明 |
+| --- | --- | --- |
+| element | `HTMLFormElement` | 必填，表单元素 |
+| onSubmit | `Function` | 验证通过后的提交回调 |
+| onValidate | `Function` | 验证结果回调 |
 
 ## 方法
 
-- `form.validate()` - 验证表单，返回 Promise
-- `form.getValues()` - 获取表单数据
-- `form.setValues(data)` - 设置表单数据
-- `form.reset()` - 重置表单
-- `form.clearValidation()` - 清除验证状态
+- `validate()` - 验证整个表单
+- `validateField(field)` - 验证单个字段
+- `getData()` - 读取表单数据
+- `setData(data)` - 写入表单数据
+- `reset()` - 重置表单并清除错误
+- `addValidator(name, fn, message)` - 添加自定义校验
+- `destroy()` - 解绑事件
 
-## 示例
+## 验证方式
 
-### 带验证的表单
-
-```js
-const form = new Form({
-  el: '#app',
-  fields: [
-    {
-      name: 'email',
-      label: '邮箱',
-      type: 'email',
-      required: true,
-      rules: [
-        { type: 'email', message: '请输入有效的邮箱地址' },
-      ],
-    },
-    {
-      name: 'password',
-      label: '密码',
-      type: 'password',
-      required: true,
-      rules: [
-        { type: 'minLength', value: 8, message: '密码至少8位' },
-      ],
-    },
-  ],
-  onSubmit: async (data) => {
-    await submitForm(data)
-  },
-})
-```
-
-### 手动验证
-
-```js
-try {
-  const data = await form.validate()
-  console.log('验证通过', data)
-} catch (errors) {
-  console.log('验证失败', errors)
-}
-```
+字段通过 `data-required`、`data-email`、`data-minlength` 等属性启用内置规则，也支持 `data-message-*` 覆盖错误文案。
