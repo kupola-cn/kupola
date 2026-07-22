@@ -596,6 +596,30 @@ export interface DividerOptions {
 export interface DividerInstance extends Destroyable {}
 export function Divider(options?: DividerOptions): DividerInstance;
 
+// Collapse
+export interface CollapseItem {
+  key: string | number;
+  title: string;
+  content?: unknown;
+  [key: string]: unknown;
+}
+export interface CollapseOptions {
+  items?: CollapseItem[];
+  accordion?: boolean;
+  defaultOpen?: (string | number)[];
+  onChange?: (activeKeys: (string | number)[]) => void;
+  onSelect?: (item: CollapseItem) => void;
+}
+export interface CollapseInstance {
+  element: DocumentFragment;
+  toggle(key: string | number): void;
+  open(key: string | number): void;
+  close(key: string | number): void;
+  getActiveKeys(): (string | number)[];
+  destroy(): void;
+}
+export function Collapse(options?: CollapseOptions): CollapseInstance;
+
 // Timeline
 export interface TimelineItem {
   content: string;

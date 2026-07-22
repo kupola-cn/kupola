@@ -28,10 +28,11 @@ import { render } from '../render.js';
  * Create a Collapse component instance.
  *
  * @param {Object}   [options]
- * @param {Array<{key:string, title:string, content:TemplateResult|string}>} [options.items]
+ * @param {Array<{key:string, title:string, content?:import('../template.js').TemplateResult|string}>} [options.items]
  * @param {boolean}  [options.accordion]   Only one panel open at a time (default false)
  * @param {string[]} [options.defaultOpen] Keys of initially open panels
  * @param {Function} [options.onChange]     Callback: (activeKeys: string[]) => void
+ * @param {Function} [options.onSelect]     Callback for non-expandable item clicks: (item) => void
  * @returns {{ element: DocumentFragment, toggle: Function, open: Function, close: Function, getActiveKeys: Function, destroy: Function }}
  */
 export function Collapse(options = {}) {
@@ -40,6 +41,7 @@ export function Collapse(options = {}) {
     accordion = false,
     defaultOpen = [],
     onChange = null,
+    onSelect = null,
   } = options;
 
   /** @type {Set<string>} */
@@ -81,6 +83,10 @@ export function Collapse(options = {}) {
     if (onChange) {onChange(getActiveKeys());}
   }
 
+  function _hasContent(item) {
+    return !!(item?.content && (typeof item.content !== 'string' || item.content.length > 0));
+  }
+
   // ── DOM sync ───────────────────────────────────────────────────────────────
 
   /** @type {Map<string, Element>} */
@@ -100,15 +106,18 @@ export function Collapse(options = {}) {
 
   const itemTemplates = items.map((item) => {
     const isActive = activeKeys.has(item.key);
+    const hasContent = _hasContent(item);
     return html`
       <div class="ds-collapse__item${isActive ? ' is-active' : ''}" data-key="${item.key}">
         <div class="ds-collapse__header">
           <span class="ds-collapse__title">${item.title}</span>
-          <svg class="ds-collapse__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
+          ${hasContent ? html`
+            <svg class="ds-collapse__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          ` : ''}
         </div>
-        <div class="ds-collapse__content">${item.content}</div>
+        ${hasContent ? html`<div class="ds-collapse__content"></div>` : ''}
       </div>
     `;
   });
@@ -122,13 +131,43 @@ export function Collapse(options = {}) {
   const collapseEl = container.querySelector('.ds-collapse');
   if (collapseEl) {
     const els = collapseEl.querySelectorAll('.ds-collapse__item');
-    els.forEach((el) => {
+    els.forEach((el, index) => {
       const key = el.getAttribute('data-key');
       if (key) {
         itemEls.set(key, el);
         const header = el.querySelector('.ds-collapse__header');
         if (header) {
-          header.addEventListener('click', () => toggle(key));
+          header.addEventListener('click', () => {
+            const item = items[index];
+            if (_hasContent(item)) {
+              toggle(key);
+              return;
+            }
+            if (onSelect) {
+              onSelect(item);
+            }
+          });
+        }
+        const contentEl = el.querySelector('.ds-collapse__content');
+        if (contentEl && items[index]) {
+          const content = items[index].content;
+          if (content && typeof content === 'object') {
+            if (content.strings && content.values) {
+              render(content, contentEl);
+            } else if (content.element) {
+              contentEl.appendChild(content.element);
+            } else if (Array.isArray(content)) {
+              content.forEach(item => {
+                if (item && item.strings && item.values) {
+                  render(item, contentEl);
+                } else {
+                  contentEl.textContent += String(item);
+                }
+              });
+            }
+          } else if (typeof content === 'string') {
+            contentEl.textContent = content;
+          }
         }
       }
     });

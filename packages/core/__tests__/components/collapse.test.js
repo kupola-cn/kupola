@@ -205,6 +205,41 @@ describe('Collapse onChange', () => {
   });
 });
 
+// ─── onSelect callback ───────────────────────────────────────────────────────
+
+describe('Collapse onSelect', () => {
+  test('clicking a non-expandable item calls onSelect', () => {
+    const onSelect = jest.fn();
+    const leaf = { key: 'leaf', title: 'Leaf item' };
+    const view = Collapse({ items: [ leaf ], onSelect });
+    const container = document.createElement('div');
+    container.appendChild(view.element);
+    document.body.appendChild(container);
+
+    container.querySelector('.ds-collapse__header').click();
+
+    expect(onSelect).toHaveBeenCalledWith(leaf);
+    expect(view.getActiveKeys()).toEqual([]);
+
+    view.destroy();
+  });
+
+  test('clicking an expandable item toggles it without calling onSelect', () => {
+    const onSelect = jest.fn();
+    const view = Collapse({ items: ITEMS, onSelect });
+    const container = document.createElement('div');
+    container.appendChild(view.element);
+    document.body.appendChild(container);
+
+    container.querySelector('.ds-collapse__header').click();
+
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(view.getActiveKeys()).toEqual([ 'a' ]);
+
+    view.destroy();
+  });
+});
+
 // ─── Destroy ─────────────────────────────────────────────────────────────────
 
 describe('Collapse destroy', () => {
