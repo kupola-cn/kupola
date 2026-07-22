@@ -1853,6 +1853,7 @@ body.ds-dashboard-page {
 }
 
 .ds-dialog {
+  position: relative;
   width: min(420px, calc(100vw - 32px));
   padding: var(--spacer-24);
   background: var(--bg-base-secondary);
@@ -1863,9 +1864,11 @@ body.ds-dashboard-page {
 }
 
 .ds-dialog__icon {
+  position: absolute;
+  top: var(--spacer-16);
+  right: var(--spacer-16);
   display: inline-flex;
   color: var(--status-info-default);
-  margin-bottom: var(--spacer-12);
 }
 
 .ds-dialog__icon--success { color: var(--status-success-default); }
