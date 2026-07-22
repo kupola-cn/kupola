@@ -83,7 +83,7 @@ function confirm(options = {}) {
     const tpl = html`
       <div class="ds-modal-mask">
         <div class="ds-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-content" tabindex="-1">
-          <div class="ds-dialog__icon ds-dialog__icon--${type}">${iconHtml}</div>
+          <div class="ds-dialog__icon ds-dialog__icon--${type}"></div>
           <div class="ds-dialog__title" id="dialog-title">${title}</div>
           <div class="ds-dialog__content" id="dialog-content">${content}</div>
           <div class="ds-dialog__actions">
@@ -97,6 +97,8 @@ function confirm(options = {}) {
     const container = document.createDocumentFragment();
     const instance = render(tpl, container);
     const maskEl = container.querySelector('.ds-modal-mask');
+    const iconEl = container.querySelector('.ds-dialog__icon');
+    if (iconEl) {iconEl.innerHTML = iconHtml;}
 
     // Append to body
     document.body.appendChild(container);
