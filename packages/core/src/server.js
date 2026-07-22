@@ -13,10 +13,10 @@
  */
 
 import { effect } from './effect.js';
-import { TemplateResult } from './template.js';
 import {
   escapeHtml,
   isSignalLike,
+  isTemplateResultLike,
   AttrPart,
   EventPart,
   TemplateInstance,
@@ -59,9 +59,9 @@ function serializeNested(tpl) {
     p.push(tpl.strings[i]);
     if (i < tpl.values.length) {
       const v = tpl.values[i];
-      if (v instanceof TemplateResult) {
+      if (isTemplateResultLike(v)) {
         p.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && v[0] instanceof TemplateResult) {
+      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         p.push(v.map(t => serializeNested(t)).join(''));
       } else if (isSignalLike(v)) {
         p.push(escapeHtml(v.value));
@@ -108,9 +108,9 @@ function serializeSSR(tpl) {
     if (i < tpl.values.length) {
       const v = tpl.values[i];
 
-      if (v instanceof TemplateResult) {
+      if (isTemplateResultLike(v)) {
         out.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && v[0] instanceof TemplateResult) {
+      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         out.push(v.map(t => serializeNested(t)).join(''));
       } else if (typeof v === 'function') {
         if (inTag) {
@@ -248,9 +248,9 @@ function classifyValues(tpl) {
           const val = v.value;
           out.push(val != null ? escapeHtml(val) : '');
         }
-      } else if (v instanceof TemplateResult) {
+      } else if (isTemplateResultLike(v)) {
         out.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && v[0] instanceof TemplateResult) {
+      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         out.push(v.map(t => serializeNested(t)).join(''));
       } else {
         out.push(escapeHtml(v ?? ''));
@@ -342,9 +342,9 @@ function _computeTextMarkerIndices(tpl) {
     if (i < tpl.values.length) {
       const v = tpl.values[i];
 
-      if (v instanceof TemplateResult) {
+      if (isTemplateResultLike(v)) {
         out.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && v[0] instanceof TemplateResult) {
+      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         out.push(v.map(t => serializeNested(t)).join(''));
       } else if (typeof v === 'function') {
         // No marker

@@ -74,12 +74,29 @@ describe('renderToString', () => {
     expect(result).toContain('<em>nested</em>');
   });
 
+  test('renders TemplateResult-like content from another bundle entry', () => {
+    const inner = { strings: [ '<em>', '</em>' ], values: [ 'foreign' ] };
+    const tpl = html`<div>${inner}</div>`;
+    const result = renderToString(tpl);
+    expect(result).toContain('<em>foreign</em>');
+    expect(result).not.toContain('[object Object]');
+  });
+
   test('renders list of templates', () => {
     const items = [ 'a', 'b', 'c' ];
     const tpl = html`<ul>${items.map(i => html`<li>${i}</li>`)}</ul>`;
     const result = renderToString(tpl);
     expect(result).toContain('<li>a</li>');
     expect(result).toContain('<li>c</li>');
+  });
+
+  test('renders list of TemplateResult-like values from another bundle entry', () => {
+    const items = [ 'a', 'b', 'c' ].map(i => ({ strings: [ '<li>', '</li>' ], values: [ i ] }));
+    const tpl = html`<ul>${items}</ul>`;
+    const result = renderToString(tpl);
+    expect(result).toContain('<li>a</li>');
+    expect(result).toContain('<li>c</li>');
+    expect(result).not.toContain('[object Object]');
   });
 
   test('escapes HTML in static values', () => {

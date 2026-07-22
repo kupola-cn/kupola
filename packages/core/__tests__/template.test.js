@@ -210,6 +210,15 @@ describe('render nested templates', () => {
     expect(container.querySelector('em')).not.toBeNull();
     expect(container.querySelector('em').textContent).toBe('nested');
   });
+
+  test('renders TemplateResult-like content from another bundle entry', () => {
+    const container = document.createElement('div');
+    const inner = { strings: [ '<em>', '</em>' ], values: [ 'foreign' ] };
+    const tpl = html`<div>${inner}</div>`;
+    render(tpl, container);
+    expect(container.querySelector('em')).not.toBeNull();
+    expect(container.querySelector('em').textContent).toBe('foreign');
+  });
 });
 
 // ─── render() — list rendering ──────────────────────────────────────────────
@@ -224,6 +233,18 @@ describe('render list', () => {
     expect(lis.length).toBe(3);
     expect(lis[0].textContent).toBe('a');
     expect(lis[2].textContent).toBe('c');
+  });
+
+  test('renders array of TemplateResult-like values from another bundle entry', () => {
+    const container = document.createElement('div');
+    const items = [ 'a', 'b', 'c' ].map(i => ({ strings: [ '<li>', '</li>' ], values: [ i ] }));
+    const tpl = html`<ul>${items}</ul>`;
+    render(tpl, container);
+    const lis = container.querySelectorAll('li');
+    expect(lis.length).toBe(3);
+    expect(lis[0].textContent).toBe('a');
+    expect(lis[2].textContent).toBe('c');
+    expect(container.textContent).not.toContain('[object Object]');
   });
 });
 

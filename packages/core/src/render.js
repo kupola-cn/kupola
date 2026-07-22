@@ -7,8 +7,6 @@
  */
 
 import { effect } from './effect.js';
-import { TemplateResult } from './template.js';
-
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 /** Minimal HTML entity escaping for text content. */
@@ -34,6 +32,16 @@ export function isSignalLike(v) {
   return false;
 }
 
+/** Check if a value is a TemplateResult, including results from another bundle entry. */
+export function isTemplateResultLike(v) {
+  return !!(
+    v &&
+    typeof v === 'object' &&
+    Array.isArray(v.strings) &&
+    Array.isArray(v.values)
+  );
+}
+
 // ─── Marker ──────────────────────────────────────────────────────────────────
 
 /** Unique marker prefix — extremely unlikely in real HTML. */
@@ -55,9 +63,9 @@ function serialize(tpl) {
     parts.push(tpl.strings[i]);
     if (i < tpl.values.length) {
       const v = tpl.values[i];
-      if (v instanceof TemplateResult) {
+      if (isTemplateResultLike(v)) {
         parts.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && v[0] instanceof TemplateResult) {
+      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         parts.push(v.map(serializeNested).join(''));
       } else if (typeof v === 'function') {
         // Functions are always in on* attributes → marker
@@ -81,9 +89,9 @@ function serializeNested(tpl) {
     parts.push(tpl.strings[i]);
     if (i < tpl.values.length) {
       const v = tpl.values[i];
-      if (v instanceof TemplateResult) {
+      if (isTemplateResultLike(v)) {
         parts.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && v[0] instanceof TemplateResult) {
+      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         parts.push(v.map(serializeNested).join(''));
       } else if (isSignalLike(v)) {
         parts.push(escapeHtml(v.value));
@@ -177,7 +185,7 @@ export class TextPart {
       this._dispose = effect(() => {
         this.node.textContent = raw.value != null ? String(raw.value) : '';
       });
-    } else if (this.rawValue instanceof TemplateResult) {
+    } else if (isTemplateResultLike(this.rawValue)) {
       // Static nested template (non-reactive for now)
       this.node.textContent = serializeNested(this.rawValue);
     } else {
