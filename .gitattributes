@@ -1,0 +1,12 @@
+# 所有文本文件统一用 LF
+* text=auto
+
+# 特定文件指定
+*.md text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+
+*.sh text eol=lf
+*.py text eol=lf
+*.go text eol=lf

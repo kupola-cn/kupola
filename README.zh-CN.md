@@ -7,30 +7,41 @@
 
 # Kupola
 
-**一个零框架依赖的声明式 UI 引擎 + 组件库，适用于任何服务端渲染 Web 应用。**
+**面向服务端渲染 Web 应用的零框架交互增强层。**
+
+Kupola 用响应式状态和声明式指令增强普通 HTML，让传统 SSR 页面不引入 SPA 框架也能拥有现代交互。原生组件库是可选扩展，用于快速补齐常见业务 UI。
 
 ---
 
 ## 核心特性
 
+- 🧭 **为 SSR 页面做渐进增强**：直接在 HTML 中使用 `k-data`、`k-on`、`k-model`、`k-show`、`k-for` 添加交互
 - ⚛️ **Signal 响应式**：基于 `signal` / `computed` / `effect` 的细粒度追踪，自动批量更新
-- 📝 **模板字面量**：`html` 标签函数 + `render` 即时 DOM 绑定，无编译步骤
-- 🖥️ **SSR 就绪**：`renderToString` + `hydrate` 纯净水合，零客户端闪烁
-- 🧩 **48+ 组件按需引入**：Modal、Table、Dropdown、Form…每个组件独立打包，tree-shaking 友好
+- 📝 **需要 JS 视图时使用模板字面量**：`html` 标签函数 + `render` 即时 DOM 绑定，无编译步骤
+- 🖥️ **SSR 就绪**：`renderToString` + `hydrate` 支持服务端优先渲染和客户端响应式绑定
+- 🧩 **可选原生组件**：48 个独立打包的业务 UI 组件，按需引入
 - 🪶 **极致轻量**：核心引擎 < 5KB gzip，无第三方依赖
+
+## 什么时候使用 Kupola
+
+当页面已经由后端模板或静态 HTML 渲染，而你只想给局部区域增加交互，不想把整页迁移到 React、Vue 或 SPA 运行时，Kupola 会比较合适。
+
+- 后端渲染的后台、管理系统、CMS 页面和内部工具
+- HTML 优先，但需要少量响应式交互的应用
+- 需要表单、弹窗、筛选、表格、局部状态控制的既有页面
+- 希望 UI 行为独立于前端框架，同时可选使用组件库的团队
 
 ---
 
 ## 最快上手
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core-directives.umd.js"></script>
 <div k-data="{ count: 0 }">
   <button k-on:click="count++">点击了 {{ count }} 次</button>
 </div>
-<script>
-  Kupola.walk(document.body);
+<script type="module">
+  import { walk } from 'https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core-directives.esm.js';
+  walk(document.body);
 </script>
 ```
 
@@ -165,6 +176,8 @@ render(view(), document.getElementById('app'));
 | `k-on` | `@` | 事件监听 |
 | `k-model` | — | 双向输入绑定 |
 | `k-for` | — | 列表渲染 |
+
+**安全提示**：Kupola 指令适用于受信任的应用模板。展示用户内容时优先使用 `k-text`。`k-html` 会写入 `innerHTML`，只应接收可信或已消毒的 HTML。不要把用户输入拼接成指令表达式。
 
 ---
 

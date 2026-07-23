@@ -75,11 +75,13 @@ npm run format     # Prettier 格式化
 
 1. 在 `packages/core/src/components/` 创建组件文件（如 `my-component.js`）
 2. 在 `packages/core/__tests__/components/` 创建测试文件
-3. 在 `rollup.config.cjs` 添加构建入口
-4. 在 `packages/core/package.json` 添加 exports 映射
+3. 在 `packages/core/src/components/types.d.ts` 添加类型声明
+4. 在 `package.json` 和 `packages/core/package.json` 添加 exports 映射
 5. 在 `.size-limit.json` 添加体积限制
-6. 在 `packages/core/src/components/types.d.ts` 添加类型声明
+6. 更新 `docs-site/components/` 下的组件文档
 7. 运行 `npm run test` 确认全部通过
+
+`rollup.config.cjs` 会自动扫描 `packages/core/src/components/*.js` 生成组件构建入口，新增组件不需要手工修改 Rollup 配置。
 
 ---
 

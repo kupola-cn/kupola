@@ -4,13 +4,13 @@
  * Initializes the Kupola directive system and sets up interactive features.
  */
 
-import { walk } from '@kupola/kupola/directives';
+import { $, walk } from '@kupola/kupola/directives';
 
 // ── Initialize directives ────────────────────────────────────────────────────
 walk(document.body);
 
 // ── Theme toggle (with localStorage persistence) ─────────────────────────────
-const themeBtn = document.getElementById('theme-btn');
+const themeBtn = $('#theme-btn');
 if (themeBtn) {
   themeBtn.addEventListener('click', () => {
     const html = document.documentElement;

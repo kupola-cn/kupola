@@ -7,30 +7,41 @@
 
 # Kupola
 
-**A zero-framework-dependency declarative UI engine + component library for any server-rendered web application.**
+**A zero-framework interaction layer for server-rendered web applications.**
+
+Kupola adds reactive state and declarative behavior to plain HTML, so traditional SSR pages can gain modern interaction without adopting a SPA framework. The native component library is an optional extension for common business UI.
 
 ---
 
 ## Features
 
-- ⚛️ **Signal-based Reactivity**: Fine-grained tracking via `signal` / `computed` / `effect` with automatic batched updates
-- 📝 **Template Literals**: `html` tagged template + `render` for instant DOM binding — no compilation step
-- 🖥️ **SSR Ready**: `renderToString` + `hydrate` for pristine hydration with zero client-side flicker
-- 🧩 **48+ Components, Tree-shakeable**: Modal, Table, Dropdown, Form… each component is independently bundled
+- 🧭 **Progressive enhancement for SSR pages**: Add behavior with `k-data`, `k-on`, `k-model`, `k-show`, and `k-for` directly in HTML
+- ⚛️ **Signal-based reactivity**: Fine-grained tracking via `signal` / `computed` / `effect` with automatic batched updates
+- 📝 **Template literals when you need JS views**: `html` tagged template + `render` for instant DOM binding, with no compilation step
+- 🖥️ **SSR ready**: `renderToString` + `hydrate` for server-first rendering and client-side reactive binding
+- 🧩 **Optional native components**: 48 independently bundled UI components for business pages
 - 🪶 **Ultra-lightweight**: Core engine < 5KB gzip, zero third-party dependencies
+
+## When to Use Kupola
+
+Kupola fits projects where HTML is already rendered by a server or static template system, and you want local interaction without moving the whole page into React, Vue, or a SPA runtime.
+
+- Backend-rendered dashboards, admin systems, CMS pages, and internal tools
+- HTML-first apps that need small reactive islands
+- Existing pages that need forms, modals, filters, tables, or stateful controls
+- Teams that want framework-independent UI behavior with optional components
 
 ---
 
 ## Quick Start
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core-directives.umd.js"></script>
 <div k-data="{ count: 0 }">
   <button k-on:click="count++">Clicked {{ count }} times</button>
 </div>
-<script>
-  Kupola.walk(document.body);
+<script type="module">
+  import { walk } from 'https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core-directives.esm.js';
+  walk(document.body);
 </script>
 ```
 
@@ -165,6 +176,8 @@ Add interactivity directly in HTML — no build tools required:
 | `k-on` | `@` | Event listener |
 | `k-model` | — | Two-way input binding |
 | `k-for` | — | List rendering |
+
+**Security note**: Kupola directives are intended for trusted application templates. Use `k-text` for user content. `k-html` writes to `innerHTML` and must only receive trusted or sanitized HTML. Do not compose directive expressions from user input.
 
 ---
 

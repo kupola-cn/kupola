@@ -22,8 +22,15 @@ export default defineConfig({
           text: '指南',
           items: [
             { text: '快速开始', link: '/guide/getting-started' },
+            { text: '书写风格', link: '/guide/authoring-style' },
+            { text: '场景 Recipes', link: '/guide/recipes' },
+            { text: '后端模板集成', link: '/guide/backend-template' },
+            { text: '项目结构', link: '/guide/project-structure' },
+            { text: '生命周期', link: '/guide/lifecycle' },
             { text: '核心概念', link: '/guide/core-concepts' },
             { text: '指令系统', link: '/guide/directives' },
+            { text: '诊断信息', link: '/guide/diagnostics' },
+            { text: '安全边界', link: '/guide/security' },
             { text: 'SSR', link: '/guide/ssr' },
             { text: '模板', link: '/guide/templates' },
             { text: 'FAQ', link: '/guide/faq' },
@@ -48,6 +55,7 @@ export default defineConfig({
           text: '组件总览',
           items: [
             { text: '概览', link: '/components/overview' },
+            { text: '组件规范', link: '/components/standards' },
             { text: '覆盖层', link: '/components/overlay' },
             { text: '导航', link: '/components/navigation' },
             { text: '表单', link: '/components/forms' },

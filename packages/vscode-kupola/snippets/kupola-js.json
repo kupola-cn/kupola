@@ -129,7 +129,7 @@
   "Kupola: renderToString (SSR)": {
     "prefix": "kssr",
     "body": [
-      "import { renderToString } from '@kupola/kupola/ssr';",
+      "import { renderToString } from '@kupola/kupola/server';",
       "",
       "const html = renderToString(${1:template});"
     ],

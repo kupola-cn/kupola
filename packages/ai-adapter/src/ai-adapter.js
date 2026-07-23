@@ -116,15 +116,14 @@ export class AIAdapter {
     return `
       <div class="ds-ai-panel" k-data="{ aiInput: '', aiMessages: [] }">
         <div class="ds-ai-messages">
-          <template k-for="msg in aiMessages">
-            <div k-bind:class="'ds-ai-msg ds-ai-msg-' + msg.role" k-text="msg.text"></div>
+          <template k-for="msg in aiMessages" :key="msg.timestamp || msg.role + ':' + msg.text">
+            <div class="ds-ai-msg" k-class="'ds-ai-msg-' + msg.role" k-text="msg.text"></div>
           </template>
         </div>
-        <div class="ds-ai-input-area">
-          <input class="ds-ai-input" k-model="aiInput" placeholder="输入指令..."
-                 k-on:keydown="if(event.key==='Enter' && aiInput.trim()) { submitAI(aiInput); aiInput='' }" />
-          <button class="ds-ai-send-btn" k-on:click="if(aiInput.trim()) { submitAI(aiInput); aiInput='' }">发送</button>
-        </div>
+        <form class="ds-ai-input-area" @submit.prevent="if(aiInput) { submitAI(aiInput); aiInput = '' }">
+          <input class="ds-ai-input" k-model.trim="aiInput" placeholder="输入指令..." />
+          <button class="ds-ai-send-btn" :disabled="!aiInput">发送</button>
+        </form>
       </div>
     `;
   }

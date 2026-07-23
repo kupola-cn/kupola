@@ -10,13 +10,76 @@
  *   k-bind   — dynamic attributes  (shorthand:  :attr)
  *   k-on     — event listeners     (shorthand:  @event)
  *   k-model  — two-way input binding
+ *   k-ref    — scoped element references
+ *   k-init   — one-time initialization statement
+ *   k-cloak  — hide until initialized
+ *   k-class  — object/array/string class binding
+ *   k-style  — object/string style binding
+ *   k-transition — CSS transition class lifecycle
+ *   k-if     — conditional DOM mounting
+ *   k-else-if — conditional branch after k-if
+ *   k-else   — fallback branch after k-if
+ *   k-for    — list rendering
  *
  * @module directives
  */
 
-import { signal } from './signal.js';
+import { signal, withoutTracking } from './signal.js';
 import { effect } from './effect.js';
 import { flushJobs } from './scheduler.js';
+
+// ─── Scope Registry ──────────────────────────────────────────────────────────
+
+/** @type {Map<string, Object|Function>} */
+const scopeRegistry = new Map();
+
+function formatDiagnostic(code, message) {
+  return `[kupola ${code}] ${message}`;
+}
+
+function warn(code, message) {
+  console.warn(formatDiagnostic(code, message));
+}
+
+/**
+ * Query one element. Thin wrapper around querySelector().
+ *
+ * @param {string|Element|null} selector
+ * @param {ParentNode} [context=document]
+ * @returns {Element|null}
+ */
+export function $(selector, context = document) {
+  if (typeof selector !== 'string') {return selector || null;}
+  return context?.querySelector ? context.querySelector(selector) : null;
+}
+
+/**
+ * Query multiple elements as a static array.
+ *
+ * @param {string} selector
+ * @param {ParentNode} [context=document]
+ * @returns {Element[]}
+ */
+export function $$(selector, context = document) {
+  if (typeof selector !== 'string') {return [];}
+  return context?.querySelectorAll ? [ ...context.querySelectorAll(selector) ] : [];
+}
+
+/**
+ * Register a named data scope for use with `k-data="name"`.
+ *
+ * @param {string} name
+ * @param {Object|Function} definition Plain data object or factory `(ctx) => data`.
+ */
+export function defineScope(name, definition) {
+  if (!name || typeof name !== 'string') {
+    throw new TypeError('[kupola] defineScope() expects a non-empty string name.');
+  }
+  if (!definition || (typeof definition !== 'object' && typeof definition !== 'function')) {
+    throw new TypeError('[kupola] defineScope() expects an object or factory function.');
+  }
+  scopeRegistry.set(name, definition);
+}
 
 // ─── Scope ────────────────────────────────────────────────────────────────────
 
@@ -70,6 +133,203 @@ function createScope(data) {
   );
 }
 
+function instantiateScopeDefinition(definition, ctx) {
+  const data = typeof definition === 'function' ? definition(ctx) : definition;
+  if (!data || typeof data !== 'object') {return {};}
+  return { ...data };
+}
+
+function assertScopeKey(name, helperName) {
+  if (!name || typeof name !== 'string' || name.includes('.')) {
+    throw new TypeError(`[kupola] ctx.${helperName}() expects a top-level scope property name.`);
+  }
+}
+
+function assertMountedScope(ctx, helperName) {
+  if (!ctx.scope) {
+    throw new TypeError(`[kupola] ctx.${helperName}() can only be used after a scope is mounted.`);
+  }
+}
+
+function isPatchableObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function createDomContext(root, disposers, refs = {}, appRefs = refs) {
+  const queryRoot = root && root.querySelector ? root : document;
+
+  const queryOne = (selector, context = queryRoot) => $(selector, context);
+  const queryAll = (selector, context = queryRoot) => $$(selector, context);
+
+  const on = (eventName, selectorOrHandler, handlerOrOptions, maybeOptions) => {
+    let selector = null;
+    let handler = selectorOrHandler;
+    let options = handlerOrOptions;
+
+    if (typeof selectorOrHandler === 'string') {
+      selector = selectorOrHandler;
+      handler = handlerOrOptions;
+      options = maybeOptions;
+    }
+
+    if (typeof handler !== 'function') {
+      throw new TypeError('[kupola] ctx.on() expects an event handler.');
+    }
+
+    const listener = (event) => {
+      if (!selector) {
+        handler(event, root);
+        return;
+      }
+      const target = event.target?.closest?.(selector);
+      if (target && root.contains(target)) {
+        handler(event, target);
+      }
+    };
+
+    root.addEventListener(eventName, listener, options);
+    let active = true;
+    const off = () => {
+      if (!active) {return;}
+      active = false;
+      root.removeEventListener(eventName, listener, options);
+    };
+    disposers.push(off);
+    return off;
+  };
+
+  const watch = (getter, callback, options = {}) => {
+    if (typeof getter !== 'function' || typeof callback !== 'function') {
+      throw new TypeError('[kupola] ctx.watch() expects a getter and callback.');
+    }
+
+    let initialized = false;
+    let oldValue;
+    let cleanupCallback = null;
+    let active = true;
+
+    const runCleanup = () => {
+      if (!cleanupCallback) {return;}
+      const cleanup = cleanupCallback;
+      cleanupCallback = null;
+      withoutTracking(cleanup);
+    };
+
+    const runCallback = (value, previous) => {
+      runCleanup();
+      const cleanup = withoutTracking(() => callback(value, previous));
+      cleanupCallback = typeof cleanup === 'function' ? cleanup : null;
+    };
+
+    const disposeEffect = effect(() => {
+      const value = getter();
+      if (!initialized) {
+        initialized = true;
+        oldValue = value;
+        if (options.immediate) {
+          runCallback(value, undefined);
+        }
+        return;
+      }
+      if (Object.is(value, oldValue)) {return;}
+      const previous = oldValue;
+      oldValue = value;
+      runCallback(value, previous);
+    });
+
+    const dispose = () => {
+      if (!active) {return;}
+      active = false;
+      disposeEffect();
+      runCleanup();
+    };
+
+    disposers.push(dispose);
+    return dispose;
+  };
+
+  const ctx = {
+    root,
+    refs,
+    appRefs,
+    $: queryOne,
+    $$: queryAll,
+    on,
+    watch,
+    update(name, updater) {
+      assertMountedScope(ctx, 'update');
+      assertScopeKey(name, 'update');
+      if (typeof updater !== 'function') {
+        throw new TypeError('[kupola] ctx.update() expects an updater function.');
+      }
+      const previous = ctx.scope[name];
+      const next = updater(previous);
+      ctx.scope[name] = next;
+      return next;
+    },
+    patch(name, partial) {
+      assertMountedScope(ctx, 'patch');
+      assertScopeKey(name, 'patch');
+      if (!isPatchableObject(partial)) {
+        throw new TypeError('[kupola] ctx.patch() expects an object patch.');
+      }
+      const previous = ctx.scope[name];
+      if (!isPatchableObject(previous)) {
+        throw new TypeError(`[kupola] ctx.patch() expects "${name}" to be an object scope property.`);
+      }
+      const next = { ...previous, ...partial };
+      ctx.scope[name] = next;
+      return next;
+    },
+  };
+
+  return ctx;
+}
+
+function addRef(refs, name, el) {
+  if (!name) {return () => {};}
+  const current = refs[name];
+  if (!current) {
+    refs[name] = el;
+  } else if (Array.isArray(current)) {
+    current.push(el);
+  } else {
+    refs[name] = [ current, el ];
+  }
+  return () => removeRef(refs, name, el);
+}
+
+function removeRef(refs, name, el) {
+  const current = refs[name];
+  if (!current) {return;}
+  if (Array.isArray(current)) {
+    const next = current.filter(item => item !== el);
+    if (next.length === 0) {
+      delete refs[name];
+    } else if (next.length === 1) {
+      refs[name] = next[0];
+    } else {
+      refs[name] = next;
+    }
+  } else if (current === el) {
+    delete refs[name];
+  }
+}
+
+function resolveData(expr, ctx, el) {
+  const name = expr?.trim();
+  if (name && scopeRegistry.has(name)) {
+    return instantiateScopeDefinition(scopeRegistry.get(name), ctx);
+  }
+  if (/^[A-Za-z_$][\w$]*$/.test(name || '')) {
+    throw new Error(formatDiagnostic(
+      'W013',
+      `Unknown k-data scope "${name}". Register it with defineScope("${name}", ...).`,
+    ));
+  }
+  return evaluate(expr, createScope({}), null, { directive: 'k-data', element: el }) || {};
+}
+
 // ─── Expression Evaluation ────────────────────────────────────────────────────
 
 /** Cache compiled expression functions. */
@@ -83,13 +343,126 @@ const exprCache = new Map();
  * @param {Proxy} scope
  * @returns {any}
  */
-function evaluate(expr, scope) {
-  let fn = exprCache.get(expr);
-  if (!fn) {
-    fn = new Function('__s__', `with(__s__){return(${expr})}`);
-    exprCache.set(expr, fn);
+function createEvaluationScope(scope, locals) {
+  if (!locals) {return scope;}
+  return new Proxy(scope, {
+    get(target, key, receiver) {
+      if (Object.prototype.hasOwnProperty.call(locals, key)) {
+        return locals[key];
+      }
+      return Reflect.get(target, key, receiver);
+    },
+    set(target, key, value, receiver) {
+      if (Object.prototype.hasOwnProperty.call(locals, key)) {
+        locals[key] = value;
+        return true;
+      }
+      return Reflect.set(target, key, value, receiver);
+    },
+    has(target, key) {
+      return Object.prototype.hasOwnProperty.call(locals, key) || key in target;
+    },
+    ownKeys(target) {
+      return [ ...new Set([ ...Reflect.ownKeys(target), ...Reflect.ownKeys(locals) ]) ];
+    },
+    getOwnPropertyDescriptor(target, key) {
+      if (Object.prototype.hasOwnProperty.call(locals, key)) {
+        return { enumerable: true, configurable: true };
+      }
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+  });
+}
+
+function createLocalScope(scope, locals) {
+  const localSignals = {};
+  for (const [ key, value ] of Object.entries(locals)) {
+    localSignals[key] = signal(value);
   }
-  return fn(scope);
+
+  const proxy = new Proxy(scope, {
+    get(target, key, receiver) {
+      if (Object.prototype.hasOwnProperty.call(localSignals, key)) {
+        return localSignals[key].value;
+      }
+      return Reflect.get(target, key, receiver);
+    },
+    set(target, key, value, receiver) {
+      if (Object.prototype.hasOwnProperty.call(localSignals, key)) {
+        localSignals[key].value = value;
+        return true;
+      }
+      return Reflect.set(target, key, value, receiver);
+    },
+    has(target, key) {
+      return Object.prototype.hasOwnProperty.call(localSignals, key) || key in target;
+    },
+    ownKeys(target) {
+      return [ ...new Set([ ...Reflect.ownKeys(target), ...Reflect.ownKeys(localSignals) ]) ];
+    },
+    getOwnPropertyDescriptor(target, key) {
+      if (Object.prototype.hasOwnProperty.call(localSignals, key)) {
+        return { enumerable: true, configurable: true };
+      }
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+  });
+
+  return {
+    scope: proxy,
+    update(nextLocals) {
+      for (const [ key, value ] of Object.entries(nextLocals)) {
+        if (Object.prototype.hasOwnProperty.call(localSignals, key)) {
+          localSignals[key].value = value;
+        } else {
+          localSignals[key] = signal(value);
+        }
+      }
+    },
+  };
+}
+
+function createExpressionError(error, expr, meta = {}) {
+  const directive = meta.directive || 'expression';
+  const element = meta.element ? describeElement(meta.element) : '<unknown>';
+  const original = error && error.message ? error.message : String(error);
+  const hint = isCspEvalError(error)
+    ? '\nHint: Kupola directive expressions use new Function(). Allow unsafe-eval in CSP, ' +
+      'or use Kupola JS APIs instead of HTML expressions in strict CSP environments.'
+    : '';
+  const wrapped = new Error(
+    formatDiagnostic('E001', `Error evaluating ${directive} on ${element}: ${expr}`) + '\n' +
+    `Original error: ${original}${hint}`,
+  );
+  wrapped.name = 'KupolaExpressionError';
+  wrapped.cause = error;
+  wrapped.directive = directive;
+  wrapped.element = meta.element || null;
+  wrapped.expression = expr;
+  return wrapped;
+}
+
+function isCspEvalError(error) {
+  const message = String(error?.message || error || '').toLowerCase();
+  return (
+    error?.name === 'EvalError' ||
+    message.includes('unsafe-eval') ||
+    message.includes('code generation from strings') ||
+    message.includes('refused to evaluate a string as javascript')
+  );
+}
+
+function evaluate(expr, scope, locals, meta) {
+  try {
+    let fn = exprCache.get(expr);
+    if (!fn) {
+      fn = new Function('__s__', `with(__s__){return(${expr})}`);
+      exprCache.set(expr, fn);
+    }
+    return fn(createEvaluationScope(scope, locals));
+  } catch (error) {
+    throw createExpressionError(error, expr, meta);
+  }
 }
 
 /**
@@ -100,14 +473,18 @@ function evaluate(expr, scope) {
  * @param {string} expr
  * @param {Proxy} scope
  */
-function evaluateStatement(expr, scope) {
+function evaluateStatement(expr, scope, locals, meta) {
   const cacheKey = '$$' + expr;
-  let fn = exprCache.get(cacheKey);
-  if (!fn) {
-    fn = new Function('__s__', `with(__s__){${expr}}`);
-    exprCache.set(cacheKey, fn);
+  try {
+    let fn = exprCache.get(cacheKey);
+    if (!fn) {
+      fn = new Function('__s__', `with(__s__){${expr}}`);
+      exprCache.set(cacheKey, fn);
+    }
+    fn(createEvaluationScope(scope, locals));
+  } catch (error) {
+    throw createExpressionError(error, expr, meta);
   }
-  fn(scope);
 }
 
 // ─── Directive Handlers ───────────────────────────────────────────────────────
@@ -138,11 +515,60 @@ function parseDirective(name) {
  * Apply k-show directive: toggle element display.
  */
 function handleShow(el, expr, scope, disposers) {
+  const useTransition = el.hasAttribute('k-transition');
+  let initialized = false;
+  let visible = false;
+  let cancelTransition = null;
+
   const dispose = effect(() => {
-    const val = evaluate(expr, scope);
-    el.style.display = val ? '' : 'none';
+    const val = evaluate(expr, scope, null, { directive: 'k-show', element: el });
+    const nextVisible = Boolean(val);
+
+    if (!initialized) {
+      initialized = true;
+      visible = nextVisible;
+      el.style.display = nextVisible ? '' : 'none';
+      return;
+    }
+
+    if (nextVisible === visible) {return;}
+    visible = nextVisible;
+
+    if (cancelTransition) {
+      cancelTransition();
+      cancelTransition = null;
+    }
+
+    if (!useTransition) {
+      el.style.display = nextVisible ? '' : 'none';
+      return;
+    }
+
+    if (nextVisible) {
+      el.style.display = '';
+      cancelTransition = runTransition(el, 'enter', () => {
+        cancelTransition = null;
+      });
+    } else {
+      cancelTransition = runTransition(el, 'leave', () => {
+        el.style.display = 'none';
+        cancelTransition = null;
+      });
+    }
   });
-  disposers.push(dispose);
+  disposers.push(() => {
+    if (cancelTransition) {cancelTransition();}
+    dispose();
+  });
+}
+
+function describeElement(el) {
+  const tag = el.tagName ? el.tagName.toLowerCase() : 'node';
+  const id = el.id ? `#${el.id}` : '';
+  const classes = el.classList && el.classList.length > 0
+    ? '.' + [ ...el.classList ].join('.')
+    : '';
+  return `<${tag}${id}${classes}>`;
 }
 
 /**
@@ -150,7 +576,7 @@ function handleShow(el, expr, scope, disposers) {
  */
 function handleText(el, expr, scope, disposers) {
   const dispose = effect(() => {
-    el.textContent = String(evaluate(expr, scope) ?? '');
+    el.textContent = String(evaluate(expr, scope, null, { directive: 'k-text', element: el }) ?? '');
   });
   disposers.push(dispose);
 }
@@ -160,7 +586,7 @@ function handleText(el, expr, scope, disposers) {
  */
 function handleHtml(el, expr, scope, disposers) {
   const dispose = effect(() => {
-    el.innerHTML = String(evaluate(expr, scope) ?? '');
+    el.innerHTML = String(evaluate(expr, scope, null, { directive: 'k-html', element: el }) ?? '');
   });
   disposers.push(dispose);
 }
@@ -168,16 +594,47 @@ function handleHtml(el, expr, scope, disposers) {
 /**
  * Apply k-bind directive: reactive attribute.
  */
+function setBoundAttribute(el, attrName, val) {
+  if (val === false || val == null) {
+    el.removeAttribute(attrName);
+  } else if (val === true) {
+    el.setAttribute(attrName, '');
+  } else {
+    el.setAttribute(attrName, String(val));
+  }
+}
+
 function handleBind(el, expr, attrName, scope, disposers) {
+  let previousAttrs = new Set();
+
   const dispose = effect(() => {
-    const val = evaluate(expr, scope);
-    if (val === false || val == null) {
-      el.removeAttribute(attrName);
-    } else if (val === true) {
-      el.setAttribute(attrName, '');
-    } else {
-      el.setAttribute(attrName, String(val));
+    const val = evaluate(expr, scope, null, {
+      directive: attrName ? `k-bind:${attrName}` : 'k-bind',
+      element: el,
+    });
+
+    if (attrName) {
+      setBoundAttribute(el, attrName, val);
+      return;
     }
+
+    if (!val || typeof val !== 'object') {
+      for (const name of previousAttrs) {
+        el.removeAttribute(name);
+      }
+      previousAttrs = new Set();
+      return;
+    }
+
+    for (const name of previousAttrs) {
+      if (!Object.prototype.hasOwnProperty.call(val, name)) {
+        el.removeAttribute(name);
+      }
+    }
+    for (const [ name, attrValue ] of Object.entries(val)) {
+      setBoundAttribute(el, name, attrValue);
+    }
+    previousAttrs = new Set(Object.keys(val));
   });
   disposers.push(dispose);
 }
@@ -190,58 +647,716 @@ function handleOn(el, expr, eventName, modifiers, scope, disposers) {
   const prevent = modifiers.includes('prevent');
   const once = modifiers.includes('once');
   const self = modifiers.includes('self');
+  const outside = modifiers.includes('outside');
+  const debounce = modifiers.includes('debounce');
+  const capture = modifiers.includes('capture');
+  const passive = modifiers.includes('passive');
+  const debounceDelay = Number(modifiers.find(item => /^\d+$/.test(item)) || 250);
+  const keyAliases = {
+    enter: 'enter',
+    escape: 'escape',
+    esc: 'escape',
+    space: ' ',
+    tab: 'tab',
+    up: 'arrowup',
+    down: 'arrowdown',
+    left: 'arrowleft',
+    right: 'arrowright',
+  };
+  const systemKeyModifiers = {
+    ctrl: 'ctrlKey',
+    shift: 'shiftKey',
+    alt: 'altKey',
+    meta: 'metaKey',
+  };
+  const nonKeyModifiers = new Set([
+    'stop',
+    'prevent',
+    'once',
+    'self',
+    'outside',
+    'debounce',
+    'capture',
+    'passive',
+    ...Object.keys(systemKeyModifiers),
+  ]);
+  const keyFilters = modifiers
+    .filter(modifier => (
+      Object.prototype.hasOwnProperty.call(keyAliases, modifier) ||
+      (!nonKeyModifiers.has(modifier) && /^[a-z]$/i.test(modifier))
+    ))
+    .map(modifier => keyAliases[modifier] || modifier.toLowerCase());
+  const requiredSystemKeys = modifiers
+    .filter(modifier => Object.prototype.hasOwnProperty.call(systemKeyModifiers, modifier))
+    .map(modifier => systemKeyModifiers[modifier]);
+  const listenerOptions = capture || passive ? { capture, passive } : undefined;
+  let timer = null;
+  let active = true;
+  let listening = false;
+  let target = null;
 
-  const handler = (e) => {
-    if (self && e.target !== el) {return;}
-    if (stop) {e.stopPropagation();}
-    if (prevent) {e.preventDefault();}
-    evaluateStatement(expr, scope);
-    flushJobs();
+  const stopListening = () => {
+    if (!listening) {return;}
+    listening = false;
+    target.removeEventListener(eventName, handler);
   };
 
-  el.addEventListener(eventName, handler, { once });
-  disposers.push(() => el.removeEventListener(eventName, handler));
+  const cleanup = () => {
+    if (!active) {return;}
+    active = false;
+    clearTimeout(timer);
+    stopListening();
+  };
+
+  const run = (e) => {
+    if (!active) {return;}
+    evaluateStatement(expr, scope, { event: e, $event: e }, {
+      directive: `k-on:${eventName}`,
+      element: el,
+    });
+    flushJobs();
+    if (once) {cleanup();}
+  };
+
+  const handler = (e) => {
+    if (!active) {return;}
+    if (outside && el.contains(e.target)) {return;}
+    if (self && e.target !== el) {return;}
+    if (requiredSystemKeys.some(key => !e[key])) {return;}
+    if (keyFilters.length > 0 && !keyFilters.includes(normalizeEventKey(e.key))) {return;}
+    if (stop) {e.stopPropagation();}
+    if (prevent && !passive) {e.preventDefault();}
+
+    if (debounce) {
+      clearTimeout(timer);
+      timer = setTimeout(() => run(e), debounceDelay);
+      if (once) {stopListening();}
+      return;
+    }
+
+    run(e);
+  };
+
+  target = outside ? document : el;
+  listening = true;
+  target.addEventListener(eventName, handler, listenerOptions);
+  disposers.push(cleanup);
+}
+
+function normalizeEventKey(key) {
+  return key === ' ' ? ' ' : String(key || '').toLowerCase();
 }
 
 /**
  * Apply k-model directive: two-way binding for form inputs.
  */
-function handleModel(el, expr, scope, disposers) {
+function castModelValue(value, modifiers) {
+  let next = value;
+  if (modifiers.includes('trim') && typeof next === 'string') {
+    next = next.trim();
+  }
+  if (modifiers.includes('boolean')) {
+    if (typeof next === 'string') {
+      const normalized = next.trim().toLowerCase();
+      if (normalized === 'true') {return true;}
+      if (normalized === 'false') {return false;}
+    }
+    return Boolean(next);
+  }
+  if (modifiers.includes('number')) {
+    const parsed = parseFloat(next);
+    next = Number.isNaN(parsed) ? next : parsed;
+  }
+  return next;
+}
+
+function getModelValue(el, currentValue, modifiers) {
+  if (el.type === 'checkbox') {
+    const value = castModelValue(el.value, modifiers);
+    if (Array.isArray(currentValue)) {
+      const next = currentValue.filter(item => item !== value);
+      if (el.checked) {next.push(value);}
+      return next;
+    }
+    return el.checked;
+  }
+
+  if (el.type === 'radio') {
+    return el.checked ? castModelValue(el.value, modifiers) : currentValue;
+  }
+
+  if (el.tagName === 'SELECT' && el.multiple) {
+    return [ ...el.selectedOptions ].map(option => castModelValue(option.value, modifiers));
+  }
+
+  return castModelValue(el.value, modifiers);
+}
+
+function renderModelValue(el, value, modifiers = []) {
+  if (el.type === 'checkbox') {
+    if (Array.isArray(value)) {
+      el.checked = value.includes(castModelValue(el.value, modifiers));
+    } else {
+      el.checked = Boolean(value);
+    }
+    return;
+  }
+
+  if (el.type === 'radio') {
+    el.checked = value === castModelValue(el.value, modifiers);
+    return;
+  }
+
+  if (el.tagName === 'SELECT' && el.multiple) {
+    const values = Array.isArray(value) ? value.map(String) : [];
+    for (const option of el.options) {
+      option.selected = values.includes(option.value);
+    }
+    return;
+  }
+
+  el.value = value != null ? String(value) : '';
+}
+
+function setModelExpression(expr, scope, value, el) {
+  evaluateStatement(`${expr} = __kupolaModelValue`, scope, { __kupolaModelValue: value }, {
+    directive: 'k-model',
+    element: el,
+  });
+}
+
+function handleModel(el, expr, scope, disposers, modifiers = []) {
+  if (!isModelElement(el)) {
+    warn('W003', `k-model expects <input>, <select>, or <textarea>; received ${describeElement(el)}.`);
+    return;
+  }
+
+  const debounce = modifiers.includes('debounce');
+  const debounceDelay = Number(modifiers.find(item => /^\d+$/.test(item)) || 250);
+  let timer = null;
+
   // Set initial value
   const dispose = effect(() => {
-    const val = evaluate(expr, scope);
-    el.value = val != null ? String(val) : '';
+    const val = evaluate(expr, scope, null, { directive: 'k-model', element: el });
+    renderModelValue(el, val, modifiers);
   });
   disposers.push(dispose);
 
   // Listen for user input
-  const inputHandler = () => {
-    // Parse the expression to find the target property
-    // For simple cases like "name" or "user.name"
-    const parts = expr.trim().split('.');
-    if (parts.length === 1) {
-      // Simple variable: "name"
-      scope[parts[0]] = el.value;
-    } else {
-      // Nested property: "user.name" — need to set on the parent
-      // Evaluate the parent path to get the object, then set the last key
-      const parentExpr = parts.slice(0, -1).join('.');
-      const key = parts[parts.length - 1];
-      try {
-        const parent = evaluate(parentExpr, scope);
-        if (parent && typeof parent === 'object') {
-          parent[key] = el.value;
-        }
-      } catch (_) {
-        // If parent evaluation fails, try as a simple scope property
-        scope[expr] = el.value;
-      }
-    }
+  const commit = () => {
+    const currentValue = evaluate(expr, scope, null, { directive: 'k-model', element: el });
+    setModelExpression(expr, scope, getModelValue(el, currentValue, modifiers), el);
     flushJobs();
   };
 
-  el.addEventListener('input', inputHandler);
-  disposers.push(() => el.removeEventListener('input', inputHandler));
+  const inputHandler = () => {
+    if (debounce) {
+      clearTimeout(timer);
+      timer = setTimeout(commit, debounceDelay);
+      return;
+    }
+    commit();
+  };
+
+  const eventName = modifiers.includes('lazy') || /^(checkbox|radio)$/.test(el.type) || el.tagName === 'SELECT'
+    ? 'change'
+    : 'input';
+
+  el.addEventListener(eventName, inputHandler);
+  disposers.push(() => {
+    clearTimeout(timer);
+    el.removeEventListener(eventName, inputHandler);
+  });
+}
+
+function isModelElement(el) {
+  return el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA';
+}
+
+function normalizeClassValue(value, classes = new Set()) {
+  if (!value) {return classes;}
+  if (typeof value === 'string') {
+    value.split(/\s+/).filter(Boolean).forEach(cls => classes.add(cls));
+  } else if (Array.isArray(value)) {
+    value.forEach(item => normalizeClassValue(item, classes));
+  } else if (typeof value === 'object') {
+    for (const [ cls, active ] of Object.entries(value)) {
+      if (active) {normalizeClassValue(cls, classes);}
+    }
+  }
+  return classes;
+}
+
+function cloneTemplateNodes(template) {
+  if (template.tagName === 'TEMPLATE') {
+    return [ ...template.content.cloneNode(true).childNodes ];
+  }
+  return [ template.cloneNode(true) ];
+}
+
+function insertNodesBefore(parent, marker, nodes) {
+  const fragment = document.createDocumentFragment();
+  for (const node of nodes) {
+    fragment.appendChild(node);
+  }
+  parent.insertBefore(fragment, marker);
+}
+
+function processMountedNodes(nodes, scope, disposers, ctx, allowRootTransition = false) {
+  for (const node of nodes) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      processSubtree(node, scope, disposers, ctx, allowRootTransition);
+    }
+  }
+}
+
+function removeMountedNodes(nodes) {
+  for (const node of nodes) {
+    if (node.parentNode) {
+      node.parentNode.removeChild(node);
+    }
+  }
+}
+
+function cleanDisposers(disposers) {
+  for (const dispose of disposers) {
+    dispose();
+  }
+  disposers.length = 0;
+}
+
+function nextFrame(callback) {
+  const raf = typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : fn => setTimeout(fn, 0);
+  raf(() => raf(callback));
+}
+
+function parseDurationList(value) {
+  return String(value || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      if (item.endsWith('ms')) {return parseFloat(item);}
+      if (item.endsWith('s')) {return parseFloat(item) * 1000;}
+      return parseFloat(item) || 0;
+    });
+}
+
+function getTransitionTimeout(el) {
+  if (typeof getComputedStyle !== 'function') {return 0;}
+  const styles = getComputedStyle(el);
+  const transitionDurations = parseDurationList(styles.transitionDuration);
+  const transitionDelays = parseDurationList(styles.transitionDelay);
+  const animationDurations = parseDurationList(styles.animationDuration);
+  const animationDelays = parseDurationList(styles.animationDelay);
+  const maxTransition = Math.max(
+    0,
+    ...transitionDurations.map((duration, index) => duration + (transitionDelays[index] || 0)),
+  );
+  const maxAnimation = Math.max(
+    0,
+    ...animationDurations.map((duration, index) => duration + (animationDelays[index] || 0)),
+  );
+  return Math.max(maxTransition, maxAnimation);
+}
+
+function getTransitionClasses(el, type) {
+  const name = el.getAttribute('k-transition')?.trim() || 'kp';
+  return {
+    from: `${name}-${type}-from`,
+    active: `${name}-${type}-active`,
+    to: `${name}-${type}-to`,
+  };
+}
+
+function findTransitionElement(nodes) {
+  return nodes.find(node => node.nodeType === Node.ELEMENT_NODE && node.hasAttribute('k-transition')) || null;
+}
+
+function runTransition(el, type, done = () => {}) {
+  const classes = getTransitionClasses(el, type);
+  let finished = false;
+  let timer = null;
+
+  const cleanup = () => {
+    if (finished) {return;}
+    finished = true;
+    clearTimeout(timer);
+    el.classList.remove(classes.from, classes.active, classes.to);
+    el.removeEventListener('transitionend', cleanup);
+    el.removeEventListener('animationend', cleanup);
+    done();
+  };
+
+  el.classList.remove(classes.to);
+  el.classList.add(classes.from, classes.active);
+
+  nextFrame(() => {
+    if (finished) {return;}
+    el.classList.remove(classes.from);
+    el.classList.add(classes.to);
+
+    const timeout = getTransitionTimeout(el);
+    el.addEventListener('transitionend', cleanup);
+    el.addEventListener('animationend', cleanup);
+    timer = setTimeout(cleanup, timeout + 50);
+  });
+
+  return cleanup;
+}
+
+/**
+ * Apply k-class directive: object/array/string class binding.
+ */
+function handleClass(el, expr, scope, disposers) {
+  const staticClasses = new Set(el.classList);
+  let previous = new Set();
+
+  const dispose = effect(() => {
+    const next = normalizeClassValue(evaluate(expr, scope, null, { directive: 'k-class', element: el }));
+    for (const cls of previous) {
+      if (!next.has(cls) && !staticClasses.has(cls)) {
+        el.classList.remove(cls);
+      }
+    }
+    for (const cls of next) {
+      el.classList.add(cls);
+    }
+    previous = next;
+  });
+  disposers.push(dispose);
+}
+
+function setStyleProperty(el, prop, value) {
+  const name = prop.replace(/[A-Z]/g, match => '-' + match.toLowerCase());
+  if (value == null || value === false) {
+    el.style.removeProperty(name);
+  } else {
+    el.style.setProperty(name, String(value));
+  }
+}
+
+/**
+ * Apply k-style directive: object/string style binding.
+ */
+function handleStyle(el, expr, scope, disposers) {
+  const staticStyle = el.getAttribute('style') || '';
+  let previousProps = new Set();
+
+  const dispose = effect(() => {
+    const value = evaluate(expr, scope, null, { directive: 'k-style', element: el });
+
+    if (typeof value === 'string') {
+      el.setAttribute('style', staticStyle ? staticStyle + ';' + value : value);
+      previousProps = new Set();
+      return;
+    }
+
+    if (!value || typeof value !== 'object') {
+      for (const prop of previousProps) {
+        setStyleProperty(el, prop, null);
+      }
+      previousProps = new Set();
+      if (staticStyle) {
+        el.setAttribute('style', staticStyle);
+      } else {
+        el.removeAttribute('style');
+      }
+      return;
+    }
+
+    for (const prop of previousProps) {
+      if (!Object.prototype.hasOwnProperty.call(value, prop)) {
+        setStyleProperty(el, prop, null);
+      }
+    }
+    for (const [ prop, propValue ] of Object.entries(value)) {
+      setStyleProperty(el, prop, propValue);
+    }
+    previousProps = new Set(Object.keys(value));
+  });
+  disposers.push(dispose);
+}
+
+/**
+ * Apply k-if/k-else-if/k-else directive chain: mount one branch with cleanup.
+ */
+function handleIf(el, expr, scope, disposers, ctx) {
+  const parent = el.parentNode;
+  if (!parent) {return;}
+
+  const marker = document.createComment(`k-if: ${expr}`);
+  const branches = [];
+
+  const addBranch = (node, branchExpr, directive) => {
+    if (directive !== 'k-else' && isBlankExpression(branchExpr)) {
+      warnEmptyDirectiveExpression(node, directive);
+      return;
+    }
+    const template = node.cloneNode(true);
+    template.removeAttribute('k-if');
+    template.removeAttribute('k-else-if');
+    template.removeAttribute('k-else');
+    branches.push({ expr: branchExpr, template, element: node, directive });
+  };
+
+  addBranch(el, expr, 'k-if');
+
+  let next = el.nextElementSibling;
+  while (next && (next.hasAttribute('k-else-if') || next.hasAttribute('k-else'))) {
+    const current = next;
+    next = next.nextElementSibling;
+    addBranch(
+      current,
+      current.hasAttribute('k-else-if') ? current.getAttribute('k-else-if') : null,
+      current.hasAttribute('k-else-if') ? 'k-else-if' : 'k-else',
+    );
+    parent.removeChild(current);
+    if (current.hasAttribute('k-else')) {break;}
+  }
+
+  parent.replaceChild(marker, el);
+
+  let currentNodes = [];
+  let childDisposers = [];
+  let currentBranch = null;
+  let initialized = false;
+  let cancelLeaves = [];
+
+  const unmount = (withTransition = false) => {
+    if (currentNodes.length === 0) {return;}
+    const nodes = currentNodes;
+    const disposersForNodes = childDisposers;
+    const transitionEl = findTransitionElement(nodes);
+    currentNodes = [];
+    childDisposers = [];
+    currentBranch = null;
+
+    cleanDisposers(disposersForNodes);
+
+    if (withTransition && transitionEl) {
+      let cancel = null;
+      cancel = runTransition(transitionEl, 'leave', () => {
+        removeMountedNodes(nodes);
+        cancelLeaves = cancelLeaves.filter(item => item !== cancel);
+      });
+      cancelLeaves.push(cancel);
+      return;
+    }
+
+    removeMountedNodes(nodes);
+  };
+
+  const mount = (branch, withTransition = false) => {
+    if (!marker.parentNode) {return;}
+    currentNodes = cloneTemplateNodes(branch.template);
+    insertNodesBefore(marker.parentNode, marker, currentNodes);
+    processMountedNodes(
+      currentNodes,
+      scope,
+      childDisposers,
+      ctx,
+      withTransition || Boolean(findTransitionElement(currentNodes)),
+    );
+    currentBranch = branch;
+
+    if (withTransition) {
+      const transitionEl = findTransitionElement(currentNodes);
+      if (transitionEl) {
+        runTransition(transitionEl, 'enter');
+      }
+    }
+  };
+
+  const dispose = effect(() => {
+    let activeBranch = null;
+    for (const branch of branches) {
+      if (!branch.expr || evaluate(branch.expr, scope, null, {
+        directive: branch.directive,
+        element: branch.element,
+      })) {
+        activeBranch = branch;
+        break;
+      }
+    }
+
+    if (activeBranch === currentBranch) {return;}
+
+    unmount(initialized);
+    if (activeBranch) {mount(activeBranch, initialized);}
+    initialized = true;
+  });
+
+  disposers.push(dispose, () => {
+    for (const cancel of cancelLeaves) {
+      cancel();
+    }
+    cancelLeaves = [];
+    unmount(false);
+  });
+}
+
+function parseForExpression(expr) {
+  const identifier = '[A-Za-z_$][\\w$]*';
+  const pattern = new RegExp(
+    '^\\s*(?:\\(\\s*(' + identifier + ')\\s*,\\s*(' + identifier + ')\\s*\\)|(' + identifier + '))' +
+      '\\s+(?:in|of)\\s+(.+?)\\s*$',
+  );
+  const match = expr.match(pattern);
+  if (!match) {
+    throw new Error(
+      formatDiagnostic(
+        'E002',
+        `Invalid k-for expression "${expr}". Use "item in items" or "(item, index) in items".`,
+      ),
+    );
+  }
+  return {
+    itemName: match[1] || match[3],
+    indexName: match[2] || null,
+    itemsExpr: match[4],
+  };
+}
+
+function toIterationEntries(value) {
+  if (!value) {return [];}
+  if (Array.isArray(value)) {
+    return value.map((item, index) => ({ item, index }));
+  }
+  if (typeof value === 'string') {
+    return [ ...value ].map((item, index) => ({ item, index }));
+  }
+  if (typeof value[Symbol.iterator] === 'function') {
+    return [ ...value ].map((item, index) => ({ item, index }));
+  }
+  if (typeof value === 'object') {
+    return Object.entries(value).map(([ key, item ]) => ({ item, index: key }));
+  }
+  return [];
+}
+
+function formatKey(key) {
+  if (typeof key === 'string') {return key;}
+  try {
+    return JSON.stringify(key) ?? String(key);
+  } catch {
+    return String(key);
+  }
+}
+
+function handleFor(el, expr, scope, disposers, ctx) {
+  const parent = el.parentNode;
+  if (!parent) {return;}
+
+  const marker = document.createComment(`k-for: ${expr}`);
+  const template = el.cloneNode(true);
+  const keyExpr = el.getAttribute(':key') || el.getAttribute('k-bind:key');
+  template.removeAttribute('k-for');
+  template.removeAttribute(':key');
+  template.removeAttribute('k-bind:key');
+  parent.replaceChild(marker, el);
+
+  const { itemName, indexName, itemsExpr } = parseForExpression(expr);
+  let currentNodes = [];
+  let childDisposers = [];
+  let keyedBlocks = new Map();
+
+  const unmount = () => {
+    cleanDisposers(childDisposers);
+    removeMountedNodes(currentNodes);
+    currentNodes = [];
+  };
+
+  const unmountKeyed = () => {
+    for (const block of keyedBlocks.values()) {
+      cleanDisposers(block.disposers);
+      removeMountedNodes(block.nodes);
+    }
+    keyedBlocks = new Map();
+  };
+
+  const createLocals = (entry) => {
+    const locals = { [itemName]: entry.item };
+    if (indexName) {locals[indexName] = entry.index;}
+    return locals;
+  };
+
+  const renderUnkeyed = (items) => {
+    unmount();
+    if (!marker.parentNode) {return;}
+
+    for (let index = 0; index < items.length; index += 1) {
+      const entry = items[index];
+      const locals = createLocals(entry);
+      const itemScope = createEvaluationScope(scope, locals);
+      const nodes = cloneTemplateNodes(template);
+      currentNodes.push(...nodes);
+      insertNodesBefore(marker.parentNode, marker, nodes);
+      processMountedNodes(nodes, itemScope, childDisposers, ctx);
+    }
+  };
+
+  const renderKeyed = (items) => {
+    if (!marker.parentNode) {return;}
+
+    const staleBlocks = new Map(keyedBlocks);
+    const nextBlocks = new Map();
+    const seenKeys = new Set();
+
+    for (let index = 0; index < items.length; index += 1) {
+      const entry = items[index];
+      const locals = createLocals(entry);
+      const rawKey = evaluate(keyExpr, scope, locals, { directive: ':key', element: el });
+      let key = rawKey;
+
+      if (seenKeys.has(rawKey)) {
+        warn(
+          'W004',
+          `${describeElement(el)} has duplicate k-for key "${formatKey(rawKey)}". ` +
+          'Duplicate keys can reuse the wrong row; make :key unique.',
+        );
+        key = Symbol('kupola-duplicate-key');
+      } else {
+        seenKeys.add(rawKey);
+      }
+
+      let block = staleBlocks.get(key);
+
+      if (block) {
+        block.localScope.update(locals);
+        staleBlocks.delete(key);
+      } else {
+        const localScope = createLocalScope(scope, locals);
+        const nodes = cloneTemplateNodes(template);
+        const blockDisposers = [];
+        block = { nodes, disposers: blockDisposers, localScope };
+        processMountedNodes(nodes, localScope.scope, blockDisposers, ctx);
+      }
+
+      nextBlocks.set(key, block);
+      insertNodesBefore(marker.parentNode, marker, block.nodes);
+    }
+
+    for (const block of staleBlocks.values()) {
+      cleanDisposers(block.disposers);
+      removeMountedNodes(block.nodes);
+    }
+
+    keyedBlocks = nextBlocks;
+  };
+
+  const dispose = effect(() => {
+    const items = toIterationEntries(evaluate(itemsExpr, scope, null, { directive: 'k-for', element: el }));
+    if (keyExpr) {
+      renderKeyed(items);
+    } else {
+      renderUnkeyed(items);
+    }
+  });
+
+  disposers.push(dispose, keyExpr ? unmountKeyed : unmount);
 }
 
 // ─── DOM Walker ───────────────────────────────────────────────────────────────
@@ -268,11 +1383,135 @@ function normalizeDirective(name) {
   return name;
 }
 
+function hasAnyAttribute(el, names) {
+  return names.some(name => el.hasAttribute(name));
+}
+
+function warnDirectiveCombinations(el) {
+  if (el.hasAttribute('k-for') && el.hasAttribute('k-if')) {
+    warn(
+      'W005',
+      `${describeElement(el)} combines k-for and k-if on the same element. ` +
+      'Prefer wrapping one directive around the other so list and branch lifecycles stay explicit.',
+    );
+  }
+
+  if (el.hasAttribute('k-class') && hasAnyAttribute(el, [ ':class', 'k-bind:class' ])) {
+    warn(
+      'W006',
+      `${describeElement(el)} combines k-class with :class/k-bind:class. ` +
+      'Use k-class for conditional classes, or :class when you intend to replace the full class attribute.',
+    );
+  }
+
+  if (el.hasAttribute('k-style') && hasAnyAttribute(el, [ ':style', 'k-bind:style' ])) {
+    warn(
+      'W007',
+      `${describeElement(el)} combines k-style with :style/k-bind:style. ` +
+      'Use k-style for conditional style properties, or :style when you intend to replace the full style attribute.',
+    );
+  }
+
+  if (el.hasAttribute('k-model') && hasAnyAttribute(el, [ ':checked', 'k-bind:checked' ])) {
+    warn(
+      'W008',
+      `${describeElement(el)} combines k-model with :checked/k-bind:checked. ` +
+      'Let k-model own checked state to avoid competing writes.',
+    );
+  }
+
+  const inputType = String(el.getAttribute('type') || '').toLowerCase();
+  const valueCanBeOptionValue = el.tagName === 'INPUT' && (inputType === 'checkbox' || inputType === 'radio');
+  if (
+    el.hasAttribute('k-model') &&
+    hasAnyAttribute(el, [ ':value', 'k-bind:value' ]) &&
+    !valueCanBeOptionValue
+  ) {
+    warn(
+      'W009',
+      `${describeElement(el)} combines k-model with :value/k-bind:value. ` +
+      'Let k-model own form value state to avoid competing writes.',
+    );
+  }
+}
+
+function isBlankExpression(expr) {
+  return String(expr ?? '').trim() === '';
+}
+
+function warnEmptyDirectiveExpression(el, directiveName) {
+  warn(
+    'W001',
+    `${describeElement(el)} has an empty ${directiveName} expression. ` +
+    'Provide an expression or remove the directive.',
+  );
+}
+
+function directiveRequiresExpression(base) {
+  return (
+    base === 'k-show' ||
+    base === 'k-text' ||
+    base === 'k-html' ||
+    base === 'k-bind' ||
+    base === 'k-on' ||
+    base === 'k-model' ||
+    base === 'k-class' ||
+    base === 'k-style' ||
+    base === 'k-init' ||
+    base === 'k-ref'
+  );
+}
+
+function warnMissingDirectiveArgument(el, directiveName, argumentName) {
+  warn(
+    'W002',
+    `${describeElement(el)} has ${directiveName} without ${argumentName}. ` +
+    'Provide an argument or remove the directive.',
+  );
+}
+
 /**
  * Process a single element's directive attributes.
  */
-function processElement(el, scope, disposers) {
+function processElement(el, scope, disposers, ctx, allowRootTransition = false) {
   const attrs = [ ...el.attributes ];
+
+  warnDirectiveCombinations(el);
+
+  if (el.hasAttribute('k-for')) {
+    const expr = el.getAttribute('k-for');
+    if (isBlankExpression(expr)) {
+      warnEmptyDirectiveExpression(el, 'k-for');
+    } else {
+      handleFor(el, expr, scope, disposers, ctx);
+      return true;
+    }
+  }
+
+  if (el.hasAttribute('k-if')) {
+    const expr = el.getAttribute('k-if');
+    if (isBlankExpression(expr)) {
+      warnEmptyDirectiveExpression(el, 'k-if');
+    } else {
+      handleIf(el, expr, scope, disposers, ctx);
+      return true;
+    }
+  }
+
+  if (el.hasAttribute('k-else-if') || el.hasAttribute('k-else')) {
+    warn(
+      'W010',
+      `${describeElement(el)} has k-else-if/k-else without an adjacent k-if branch.`,
+    );
+    return true;
+  }
+
+  if (el.hasAttribute('k-transition') && !el.hasAttribute('k-show') && !allowRootTransition) {
+    warn(
+      'W011',
+      `${describeElement(el)} has k-transition, but it only runs with k-show or k-if.`,
+    );
+  }
 
   for (const attr of attrs) {
     const name = attr.name;
@@ -282,6 +1521,17 @@ function processElement(el, scope, disposers) {
 
     const full = normalizeDirective(name);
     const { base, arg, modifiers } = parseDirective(full);
+    const directiveName = name.startsWith(':') || name.startsWith('@') ? name : full;
+
+    if (base === 'k-on' && !arg) {
+      warnMissingDirectiveArgument(el, directiveName, 'an event name');
+      continue;
+    }
+
+    if (directiveRequiresExpression(base) && isBlankExpression(expr)) {
+      warnEmptyDirectiveExpression(el, directiveName);
+      continue;
+    }
 
     switch (base) {
     case 'k-show':
@@ -294,16 +1544,63 @@ function processElement(el, scope, disposers) {
       handleHtml(el, expr, scope, disposers);
       break;
     case 'k-bind':
-      if (arg) {handleBind(el, expr, arg, scope, disposers);}
+      handleBind(el, expr, arg, scope, disposers);
       break;
     case 'k-on':
       if (arg) {handleOn(el, expr, arg, modifiers, scope, disposers);}
       break;
     case 'k-model':
-      handleModel(el, expr, scope, disposers);
+      handleModel(el, expr, scope, disposers, modifiers);
+      break;
+    case 'k-class':
+      handleClass(el, expr, scope, disposers);
+      break;
+    case 'k-style':
+      handleStyle(el, expr, scope, disposers);
+      break;
+    case 'k-init':
+      evaluateStatement(expr, scope, null, { directive: 'k-init', element: el });
+      flushJobs();
+      break;
+    case 'k-cloak':
+      el.removeAttribute('k-cloak');
+      break;
+    case 'k-ref':
+      disposers.push(addRef(ctx.refs, expr, el));
+      if (ctx.appRefs && ctx.appRefs !== ctx.refs) {
+        disposers.push(addRef(ctx.appRefs, expr, el));
+      }
       break;
       // k-data is handled by the walker
     }
+  }
+  return false;
+}
+
+function getDirectDataChildren(el) {
+  return [ ...el.children ].filter(child => (
+    child.parentElement === el && child.hasAttribute('k-data')
+  ));
+}
+
+function processNestedDataChildren(children, disposers, appRefs) {
+  for (const child of children) {
+    if (!child.parentElement || !child.hasAttribute('k-data')) {continue;}
+    processDataElement(child, disposers, appRefs);
+  }
+}
+
+function processSubtree(el, scope, disposers, ctx, allowRootTransition = false) {
+  if (el.hasAttribute('k-data')) {
+    processDataElement(el, disposers, ctx.appRefs);
+    return;
+  }
+
+  const skipChildren = processElement(el, scope, disposers, ctx, allowRootTransition);
+  const nestedDataChildren = skipChildren ? [] : getDirectDataChildren(el);
+  if (!skipChildren) {
+    walkChildren(el, scope, disposers, ctx);
+    processNestedDataChildren(nestedDataChildren, disposers, ctx.appRefs);
   }
 }
 
@@ -311,43 +1608,119 @@ function processElement(el, scope, disposers) {
  * Recursively walk children, processing directives.
  * Stops descending into nested k-data elements (they create their own scope).
  */
-function walkChildren(parent, scope, disposers) {
-  for (const child of parent.children) {
+function walkChildren(parent, scope, disposers, ctx) {
+  for (const child of [ ...parent.children ]) {
+    if (child.parentElement !== parent) {continue;}
     if (child.hasAttribute('k-data')) {
       // Nested scope — handled separately
       continue;
     }
-    processElement(child, scope, disposers);
-    walkChildren(child, scope, disposers);
+    processSubtree(child, scope, disposers, ctx);
   }
 }
 
 /**
  * Process a k-data element: create scope, process self + children.
  */
-function processDataElement(el, disposers) {
+function processDataElement(el, disposers, appRefs = {}) {
   const expr = el.getAttribute('k-data');
+  const ctx = createDomContext(el, disposers, {}, appRefs);
   let data = {};
-  try {
-    data = evaluate(expr, createScope({})) || {};
-  } catch (_) {
-    console.warn('[kupola] k-data parse error:', expr);
+  if (isBlankExpression(expr)) {
+    warnEmptyDirectiveExpression(el, 'k-data');
+  } else {
+    try {
+      data = resolveData(expr, ctx, el);
+    } catch (error) {
+      console.warn(error?.message || formatDiagnostic('E003', `k-data parse error: ${expr}`));
+    }
   }
 
   const scope = createScope(data);
+  ctx.scope = scope;
 
   // Process directives on this element (excluding k-data itself)
-  processElement(el, scope, disposers);
+  const skipChildren = processElement(el, scope, disposers, ctx);
+  const nestedDataChildren = skipChildren ? [] : getDirectDataChildren(el);
 
   // Walk children
-  walkChildren(el, scope, disposers);
+  if (!skipChildren) {
+    walkChildren(el, scope, disposers, ctx);
+  }
+
+  if (typeof scope.mounted === 'function') {
+    scope.mounted(ctx);
+  }
 
   // Handle nested k-data elements
-  for (const child of el.children) {
-    if (child.hasAttribute('k-data')) {
-      processDataElement(child, disposers);
-    }
+  if (!skipChildren) {
+    processNestedDataChildren(nestedDataChildren, disposers, appRefs);
   }
+
+  return ctx;
+}
+
+// ─── Auto Destroy ────────────────────────────────────────────────────────────
+
+const autoDestroyRoots = new Map();
+let autoDestroyObserver = null;
+const activeWalkRoots = new WeakMap();
+
+function ensureAutoDestroyObserver() {
+  if (autoDestroyObserver || typeof MutationObserver !== 'function') {return;}
+  const target = document.documentElement || document.body;
+  if (!target) {return;}
+
+  autoDestroyObserver = new MutationObserver(() => {
+    for (const [ root, destroy ] of [ ...autoDestroyRoots ]) {
+      if (!root.isConnected) {
+        destroy();
+      }
+    }
+  });
+  autoDestroyObserver.observe(target, { childList: true, subtree: true });
+}
+
+function unobserveAutoDestroyRoot(root) {
+  autoDestroyRoots.delete(root);
+  if (autoDestroyRoots.size === 0 && autoDestroyObserver) {
+    autoDestroyObserver.disconnect();
+    autoDestroyObserver = null;
+  }
+}
+
+function observeAutoDestroyRoot(root, destroy) {
+  if (!root || root === document || !root.isConnected) {return;}
+  ensureAutoDestroyObserver();
+  if (!autoDestroyObserver) {return;}
+  autoDestroyRoots.set(root, destroy);
+}
+
+function warnDuplicateWalk(root) {
+  if (!activeWalkRoots.has(root)) {return;}
+  warn(
+    'W012',
+    `${describeElement(root)} is already initialized by walk(). ` +
+    'Destroy the previous instance before calling walk() on the same root again.',
+  );
+}
+
+function resolveWalkRoot(root) {
+  if (typeof root === 'string') {
+    root = document.querySelector(root);
+  }
+  if (!root || !root.nodeType) {
+    throw new TypeError('[kupola] walk() expects an Element or selector.');
+  }
+  return root;
+}
+
+function resolveOptionalWalkRoot(root) {
+  if (typeof root === 'string') {
+    root = document.querySelector(root);
+  }
+  if (!root || !root.nodeType) {return null;}
+  return root;
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -356,17 +1729,28 @@ function processDataElement(el, disposers) {
  * Walk a DOM tree and activate all Kupola directives.
  *
  * Finds `k-data` elements to create reactive scopes, then processes
- * `k-show`, `k-text`, `k-html`, `k-bind`, `k-on`, `k-model` directives.
+ * `k-show`, `k-if`, `k-else-if`, `k-else`, `k-for`, `k-text`, `k-html`,
+ * `k-bind`, `k-class`, `k-style`, `k-on`, `k-model`, `k-ref`,
+ * `k-init`, `k-cloak` directives.
  *
- * @param {Element} root  Root element to walk.
- * @returns {{ destroy: Function }}  Call destroy() to clean up all effects/listeners.
+ * @param {Element|string} root  Root element or selector to walk.
+ * @param {{ autoDestroy?: boolean }} [options]
+ * @returns {{
+ *   destroy: Function, root: Element, refs: Object,
+ *   $: Function, $$: Function, on: Function, watch: Function
+ * }}
+ *   Call destroy() to clean up all effects/listeners.
  */
-export function walk(root) {
+export function walk(root, options = {}) {
+  root = resolveWalkRoot(root);
+  warnDuplicateWalk(root);
+
   /** @type {Function[]} */
   const disposers = [];
+  const ctx = createDomContext(root, disposers, {});
 
   if (root.hasAttribute && root.hasAttribute('k-data')) {
-    processDataElement(root, disposers);
+    processDataElement(root, disposers, ctx.refs);
   } else {
     // Find top-level k-data elements within root
     const dataElements = root.querySelectorAll
@@ -377,37 +1761,120 @@ export function walk(root) {
       // Check if any data element is a direct child — process it
       // For elements nested inside non-data parents, process them
       for (const el of dataElements) {
-        // Only process if no ancestor (up to root) also has k-data
-        // (nested scopes are handled by their parent processDataElement)
+        // Only process if no ancestor (up to root) owns this subtree.
+        // Nested scopes and dynamic directive fragments are handled by
+        // their parent processDataElement/handleIf/handleFor path.
         let isNested = false;
         let parent = el.parentElement;
         while (parent && parent !== root) {
-          if (parent.hasAttribute('k-data')) {
+          if (
+            parent.hasAttribute('k-data') ||
+            parent.hasAttribute('k-if') ||
+            parent.hasAttribute('k-else-if') ||
+            parent.hasAttribute('k-else') ||
+            parent.hasAttribute('k-for')
+          ) {
             isNested = true;
             break;
           }
           parent = parent.parentElement;
         }
         if (!isNested) {
-          processDataElement(el, disposers);
+          processDataElement(el, disposers, ctx.refs);
         }
       }
     } else {
       // No k-data found — process directives on all children with empty scope
       const scope = createScope({});
-      for (const child of root.children) {
-        processElement(child, scope, disposers);
-        walkChildren(child, scope, disposers);
+      ctx.scope = scope;
+      for (const child of [ ...root.children ]) {
+        if (child.parentElement !== root) {continue;}
+        processSubtree(child, scope, disposers, ctx);
       }
     }
   }
 
-  return {
+  let active = true;
+  const result = {
+    root,
+    refs: ctx.refs,
+    $: ctx.$,
+    $$: ctx.$$,
+    on: ctx.on,
+    watch: ctx.watch,
     destroy() {
+      if (!active) {return;}
+      active = false;
+      activeWalkRoots.delete(root);
+      unobserveAutoDestroyRoot(root);
       for (const dispose of disposers) {
         dispose();
       }
       disposers.length = 0;
     },
   };
+
+  activeWalkRoots.set(root, result);
+
+  if (options.autoDestroy) {
+    observeAutoDestroyRoot(root, result.destroy);
+  }
+
+  return result;
+}
+
+/**
+ * Walk a DOM tree and automatically destroy the instance when the root is removed.
+ *
+ * @param {Element|string} root  Root element or selector to walk.
+ * @returns {ReturnType<typeof walk>}
+ */
+export function walkAuto(root) {
+  return walk(root, { autoDestroy: true });
+}
+
+/**
+ * Return the existing walk instance for a root, or create one if needed.
+ *
+ * @param {Element|string} root  Root element or selector to walk.
+ * @param {{ autoDestroy?: boolean }} [options]
+ * @returns {ReturnType<typeof walk>}
+ */
+export function walkOnce(root, options = {}) {
+  root = resolveWalkRoot(root);
+  return activeWalkRoots.get(root) || walk(root, options);
+}
+
+/**
+ * Get the active walk instance for a root.
+ *
+ * @param {Element|string} root  Root element or selector to inspect.
+ * @returns {ReturnType<typeof walk>|null}
+ */
+export function getWalk(root) {
+  root = resolveOptionalWalkRoot(root);
+  return root ? activeWalkRoots.get(root) || null : null;
+}
+
+/**
+ * Check whether a root has an active walk instance.
+ *
+ * @param {Element|string} root  Root element or selector to inspect.
+ * @returns {boolean}
+ */
+export function hasWalk(root) {
+  return Boolean(getWalk(root));
+}
+
+/**
+ * Destroy the active walk instance for a root if one exists.
+ *
+ * @param {Element|string} root  Root element or selector to destroy.
+ * @returns {boolean}
+ */
+export function destroyWalk(root) {
+  const instance = getWalk(root);
+  if (!instance) {return false;}
+  instance.destroy();
+  return true;
 }

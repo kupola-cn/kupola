@@ -2,8 +2,8 @@
 layout: home
 hero:
   name: Kupola
-  text: 现代模块化 UI 组件库
-  tagline: 零框架依赖 · 48+ 组件 · Tree-shakeable
+  text: 零框架交互增强层
+  tagline: 为服务端渲染 HTML 添加响应式指令与可选原生组件
   actions:
     - theme: brand
       text: 快速开始

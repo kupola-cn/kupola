@@ -9,17 +9,13 @@
 适合传统服务端渲染页面，无需任何构建工具：
 
 ```html
-<!-- 核心引擎 -->
-<script src="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core.umd.js"></script>
-<!-- 指令系统（可选，用于 HTML 声明式写法） -->
-<script src="https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core-directives.umd.js"></script>
-
 <div k-data="{ count: 0 }">
   <button k-on:click="count++">点击 ${count} 次</button>
 </div>
 
-<script>
-  Kupola.walk(document.body);
+<script type="module">
+  import { walk } from 'https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core-directives.esm.js';
+  walk(document.body);
 </script>
 ```
 

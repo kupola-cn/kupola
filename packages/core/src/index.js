@@ -33,7 +33,7 @@ export { hydrate } from './server.js';
 export { defineComponent, register, getComponent, hasComponent, clearRegistry } from './component.js';
 
 // ── Directives ───────────────────────────────────────────────────────────────
-export { walk } from './directives.js';
+export { $, $$, walk, walkAuto, walkOnce, getWalk, hasWalk, destroyWalk, defineScope } from './directives.js';
 
 // ── Scheduler (advanced / testing) ───────────────────────────────────────────
 export { flushJobs, resetScheduler } from './scheduler.js';

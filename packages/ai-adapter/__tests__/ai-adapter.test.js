@@ -208,8 +208,10 @@ describe('AIAdapter', () => {
 
       expect(html).toContain('ds-ai-panel');
       expect(html).toContain('k-data');
-      expect(html).toContain('k-model');
-      expect(html).toContain('k-on:click');
+      expect(html).toContain(':key');
+      expect(html).toContain('k-class');
+      expect(html).toContain('k-model.trim');
+      expect(html).toContain('@submit.prevent');
     });
   });
 

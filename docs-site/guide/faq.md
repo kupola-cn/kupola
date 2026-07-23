@@ -57,13 +57,36 @@ npm install
 <textarea k-model="bio"></textarea>
 ```
 
+常用修饰符包括 `.trim`、`.number`、`.lazy` 和 `.debounce.300`：
+
+```html
+<input k-model.trim="name" />
+<input k-model.number="age" />
+<input k-model.debounce.300="keyword" />
+```
+
+### Q: 表单提交推荐怎么写？
+
+优先把提交逻辑放在 `<form>` 上，用 `@submit.prevent` 调用命名方法：
+
+```html
+<form k-data="profileForm" @submit.prevent="save()">
+  <input k-model.trim="name" />
+  <button :disabled="saving">保存</button>
+</form>
+```
+
+这样点击按钮和按 Enter 都会进入同一条提交路径。
+
 ### Q: k-for 如何获取索引？
 
 ```html
-<template k-for="(item, index) in items">
+<template k-for="(item, index) in items" :key="item.id">
   <span k-text="index + ': ' + item.name"></span>
 </template>
 ```
+
+带 `:key` 时会复用并移动已有 DOM；没有 key 时会重新渲染列表片段。更新数组时优先重新赋值，例如 `items = [...items, nextItem]`；大列表优先使用 `VirtualList`。
 
 ### Q: k-bind 可以绑定任意 HTML 属性吗？
 
@@ -72,24 +95,77 @@ npm install
 ```html
 <button k-bind:disabled="isLoading">Submit</button>
 <img k-bind:src="imageUrl" />
-<div k-bind:class="active ? 'active' : ''"></div>
+<div k-bind:data-state="active ? 'active' : 'idle'"></div>
+```
+
+也可以用对象批量绑定：
+
+```html
+<button k-bind="{ disabled: isLoading, title: label }">Submit</button>
+```
+
+条件 class 推荐使用 `k-class`：
+
+```html
+<div k-class="{ active: active }"></div>
 ```
 
 ### Q: k-on 支持哪些事件？
 
 支持所有标准 DOM 事件：`click`、`submit`、`keydown`、`input`、`change`、`focus`、`blur`、`mouseenter`、`mouseleave` 等。
 
+常用修饰符包括 `.stop`、`.prevent`、`.once`、`.self`、`.outside`、`.enter`、`.escape` 和 `.debounce.300`。
+
+### Q: k-transition 会内置动画 CSS 吗？
+
+不会。`k-transition` 只负责给 `k-show` / `k-if` 添加进入和离开的 class 生命周期，动画效果由项目 CSS 决定。
+
+```html
+<div k-show="open" k-transition>...</div>
+```
+
+```css
+.kp-enter-active,
+.kp-leave-active {
+  transition: opacity 150ms ease;
+}
+
+.kp-enter-from,
+.kp-leave-to {
+  opacity: 0;
+}
+```
+
+写 `k-transition="fade"` 时，class 前缀会变成 `.fade-enter-from`、`.fade-leave-to` 等。
+
 ### Q: k-data 的作用域是怎样的？
 
-`k-data` 创建的作用域对其所有子元素可见。嵌套的 `k-data` 会继承父作用域并覆盖同名变量：
+`k-data` 创建的作用域对其所有非嵌套作用域的子元素可见。嵌套的 `k-data` 会创建独立作用域，不会自动继承父作用域：
 
 ```html
 <div k-data="{ count: 0, name: 'parent' }">
   <div k-data="{ count: 10 }">
-    <!-- count = 10, name = 'parent' -->
+    <!-- count = 10；name 不来自父作用域 -->
   </div>
 </div>
 ```
+
+### Q: 什么时候使用 watch()？
+
+模板负责声明 UI 绑定，`watch()` 负责响应状态变化后的 JS 副作用，例如请求接口、本地存储、同步第三方组件。
+
+```js
+defineScope('usersPage', () => ({
+  keyword: '',
+  mounted({ watch }) {
+    watch(() => this.keyword, () => this.search())
+  },
+}))
+```
+
+`watch()` 会随当前 `walk()` 实例销毁而自动清理。
+
+动态片段里如果不方便保存实例引用，可以用 `getWalk()`、`hasWalk()`、`destroyWalk()` 管理当前 root 的实例；初始化入口可能重复触发时用 `walkOnce()`。
 
 ---
 
@@ -221,7 +297,7 @@ setMessages('zh-CN', {
 ### Q: 如何进行服务端渲染？
 
 ```js
-import { renderToString } from '@kupola/kupola/ssr';
+import { renderToString } from '@kupola/kupola/server';
 
 const html = renderToString(template);
 // 发送到客户端后水合：
@@ -268,7 +344,7 @@ VirtualList({
 - `k-text` 自动转义 HTML
 - `k-html` 仅用于受信内容（会直接设置 innerHTML）
 - Notification 组件的 title/message 已内置 HTML 转义
-- 核心引擎不使用 `eval` / `new Function`，CSP 兼容
+- 指令表达式会编译执行，因此模板必须来自可信源码；严格禁用 `unsafe-eval` 的 CSP 环境需要使用 JS API 或专门的 CSP 方案
 
 ### Q: 如何防止组件异常导致页面崩溃？
 
@@ -314,7 +390,9 @@ module.exports = { plugins: [new KupolaPlugin()] };
 ### Q: CDN link？
 
 ```html
-<script src="https://unpkg.com/@kupola/kupola/dist/kupola-core.umd.js"></script>
+<script type="module">
+  import { signal, html, render } from 'https://unpkg.com/@kupola/kupola/dist/kupola-core.esm.js';
+</script>
 <link rel="stylesheet" href="https://unpkg.com/@kupola/kupola/dist/css/kupola.css" />
 ```
 

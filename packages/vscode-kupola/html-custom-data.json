@@ -23,28 +23,76 @@
       "description": "Conditionally renders the element. Removed from DOM when falsy.\n\n```html\n<div k-if=\"isLoggedIn\">Welcome!</div>\n```"
     },
     {
+      "name": "k-else-if",
+      "description": "Conditional branch after a k-if element. Must be adjacent to the previous branch.\n\n```html\n<p k-if=\"loading\">Loading</p>\n<p k-else-if=\"error\">Error</p>\n<p k-else>Done</p>\n```"
+    },
+    {
       "name": "k-else",
-      "description": "Marks the else branch of a k-if. Must immediately follow a k-if element.\n\n```html\n<div k-if=\"isLoggedIn\">Welcome!</div>\n<div k-else>Please log in.</div>\n```"
+      "description": "Fallback branch after k-if or k-else-if. Must be adjacent to the previous branch.\n\n```html\n<p k-if=\"ok\">OK</p>\n<p k-else>Not OK</p>\n```"
     },
     {
       "name": "k-for",
-      "description": "List rendering. Use on `<template>` for best performance.\n\n```html\n<template k-for=\"item in items\">\n  <li k-text=\"item.name\"></li>\n</template>\n```\n\nWith index:\n```html\n<template k-for=\"(item, index) in items\">\n  ...\n</template>\n```"
+      "description": "Renders a template for each item in an iterable value. Add :key to reuse row DOM during reorder/update.\n\n```html\n<template k-for=\"(item, index) in items\" :key=\"item.id\">\n  <li k-text=\"item.name\"></li>\n</template>\n```"
+    },
+    {
+      "name": ":key",
+      "description": "Stable key for k-for rows. Used to reuse and move existing DOM.\n\n```html\n<template k-for=\"item in items\" :key=\"item.id\">...</template>\n```"
     },
     {
       "name": "k-model",
       "description": "Two-way data binding for form inputs (input, select, textarea, checkbox).\n\n```html\n<input k-model=\"username\" />\n<select k-model=\"role\">...</select>\n<input type=\"checkbox\" k-model=\"agree\" />\n```"
     },
     {
+      "name": "k-model.trim",
+      "description": "Two-way binding that trims string input before writing to state.\n\n```html\n<input k-model.trim=\"name\" />\n```"
+    },
+    {
+      "name": "k-model.number",
+      "description": "Two-way binding that parses numeric input before writing to state.\n\n```html\n<input k-model.number=\"age\" />\n```"
+    },
+    {
+      "name": "k-model.lazy",
+      "description": "Two-way binding that updates on change instead of input.\n\n```html\n<input k-model.lazy=\"keyword\" />\n```"
+    },
+    {
+      "name": "k-model.debounce.300",
+      "description": "Two-way binding that delays state writes until input settles. The numeric modifier is the delay in milliseconds.\n\n```html\n<input k-model.debounce.300=\"keyword\" />\n```"
+    },
+    {
       "name": "k-cloak",
       "description": "Hides the element until Kupola directives are initialized. Prevents flash of unstyled content.\n\n```html\n<div k-data=\"...\" k-cloak>...</div>\n```"
     },
     {
+      "name": "k-init",
+      "description": "Runs a statement once when the current scope initializes.\n\n```html\n<section k-data=\"usersPage\" k-init=\"load()\"></section>\n```"
+    },
+    {
+      "name": "k-ref",
+      "description": "Registers an element reference on the current scope context and walk() result.\n\n```html\n<input k-ref=\"keyword\" k-model=\"keyword\" />\n```"
+    },
+    {
+      "name": "k-class",
+      "description": "Adds and removes classes from string, array, or object values while preserving static classes.\n\n```html\n<button class=\"btn\" k-class=\"{ 'is-active': active }\"></button>\n```"
+    },
+    {
+      "name": "k-style",
+      "description": "Adds and removes inline styles from object or string values.\n\n```html\n<div k-style=\"{ color: active ? 'red' : null }\"></div>\n```"
+    },
+    {
+      "name": "k-transition",
+      "description": "Adds CSS class lifecycle hooks for k-show and k-if. Default prefix is kp; k-transition=\"fade\" uses fade-enter-from / fade-leave-to classes.\n\n```html\n<div k-show=\"open\" k-transition>...</div>\n```"
+    },
+    {
+      "name": "k-bind",
+      "description": "Dynamically binds an object of attributes.\n\n```html\n<button k-bind=\"{ disabled: loading, title: label }\"></button>\n```"
+    },
+    {
       "name": "k-bind:class",
-      "description": "Dynamically binds the class attribute.\n\n```html\n<div k-bind:class=\"active ? 'active' : ''\"></div>\n```"
+      "description": "Dynamically replaces the class attribute. Prefer k-class for conditional class maps.\n\n```html\n<div k-bind:class=\"active ? 'active' : ''\"></div>\n```"
     },
     {
       "name": "k-bind:style",
-      "description": "Dynamically binds the style attribute.\n\n```html\n<div k-bind:style=\"'color:' + color\"></div>\n```"
+      "description": "Dynamically replaces the style attribute. Prefer k-style for conditional style maps.\n\n```html\n<div k-bind:style=\"'color:' + color\"></div>\n```"
     },
     {
       "name": "k-bind:disabled",
@@ -63,8 +111,28 @@
       "description": "Form submit event handler.\n\n```html\n<form k-on:submit=\"handleSubmit(event)\">...</form>\n```"
     },
     {
+      "name": "@submit.prevent",
+      "description": "Form submit handler that prevents the browser's default page reload.\n\n```html\n<form @submit.prevent=\"save()\">...</form>\n```"
+    },
+    {
       "name": "k-on:keydown",
       "description": "Keydown event handler.\n\n```html\n<input k-on:keydown=\"if(event.key==='Enter') submit()\" />\n```"
+    },
+    {
+      "name": "@keydown.enter",
+      "description": "Keydown handler that only runs for Enter.\n\n```html\n<input @keydown.enter=\"submit()\" />\n```"
+    },
+    {
+      "name": "@keydown.escape",
+      "description": "Keydown handler that only runs for Escape.\n\n```html\n<input @keydown.escape=\"close()\" />\n```"
+    },
+    {
+      "name": "@click.outside",
+      "description": "Runs when a click happens outside the element.\n\n```html\n<div @click.outside=\"close()\"></div>\n```"
+    },
+    {
+      "name": "@input.debounce.300",
+      "description": "Debounced input handler. The numeric modifier is the delay in milliseconds.\n\n```html\n<input @input.debounce.300=\"search()\" />\n```"
     },
     {
       "name": "k-on:change",

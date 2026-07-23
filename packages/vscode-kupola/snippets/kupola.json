@@ -42,8 +42,8 @@
   "Kupola: k-for loop": {
     "prefix": "k-for",
     "body": [
-      "<template k-for=\"${1:item} in ${2:items}\">",
-      "  <${3:div} k-text=\"${1:item}\"></${3:div}>",
+      "<template k-for=\"${1:item} in ${2:items}\" :key=\"${1:item}.${3:id}\">",
+      "  <${4:div} k-text=\"${1:item}\"></${4:div}>",
       "</template>"
     ],
     "description": "Kupola list rendering with k-for"
@@ -51,10 +51,10 @@
   "Kupola: k-for with index": {
     "prefix": "k-fori",
     "body": [
-      "<template k-for=\"(${1:item}, ${2:index}) in ${3:items}\">",
-      "  <${4:div}>",
+      "<template k-for=\"(${1:item}, ${2:index}) in ${3:items}\" :key=\"${1:item}.${4:id}\">",
+      "  <${5:div}>",
       "    <span k-text=\"${2:index}\"></span>: <span k-text=\"${1:item}\"></span>",
-      "  </${4:div}>",
+      "  </${5:div}>",
       "</template>"
     ],
     "description": "Kupola list rendering with index"
@@ -64,15 +64,46 @@
     "body": "k-bind:${1:class}=\"${2:expression}\"",
     "description": "Kupola attribute binding"
   },
-  "Kupola: k-bind:class": {
+  "Kupola: k-class": {
     "prefix": "k-class",
-    "body": "k-bind:class=\"${1:condition} ? '${2:class-a}' : '${3:class-b}'\"",
-    "description": "Kupola dynamic class binding"
+    "body": "k-class=\"{ '${1:is-active}': ${2:condition} }\"",
+    "description": "Kupola conditional class binding"
   },
-  "Kupola: k-bind:style": {
+  "Kupola: k-ref": {
+    "prefix": "k-ref",
+    "body": "k-ref=\"${1:name}\"",
+    "description": "Kupola scoped element reference"
+  },
+  "Kupola: k-init": {
+    "prefix": "k-init",
+    "body": "k-init=\"${1:init()}\"",
+    "description": "Kupola one-time scope initialization"
+  },
+  "Kupola: k-transition": {
+    "prefix": "k-transition",
+    "body": [
+      "<${1:div} k-show=\"${2:open}\" k-transition>",
+      "  $0",
+      "</${1:div}>",
+      "",
+      "<style>",
+      ".kp-enter-active,",
+      ".kp-leave-active {",
+      "  transition: opacity 150ms ease;",
+      "}",
+      "",
+      ".kp-enter-from,",
+      ".kp-leave-to {",
+      "  opacity: 0;",
+      "}",
+      "</style>"
+    ],
+    "description": "Kupola transition class lifecycle for k-show and k-if"
+  },
+  "Kupola: k-style": {
     "prefix": "k-style",
-    "body": "k-bind:style=\"${1:condition} ? '${2:style-a}' : '${3:style-b}'\"",
-    "description": "Kupola dynamic style binding"
+    "body": "k-style=\"{ ${1:color}: ${2:value} }\"",
+    "description": "Kupola conditional style binding"
   },
   "Kupola: k-bind:disabled": {
     "prefix": "k-disabled",
@@ -91,8 +122,8 @@
   },
   "Kupola: k-on:submit": {
     "prefix": "k-submit",
-    "body": "k-on:submit=\"${1:expression}\"",
-    "description": "Kupola form submit event handler"
+    "body": "@submit.prevent=\"${1:save()}\"",
+    "description": "Kupola form submit event handler with default submit prevented"
   },
   "Kupola: k-on:keydown": {
     "prefix": "k-keydown",
@@ -103,6 +134,11 @@
     "prefix": "k-model",
     "body": "<input k-model=\"${1:variable}\" placeholder=\"${2:placeholder}\" />",
     "description": "Kupola two-way data binding on input"
+  },
+  "Kupola: k-model debounce": {
+    "prefix": "k-model-debounce",
+    "body": "<input k-model.trim.debounce.${1:300}=\"${2:keyword}\" placeholder=\"${3:Search}\" />",
+    "description": "Kupola debounced two-way input binding"
   },
   "Kupola: k-model select": {
     "prefix": "k-model-select",
@@ -141,36 +177,21 @@
     ],
     "description": "Kupola counter example"
   },
-  "Kupola: todo list example": {
-    "prefix": "kupola-todo",
-    "body": [
-      "<div k-data=\"{ todos: [], newTodo: '' }\">",
-      "  <input k-model=\"newTodo\" k-on:keydown=\"if(event.key==='Enter' && newTodo.trim()){todos.push({text:newTodo.trim(),done:false});newTodo=''}\" />",
-      "  <template k-for=\"todo in todos\">",
-      "    <div>",
-      "      <input type=\"checkbox\" k-model=\"todo.done\" />",
-      "      <span k-text=\"todo.text\"></span>",
-      "    </div>",
-      "  </template>",
-      "  <p k-show=\"todos.length === 0\">No todos yet.</p>",
-      "</div>"
-    ],
-    "description": "Kupola todo list example"
-  },
   "Kupola: form example": {
     "prefix": "kupola-form",
     "body": [
-      "<div k-data=\"{ name: '', email: '', role: 'user' }\">",
-      "  <label>Name: <input k-model=\"name\" /></label>",
-      "  <label>Email: <input k-model=\"email\" /></label>",
+      "<form k-data=\"{ name: '', email: '', role: 'user', saving: false }\" @submit.prevent=\"save()\">",
+      "  <label>Name: <input k-model.trim=\"name\" /></label>",
+      "  <label>Email: <input k-model.trim=\"email\" /></label>",
       "  <label>Role:",
       "    <select k-model=\"role\">",
       "      <option value=\"user\">User</option>",
       "      <option value=\"admin\">Admin</option>",
       "    </select>",
       "  </label>",
+      "  <button :disabled=\"saving\">Save</button>",
       "  <pre k-text=\"JSON.stringify({name, email, role}, null, 2)\"></pre>",
-      "</div>"
+      "</form>"
     ],
     "description": "Kupola form binding example"
   },

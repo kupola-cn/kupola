@@ -10,7 +10,7 @@
  */
 
 import { queueJob } from './scheduler.js';
-import { isProfilerEnabled, profileSignalWrite, profileSignalRead, profileTrigger } from './devtools.js';
+import { isProfilerEnabled, profileSignalWrite, profileSignalRead } from './devtools.js';
 
 // ─── Global dependency-tracking state ────────────────────────────────────────
 
@@ -34,6 +34,21 @@ export function pushEffect(eff) {
  */
 export function popEffect() {
   activeEffect = effectStack.pop() ?? null;
+}
+
+/**
+ * Run a function without collecting reactive dependencies.
+ * @param {Function} fn
+ * @returns {any}
+ */
+export function withoutTracking(fn) {
+  const previous = activeEffect;
+  activeEffect = null;
+  try {
+    return fn();
+  } finally {
+    activeEffect = previous;
+  }
 }
 
 // ─── Batch-awareness flag (set by batch.js) ─────────────────────────────────
