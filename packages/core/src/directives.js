@@ -33,6 +33,7 @@ import { flushJobs } from './scheduler.js';
 /** @type {Map<string, Object|Function>} */
 const scopeRegistry = new Map();
 let htmlSanitizer = null;
+let walkRootCount = 0;
 
 function formatDiagnostic(code, message) {
   return `[kupola ${code}] ${message}`;
@@ -45,6 +46,9 @@ function warn(code, message) {
 /**
  * Configure HTML processing for k-html. Pass null to restore trusted passthrough behavior.
  *
+ * Note: This sets a global default. For multi-app/micro-frontend scenarios,
+ * prefer passing sanitizer via walk({ sanitizer }) for per-root isolation.
+ *
  * @param {((html: string, element: Element) => string)|null} sanitizer
  */
 export function setHtmlSanitizer(sanitizer) {
@@ -52,6 +56,10 @@ export function setHtmlSanitizer(sanitizer) {
     throw new TypeError('[kupola] setHtmlSanitizer() expects a function or null.');
   }
   htmlSanitizer = sanitizer;
+  if (walkRootCount > 1) {
+    warn('W025', 'setHtmlSanitizer() was called with multiple walk roots active. ' +
+      'Consider passing sanitizer via walk({ sanitizer }) for per-root isolation.');
+  }
 }
 
 /**
@@ -648,6 +656,9 @@ function handleHtml(el, expr, scope, disposers, sanitizer) {
 
 /**
  * Apply k-bind directive: reactive attribute.
+ * 
+ * Security strategy: whitelist approach for dynamic attribute binding.
+ * Only explicitly allowed attributes can be bound dynamically.
  */
 const URL_ATTRIBUTES = new Set([
   'href', 'src', 'action', 'formaction', 'poster', 'xlink:href', 'data', 'codebase',
@@ -663,6 +674,15 @@ const MEDIA_URL_CONTEXTS = new Set([
 ]);
 const SAFE_MEDIA_DATA_URL = /^data:image\/(?:avif|bmp|gif|jpeg|jpg|png|webp);base64,/i;
 const URL_ALLOWED_PROTOCOLS = new Set([ 'http:', 'https:' ]);
+const SAFE_NON_URL_ATTRIBUTES = new Set([
+  'id', 'class', 'style', 'title', 'alt', 'placeholder', 'disabled', 'readonly',
+  'checked', 'selected', 'required', 'value', 'name', 'type', 'role', 'aria-label',
+  'aria-hidden', 'aria-disabled', 'aria-invalid', 'aria-describedby', 'aria-labelledby',
+  'aria-expanded', 'aria-controls', 'aria-current', 'aria-selected', 'aria-modal',
+  'data-*', 'tabindex', 'autocomplete', 'pattern', 'maxlength', 'minlength', 'size',
+  'accept', 'multiple', 'autofocus', 'formnovalidate', 'novalidate', 'enctype',
+  'method', 'target', 'rel', 'download', 'crossorigin', 'integrity', 'referrerpolicy',
+]);
 
 function hasUrlConfusionChars(value) {
   for (const char of String(value)) {
@@ -737,8 +757,16 @@ function isDangerousBoundAttribute(el, attrName, value) {
   if (isPrototypeKey(name) || /^on/i.test(name) || BLOCKED_DYNAMIC_ATTRIBUTES.has(name)) {return true;}
   if (tagName === 'meta' && name === 'http-equiv') {return true;}
   if (tagName === 'base' && name === 'href') {return true;}
-  if (!URL_ATTRIBUTES.has(name) || value == null) {return false;}
-  return !isSafeDynamicUrl(el, name, value);
+  if (URL_ATTRIBUTES.has(name)) {
+    if (value == null) {return false;}
+    return !isSafeDynamicUrl(el, name, value);
+  }
+  if (SAFE_NON_URL_ATTRIBUTES.has(name) || name.startsWith('data-')) {return false;}
+  warn(
+    'W020',
+    `${describeElement(el)} blocked dynamic attribute "${attrName}"; only whitelisted attributes may be bound dynamically.`,
+  );
+  return true;
 }
 
 function setBoundAttribute(el, attrName, val) {
@@ -2132,6 +2160,8 @@ export function walk(root, options = {}) {
     throw new TypeError('[kupola] walk() sanitizer option expects a function or null.');
   }
 
+  walkRootCount += 1;
+
   /** @type {Function[]} */
   const disposers = [];
   const ctx = createDomContext(root, disposers, Object.create(null), undefined, options.sanitizer);
@@ -2197,6 +2227,7 @@ export function walk(root, options = {}) {
     destroy() {
       if (!active) {return;}
       active = false;
+      walkRootCount -= 1;
       activeWalkRoots.delete(root);
       unobserveAutoDestroyRoot(root);
       for (const dispose of disposers) {

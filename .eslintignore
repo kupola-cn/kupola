@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+storybook-static/
+docs-site/.vitepress/.temp/
+docs-site/.vitepress/dist/
+*.log
+*.tmp
+dgc/
+his-sys/

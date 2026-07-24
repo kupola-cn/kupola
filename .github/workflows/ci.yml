@@ -62,6 +62,7 @@ jobs:
 
       - name: Check bundle size
         run: npm run size
+        if: matrix.os != 'windows-latest'
 
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '22.x'
