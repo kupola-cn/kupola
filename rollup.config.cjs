@@ -4,14 +4,36 @@ const nodeResolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const terser = require('@rollup/plugin-terser');
 const babel = require('@rollup/plugin-babel');
+const replace = require('@rollup/plugin-replace');
 
 const terserOptions = {
-  compress: { drop_console: true, drop_debugger: true },
-  mangle: { properties: { regex: /^_/ } },
+  compress: {
+    drop_console: true,
+    drop_debugger: true,
+    pure_funcs: ['console.log', 'console.warn', 'console.error'],
+    passes: 3,
+    hoist_funs: true,
+    hoist_vars: true,
+    inline: true,
+    collapse_vars: true,
+    reduce_vars: true,
+  },
+  mangle: {
+    properties: { regex: /^_/ },
+    toplevel: true,
+    keep_classnames: false,
+    keep_fnames: false,
+  },
 };
 
 function plugins(include, resolveOptions = {}) {
   return [
+    replace({
+      preventAssignment: true,
+      values: {
+        '__DEV__': JSON.stringify(process.env.NODE_ENV !== 'production'),
+      },
+    }),
     nodeResolve({ browser: true, ...resolveOptions }),
     commonjs({ include, requireReturnsDefault: 'auto' }),
     babel({
@@ -51,6 +73,7 @@ const aiAdapterInclude = ['packages/ai-adapter/src/**/*.js'];
 
 const coreEntries = [
   ['packages/core/src/index.js', 'dist/kupola-core'],
+  ['packages/core/src/platform.js', 'dist/kupola-platform'],
   ['packages/core/src/server.js', 'dist/kupola-core-server'],
   ['packages/core/src/directives.js', 'dist/kupola-core-directives'],
   ['packages/core/src/i18n.js', 'dist/kupola-core-i18n'],

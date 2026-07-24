@@ -4,7 +4,9 @@
  * @jest-environment jsdom
  */
 
-import { signal, computed, html, flushJobs, resetScheduler } from '../src/index.js';
+import { signal, computed } from '../src/index.js';
+import { html } from '../src/template.js';
+import { flushJobs, resetScheduler } from '../src/scheduler.js';
 import { renderToString, hydrate } from '../src/server.js';
 
 afterEach(() => {

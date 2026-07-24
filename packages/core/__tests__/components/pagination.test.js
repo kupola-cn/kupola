@@ -4,7 +4,8 @@
  * @jest-environment jsdom
  */
 
-import { html, resetScheduler } from '../../src/index.js';
+import { html } from '../../src/template.js';
+import { resetScheduler } from '../../src/scheduler.js';
 import { Pagination } from '@kupola/components';
 
 afterEach(() => {

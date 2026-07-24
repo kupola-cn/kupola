@@ -5,7 +5,7 @@
  * Reuses the existing `ds-collapse` CSS classes for styling.
  *
  * ```js
- * import { html } from '@kupola/core';
+ * import { html } from '@kupola/core/template';
  * import { Collapse } from '@kupola/components/collapse';
  *
  * const view = Collapse({
@@ -21,8 +21,8 @@
  * @module components/collapse
  */
 
-import { html } from '@kupola/core';
-import { render } from '@kupola/core';
+import { html } from '@kupola/core/template';
+import { render } from '@kupola/core/render';
 import { getIconHtml } from './icon-helper';
 
 /**

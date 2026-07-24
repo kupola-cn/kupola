@@ -4,7 +4,7 @@
  * @jest-environment jsdom
  */
 
-import { resetScheduler } from '../../src/index.js';
+import { resetScheduler } from '../../src/scheduler.js';
 import { Alert } from '@kupola/components';
 
 afterEach(() => {

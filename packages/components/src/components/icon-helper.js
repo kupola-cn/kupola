@@ -1,4 +1,4 @@
-import { html } from '@kupola/core';
+import { html } from '@kupola/core/template';
 import { getIcon } from './icon-config';
 
 const DEFAULT_ICONS = {

@@ -20,8 +20,8 @@
  * @module components/slider
  */
 
-import { html } from '@kupola/core';
-import { render } from '@kupola/core';
+import { html } from '@kupola/core/template';
+import { render } from '@kupola/core/render';
 
 /**
  * Create a Slider component instance.

@@ -15,7 +15,8 @@ import {
   walkAuto,
   walkOnce,
 } from '../src/directives.js';
-import { flushJobs, resetScheduler, signal } from '../src/index.js';
+import { flushJobs, resetScheduler } from '../src/scheduler.js';
+import { signal } from '../src/index.js';
 
 afterEach(() => {
   setHtmlSanitizer(null);

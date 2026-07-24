@@ -5,7 +5,7 @@
  * Reuses the existing `ds-modal-*` CSS classes for styling.
  *
  * ```js
- * import { html } from '@kupola/core';
+ * import { html } from '@kupola/core/template';
  * import { Modal } from '@kupola/components/modal';
  *
  * const view = Modal({ title: 'Hello', width: '480px' }, html`<p>Content</p>`);
@@ -18,8 +18,8 @@
  * @module components/modal
  */
 
-import { html } from '@kupola/core';
-import { render } from '@kupola/core';
+import { html } from '@kupola/core/template';
+import { render } from '@kupola/core/render';
 import { reactive, watch } from '@kupola/core';
 import { getIconHtml } from './icon-helper';
 

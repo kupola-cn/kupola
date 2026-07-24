@@ -4,7 +4,10 @@
  * @jest-environment jsdom
  */
 
-import { signal, computed, effect, batch, html, render, flushJobs, resetScheduler } from '../src/index.js';
+import { signal, computed, effect, batch } from '../src/index.js';
+import { html } from '../src/template.js';
+import { render } from '../src/render.js';
+import { flushJobs, resetScheduler } from '../src/scheduler.js';
 
 afterEach(() => {
   document.body.innerHTML = '';

@@ -4,7 +4,7 @@
  * @jest-environment jsdom
  */
 
-import { resetScheduler } from '../../src/index.js';
+import { resetScheduler } from '../../src/scheduler.js';
 import { TextArea as Textarea } from '@kupola/components';
 
 afterEach(() => {

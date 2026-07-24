@@ -422,35 +422,39 @@ function cacheExpression(key, fn) {
  * @param {Proxy} scope
  * @returns {any}
  */
-function createEvaluationScope(scope, locals) {
-  if (!locals) {return scope;}
-  return new Proxy(scope, {
+function createScopeProxy(baseScope, localStore, getValue, setValue) {
+  return new Proxy(baseScope, {
     get(target, key, receiver) {
-      if (Object.prototype.hasOwnProperty.call(locals, key)) {
-        return locals[key];
+      if (Object.prototype.hasOwnProperty.call(localStore, key)) {
+        return getValue(localStore, key);
       }
       return Reflect.get(target, key, receiver);
     },
     set(target, key, value, receiver) {
-      if (Object.prototype.hasOwnProperty.call(locals, key)) {
-        locals[key] = value;
+      if (Object.prototype.hasOwnProperty.call(localStore, key)) {
+        setValue(localStore, key, value);
         return true;
       }
       return Reflect.set(target, key, value, receiver);
     },
     has(target, key) {
-      return Object.prototype.hasOwnProperty.call(locals, key) || key in target;
+      return Object.prototype.hasOwnProperty.call(localStore, key) || key in target;
     },
     ownKeys(target) {
-      return [ ...new Set([ ...Reflect.ownKeys(target), ...Reflect.ownKeys(locals) ]) ];
+      return [ ...new Set([ ...Reflect.ownKeys(target), ...Reflect.ownKeys(localStore) ]) ];
     },
     getOwnPropertyDescriptor(target, key) {
-      if (Object.prototype.hasOwnProperty.call(locals, key)) {
+      if (Object.prototype.hasOwnProperty.call(localStore, key)) {
         return { enumerable: true, configurable: true };
       }
       return Reflect.getOwnPropertyDescriptor(target, key);
     },
   });
+}
+
+function createEvaluationScope(scope, locals) {
+  if (!locals) {return scope;}
+  return createScopeProxy(scope, locals, (s, k) => s[k], (s, k, v) => { s[k] = v; });
 }
 
 function createLocalScope(scope, locals) {
@@ -459,33 +463,7 @@ function createLocalScope(scope, locals) {
     localSignals[key] = signal(value);
   }
 
-  const proxy = new Proxy(scope, {
-    get(target, key, receiver) {
-      if (Object.prototype.hasOwnProperty.call(localSignals, key)) {
-        return localSignals[key].value;
-      }
-      return Reflect.get(target, key, receiver);
-    },
-    set(target, key, value, receiver) {
-      if (Object.prototype.hasOwnProperty.call(localSignals, key)) {
-        localSignals[key].value = value;
-        return true;
-      }
-      return Reflect.set(target, key, value, receiver);
-    },
-    has(target, key) {
-      return Object.prototype.hasOwnProperty.call(localSignals, key) || key in target;
-    },
-    ownKeys(target) {
-      return [ ...new Set([ ...Reflect.ownKeys(target), ...Reflect.ownKeys(localSignals) ]) ];
-    },
-    getOwnPropertyDescriptor(target, key) {
-      if (Object.prototype.hasOwnProperty.call(localSignals, key)) {
-        return { enumerable: true, configurable: true };
-      }
-      return Reflect.getOwnPropertyDescriptor(target, key);
-    },
-  });
+  const proxy = createScopeProxy(scope, localSignals, (s, k) => s[k].value, (s, k, v) => { s[k].value = v; });
 
   return {
     scope: proxy,
@@ -532,41 +510,26 @@ function isCspEvalError(error) {
 }
 
 function evaluate(expr, scope, locals, meta) {
-  try {
-    let entry = exprCache.get(expr);
-    let fn = entry?.fn;
-    if (!fn) {
-      fn = new Function('__s__', `with(__s__){return(${expr})}`);
-      cacheExpression(expr, fn);
-    } else {
-      entry._lastUsed = Date.now();
-    }
-    return fn(createEvaluationScope(scope, locals));
-  } catch (error) {
-    throw createExpressionError(error, expr, meta);
-  }
+  return _evaluate(expr, scope, locals, meta, true);
 }
 
-/**
- * Evaluate a statement for writing (event handlers, k-model).
- * Supports assignments like `count++` or `active = !active`.
- * Uses `with(scope)` so assignments go through the Proxy's set trap.
- *
- * @param {string} expr
- * @param {Proxy} scope
- */
 function evaluateStatement(expr, scope, locals, meta) {
-  const cacheKey = '$$' + expr;
+  return _evaluate(expr, scope, locals, meta, false);
+}
+
+function _evaluate(expr, scope, locals, meta, isExpression) {
+  const cacheKey = isExpression ? expr : '$$' + expr;
+  const template = isExpression ? `with(__s__){return(${expr})}` : `with(__s__){${expr}}`;
   try {
     let entry = exprCache.get(cacheKey);
     let fn = entry?.fn;
     if (!fn) {
-      fn = new Function('__s__', `with(__s__){${expr}}`);
+      fn = new Function('__s__', template);
       cacheExpression(cacheKey, fn);
     } else {
       entry._lastUsed = Date.now();
     }
-    fn(createEvaluationScope(scope, locals));
+    return fn(createEvaluationScope(scope, locals));
   } catch (error) {
     throw createExpressionError(error, expr, meta);
   }

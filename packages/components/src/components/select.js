@@ -22,8 +22,8 @@
  * @module components/select
  */
 
-import { html } from '@kupola/core';
-import { render } from '@kupola/core';
+import { html } from '@kupola/core/template';
+import { render } from '@kupola/core/render';
 import { t } from '@kupola/core/i18n';
 import { reactive, watch } from '@kupola/core';
 import { getIconHtml } from './icon-helper';

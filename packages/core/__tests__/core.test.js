@@ -3,7 +3,8 @@
  * @kupola/core — Unit tests for the Signal reactivity system.
  */
 
-import { signal, computed, effect, batch, flushJobs, resetScheduler } from '../src/index.js';
+import { signal, computed, effect, batch } from '../src/index.js';
+import { flushJobs, resetScheduler } from '../src/scheduler.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

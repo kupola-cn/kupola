@@ -6,7 +6,11 @@
  * reasonable time limits for production-scale data.
  */
 
-import { signal, computed, effect, flushJobs, resetScheduler } from '../packages/core/src/index.js';
+import { signal, computed, effect } from '../packages/core/src/index.js';
+import { flushJobs, resetScheduler } from '../packages/core/src/scheduler.js';
+import { Table, VirtualList } from '@kupola/components';
+import { renderToString } from '../packages/core/src/server.js';
+import { html } from '../packages/core/src/template.js';
 
 describe('Performance: Signal reactivity', () => {
   afterEach(() => {
@@ -91,8 +95,6 @@ describe('Performance: Signal reactivity', () => {
 
 describe('Performance: VirtualList creation', () => {
   test('VirtualList with 10,000 items creates in < 200ms', () => {
-    const { VirtualList } = require('@kupola/components');
-
     const items = Array.from({ length: 10000 }, (_, i) => ({
       title: `Item ${i + 1}`,
       subtitle: `Description for item ${i + 1}`,
@@ -112,8 +114,6 @@ describe('Performance: VirtualList creation', () => {
   });
 
   test('VirtualList with 100,000 items creates in < 500ms', () => {
-    const { VirtualList } = require('@kupola/components');
-
     const items = Array.from({ length: 100000 }, (_, i) => ({
       title: `Item ${i + 1}`,
     }));
@@ -134,8 +134,6 @@ describe('Performance: VirtualList creation', () => {
 
 describe('Performance: Table component', () => {
   test('Table with 1,000 rows creates in < 500ms', () => {
-    const { Table } = require('@kupola/components');
-
     const data = Array.from({ length: 1000 }, (_, i) => ({
       id: i + 1,
       name: `User ${i + 1}`,
@@ -163,7 +161,6 @@ describe('Performance: Table component', () => {
   });
 
   test('Table with 5,000 rows creates in < 2000ms', () => {
-    const { Table } = require('@kupola/components');
 
     const data = Array.from({ length: 5000 }, (_, i) => ({
       id: i + 1,
@@ -196,10 +193,7 @@ describe('Performance: Table component', () => {
 });
 
 describe('Performance: SSR renderToString', () => {
-  test('renderToString 100 items in < 100ms', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
-    const { html } = await import('../packages/core/src/index.js');
-
+  test('renderToString 100 items in < 100ms', () => {
     const items = Array.from({ length: 100 }, (_, i) => ({
       name: `Item ${i + 1}`,
       value: i * 10,

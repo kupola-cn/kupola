@@ -46,19 +46,32 @@
 const STORAGE_KEY = 'kupola-theme';
 const BRAND_STORAGE_KEY = 'kupola-brand-color';
 const VALID_THEMES = ['light', 'dark'];
+const FALLBACK_BRAND = { id: 'violet', label: 'Violet', color: '#8B5CF6' };
 
-export const DEFAULT_BRAND_COLORS = [
-  { id: 'green', label: 'Green', color: '#22C55E' },
-  { id: 'teal', label: 'Teal', color: '#14B8A6' },
-  { id: 'cyan', label: 'Cyan', color: '#06B6D4' },
-  { id: 'blue', label: 'Blue', color: '#3B82F6' },
-  { id: 'indigo', label: 'Indigo', color: '#6366F1' },
-  { id: 'violet', label: 'Violet', color: '#8B5CF6' },
-  { id: 'rose', label: 'Rose', color: '#F43F5E' },
-  { id: 'orange', label: 'Orange', color: '#F97316' },
-  { id: 'amber', label: 'Amber', color: '#F59E0B' },
-  { id: 'slate', label: 'Slate', color: '#535164' },
-];
+export const DEFAULT_BRAND_COLORS = [];
+
+export function registerBrandColors(colors) {
+  DEFAULT_BRAND_COLORS.push(...colors);
+}
+
+if (__DEV__) {
+  registerBrandColors([
+    { id: 'green', label: 'Green', color: '#22C55E' },
+    { id: 'teal', label: 'Teal', color: '#14B8A6' },
+    { id: 'cyan', label: 'Cyan', color: '#06B6D4' },
+    { id: 'blue', label: 'Blue', color: '#3B82F6' },
+    { id: 'indigo', label: 'Indigo', color: '#6366F1' },
+    { id: 'violet', label: 'Violet', color: '#8B5CF6' },
+    { id: 'rose', label: 'Rose', color: '#F43F5E' },
+    { id: 'orange', label: 'Orange', color: '#F97316' },
+    { id: 'amber', label: 'Amber', color: '#F59E0B' },
+    { id: 'slate', label: 'Slate', color: '#535164' },
+  ]);
+}
+
+function _getDefaultBrand() {
+  return DEFAULT_BRAND_COLORS[0] || FALLBACK_BRAND;
+}
 
 /** @type {Set<(theme: string) => void>} */
 const _listeners = new Set();
@@ -164,7 +177,7 @@ export function resolveBrandColor(value) {
   const preset = DEFAULT_BRAND_COLORS.find(item => item.id === text || item.color.toLowerCase() === text.toLowerCase());
   if (preset) { return { ...preset }; }
 
-  const color = _normalizeHex(text || DEFAULT_BRAND_COLORS[0].color);
+  const color = _normalizeHex(text || _getDefaultBrand().color);
   return { id: 'custom', label: color, color };
 }
 
@@ -183,7 +196,7 @@ export function getPreferredBrandColor() {
       }
     }
   }
-  return resolveBrandColor(DEFAULT_BRAND_COLORS[0]);
+  return resolveBrandColor(_getDefaultBrand());
 }
 
 /**
@@ -216,7 +229,7 @@ export function resetBrandColor() {
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(BRAND_STORAGE_KEY);
   }
-  return setBrandColor(DEFAULT_BRAND_COLORS[0], { persist: false });
+  return setBrandColor(_getDefaultBrand(), { persist: false });
 }
 
 /**
@@ -241,7 +254,7 @@ export function attachBrandColorPicker(trigger, options = {}) {
   }
 
   const {
-    colors = DEFAULT_BRAND_COLORS,
+    colors = DEFAULT_BRAND_COLORS.length > 0 ? DEFAULT_BRAND_COLORS : [_getDefaultBrand()],
     title = 'Brand color',
     custom = true,
     customLabel = '自定义颜色',

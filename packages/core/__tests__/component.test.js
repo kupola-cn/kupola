@@ -4,17 +4,10 @@
  * @jest-environment jsdom
  */
 
-import {
-  signal,
-  html,
-  flushJobs,
-  resetScheduler,
-  defineComponent,
-  register,
-  getComponent,
-  hasComponent,
-  clearRegistry,
-} from '../src/index.js';
+import { signal } from '../src/index.js';
+import { html } from '../src/template.js';
+import { flushJobs, resetScheduler } from '../src/scheduler.js';
+import { defineComponent, register, getComponent, hasComponent, clearRegistry } from '../src/component.js';
 
 afterEach(() => {
   document.body.innerHTML = '';

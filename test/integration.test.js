@@ -3,8 +3,11 @@
  * Integration tests — cross-module scenarios.
  */
 
-import { signal, computed, effect, flushJobs, resetScheduler, html } from '../packages/core/src/index.js';
+import { signal, computed, effect } from '../packages/core/src/index.js';
+import { flushJobs, resetScheduler } from '../packages/core/src/scheduler.js';
+import { html } from '../packages/core/src/template.js';
 import { setLocale, getLocale, t, addMessages } from '../packages/core/src/i18n.js';
+import { renderToString } from '../packages/core/src/server.js';
 
 describe('i18n module', () => {
   afterEach(() => {
@@ -122,7 +125,7 @@ describe('Signal + Effect integration', () => {
 
 describe('SSR + i18n integration', () => {
   test('renderToString works with locale set', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
+    // renderToString already imported at top of file
 
     setLocale('zh-CN');
     const closeText = t('modal.close');
@@ -139,7 +142,7 @@ describe('SSR + i18n integration', () => {
 
 describe('SSR hydration boundary cases', () => {
   test('renderToString handles null/undefined values', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
+    // renderToString already imported at top of file
 
     const tpl = html`<div>${null}</div><div>${undefined}</div>`;
     const result = renderToString(tpl);
@@ -148,7 +151,7 @@ describe('SSR hydration boundary cases', () => {
   });
 
   test('renderToString handles signal values in text', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
+    // renderToString already imported at top of file
 
     const count = signal(42);
     const tpl = html`<span>${count}</span>`;
@@ -158,7 +161,7 @@ describe('SSR hydration boundary cases', () => {
   });
 
   test('renderToString handles signal values in attributes', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
+    // renderToString already imported at top of file
 
     const cls = signal('active');
     const tpl = html`<div class="${cls}"></div>`;
@@ -168,7 +171,7 @@ describe('SSR hydration boundary cases', () => {
   });
 
   test('renderToString handles event handlers (no output)', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
+    // renderToString already imported at top of file
 
     const handler = () => {};
     const tpl = html`<button onclick="${handler}">Click</button>`;
@@ -179,7 +182,7 @@ describe('SSR hydration boundary cases', () => {
   });
 
   test('renderToString escapes HTML entities', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
+    // renderToString already imported at top of file
 
     const dangerous = signal('<script>alert("xss")</script>');
     const tpl = html`<div>${dangerous}</div>`;
@@ -189,7 +192,7 @@ describe('SSR hydration boundary cases', () => {
   });
 
   test('renderToString handles nested templates', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
+    // renderToString already imported at top of file
 
     const inner = html`<em>bold</em>`;
     const tpl = html`<div>${inner}</div>`;
@@ -198,7 +201,7 @@ describe('SSR hydration boundary cases', () => {
   });
 
   test('renderToString handles array of templates', async () => {
-    const { renderToString } = await import('../packages/core/src/server.js');
+    // renderToString already imported at top of file
 
     const items = ['a', 'b', 'c'].map(i => html`<li>${i}</li>`);
     const tpl = html`<ul>${items}</ul>`;

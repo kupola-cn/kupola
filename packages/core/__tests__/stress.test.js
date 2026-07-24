@@ -4,7 +4,8 @@
  * @jest-environment jsdom
  */
 
-import { signal, reactive, effect, flushJobs, resetScheduler } from '../src/index.js';
+import { signal, reactive, effect } from '../src/index.js';
+import { flushJobs, resetScheduler } from '../src/scheduler.js';
 
 afterEach(() => {
   resetScheduler();

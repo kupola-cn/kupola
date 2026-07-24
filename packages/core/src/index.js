@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/core — Public API surface.
+ * @kupola/core — Core reactivity engine (signal + computed + effect + batch).
  *
- * This is the single entry point for the core reactivity engine.
- * Re-exports all public primitives.
+ * This package contains only the essential reactivity primitives.
+ * For full features (rendering, components, directives, theme), use @kupola/platform.
  *
  * @module @kupola/core
  */
@@ -19,57 +19,3 @@ export { effect, watch } from './effect.js';
 
 // ── Batch ────────────────────────────────────────────────────────────────────
 export { batch } from './batch.js';
-
-// ── Template ─────────────────────────────────────────────────────────────────
-export { html, TemplateResult } from './template.js';
-
-// ── Render ───────────────────────────────────────────────────────────────────
-export { render } from './render.js';
-
-// ── SSR (client-side hydrate) ───────────────────────────────────────────────
-export { hydrate } from './server.js';
-
-// ── Component ────────────────────────────────────────────────────────────────
-export { defineComponent, register, getComponent, hasComponent, clearRegistry, provide, inject } from './component.js';
-
-// ── Directives ───────────────────────────────────────────────────────────────
-export {
-  $, $$, walk, walkAuto, walkOnce, getWalk, hasWalk, destroyWalk, defineScope, setHtmlSanitizer,
-} from './directives.js';
-
-// ── Scheduler (advanced / testing) ───────────────────────────────────────────
-export { flushJobs, resetScheduler, nextTick } from './scheduler.js';
-
-// ── i18n ─────────────────────────────────────────────────────────────────────
-export {
-  setLocale, getLocale, t, addMessages, getMessages, getSupportedLocales,
-  formatDate, formatNumber, formatCurrency, formatRelativeTime,
-  isRTL, getDirection, onLocaleChange, localeSignal,
-} from './i18n.js';
-
-// ── Error Boundary ───────────────────────────────────────────────────────────
-export { ErrorBoundary } from './errors.js';
-
-// ── DevTools (profiler) ──────────────────────────────────────────────────────
-export { enableProfiler, disableProfiler, resetProfiler, getProfileReport, printProfileReport } from './devtools.js';
-
-// ── Lazy Load ────────────────────────────────────────────────────────────────
-export { lazyComponent, preloadComponent } from './lazy.js';
-
-// ── Theme (anti-FOUC) ────────────────────────────────────────────────────────
-export {
-  DEFAULT_BRAND_COLORS,
-  themePreload,
-  getPreferredTheme,
-  setTheme,
-  toggleTheme,
-  onThemeChange,
-  getBrandColors,
-  resolveBrandColor,
-  getPreferredBrandColor,
-  setBrandColor,
-  resetBrandColor,
-  onBrandColorChange,
-  attachBrandColorPicker,
-  getThemeInlineScript,
-} from './theme.js';

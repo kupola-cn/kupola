@@ -10,7 +10,14 @@
  */
 
 import { queueJob } from './scheduler.js';
-import { isProfilerEnabled, profileSignalWrite, profileSignalRead } from './devtools.js';
+
+let isProfilerEnabled = () => false;
+let profileSignalWrite = () => {};
+let profileSignalRead = () => {};
+
+if (__DEV__) {
+  ({ isProfilerEnabled, profileSignalWrite, profileSignalRead } = require('./devtools.js'));
+}
 
 // ─── Global dependency-tracking state ────────────────────────────────────────
 

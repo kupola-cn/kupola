@@ -285,6 +285,11 @@
       "import": "./dist/kupola-core-server.esm.js",
       "require": "./dist/kupola-core-server.cjs",
       "types": "./packages/core/src/server.d.ts"
+    },
+    "./platform": {
+      "import": "./dist/kupola-platform.esm.js",
+      "require": "./dist/kupola-platform.cjs",
+      "types": "./packages/core/src/platform.d.ts"
     }
   },
   "scripts": {
@@ -299,7 +304,7 @@
     "lint:directives": "eslint packages/core/src/directives.js packages/core/__tests__/directives.test.js",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "test": "jest",
+    "test": "jest --config jest.config.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "types:check": "tsc -p tsconfig.public-api.json",
@@ -369,6 +374,7 @@
     "@rollup/plugin-babel": "^7.1.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "@size-limit/file": "^12.1.0",
     "@storybook/addon-essentials": "^8.6.14",
@@ -376,6 +382,7 @@
     "@storybook/html": "^8.6.14",
     "@storybook/html-vite": "^8.6.14",
     "clean-css": "^5.3.3",
+    "esbuild-jest": "^0.5.0",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.4.1",

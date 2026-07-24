@@ -20,8 +20,8 @@
  * @module components/alert
  */
 
-import { html } from '@kupola/core';
-import { render } from '@kupola/core';
+import { html } from '@kupola/core/template';
+import { render } from '@kupola/core/render';
 
 /**
  * Create an Alert component instance.

@@ -9,7 +9,13 @@
  */
 
 import { pushEffect, popEffect } from './signal.js';
-import { isProfilerEnabled, profileEffectRun } from './devtools.js';
+
+let isProfilerEnabled = () => false;
+let profileEffectRun = () => {};
+
+if (__DEV__) {
+  ({ isProfilerEnabled, profileEffectRun } = require('./devtools.js'));
+}
 
 /**
  * @typedef {Object} EffectRecord
