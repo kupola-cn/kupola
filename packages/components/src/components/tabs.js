@@ -6,7 +6,7 @@
  *
  * ```js
  * import { html } from '@kupola/core';
- * import { Tabs } from '@kupola/core/components/tabs';
+ * import { Tabs } from '@kupola/components/tabs';
  *
  * const view = Tabs({
  *   tabs: [

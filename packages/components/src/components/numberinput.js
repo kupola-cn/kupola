@@ -5,7 +5,7 @@
  * Reuses the existing `ds-number-input*` CSS classes for styling.
  *
  * ```js
- * import { NumberInput } from '@kupola/core/components/numberinput';
+ * import { NumberInput } from '@kupola/components/numberinput';
  *
  * const view = NumberInput({
  *   min: 0,

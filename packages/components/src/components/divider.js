@@ -5,7 +5,7 @@
  * Reuses the existing `ds-divider*` CSS classes for styling.
  *
  * ```js
- * import { Divider } from '@kupola/core/components/divider';
+ * import { Divider } from '@kupola/components/divider';
  *
  * // Horizontal divider:
  * const h = Divider();

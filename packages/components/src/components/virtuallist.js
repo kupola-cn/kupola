@@ -5,7 +5,7 @@
  * Reuses the existing `ds-virtual-list*` CSS classes for styling.
  *
  * ```js
- * import { VirtualList } from '@kupola/core/components/virtuallist';
+ * import { VirtualList } from '@kupola/components/virtuallist';
  *
  * const items = Array.from({ length: 10000 }, (_, i) => ({
  *   title: `Item ${i + 1}`,

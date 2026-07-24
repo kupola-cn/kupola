@@ -1,11 +1,11 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
- * @kupola/core — Datepicker component built on the 2.0 reactive core.
+ * @kupola/core — Datepicker component built on the 3.0 reactive core.
  *
  * Reuses the existing `ds-datepicker-*` CSS classes for styling.
  *
  * ```js
- * import { Datepicker } from '@kupola/core/components/datepicker';
+ * import { Datepicker } from '@kupola/components/datepicker';
  *
  * const view = Datepicker({
  *   placeholder: 'Select date',
@@ -21,6 +21,7 @@
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
 import { t } from '@kupola/core/i18n';
+import { reactive, watch } from '@kupola/core';
 
 const MONTHS = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
 const WEEKDAYS = [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ];
@@ -53,35 +54,34 @@ export function Datepicker(options = {}) {
   const _MONTHS = t('datepicker.months').split(',');
   const _WEEKDAYS = t('datepicker.weekdays').split(',');
 
-  let _isOpen = false;
-  let _viewYear = new Date().getFullYear();
-  let _viewMonth = new Date().getMonth();
-  let _selectedDate = null;
-  let _lastInstance = null;
+  const now = new Date();
+  const state = reactive({
+    isOpen: false,
+    viewYear: now.getFullYear(),
+    viewMonth: now.getMonth(),
+    selectedDate: null,
+  });
 
-  // Parse initial value
   if (initialValue) {
-    _selectedDate = _parseDate(initialValue);
-    if (_selectedDate) {
-      _viewYear = _selectedDate.getFullYear();
-      _viewMonth = _selectedDate.getMonth();
+    const parsed = _parseDate(initialValue);
+    if (parsed) {
+      state.selectedDate = parsed;
+      state.viewYear = parsed.getFullYear();
+      state.viewMonth = parsed.getMonth();
     }
   }
 
   const _minDate = minDateStr ? _parseDate(minDateStr) : null;
   const _maxDate = maxDateStr ? _parseDate(maxDateStr) : null;
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  let wrapEl = null;
+  let _lastInstance = null;
 
   function _parseDate(str) {
     if (!str) {return null;}
-    // Try YYYY-MM-DD first
     let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (m) {return new Date(+m[1], +m[2] - 1, +m[3]);}
-    // Try MM/DD/YYYY
     m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (m) {return new Date(+m[3], +m[1] - 1, +m[2]);}
-    // Try DD/MM/YYYY
     m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
     if (m) {return new Date(+m[3], +m[2] - 1, +m[1]);}
     return null;
@@ -107,10 +107,10 @@ export function Datepicker(options = {}) {
   }
 
   function _isSelected(date) {
-    if (!_selectedDate) {return false;}
-    return date.getFullYear() === _selectedDate.getFullYear()
-      && date.getMonth() === _selectedDate.getMonth()
-      && date.getDate() === _selectedDate.getDate();
+    if (!state.selectedDate) {return false;}
+    return date.getFullYear() === state.selectedDate.getFullYear()
+      && date.getMonth() === state.selectedDate.getMonth()
+      && date.getDate() === state.selectedDate.getDate();
   }
 
   function _isDisabled(date) {
@@ -124,19 +124,17 @@ export function Datepicker(options = {}) {
   }
 
   function _getCalendarDays() {
-    const daysInMonth = _getDaysInMonth(_viewYear, _viewMonth);
-    const firstDay = new Date(_viewYear, _viewMonth, 1);
-    // Calculate offset from weekStart
-    let startDow = firstDay.getDay(); // 0=Sun
+    const daysInMonth = _getDaysInMonth(state.viewYear, state.viewMonth);
+    const firstDay = new Date(state.viewYear, state.viewMonth, 1);
+    let startDow = firstDay.getDay();
     if (weekStart === 1) {
-      startDow = startDow === 0 ? 6 : startDow - 1; // Convert to Mon=0
+      startDow = startDow === 0 ? 6 : startDow - 1;
     }
 
     const days = [];
 
-    // Previous month days
-    const prevMonth = _viewMonth === 0 ? 11 : _viewMonth - 1;
-    const prevYear = _viewMonth === 0 ? _viewYear - 1 : _viewYear;
+    const prevMonth = state.viewMonth === 0 ? 11 : state.viewMonth - 1;
+    const prevYear = state.viewMonth === 0 ? state.viewYear - 1 : state.viewYear;
     const daysInPrevMonth = _getDaysInMonth(prevYear, prevMonth);
     for (let i = startDow - 1; i >= 0; i--) {
       days.push({
@@ -145,19 +143,17 @@ export function Datepicker(options = {}) {
       });
     }
 
-    // Current month days
     for (let d = 1; d <= daysInMonth; d++) {
       days.push({
-        date: new Date(_viewYear, _viewMonth, d),
+        date: new Date(state.viewYear, state.viewMonth, d),
         outside: false,
       });
     }
 
-    // Next month days to fill last row
     const remaining = 7 - (days.length % 7);
     if (remaining < 7) {
-      const nextMonth = _viewMonth === 11 ? 0 : _viewMonth + 1;
-      const nextYear = _viewMonth === 11 ? _viewYear + 1 : _viewYear;
+      const nextMonth = state.viewMonth === 11 ? 0 : state.viewMonth + 1;
+      const nextYear = state.viewMonth === 11 ? state.viewYear + 1 : state.viewYear;
       for (let d = 1; d <= remaining; d++) {
         days.push({
           date: new Date(nextYear, nextMonth, d),
@@ -172,32 +168,34 @@ export function Datepicker(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
-    if (_isOpen) {return;}
-    _isOpen = true;
+    state.isOpen = true;
     const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
     if (calEl) {calEl.style.display = 'block';}
   }
 
   function close() {
-    if (!_isOpen) {return;}
-    _isOpen = false;
+    state.isOpen = false;
     const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
     if (calEl) {calEl.style.display = 'none';}
   }
 
   function toggle() {
-    _isOpen ? close() : open();
+    if (state.isOpen) {
+      close();
+    } else {
+      open();
+    }
   }
 
   function getValue() {
-    return _selectedDate ? _formatDate(_selectedDate) : '';
+    return state.selectedDate ? _formatDate(state.selectedDate) : '';
   }
 
   function setValue(val) {
-    _selectedDate = _parseDate(val);
-    if (_selectedDate) {
-      _viewYear = _selectedDate.getFullYear();
-      _viewMonth = _selectedDate.getMonth();
+    state.selectedDate = _parseDate(val);
+    if (state.selectedDate) {
+      state.viewYear = state.selectedDate.getFullYear();
+      state.viewMonth = state.selectedDate.getMonth();
     }
     _updateInput();
     _rerenderCalendar();
@@ -207,9 +205,9 @@ export function Datepicker(options = {}) {
 
   function _selectDate(date) {
     if (_isDisabled(date)) {return;}
-    _selectedDate = date;
-    _viewYear = date.getFullYear();
-    _viewMonth = date.getMonth();
+    state.selectedDate = date;
+    state.viewYear = date.getFullYear();
+    state.viewMonth = date.getMonth();
     _updateInput();
     _rerenderCalendar();
     close();
@@ -221,26 +219,26 @@ export function Datepicker(options = {}) {
   function _updateInput() {
     const inputEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__input') : null;
     if (inputEl) {
-      inputEl.value = _selectedDate ? _formatDate(_selectedDate) : '';
+      inputEl.value = state.selectedDate ? _formatDate(state.selectedDate) : '';
     }
   }
 
   function _prevMonth() {
-    if (_viewMonth === 0) {
-      _viewMonth = 11;
-      _viewYear--;
+    if (state.viewMonth === 0) {
+      state.viewMonth = 11;
+      state.viewYear--;
     } else {
-      _viewMonth--;
+      state.viewMonth--;
     }
     _rerenderCalendar();
   }
 
   function _nextMonth() {
-    if (_viewMonth === 11) {
-      _viewMonth = 0;
-      _viewYear++;
+    if (state.viewMonth === 11) {
+      state.viewMonth = 0;
+      state.viewYear++;
     } else {
-      _viewMonth++;
+      state.viewMonth++;
     }
     _rerenderCalendar();
   }
@@ -249,13 +247,11 @@ export function Datepicker(options = {}) {
     const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
     if (!calEl) {return;}
 
-    // Update title
     const titleEl = calEl.querySelector('.ds-datepicker__title');
     if (titleEl) {
-      titleEl.textContent = `${_MONTHS[_viewMonth]} ${_viewYear}`;
+      titleEl.textContent = `${_MONTHS[state.viewMonth]} ${state.viewYear}`;
     }
 
-    // Update days grid
     const daysEl = calEl.querySelector('.ds-datepicker__days');
     if (!daysEl) {return;}
     daysEl.innerHTML = '';
@@ -293,7 +289,7 @@ export function Datepicker(options = {}) {
   };
 
   const onDocumentClick = (e) => {
-    if (!_isOpen) {return;}
+    if (!state.isOpen) {return;}
     if (wrapEl && !wrapEl.contains(e.target)) {
       close();
     }
@@ -301,7 +297,7 @@ export function Datepicker(options = {}) {
   document.addEventListener('click', onDocumentClick);
 
   const onKeydown = (e) => {
-    if (e.key === 'Escape' && _isOpen) {
+    if (e.key === 'Escape' && state.isOpen) {
       close();
     }
   };
@@ -309,26 +305,14 @@ export function Datepicker(options = {}) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const displayValue = _selectedDate ? _formatDate(_selectedDate) : '';
-  const titleText = `${_MONTHS[_viewMonth]} ${_viewYear}`;
+  const displayValue = state.selectedDate ? _formatDate(state.selectedDate) : '';
+  const titleText = `${_MONTHS[state.viewMonth]} ${state.viewYear}`;
 
-  // Adjusted weekday labels based on weekStart
-  const adjustedWeekdays = [];
-  for (let i = 0; i < 7; i++) {
-    const idx = weekStart === 1 ? i : (i + weekStart) % 7;
-    // weekStart=1 → Mo Tu We Th Fr Sa Su
-    // weekStart=0 → Su Mo Tu We Th Fr Sa
-    adjustedWeekdays.push(WEEKDAYS[weekStart === 1 ? i : (i + 6) % 7]);
-  }
-  // Simplify: just use the standard order based on weekStart
   const wdLabels = weekStart === 1
     ? _WEEKDAYS
     : [ _WEEKDAYS[6], ..._WEEKDAYS.slice(0, 6) ];
 
   const weekdaySpans = wdLabels.map((d) => html`<span>${d}</span>`);
-
-  // Initial days (will be replaced by _rerenderCalendar)
-  const initialDays = [];
 
   const tpl = html`
     <div class="ds-datepicker">
@@ -362,10 +346,16 @@ export function Datepicker(options = {}) {
   const container = document.createDocumentFragment();
   _lastInstance = render(tpl, container);
 
-  const wrapEl = container.querySelector('.ds-datepicker');
+  wrapEl = container.querySelector('.ds-datepicker');
 
-  // Render initial days
   _rerenderCalendar();
+
+  watch(() => state.isOpen, (isOpen) => {
+    const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
+    if (calEl) {
+      calEl.style.display = isOpen ? 'block' : 'none';
+    }
+  });
 
   return {
     get element() { return container; },

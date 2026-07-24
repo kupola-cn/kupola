@@ -6,7 +6,7 @@
  * async validation, and form state management.
  *
  * ```js
- * import { Validation } from '@kupola/core/components/validation';
+ * import { Validation } from '@kupola/components/validation';
  *
  * const v = Validation();
  *

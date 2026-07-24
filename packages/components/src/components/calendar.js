@@ -5,7 +5,7 @@
  * Full-featured calendar with month/week views, date selection, range mode, and events.
  *
  * ```js
- * import { Calendar } from '@kupola/core/components/calendar';
+ * import { Calendar } from '@kupola/components/calendar';
  *
  * const cal = Calendar({
  *   selectedDate: new Date(2024, 5, 15),

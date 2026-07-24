@@ -5,7 +5,7 @@
  * Reuses the existing `ds-countdown*` CSS classes for styling.
  *
  * ```js
- * import { Countdown } from '@kupola/core/components/countdown';
+ * import { Countdown } from '@kupola/components/countdown';
  *
  * const view = Countdown({
  *   target: Date.now() + 60000,  // 1 minute from now

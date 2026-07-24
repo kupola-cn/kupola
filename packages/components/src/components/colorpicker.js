@@ -5,7 +5,7 @@
  * Reuses the existing `ds-color-picker*` CSS classes for styling.
  *
  * ```js
- * import { ColorPicker } from '@kupola/core/components/colorpicker';
+ * import { ColorPicker } from '@kupola/components/colorpicker';
  *
  * const view = ColorPicker({
  *   value: '#3b82f6',

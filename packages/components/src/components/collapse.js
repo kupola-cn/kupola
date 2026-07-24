@@ -6,7 +6,7 @@
  *
  * ```js
  * import { html } from '@kupola/core';
- * import { Collapse } from '@kupola/core/components/collapse';
+ * import { Collapse } from '@kupola/components/collapse';
  *
  * const view = Collapse({
  *   items: [

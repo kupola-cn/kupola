@@ -1,11 +1,11 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
- * @kupola/core — Dropdown component built on the 2.0 reactive core.
+ * @kupola/core — Dropdown component built on the 3.0 reactive core.
  *
  * Reuses the existing `ds-dropdown-*` CSS classes for styling.
  *
  * ```js
- * import { Dropdown } from '@kupola/core/components/dropdown';
+ * import { Dropdown } from '@kupola/components/dropdown';
  *
  * const view = Dropdown({
  *   items: [{ value: 'a', text: 'Option A' }, { value: 'b', text: 'Option B' }],
@@ -19,6 +19,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { reactive, watch } from '@kupola/core';
 
 /**
  * Create a Dropdown component instance.
@@ -40,29 +41,37 @@ export function Dropdown(options = {}) {
     placeholder = 'Select...',
   } = options;
 
-  let _isOpen = false;
-  let _focusIndex = -1;
+  const state = reactive({
+    isOpen: false,
+    focusIndex: -1,
+  });
+
+  let wrapperEl = null;
+  let menuEl = null;
+  let triggerEl = null;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
-    if (_isOpen) {return;}
-    _isOpen = true;
+    state.isOpen = true;
     if (menuEl) {menuEl.classList.add('is-open');}
     if (triggerEl) {triggerEl.setAttribute('aria-expanded', 'true');}
   }
 
   function close() {
-    if (!_isOpen) {return;}
-    _isOpen = false;
-    _focusIndex = -1;
+    state.isOpen = false;
+    state.focusIndex = -1;
+    _clearFocus();
     if (menuEl) {menuEl.classList.remove('is-open');}
     if (triggerEl) {triggerEl.setAttribute('aria-expanded', 'false');}
-    _clearFocus();
   }
 
   function toggle() {
-    _isOpen ? close() : open();
+    if (state.isOpen) {
+      close();
+    } else {
+      open();
+    }
   }
 
   // ── Focus management ───────────────────────────────────────────────────────
@@ -78,8 +87,8 @@ export function Dropdown(options = {}) {
     const items_ = menuEl.querySelectorAll('.ds-dropdown__item');
     if (items_.length === 0) {return;}
     _clearFocus();
-    _focusIndex = ((idx % items_.length) + items_.length) % items_.length;
-    items_[_focusIndex].classList.add('is-focused');
+    state.focusIndex = ((idx % items_.length) + items_.length) % items_.length;
+    items_[state.focusIndex].classList.add('is-focused');
   }
 
   // ── Item selection ─────────────────────────────────────────────────────────
@@ -97,7 +106,6 @@ export function Dropdown(options = {}) {
 
   // ── Event handlers ─────────────────────────────────────────────────────────
 
-  // Trigger click
   const onTriggerClick = (e) => {
     e.stopPropagation();
     if (trigger === 'click') {
@@ -105,33 +113,30 @@ export function Dropdown(options = {}) {
     }
   };
 
-  // Item click
   const onItemClick = (idx) => (e) => {
     e.stopPropagation();
     _selectItem(idx);
   };
 
-  // Click outside
   const onDocumentClick = (e) => {
-    if (!_isOpen) {return;}
+    if (!state.isOpen) {return;}
     if (wrapperEl && !wrapperEl.contains(e.target)) {
       close();
     }
   };
   document.addEventListener('click', onDocumentClick);
 
-  // Keyboard navigation
   const onKeydown = (e) => {
-    if (!_isOpen) {return;}
+    if (!state.isOpen) {return;}
 
     switch (e.key) {
     case 'ArrowDown':
       e.preventDefault();
-      _setFocus(_focusIndex + 1);
+      _setFocus(state.focusIndex + 1);
       break;
     case 'ArrowUp':
       e.preventDefault();
-      _setFocus(_focusIndex - 1);
+      _setFocus(state.focusIndex - 1);
       break;
     case 'Home':
       e.preventDefault();
@@ -143,7 +148,7 @@ export function Dropdown(options = {}) {
       break;
     case 'Enter':
       e.preventDefault();
-      if (_focusIndex >= 0) {_selectItem(_focusIndex);}
+      if (state.focusIndex >= 0) {_selectItem(state.focusIndex);}
       break;
     case 'Escape':
     case 'Tab':
@@ -176,18 +181,29 @@ export function Dropdown(options = {}) {
   const container = document.createDocumentFragment();
   const instance = render(tpl, container);
 
-  // Grab references to key elements
-  const wrapperEl = container.querySelector('.ds-dropdown');
-  const menuEl = container.querySelector('.ds-dropdown__menu');
-  const triggerEl = container.querySelector('.ds-dropdown__trigger');
+  wrapperEl = container.querySelector('.ds-dropdown');
+  menuEl = container.querySelector('.ds-dropdown__menu');
+  triggerEl = container.querySelector('.ds-dropdown__trigger');
 
-  // Bind item click handlers (after render, directly on DOM)
   if (menuEl) {
     const itemEls = menuEl.querySelectorAll('.ds-dropdown__item');
     itemEls.forEach((el, i) => {
       el.addEventListener('click', onItemClick(i));
     });
   }
+
+  watch(() => state.isOpen, (isOpen) => {
+    if (menuEl) {
+      if (isOpen) {
+        menuEl.classList.add('is-open');
+      } else {
+        menuEl.classList.remove('is-open');
+      }
+    }
+    if (triggerEl) {
+      triggerEl.setAttribute('aria-expanded', String(isOpen));
+    }
+  });
 
   return {
     get element() { return container; },

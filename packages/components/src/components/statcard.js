@@ -5,7 +5,7 @@
  * Reuses the existing `ds-statcard*` CSS classes for styling.
  *
  * ```js
- * import { Statcard } from '@kupola/core/components/statcard';
+ * import { Statcard } from '@kupola/components/statcard';
  *
  * const view = Statcard({
  *   title: 'Revenue',

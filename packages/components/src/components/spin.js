@@ -5,7 +5,7 @@
  * Reuses the existing `ds-spin-*` CSS classes for styling.
  *
  * ```js
- * import { Spin } from '@kupola/core/components/spin';
+ * import { Spin } from '@kupola/components/spin';
  *
  * const view = Spin({ text: 'Loading...', size: 'lg' });
  * container.appendChild(view.element);

@@ -1,12 +1,12 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
- * @kupola/core — Modal component built on the 2.0 reactive core.
+ * @kupola/core — Modal component built on the 3.0 reactive core.
  *
  * Reuses the existing `ds-modal-*` CSS classes for styling.
  *
  * ```js
  * import { html } from '@kupola/core';
- * import { Modal } from '@kupola/core/components/modal';
+ * import { Modal } from '@kupola/components/modal';
  *
  * const view = Modal({ title: 'Hello', width: '480px' }, html`<p>Content</p>`);
  * container.appendChild(view.element);
@@ -18,9 +18,9 @@
  * @module components/modal
  */
 
-import { signal } from '@kupola/core';
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { reactive, watch } from '@kupola/core';
 
 /**
  * Create a Modal component instance.
@@ -41,43 +41,50 @@ export function Modal(options = {}, children = null) {
     escClose = true,
   } = options;
 
-  let _isOpen = false;
+  const state = reactive({
+    isOpen: false,
+  });
+
+  let maskEl = null;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
-    if (_isOpen) {return;}
-    _isOpen = true;
-    if (maskEl) {maskEl.classList.add('is-visible');}
-    document.body.style.overflow = 'hidden';
-    // Focus management: focus the dialog element
-    const dialogEl = maskEl?.querySelector('.ds-modal');
-    if (dialogEl) {dialogEl.focus();}
+    state.isOpen = true;
+    if (maskEl) {
+      maskEl.classList.add('is-visible');
+      document.body.style.overflow = 'hidden';
+      const dialogEl = maskEl.querySelector('.ds-modal');
+      if (dialogEl) {dialogEl.focus();}
+    }
   }
 
   function close() {
-    if (!_isOpen) {return;}
-    _isOpen = false;
-    if (maskEl) {maskEl.classList.remove('is-visible');}
-    document.body.style.overflow = '';
+    state.isOpen = false;
+    if (maskEl) {
+      maskEl.classList.remove('is-visible');
+      document.body.style.overflow = '';
+    }
   }
 
   function toggle() {
-    _isOpen ? close() : open();
+    if (state.isOpen) {
+      close();
+    } else {
+      open();
+    }
   }
 
   // ── Event handlers ─────────────────────────────────────────────────────────
 
-  /** Focus trap: keep Tab within the dialog when open. */
   const FOCUSABLE = 'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
   const onKeydown = (e) => {
-    if (!_isOpen) {return;}
+    if (!state.isOpen) {return;}
     if (escClose && e.key === 'Escape') {
       close();
       return;
     }
-    // Focus trap
     if (e.key === 'Tab' && maskEl) {
       const dialogEl = maskEl.querySelector('.ds-modal');
       if (!dialogEl) {return;}
@@ -123,10 +130,22 @@ export function Modal(options = {}, children = null) {
   const container = document.createDocumentFragment();
   const instance = render(tpl, container);
 
-  // Grab reference to the mask element (first child of the fragment)
-  const maskEl = container.querySelector
+  maskEl = container.querySelector
     ? container.querySelector('.ds-modal-mask')
     : container.firstChild;
+
+  watch(() => state.isOpen, (isOpen) => {
+    if (!maskEl) return;
+    if (isOpen) {
+      maskEl.classList.add('is-visible');
+      document.body.style.overflow = 'hidden';
+      const dialogEl = maskEl.querySelector('.ds-modal');
+      if (dialogEl) {dialogEl.focus();}
+    } else {
+      maskEl.classList.remove('is-visible');
+      document.body.style.overflow = '';
+    }
+  });
 
   return {
     get element() { return container; },

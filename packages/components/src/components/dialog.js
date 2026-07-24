@@ -6,7 +6,7 @@
  * Reuses the existing `ds-modal-mask` + `ds-dialog-*` CSS classes.
  *
  * ```js
- * import { Dialog } from '@kupola/core/components/dialog';
+ * import { Dialog } from '@kupola/components/dialog';
  *
  * const ok = await Dialog.confirm({
  *   title: 'Delete item?',

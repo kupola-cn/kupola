@@ -5,7 +5,7 @@
  * Reuses the existing `ds-dynamic-tags*` CSS classes for styling.
  *
  * ```js
- * import { DynamicTags } from '@kupola/core/components/dynamictags';
+ * import { DynamicTags } from '@kupola/components/dynamictags';
  *
  * const view = DynamicTags({
  *   tags: ['JavaScript', 'TypeScript'],

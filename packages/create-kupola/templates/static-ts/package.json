@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@kupola/kupola": "^2.0.0-beta.6"
+    "@kupola/kupola": "^3.0.0"
   },
   "devDependencies": {
     "typescript": "^5.5.0",

@@ -5,7 +5,7 @@
  * Reuses the existing `ds-image-preview*` CSS classes for styling.
  *
  * ```js
- * import { ImagePreview } from '@kupola/core/components/imagepreview';
+ * import { ImagePreview } from '@kupola/components/imagepreview';
  *
  * const view = ImagePreview({
  *   images: [

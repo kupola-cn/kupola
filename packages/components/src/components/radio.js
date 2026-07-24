@@ -5,7 +5,7 @@
  * Reuses the existing `ds-radio*` CSS classes for styling.
  *
  * ```js
- * import { Radio } from '@kupola/core/components/radio';
+ * import { Radio } from '@kupola/components/radio';
  *
  * const view = Radio({
  *   name: 'color',

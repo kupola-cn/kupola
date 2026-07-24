@@ -5,7 +5,7 @@
  * Reuses the existing `ds-kbd*` CSS classes for styling.
  *
  * ```js
- * import { Kbd } from '@kupola/core/components/kbd';
+ * import { Kbd } from '@kupola/components/kbd';
  *
  * const view = Kbd({ key: 'Ctrl+S', size: 'sm' });
  * container.appendChild(view.element);

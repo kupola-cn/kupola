@@ -5,7 +5,7 @@
  * Reuses the existing `ds-fileupload*` CSS classes for styling.
  *
  * ```js
- * import { FileUpload } from '@kupola/core/components/fileupload';
+ * import { FileUpload } from '@kupola/components/fileupload';
  *
  * const view = FileUpload({
  *   accept: '.png,.jpg',

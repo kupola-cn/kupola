@@ -5,7 +5,7 @@
  * Reuses the existing `ds-badge-*` CSS classes for styling.
  *
  * ```js
- * import { Badge } from '@kupola/core/components/badge';
+ * import { Badge } from '@kupola/components/badge';
  *
  * const view = Badge({ value: 5, type: 'error' });
  * container.appendChild(view.element);

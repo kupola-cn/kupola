@@ -5,7 +5,7 @@
  * Reuses the existing `ds-textarea` CSS class for styling.
  *
  * ```js
- * import { Textarea } from '@kupola/core/components/textarea';
+ * import { Textarea } from '@kupola/components/textarea';
  *
  * const view = Textarea({
  *   placeholder: 'Enter description...',

@@ -5,7 +5,7 @@
  * Reuses the existing `ds-breadcrumb*` CSS classes for styling.
  *
  * ```js
- * import { Breadcrumb } from '@kupola/core/components/breadcrumb';
+ * import { Breadcrumb } from '@kupola/components/breadcrumb';
  *
  * const view = Breadcrumb({
  *   items: [

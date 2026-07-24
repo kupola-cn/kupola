@@ -5,7 +5,7 @@
  * Reuses the existing `ds-timepicker*` CSS classes for styling.
  *
  * ```js
- * import { Timepicker } from '@kupola/core/components/timepicker';
+ * import { Timepicker } from '@kupola/components/timepicker';
  *
  * const view = Timepicker({
  *   value: '14:30',

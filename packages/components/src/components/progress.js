@@ -5,7 +5,7 @@
  * Reuses the existing `ds-progress-*` CSS classes for styling.
  *
  * ```js
- * import { Progress } from '@kupola/core/components/progress';
+ * import { Progress } from '@kupola/components/progress';
  *
  * const view = Progress({
  *   percent: 60,

@@ -5,7 +5,7 @@
  * Reuses the existing `ds-slider*` CSS classes for styling.
  *
  * ```js
- * import { Slider } from '@kupola/core/components/slider';
+ * import { Slider } from '@kupola/components/slider';
  *
  * const view = Slider({
  *   label: 'Volume',

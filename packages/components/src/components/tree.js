@@ -5,7 +5,7 @@
  * Reuses the existing `ds-tree*` CSS classes for styling.
  *
  * ```js
- * import { Tree } from '@kupola/core/components/tree';
+ * import { Tree } from '@kupola/components/tree';
  *
  * const view = Tree({
  *   data: [

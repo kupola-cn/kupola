@@ -19,6 +19,8 @@
  *   dash.mount(document.getElementById('dashboard'));
  */
 
+import { reactive, watch } from '@kupola/core';
+
 export class AIDashboard {
   /**
    * @param {import('./ai-adapter.js').AIAdapter} adapter
@@ -52,7 +54,7 @@ export class AIDashboard {
    * @param {string} [config.icon]      — emoji icon
    */
   addCard(name, queryType, config = {}) {
-    this.cards.set(name, {
+    const cardState = reactive({
       name,
       queryType,
       label: config.label || name,
@@ -62,6 +64,8 @@ export class AIDashboard {
       lastData: null,
       lastError: null,
     });
+
+    this.cards.set(name, cardState);
     return this;
   }
 
@@ -86,7 +90,12 @@ export class AIDashboard {
     parent.appendChild(this._container);
     this._renderAll();
 
-    // Subscribe to result events for live update
+    for (const [name, card] of this.cards) {
+      watch(() => ({ data: card.lastData, error: card.lastError }), () => {
+        this._renderCard(name);
+      });
+    }
+
     const unsub = this.adapter.bus.on('result', ({ command, result }) => {
       if (command.engine === 'query') {
         for (const [name, card] of this.cards) {
@@ -98,7 +107,6 @@ export class AIDashboard {
     });
     this._unsubscribers.push(unsub);
 
-    // Auto-refresh
     if (this.options.refreshInterval > 0) {
       this._timer = setInterval(() => this.refreshAll(), this.options.refreshInterval);
     }
@@ -120,7 +128,7 @@ export class AIDashboard {
       this._updateCard(name, result);
     } catch (err) {
       card.lastError = err.message;
-      this._renderCard(name);
+      card.lastData = null;
     }
   }
 
@@ -203,7 +211,6 @@ export class AIDashboard {
       }
     }
 
-    // Default: show summary or data count
     if (data.summary) return data.summary;
     if (Array.isArray(data.data)) return data.data.length;
     return '—';
@@ -215,13 +222,11 @@ export class AIDashboard {
     const rows = table.rows.slice(0, maxRows);
 
     let html = '<div style="margin-top:12px;overflow-x:auto;"><table style="width:100%;font-size:12px;border-collapse:collapse;">';
-    // Header
     html += '<tr>';
     for (const col of table.columns) {
       html += `<th style="text-align:left;padding:4px 8px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:500;">${_esc(col.title)}</th>`;
     }
     html += '</tr>';
-    // Rows
     for (const row of rows) {
       html += '<tr>';
       for (const col of table.columns) {
@@ -245,8 +250,8 @@ export class AIDashboard {
       card.lastError = null;
     } else {
       card.lastError = result.error || 'Query failed';
+      card.lastData = null;
     }
-    this._renderCard(name);
   }
 }
 

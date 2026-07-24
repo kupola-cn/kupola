@@ -23,6 +23,8 @@
  *   panel.open();
  */
 
+import { signal, effect } from '@kupola/core';
+
 export class AIPanel {
   /**
    * @param {import('./ai-adapter.js').AIAdapter} adapter
@@ -57,7 +59,8 @@ export class AIPanel {
     this._progressEl = null;
     this._timelineEl = null;
     this._unsubscribers = [];
-    this._isOpen = false;
+    this._isOpen = signal(false);
+    this._messages = signal([]);
     this._resultViewerEl = null;
     this._currentResultView = null;
     this._resultKeydownHandler = (e) => {
@@ -83,7 +86,6 @@ export class AIPanel {
     this._container.style.display = 'none';
     this._container.innerHTML = this._buildHTML();
 
-    // Cache DOM refs
     this._messagesEl = this._container.querySelector('.ds-ai-messages');
     this._inputEl = this._container.querySelector('.ds-ai-input');
     this._sendBtn = this._container.querySelector('.ds-ai-send-btn');
@@ -92,7 +94,6 @@ export class AIPanel {
     this._headerCloseBtn = this._container.querySelector('.ds-ai-close-btn');
     this._headerMinBtn = this._container.querySelector('.ds-ai-min-btn');
 
-    // Bind events
     this._sendBtn.addEventListener('click', () => this._handleSend());
     this._inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -105,36 +106,59 @@ export class AIPanel {
 
     parent.appendChild(this._container);
 
-    // Subscribe to adapter events
     this._subscribeEvents();
 
-    // Render existing messages
-    this._renderExistingMessages();
+    this._messages.value = this.adapter.getMessages().map(m => ({
+      role: m.role,
+      text: m.text,
+      actions: null,
+    }));
+
+    effect(() => {
+      this._renderMessages();
+    });
+
+    effect(() => {
+      if (!this._container) return;
+      const isOpen = this._isOpen.value;
+      this._container.style.display = isOpen ? 'flex' : 'none';
+      if (isOpen) {
+        this._container.classList.add('is-visible');
+        this._scrollToBottom();
+        this._inputEl.focus();
+      } else {
+        this._container.classList.remove('is-visible');
+      }
+    });
 
     return this;
   }
 
   /** Show the panel. */
   open() {
+    this._isOpen.value = true;
     if (!this._container) return;
     this._container.style.display = 'flex';
     this._container.classList.add('is-visible');
-    this._isOpen = true;
     this._scrollToBottom();
-    this._inputEl.focus();
+    if (this._inputEl) {this._inputEl.focus();}
   }
 
   /** Hide the panel. */
   close() {
+    this._isOpen.value = false;
     if (!this._container) return;
-    this._container.classList.remove('is-visible');
     this._container.style.display = 'none';
-    this._isOpen = false;
+    this._container.classList.remove('is-visible');
   }
 
   /** Toggle visibility. */
   toggle() {
-    this._isOpen ? this.close() : this.open();
+    if (this._isOpen.value) {
+      this.close();
+    } else {
+      this.open();
+    }
   }
 
   /** Destroy the panel and clean up listeners. */
@@ -148,12 +172,13 @@ export class AIPanel {
     this._container = null;
     this._messagesEl = null;
     this._inputEl = null;
-    this._isOpen = false;
+    this._isOpen.value = false;
   }
 
   /** Programmatically add a message to the panel. */
   addMessage(role, text, actions = null) {
-    this._appendMessage(role, text, actions);
+    this._messages.value = [...this._messages.value, { role, text, actions }];
+    this._renderMessages();
   }
 
   // ── Private ────────────────────────────────────────────
@@ -188,28 +213,32 @@ export class AIPanel {
   _subscribeEvents() {
     const bus = this.adapter.bus;
 
-    // New messages
     const unsubResult = bus.on('result', ({ command, result }) => {
       const msg = this.adapter.getMessages().pop();
       if (msg) {
-        this._appendMessage(msg.role, msg.text, this._buildResultActions(command, result));
+        this._messages.value = [...this._messages.value, {
+          role: msg.role,
+          text: msg.text,
+          actions: this._buildResultActions(command, result),
+        }];
       }
 
-      // Show quick actions if there's a suggestion
       if (result && result.suggestion && result.suggestion.suggest) {
-        this._appendMessage('suggestion', result.suggestion.message, [
-          { label: '创建流程', action: () => this._handleSend(`创建流程 ${command.type}`) },
-          { label: '忽略', action: () => {} },
-        ]);
+        this._messages.value = [...this._messages.value, {
+          role: 'suggestion',
+          text: result.suggestion.message,
+          actions: [
+            { label: '创建流程', action: () => this._handleSend(`创建流程 ${command.type}`) },
+            { label: '忽略', action: () => {} },
+          ],
+        }];
       }
     });
 
-    // Flow step events → timeline
     const unsubFlowStep = bus.on('flow:step', ({ step, label, status }) => {
       this._updateTimeline(step, label, status);
     });
 
-    // Flow complete → hide timeline after delay
     const unsubFlowComplete = bus.on('flow:complete', () => {
       setTimeout(() => { this._timelineEl.classList.remove('is-visible'); }, 3000);
     });
@@ -217,10 +246,38 @@ export class AIPanel {
     this._unsubscribers.push(unsubResult, unsubFlowStep, unsubFlowComplete);
   }
 
-  _renderExistingMessages() {
-    for (const msg of this.adapter.getMessages()) {
-      this._appendMessage(msg.role, msg.text);
+  _renderMessages() {
+    if (!this._messagesEl) return;
+
+    this._messagesEl.innerHTML = '';
+    for (const msg of this._messages.value) {
+      const div = document.createElement('div');
+      div.className = `ds-ai-msg ds-ai-msg-${msg.role}`;
+      div.innerHTML = _renderText(msg.text);
+
+      if (this.options.showTimestamp) {
+        const ts = document.createElement('span');
+        ts.className = 'ds-ai-ts';
+        ts.textContent = new Date().toLocaleTimeString();
+        div.appendChild(ts);
+      }
+
+      if (msg.actions && msg.actions.length > 0) {
+        const btnGroup = document.createElement('div');
+        btnGroup.className = 'ds-ai-actions';
+        for (const act of msg.actions) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = act.label;
+          btn.addEventListener('click', () => act.action());
+          btnGroup.appendChild(btn);
+        }
+        div.appendChild(btnGroup);
+      }
+
+      this._messagesEl.appendChild(div);
     }
+    this._scrollToBottom();
   }
 
   async _handleSend(overrideInput) {
@@ -228,54 +285,22 @@ export class AIPanel {
     if (!input) return;
 
     this._inputEl.value = '';
-    this._appendMessage('user', input);
+    this._messages.value = [...this._messages.value, { role: 'user', text: input, actions: null }];
 
     try {
       const context = await this._resolveContext(input);
       const result = await this.adapter.process(input, context);
 
-      // If it's a batch operation, show progress
       if (result.result && result.result.total) {
         this._showProgress(result.result);
       }
     } catch (err) {
-      this._appendMessage('system', `❌ Error: ${err.message}`);
+      this._messages.value = [...this._messages.value, {
+        role: 'system',
+        text: `❌ Error: ${err.message}`,
+        actions: null,
+      }];
     }
-  }
-
-  _appendMessage(role, text, actions = null) {
-    if (!this._messagesEl) return;
-
-    const div = document.createElement('div');
-    div.className = `ds-ai-msg ds-ai-msg-${role}`;
-
-    // Render text (support basic markdown-like formatting)
-    div.innerHTML = _renderText(text);
-
-    // Timestamp
-    if (this.options.showTimestamp) {
-      const ts = document.createElement('span');
-      ts.className = 'ds-ai-ts';
-      ts.textContent = new Date().toLocaleTimeString();
-      div.appendChild(ts);
-    }
-
-    // Action buttons
-    if (actions && actions.length > 0) {
-      const btnGroup = document.createElement('div');
-      btnGroup.className = 'ds-ai-actions';
-      for (const act of actions) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = act.label;
-        btn.addEventListener('click', () => act.action());
-        btnGroup.appendChild(btn);
-      }
-      div.appendChild(btnGroup);
-    }
-
-    this._messagesEl.appendChild(div);
-    this._scrollToBottom();
   }
 
   _buildResultActions(command, result) {
@@ -580,7 +605,6 @@ export class AIPanel {
     this._timelineEl.classList.add('is-visible');
 
     const icons = { running: '🔄', success: '✅', error: '❌', skipped: '⏭️', done: '✅' };
-    // Find or create step element
     let stepEl = this._timelineEl.querySelector(`[data-step="${step}"]`);
     if (!stepEl) {
       stepEl = document.createElement('div');
@@ -612,18 +636,10 @@ function _esc(str) {
   return d.innerHTML;
 }
 
-/**
- * Simple text renderer: converts basic markdown-like patterns to HTML.
- * - **bold** → <strong>
- * - `code` → <code>
- * - JSON objects → pretty-printed <pre>
- */
 function _renderText(text) {
   if (!text) return '';
   let s = _esc(text);
-  // Bold
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // Inline code
   s = s.replace(/`(.+?)`/g, '<code>$1</code>');
   return s;
 }

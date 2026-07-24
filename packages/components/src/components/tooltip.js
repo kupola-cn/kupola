@@ -5,7 +5,7 @@
  * Reuses the existing `ds-tooltip-*` CSS classes for styling.
  *
  * ```js
- * import { Tooltip } from '@kupola/core/components/tooltip';
+ * import { Tooltip } from '@kupola/components/tooltip';
  *
  * const tip = Tooltip({ target: buttonEl, content: 'Delete this item', placement: 'top' });
  * // Later:

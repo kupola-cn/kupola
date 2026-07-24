@@ -5,7 +5,7 @@
  * Reuses the existing `ds-tag-*` CSS classes for styling.
  *
  * ```js
- * import { Tag } from '@kupola/core/components/tag';
+ * import { Tag } from '@kupola/components/tag';
  *
  * const view = Tag({
  *   text: 'Active',

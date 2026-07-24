@@ -5,7 +5,7 @@
  * Reuses the existing `ds-switch` CSS classes for styling.
  *
  * ```js
- * import { Switch } from '@kupola/core/components/switch';
+ * import { Switch } from '@kupola/components/switch';
  *
  * const view = Switch({
  *   checked: false,

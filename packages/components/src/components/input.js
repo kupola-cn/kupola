@@ -5,7 +5,7 @@
  * Reuses the existing `ds-input*` CSS classes for styling.
  *
  * ```js
- * import { Input } from '@kupola/core/components/input';
+ * import { Input } from '@kupola/components/input';
  *
  * const view = Input({
  *   placeholder: 'Enter text...',

@@ -5,7 +5,7 @@
  * Reuses the existing `ds-checkbox*` CSS classes for styling.
  *
  * ```js
- * import { Checkbox } from '@kupola/core/components/checkbox';
+ * import { Checkbox } from '@kupola/components/checkbox';
  *
  * const view = Checkbox({
  *   label: 'Accept terms',

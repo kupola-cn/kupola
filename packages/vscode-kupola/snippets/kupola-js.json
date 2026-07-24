@@ -1,31 +1,36 @@
 {
   "Kupola: import component": {
     "prefix": "kimport",
-    "body": "import { ${1:ComponentName} } from '@kupola/kupola';",
+    "body": "import { ${1:ComponentName} } from '@kupola/components';",
     "description": "Import a Kupola component"
   },
-  "Kupola: import multiple": {
+  "Kupola: import multiple components": {
     "prefix": "kimports",
     "body": [
       "import {",
       "  ${1:Modal},",
       "  ${2:Button},",
       "  ${3:Table}",
-      "} from '@kupola/kupola';"
+      "} from '@kupola/components';"
     ],
     "description": "Import multiple Kupola components"
+  },
+  "Kupola: import core": {
+    "prefix": "kimport-core",
+    "body": "import { ${1:signal}, ${2:computed}, ${3:effect} } from '@kupola/core';",
+    "description": "Import Kupola core reactivity primitives"
   },
   "Kupola: import walk (directives)": {
     "prefix": "kwalk",
     "body": [
-      "import { walk } from '@kupola/kupola/directives';",
+      "import { walk } from '@kupola/core/directives';",
       "walk(document.body);"
     ],
     "description": "Import and initialize Kupola directive system"
   },
-  "Kupola: import signal": {
+  "Kupola: signal": {
     "prefix": "ksignal",
-    "body": "import { signal, computed, effect } from '@kupola/kupola';",
+    "body": "import { signal, computed, effect } from '@kupola/core';",
     "description": "Import Kupola reactivity primitives"
   },
   "Kupola: signal usage": {
@@ -35,6 +40,20 @@
       "effect(() => console.log(${1:count}.value));"
     ],
     "description": "Create a Kupola signal with effect"
+  },
+  "Kupola: reactive": {
+    "prefix": "kreactive",
+    "body": [
+      "import { reactive, watch } from '@kupola/core';",
+      "",
+      "const ${1:state} = reactive({",
+      "  ${2:name}: '${3:value}',",
+      "});",
+      "watch(() => ${1:state}.${2:name}, (val) => {",
+      "  console.log(${2:name}, val);",
+      "});"
+    ],
+    "description": "Create a reactive object with watch"
   },
   "Kupola: computed": {
     "prefix": "kcomputed",
@@ -50,10 +69,82 @@
     ],
     "description": "Create a Kupola effect with dispose"
   },
+  "Kupola: watch": {
+    "prefix": "kwatch",
+    "body": [
+      "watch(() => ${1:source}, (val, oldVal) => {",
+      "  ${2:// react to changes}",
+      "});"
+    ],
+    "description": "Watch a reactive source for changes"
+  },
+  "Kupola: watch with options": {
+    "prefix": "kwatchopt",
+    "body": [
+      "watch(() => ${1:source}, (val) => {",
+      "  ${2:// callback}",
+      "}, {",
+      "  immediate: ${3:false},",
+      "  deep: ${4:false},",
+      "});"
+    ],
+    "description": "Watch with immediate and deep options"
+  },
+  "Kupola: provide": {
+    "prefix": "kprovide",
+    "body": [
+      "import { provide } from '@kupola/core';",
+      "",
+      "provide('${1:key}', ${2:value});"
+    ],
+    "description": "Provide a value to child components"
+  },
+  "Kupola: inject": {
+    "prefix": "kinject",
+    "body": [
+      "import { inject } from '@kupola/core';",
+      "",
+      "const ${1:value} = inject('${2:key}', ${3:defaultValue});"
+    ],
+    "description": "Inject a value from parent component"
+  },
+  "Kupola: i18n setup": {
+    "prefix": "ki18n",
+    "body": [
+      "import { setLocale, t, formatDate, formatNumber } from '@kupola/core/i18n';",
+      "",
+      "setLocale('${1|en-US,zh-CN|}');"
+    ],
+    "description": "Set up Kupola i18n locale"
+  },
+  "Kupola: t function": {
+    "prefix": "kt",
+    "body": "t('${1:key}', ${2:{}})",
+    "description": "Translate text using i18n"
+  },
+  "Kupola: formatDate": {
+    "prefix": "kformatdate",
+    "body": "formatDate(${1:new Date()}, '${2:short}')",
+    "description": "Format date using i18n"
+  },
+  "Kupola: formatNumber": {
+    "prefix": "kformatnum",
+    "body": "formatNumber(${1:1234.56})",
+    "description": "Format number using i18n"
+  },
+  "Kupola: lazyComponent": {
+    "prefix": "klazy",
+    "body": [
+      "import { lazyComponent } from '@kupola/core';",
+      "",
+      "const ${1:Component} = lazyComponent(() => import('${2:./path}'));"
+    ],
+    "description": "Create a lazy-loaded component"
+  },
   "Kupola: Modal usage": {
     "prefix": "kmodal",
     "body": [
-      "import { Modal } from '@kupola/kupola';",
+      "import { Modal } from '@kupola/components';",
       "",
       "const modal = Modal({",
       "  title: '${1:Title}',",
@@ -67,7 +158,7 @@
   "Kupola: Dialog usage": {
     "prefix": "kdialog",
     "body": [
-      "import { Dialog } from '@kupola/kupola';",
+      "import { Dialog } from '@kupola/components';",
       "",
       "Dialog({",
       "  title: '${1:Confirm}',",
@@ -80,7 +171,7 @@
   "Kupola: Table usage": {
     "prefix": "ktable",
     "body": [
-      "import { Table } from '@kupola/kupola';",
+      "import { Table } from '@kupola/components';",
       "",
       "Table({",
       "  columns: [",
@@ -95,7 +186,7 @@
   "Kupola: Notification usage": {
     "prefix": "knotify",
     "body": [
-      "import { Notification } from '@kupola/kupola';",
+      "import { Notification } from '@kupola/components';",
       "",
       "Notification({",
       "  title: '${1:Title}',",
@@ -105,19 +196,10 @@
     ],
     "description": "Show a Kupola notification"
   },
-  "Kupola: i18n setup": {
-    "prefix": "ki18n",
-    "body": [
-      "import { setLocale, t } from '@kupola/kupola/i18n';",
-      "",
-      "setLocale('${1|en-US,zh-CN|}');"
-    ],
-    "description": "Set up Kupola i18n locale"
-  },
   "Kupola: ErrorBoundary": {
     "prefix": "kerror",
     "body": [
-      "import { ErrorBoundary } from '@kupola/kupola';",
+      "import { ErrorBoundary } from '@kupola/core';",
       "",
       "ErrorBoundary(() => ${1:componentFactory}(), {",
       "  fallback: '${2:Something went wrong}',",
@@ -129,7 +211,7 @@
   "Kupola: renderToString (SSR)": {
     "prefix": "kssr",
     "body": [
-      "import { renderToString } from '@kupola/kupola/server';",
+      "import { renderToString } from '@kupola/core/server';",
       "",
       "const html = renderToString(${1:template});"
     ],
@@ -138,7 +220,7 @@
   "Kupola: hydrate": {
     "prefix": "khydrate",
     "body": [
-      "import { hydrate } from '@kupola/kupola';",
+      "import { hydrate } from '@kupola/core';",
       "",
       "hydrate(${1:template}, ${2:container});"
     ],
@@ -147,9 +229,9 @@
   "Kupola: theme setup": {
     "prefix": "ktheme",
     "body": [
-      "import '@kupola/kupola/css/tokens.css';",
-      "import '@kupola/kupola/css/components.css';",
-      "import '@kupola/kupola/css/theme.css';"
+      "import '@kupola/components/css/tokens.css';",
+      "import '@kupola/components/css/components.css';",
+      "import '@kupola/components/css/theme.css';"
     ],
     "description": "Import Kupola CSS design system"
   }

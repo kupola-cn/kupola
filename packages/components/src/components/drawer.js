@@ -6,7 +6,7 @@
  *
  * ```js
  * import { html } from '@kupola/core';
- * import { Drawer } from '@kupola/core/components/drawer';
+ * import { Drawer } from '@kupola/components/drawer';
  *
  * const view = Drawer({ title: 'Settings', placement: 'right', width: '400px' }, html`<p>Content</p>`);
  * container.appendChild(view.element);

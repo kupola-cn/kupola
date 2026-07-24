@@ -6,7 +6,7 @@
  * data binding, and submit handling.
  *
  * ```js
- * import { Form } from '@kupola/core/components/form';
+ * import { Form } from '@kupola/components/form';
  *
  * const form = Form({
  *   element: document.querySelector('form'),

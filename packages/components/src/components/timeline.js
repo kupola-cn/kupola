@@ -5,7 +5,7 @@
  * Reuses the existing `ds-timeline*` CSS classes for styling.
  *
  * ```js
- * import { Timeline } from '@kupola/core/components/timeline';
+ * import { Timeline } from '@kupola/components/timeline';
  *
  * const view = Timeline({
  *   items: [

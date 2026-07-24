@@ -5,7 +5,7 @@
  * Reuses the existing `ds-pagination-*` CSS classes for styling.
  *
  * ```js
- * import { Pagination } from '@kupola/core/components/pagination';
+ * import { Pagination } from '@kupola/components/pagination';
  *
  * const view = Pagination({
  *   total: 100,

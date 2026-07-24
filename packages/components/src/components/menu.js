@@ -5,7 +5,7 @@
  * Reuses the existing `ds-menu*` CSS classes for styling.
  *
  * ```js
- * import { Menu } from '@kupola/core/components/menu';
+ * import { Menu } from '@kupola/components/menu';
  *
  * const view = Menu({
  *   items: [

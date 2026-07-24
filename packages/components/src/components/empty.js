@@ -5,7 +5,7 @@
  * Reuses the existing `ds-empty*` CSS classes for styling.
  *
  * ```js
- * import { Empty } from '@kupola/core/components/empty';
+ * import { Empty } from '@kupola/components/empty';
  *
  * const view = Empty({
  *   title: 'No data',

@@ -5,7 +5,7 @@
  * GitHub-style contribution heatmap with date-based data, color levels, and tooltips.
  *
  * ```js
- * import { Heatmap } from '@kupola/core/components/heatmap';
+ * import { Heatmap } from '@kupola/components/heatmap';
  *
  * const heatmap = Heatmap({
  *   data: [{ date: '2024-01-15', value: 5 }, ...],

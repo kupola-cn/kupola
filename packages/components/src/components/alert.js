@@ -5,7 +5,7 @@
  * Reuses the existing `ds-alert-*` CSS classes for styling.
  *
  * ```js
- * import { Alert } from '@kupola/core/components/alert';
+ * import { Alert } from '@kupola/components/alert';
  *
  * const view = Alert({
  *   title: 'Warning',

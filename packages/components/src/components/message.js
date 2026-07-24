@@ -5,7 +5,7 @@
  * Global message notification system with types and positions.
  *
  * ```js
- * import { Message } from '@kupola/core/components/message';
+ * import { Message } from '@kupola/components/message';
  *
  * const msg = Message();
  * msg.success('Operation completed');

@@ -5,7 +5,7 @@
  * Reuses the existing `ds-skeleton-*` CSS classes for styling.
  *
  * ```js
- * import { Skeleton } from '@kupola/core/components/skeleton';
+ * import { Skeleton } from '@kupola/components/skeleton';
  *
  * const view = Skeleton({ variant: 'text', count: 3 });
  * container.appendChild(view.element);

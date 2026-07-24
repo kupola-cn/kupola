@@ -6,7 +6,7 @@
  * Reuses the existing icon SVG paths from 1.0.
  *
  * ```js
- * import { Icons, svg } from '@kupola/core/components/icons';
+ * import { Icons, svg } from '@kupola/components/icons';
  *
  * // Get SVG string
  * const checkSvg = svg('check');

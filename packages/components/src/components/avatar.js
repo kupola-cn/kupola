@@ -5,7 +5,7 @@
  * Reuses the existing `ds-avatar*` CSS classes for styling.
  *
  * ```js
- * import { Avatar } from '@kupola/core/components/avatar';
+ * import { Avatar } from '@kupola/components/avatar';
  *
  * const view = Avatar({ text: 'JD', size: 'lg', accent: true });
  * container.appendChild(view.element);

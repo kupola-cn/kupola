@@ -5,7 +5,7 @@
  * Reuses the existing `ds-carousel*` CSS classes for styling.
  *
  * ```js
- * import { Carousel } from '@kupola/core/components/carousel';
+ * import { Carousel } from '@kupola/components/carousel';
  *
  * const view = Carousel({
  *   items: ['Slide 1', 'Slide 2', 'Slide 3'],

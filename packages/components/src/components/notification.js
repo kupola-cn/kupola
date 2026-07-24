@@ -5,7 +5,7 @@
  * Reuses the existing `ds-notification-*` CSS classes for styling.
  *
  * ```js
- * import { Notification } from '@kupola/core/components/notification';
+ * import { Notification } from '@kupola/components/notification';
  *
  * Notification.success({ title: 'Saved', message: 'Changes saved successfully.' });
  * Notification.error({ title: 'Error', message: 'Failed to save.' });
