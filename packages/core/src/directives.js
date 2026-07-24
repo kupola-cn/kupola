@@ -384,6 +384,15 @@ function scheduleCacheCleanup() {
   }, CACHE_EXPIRE_MS);
 }
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (cacheCleanupTimer) {
+      clearTimeout(cacheCleanupTimer);
+      cacheCleanupTimer = null;
+    }
+  });
+}
+
 function cacheExpression(key, fn) {
   const entry = { fn, _lastUsed: Date.now() };
   exprCache.set(key, entry);
@@ -1061,15 +1070,37 @@ function castModelValue(value, modifiers) {
 
 function areValuesEqual(a, b) {
   if (a === b) {return true;}
+  if (typeof a !== typeof b) {return false;}
   if (typeof a === 'number' && typeof b === 'number' && Number.isNaN(a) && Number.isNaN(b)) {return true;}
-  if (typeof a === 'object' && typeof b === 'object') {
-    try {
-      return JSON.stringify(a) === JSON.stringify(b);
-    } catch {
-      return a === b;
+  if (typeof a === 'object' && a && b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) {return false;}
+      for (let i = 0; i < a.length; i += 1) {
+        if (!areValuesEqual(a[i], b[i])) {return false;}
+      }
+      return true;
     }
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) {return false;}
+    for (const key of keysA) {
+      if (!keysB.includes(key) || !areValuesEqual(a[key], b[key])) {return false;}
+    }
+    return true;
   }
   return false;
+}
+
+function deepClone(value) {
+  if (!value || typeof value !== 'object') {return value;}
+  if (Array.isArray(value)) {return value.map(deepClone);}
+  if (value instanceof Date) {return new Date(value.getTime());}
+  if (value instanceof RegExp) {return new RegExp(value);}
+  const clone = {};
+  for (const key of Object.keys(value)) {
+    clone[key] = deepClone(value[key]);
+  }
+  return clone;
 }
 
 function getModelValue(el, currentValue, modifiers) {
@@ -1157,7 +1188,7 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
   const debounceDelay = Number(modifiers.find(item => /^\d+$/.test(item)) || 250);
   let timer = null;
   let composing = false;
-  let initialValue = evaluate(expr, scope, null, { directive: 'k-model', element: el });
+  let initialValue = deepClone(evaluate(expr, scope, null, { directive: 'k-model', element: el }));
 
   // Set initial value
   const dispose = effect(() => {

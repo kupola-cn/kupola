@@ -178,27 +178,56 @@ const REACTIVE_SYMBOL = Symbol('kupola-reactive');
 const ARRAY_MUTATION_METHODS = new Set([
   'push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse',
 ]);
+const visited = new WeakSet();
 
 function isReactive(obj) {
   return obj && obj[REACTIVE_SYMBOL] === true;
+}
+
+function shallowClone(obj) {
+  if (Array.isArray(obj)) {return [ ...obj ];}
+  const clone = Object.create(Object.getPrototypeOf(obj));
+  for (const key of Object.getOwnPropertyNames(obj)) {
+    const desc = Object.getOwnPropertyDescriptor(obj, key);
+    Object.defineProperty(clone, key, desc);
+  }
+  for (const key of Object.getOwnPropertySymbols(obj)) {
+    const desc = Object.getOwnPropertyDescriptor(obj, key);
+    Object.defineProperty(clone, key, desc);
+  }
+  return clone;
 }
 
 function wrapReactive(obj, parentSignal) {
   if (!obj || typeof obj !== 'object') {return obj;}
   if (isReactive(obj)) {return obj;}
   if (obj instanceof Signal) {return obj;}
+  if (obj instanceof Date || obj instanceof RegExp || obj instanceof Error) {return obj;}
+  if (visited.has(obj)) {return obj;}
 
-  const reactiveObj = Array.isArray(obj)
-    ? new Proxy([ ...obj ], createReactiveHandler(parentSignal))
-    : new Proxy({ ...obj }, createReactiveHandler(parentSignal));
+  visited.add(obj);
+  const reactiveObj = new Proxy(shallowClone(obj), createReactiveHandler(parentSignal));
+  visited.delete(obj);
 
   reactiveObj[REACTIVE_SYMBOL] = true;
 
-  for (const key of Object.keys(obj)) {
-    reactiveObj[key] = wrapReactive(obj[key], parentSignal);
+  const keys = [ ...Object.keys(obj), ...Object.getOwnPropertySymbols(obj) ];
+  for (const key of keys) {
+    const desc = Object.getOwnPropertyDescriptor(obj, key);
+    if (desc && !desc.get && !desc.set) {
+      reactiveObj[key] = wrapReactive(obj[key], parentSignal);
+    }
   }
 
   return reactiveObj;
+}
+
+function notifyParent(parentSignal, target) {
+  if (!parentSignal) {return;}
+  const newValue = Array.isArray(target) ? [ ...target ] : { ...target };
+  if (!Object.is(parentSignal._value, newValue)) {
+    parentSignal.value = newValue;
+  }
 }
 
 function createReactiveHandler(parentSignal) {
@@ -206,11 +235,12 @@ function createReactiveHandler(parentSignal) {
     get(target, key, receiver) {
       if (key === REACTIVE_SYMBOL) {return true;}
       if (key === 'toJSON') {return () => target;}
+      if (key === '_signal') {return parentSignal;}
       if (typeof target[key] === 'function') {
         if (ARRAY_MUTATION_METHODS.has(key)) {
           return function(...args) {
             const result = target[key](...args);
-            if (parentSignal) {parentSignal.value = { ...target };}
+            notifyParent(parentSignal, target);
             return result;
           };
         }
@@ -220,20 +250,36 @@ function createReactiveHandler(parentSignal) {
     },
     set(target, key, value, receiver) {
       if (key === REACTIVE_SYMBOL) {return true;}
+      const oldValue = target[key];
       value = wrapReactive(value, parentSignal);
       const result = Reflect.set(target, key, value, receiver);
-      if (parentSignal) {parentSignal.value = { ...target };}
+      if (!Object.is(oldValue, value)) {
+        notifyParent(parentSignal, target);
+      }
       return result;
     },
     deleteProperty(target, key) {
+      const hadKey = key in target;
       const result = Reflect.deleteProperty(target, key);
-      if (parentSignal) {parentSignal.value = { ...target };}
+      if (hadKey) {
+        notifyParent(parentSignal, target);
+      }
       return result;
+    },
+    has(target, key) {
+      return Reflect.has(target, key);
+    },
+    ownKeys(target) {
+      return Reflect.ownKeys(target);
+    },
+    getOwnPropertyDescriptor(target, key) {
+      return Reflect.getOwnPropertyDescriptor(target, key);
     },
   };
 }
 
 export function reactive(obj) {
+  if (!obj || typeof obj !== 'object') {return obj;}
   const sig = new Signal(obj);
   const reactiveObj = wrapReactive(obj, sig);
   Object.defineProperty(reactiveObj, '_signal', { value: sig, enumerable: false });
