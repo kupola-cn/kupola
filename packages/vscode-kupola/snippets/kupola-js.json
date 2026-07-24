@@ -102,7 +102,7 @@
   "Kupola: inject": {
     "prefix": "kinject",
     "body": [
-      "import { inject } from '@kupola/core';",
+      "import { inject } from '@kupola/platform';",
       "",
       "const ${1:value} = inject('${2:key}', ${3:defaultValue});"
     ],
@@ -199,7 +199,7 @@
   "Kupola: ErrorBoundary": {
     "prefix": "kerror",
     "body": [
-      "import { ErrorBoundary } from '@kupola/core';",
+      "import { ErrorBoundary } from '@kupola/platform';",
       "",
       "ErrorBoundary(() => ${1:componentFactory}(), {",
       "  fallback: '${2:Something went wrong}',",
@@ -220,7 +220,7 @@
   "Kupola: hydrate": {
     "prefix": "khydrate",
     "body": [
-      "import { hydrate } from '@kupola/core';",
+      "import { hydrate } from '@kupola/platform/server';",
       "",
       "hydrate(${1:template}, ${2:container});"
     ],
@@ -229,9 +229,9 @@
   "Kupola: theme setup": {
     "prefix": "ktheme",
     "body": [
-      "import '@kupola/components/css/tokens.css';",
-      "import '@kupola/components/css/components.css';",
-      "import '@kupola/components/css/theme.css';"
+      "import '@kupola/platform/css/tokens.css';",
+      "import '@kupola/platform/css/components.css';",
+      "import '@kupola/platform/css/theme.css';"
     ],
     "description": "Import Kupola CSS design system"
   }

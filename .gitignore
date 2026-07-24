@@ -13,6 +13,7 @@ sync-to-his.ps1
 node_modules/
 /dist/
 *.tgz
+*.vsix
 
 # OS
 .DS_Store

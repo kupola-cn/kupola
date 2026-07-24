@@ -49,3 +49,6 @@ export {
 
 // ── Lazy Load ────────────────────────────────────────────────────────────────
 export { lazyComponent, preloadComponent } from './lazy.js';
+
+// ── Error Boundary ───────────────────────────────────────────────────────────
+export { ErrorBoundary } from './errors.js';
