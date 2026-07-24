@@ -365,15 +365,40 @@ function resolveData(expr, ctx, el) {
 
 // ─── Expression Evaluation ────────────────────────────────────────────────────
 
-/** Cache compiled expression functions. */
+/** Cache compiled expression functions with LRU eviction. */
 const exprCache = new Map();
 const MAX_CACHED_EXPRESSIONS = 500;
+const CACHE_EXPIRE_MS = 300000;
+let cacheCleanupTimer = null;
+
+function scheduleCacheCleanup() {
+  if (cacheCleanupTimer) {return;}
+  cacheCleanupTimer = setTimeout(() => {
+    cacheCleanupTimer = null;
+    const now = Date.now();
+    for (const [ key, entry ] of exprCache) {
+      if (entry && entry._lastUsed && now - entry._lastUsed > CACHE_EXPIRE_MS) {
+        exprCache.delete(key);
+      }
+    }
+  }, CACHE_EXPIRE_MS);
+}
 
 function cacheExpression(key, fn) {
-  exprCache.set(key, fn);
+  const entry = { fn, _lastUsed: Date.now() };
+  exprCache.set(key, entry);
   if (exprCache.size > MAX_CACHED_EXPRESSIONS) {
-    exprCache.delete(exprCache.keys().next().value);
+    let oldestKey = null;
+    let oldestTime = Infinity;
+    for (const [ k, v ] of exprCache) {
+      if (v._lastUsed < oldestTime) {
+        oldestTime = v._lastUsed;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey) {exprCache.delete(oldestKey);}
   }
+  scheduleCacheCleanup();
   return fn;
 }
 
@@ -496,10 +521,13 @@ function isCspEvalError(error) {
 
 function evaluate(expr, scope, locals, meta) {
   try {
-    let fn = exprCache.get(expr);
+    let entry = exprCache.get(expr);
+    let fn = entry?.fn;
     if (!fn) {
       fn = new Function('__s__', `with(__s__){return(${expr})}`);
       cacheExpression(expr, fn);
+    } else {
+      entry._lastUsed = Date.now();
     }
     return fn(createEvaluationScope(scope, locals));
   } catch (error) {
@@ -518,10 +546,13 @@ function evaluate(expr, scope, locals, meta) {
 function evaluateStatement(expr, scope, locals, meta) {
   const cacheKey = '$$' + expr;
   try {
-    let fn = exprCache.get(cacheKey);
+    let entry = exprCache.get(cacheKey);
+    let fn = entry?.fn;
     if (!fn) {
       fn = new Function('__s__', `with(__s__){${expr}}`);
       cacheExpression(cacheKey, fn);
+    } else {
+      entry._lastUsed = Date.now();
     }
     fn(createEvaluationScope(scope, locals));
   } catch (error) {
@@ -1023,11 +1054,24 @@ function castModelValue(value, modifiers) {
   return next;
 }
 
+function areValuesEqual(a, b) {
+  if (a === b) {return true;}
+  if (typeof a === 'number' && typeof b === 'number' && Number.isNaN(a) && Number.isNaN(b)) {return true;}
+  if (typeof a === 'object' && typeof b === 'object') {
+    try {
+      return JSON.stringify(a) === JSON.stringify(b);
+    } catch {
+      return a === b;
+    }
+  }
+  return false;
+}
+
 function getModelValue(el, currentValue, modifiers) {
   if (el.type === 'checkbox') {
     const value = castModelValue(el.value, modifiers);
     if (Array.isArray(currentValue)) {
-      const next = currentValue.filter(item => item !== value);
+      const next = currentValue.filter(item => !areValuesEqual(item, value));
       if (el.checked) {next.push(value);}
       return next;
     }
@@ -1048,7 +1092,8 @@ function getModelValue(el, currentValue, modifiers) {
 function renderModelValue(el, value, modifiers = []) {
   if (el.type === 'checkbox') {
     if (Array.isArray(value)) {
-      el.checked = value.includes(castModelValue(el.value, modifiers));
+      const checkboxValue = castModelValue(el.value, modifiers);
+      el.checked = value.some(item => areValuesEqual(item, checkboxValue));
     } else {
       el.checked = Boolean(value);
     }
@@ -1107,6 +1152,7 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
   const debounceDelay = Number(modifiers.find(item => /^\d+$/.test(item)) || 250);
   let timer = null;
   let composing = false;
+  let initialValue = evaluate(expr, scope, null, { directive: 'k-model', element: el });
 
   // Set initial value
   const dispose = effect(() => {
@@ -1150,6 +1196,19 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
     el.addEventListener('compositionstart', compositionStartHandler);
     el.addEventListener('compositionend', compositionEndHandler);
   }
+
+  const form = el.form;
+  if (form) {
+    const formResetHandler = () => {
+      setModelExpression(expr, scope, initialValue, el);
+      flushJobs();
+    };
+    form.addEventListener('reset', formResetHandler);
+    disposers.push(() => {
+      form.removeEventListener('reset', formResetHandler);
+    });
+  }
+
   disposers.push(() => {
     clearTimeout(timer);
     el.removeEventListener(eventName, inputHandler);
@@ -1560,6 +1619,12 @@ function toIterationEntries(value) {
 
 function formatKey(key) {
   if (typeof key === 'string') {return key;}
+  if (typeof key === 'symbol') {return `Symbol(${key.description || ''})`;}
+  if (key === null) {return 'null';}
+  if (key === undefined) {return 'undefined';}
+  if (typeof key === 'object') {
+    return `[object ${key.constructor?.name || 'Object'}]`;
+  }
   try {
     return JSON.stringify(key) ?? String(key);
   } catch {
@@ -1766,7 +1831,13 @@ function hasAnyAttribute(el, names) {
 }
 
 function warnDirectiveCombinations(el) {
-  if (el.hasAttribute('k-for') && el.hasAttribute('k-if')) {
+  const hasFor = el.hasAttribute('k-for');
+  const hasIf = el.hasAttribute('k-if');
+  const hasElseIf = el.hasAttribute('k-else-if');
+  const hasElse = el.hasAttribute('k-else');
+  const hasKey = el.hasAttribute('k-key') || el.hasAttribute(':key') || el.hasAttribute('k-bind:key');
+
+  if (hasFor && hasIf) {
     warn(
       'W005',
       `${describeElement(el)} combines k-for and k-if on the same element. ` +
@@ -1783,7 +1854,7 @@ function warnDirectiveCombinations(el) {
     );
   }
 
-  if (el.hasAttribute('k-for') && (el.hasAttribute('k-else-if') || el.hasAttribute('k-else'))) {
+  if (hasFor && (hasElseIf || hasElse)) {
     warn(
       'W021',
       `${describeElement(el)} combines k-for with k-else-if/k-else. ` +
@@ -1791,18 +1862,37 @@ function warnDirectiveCombinations(el) {
     );
   }
 
-  if (el.hasAttribute('k-key') && !el.hasAttribute('k-for')) {
+  if (hasKey && !hasFor) {
     warn(
       'W021',
       `${describeElement(el)} has k-key outside k-for. k-key only identifies rows rendered by k-for.`,
     );
   }
 
-  if (el.hasAttribute('k-for')) {
+  if (hasFor && !hasKey) {
+    warn(
+      'W021',
+      `${describeElement(el)} has k-for without k-key. This causes full re-renders on every update, ` +
+      'losing input focus and scroll position. Add :key="uniqueValue" for stable diffing.',
+    );
+  }
+
+  if (hasFor) {
     for (const keyAttribute of [ 'k-key', ':key', 'k-bind:key' ]) {
       if (el.hasAttribute(keyAttribute) && isBlankExpression(el.getAttribute(keyAttribute))) {
         warnEmptyDirectiveExpression(el, keyAttribute);
       }
+    }
+  }
+
+  if (hasFor) {
+    const keyAttrs = [ 'k-key', ':key', 'k-bind:key' ].filter(name => el.hasAttribute(name));
+    if (keyAttrs.length > 1) {
+      warn(
+        'W021',
+        `${describeElement(el)} has conflicting k-for key bindings: ${keyAttrs.join(', ')}. ` +
+        'Precedence: k-key > :key > k-bind:key. Use only one.',
+      );
     }
   }
 
