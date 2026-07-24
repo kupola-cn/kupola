@@ -32,20 +32,34 @@ npm run docs:dev     # 启动文档开发服务器
 ```
 kupola/
 ├── packages/
-│   └── core/            # @kupola/core 核心引擎 + 48 个 UI 组件
-│       ├── src/         # 源码
-│       │   ├── components/  # UI 组件（每个组件一个文件）
-│       │   ├── signal.js    # Signal 响应式原语
-│       │   ├── computed.js  # Computed 派生值
-│       │   ├── effect.js    # Effect 副作用
-│       │   ├── template.js  # 模板字面量引擎
-│       │   ├── render.js    # DOM 渲染器
-│       │   ├── server.js    # SSR（renderToString + hydrate）
-│       │   ├── directives.js # 声明式指令系统（k-*）
-│       │   └── index.js     # 核心公共入口
-│       └── __tests__/   # 单元测试（883 个用例）
+│   ├── core/            # @kupola/core 核心引擎
+│   │   ├── src/         # 响应式系统、模板引擎、渲染器、指令系统
+│   │   │   ├── signal.js    # Signal 响应式原语
+│   │   │   ├── computed.js  # Computed 派生值
+│   │   │   ├── effect.js    # Effect 副作用
+│   │   │   ├── template.js  # 模板字面量引擎
+│   │   │   ├── render.js    # DOM 渲染器
+│   │   │   ├── server.js    # SSR（renderToString + hydrate）
+│   │   │   ├── directives.js # 声明式指令系统（k-*）
+│   │   │   ├── lazy.js      # 懒加载组件
+│   │   │   ├── devtools.js  # 性能分析器
+│   │   │   └── index.js     # 核心公共入口
+│   │   └── __tests__/   # 单元测试
+│   ├── components/      # @kupola/components UI 组件库（40+ 组件）
+│   │   ├── src/
+│   │   │   ├── components/  # UI 组件（每个组件一个文件）
+│   │   │   └── index.js     # 组件导出入口
+│   │   └── README.md
+│   ├── ai-adapter/      # @kupola/ai-adapter AI 适配器
+│   │   ├── src/         # 意图解析、流程引擎、对话面板
+│   │   └── __tests__/
+│   ├── create-kupola/   # @kupola/create-kupola 项目脚手架
+│   │   ├── index.js     # CLI 入口
+│   │   └── templates/   # 项目模板（static、nextjs、nuxt、flask、fastapi、gin）
+│   ├── css/             # 样式包（tokens、components、responsive）
+│   └── vscode-kupola/   # VS Code 扩展（代码片段、智能提示）
+├── docs-site/           # VitePress 文档站点
 ├── test/                # Jest 全局 setup
-├── his-sys/             # 基于 Kupola 的 HIS 医疗系统
 └── *.config.*           # 构建 & 工具配置
 ```
 
@@ -88,17 +102,71 @@ directives 核心变更。
 
 ---
 
+## Commit 规范
+
+Kupola 使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范，提交信息格式如下：
+
+```
+<type>(<scope>): <description>
+
+<body>
+
+<footer>
+```
+
+### Commit 类型
+
+| 类型 | 说明 |
+|------|------|
+| `feat` | 新功能 |
+| `fix` | 修复 Bug |
+| `docs` | 文档更新 |
+| `style` | 代码风格（不影响功能） |
+| `refactor` | 重构（既不是新功能也不是修复） |
+| `perf` | 性能优化 |
+| `test` | 添加/修改测试 |
+| `chore` | 构建/工具/依赖更新 |
+| `revert` | 撤销之前的提交 |
+
+### 示例
+
+```bash
+# 新功能
+feat(components): add DatePicker component
+
+# Bug 修复
+fix(directives): fix k-model not updating on blur
+
+# 文档更新
+docs: update installation guide
+
+# 性能优化
+perf(signal): optimize signal subscription cleanup
+```
+
+### Scope 可选值
+
+- `core` - 核心引擎
+- `components` - UI 组件
+- `directives` - 指令系统
+- `ai-adapter` - AI 适配器
+- `css` - 样式
+- `docs` - 文档
+- `build` - 构建配置
+
+---
+
 ## 新增组件流程
 
-1. 在 `packages/core/src/components/` 创建组件文件（如 `my-component.js`）
+1. 在 `packages/components/src/components/` 创建组件文件（如 `my-component.js`）
 2. 在 `packages/core/__tests__/components/` 创建测试文件
-3. 在 `packages/core/src/components/types.d.ts` 添加类型声明
-4. 在 `package.json` 和 `packages/core/package.json` 添加 exports 映射
+3. 在 `packages/components/src/components/types.d.ts` 添加类型声明
+4. 在 `package.json` 和 `packages/components/package.json` 添加 exports 映射
 5. 在 `.size-limit.json` 添加体积限制
 6. 更新 `docs-site/components/` 下的组件文档
 7. 运行 `npm run test` 确认全部通过
 
-`rollup.config.cjs` 会自动扫描 `packages/core/src/components/*.js` 生成组件构建入口，新增组件不需要手工修改 Rollup 配置。
+`rollup.config.cjs` 会自动扫描 `packages/components/src/components/*.js` 生成组件构建入口，新增组件不需要手工修改 Rollup 配置。
 
 ---
 

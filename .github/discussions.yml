@@ -1,0 +1,39 @@
+# GitHub Discussions Configuration
+
+# Define categories for discussions
+categories:
+  - name: ❓ Q&A
+    description: "Ask questions about using Kupola, get help with issues"
+    emoji: "❓"
+    pinned: true
+    default: true
+
+  - name: 💡 Feature Requests
+    description: "Suggest new features or improvements"
+    emoji: "💡"
+    pinned: true
+
+  - name: 🧩 Show and Tell
+    description: "Share your projects built with Kupola"
+    emoji: "🧩"
+
+  - name: 📚 Documentation
+    description: "Discuss documentation improvements"
+    emoji: "📚"
+
+  - name: 🔧 Development
+    description: "Discuss development, contributing, and roadmap"
+    emoji: "🔧"
+
+  - name: 🐛 Bug Reports
+    description: "Report bugs or issues (use GitHub Issues for formal reports)"
+    emoji: "🐛"
+
+# Set up announcement posts
+announcement:
+  enabled: true
+  category: "🔧 Development"
+
+# Enable community health checks
+community_health:
+  enabled: true

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'Kupola 2.0',
+  title: 'Kupola 3.0',
   description: '现代模块化 UI 组件库',
   lang: 'zh-CN',
   base: '/kupola/',

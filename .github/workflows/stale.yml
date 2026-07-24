@@ -1,0 +1,54 @@
+name: Stale Issues and PRs
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight UTC
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # Issue settings
+          days-before-issue-stale: 60
+          days-before-issue-close: 7
+          stale-issue-message: >
+            This issue has been marked as stale because it has been open for 60 days with no activity.
+            It will be closed in 7 days if no further activity occurs.
+            Please respond if this issue is still relevant or if you need additional information.
+          close-issue-message: >
+            This issue has been closed due to inactivity.
+            If you believe this issue is still relevant, please reopen it with additional context.
+          stale-issue-label: 'stale'
+          close-issue-label: 'closed-stale'
+
+          # PR settings
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+          stale-pr-message: >
+            This PR has been marked as stale because it has been open for 30 days with no activity.
+            It will be closed in 7 days if no further activity occurs.
+            Please ensure the PR is ready for review or address any feedback.
+          close-pr-message: >
+            This PR has been closed due to inactivity.
+            If you believe this PR is still relevant, please reopen it with updates.
+          stale-pr-label: 'stale'
+          close-pr-label: 'closed-stale'
+
+          # Exclusions
+          exempt-issue-labels: 'critical,blocker,help-wanted,good-first-issue'
+          exempt-pr-labels: 'critical,blocker,wip'
+
+          # Only stale issues and PRs without these labels
+          any-of-labels: ''
+
+          # Remove stale label when there's activity
+          remove-stale-when-updated: true
+
+          # Debug mode (optional)
+          debug-only: false

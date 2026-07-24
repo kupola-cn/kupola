@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Security fixes are provided for the latest published `2.1.x` release. Older
+Security fixes are provided for the latest published `3.x.x` release. Older
 minor and prerelease versions should be upgraded before reporting a problem.
 
 ## Reporting a vulnerability

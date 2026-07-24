@@ -1,0 +1,34 @@
+# CODEOWNERS for automatic PR review assignment
+
+# Default owner for all files
+*   @kupola-cn/maintainers
+
+# Core package owners
+/packages/core/              @kupola-cn/maintainers
+
+# Components package owners
+/packages/components/        @kupola-cn/maintainers
+
+# AI Adapter owners
+/packages/ai-adapter/        @kupola-cn/maintainers
+
+# Create-kupola scaffolding
+/packages/create-kupola/     @kupola-cn/maintainers
+
+# VS Code extension
+/packages/vscode-kupola/     @kupola-cn/maintainers
+
+# CSS package
+/packages/css/               @kupola-cn/maintainers
+
+# Documentation
+/docs-site/                  @kupola-cn/maintainers
+
+# CI/CD workflows
+/.github/workflows/          @kupola-cn/maintainers
+
+# Root configuration
+/package.json                @kupola-cn/maintainers
+/rollup.config.cjs           @kupola-cn/maintainers
+/vite.config.js              @kupola-cn/maintainers
+/.size-limit.json            @kupola-cn/maintainers
