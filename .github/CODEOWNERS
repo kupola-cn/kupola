@@ -6,6 +6,9 @@
 # Core package owners
 /packages/core/              @kupola-cn/maintainers
 
+# Platform package owners
+/packages/platform/          @kupola-cn/maintainers
+
 # Components package owners
 /packages/components/        @kupola-cn/maintainers
 
