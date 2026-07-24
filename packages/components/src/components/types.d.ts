@@ -1,6 +1,6 @@
 /**
- * @kupola/core — TypeScript type definitions for 2.0 components.
- * @module @kupola/core/components
+ * @kupola/components — TypeScript type definitions.
+ * @module @kupola/components
  */
 
 // ============================================================
