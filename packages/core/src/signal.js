@@ -197,16 +197,17 @@ function shallowClone(obj) {
   return clone;
 }
 
-function wrapReactive(obj, parentSignal, visited = new WeakSet()) {
+function wrapReactive(obj, parentSignal, visited = new WeakSet(), proxyCache = new Map()) {
   if (!obj || typeof obj !== 'object') {return obj;}
   if (isReactive(obj)) {return obj;}
   if (obj instanceof Signal) {return obj;}
   if (obj instanceof Date || obj instanceof RegExp || obj instanceof Error) {return obj;}
+  if (proxyCache.has(obj)) {return proxyCache.get(obj);}
   if (visited.has(obj)) {return obj;}
 
   visited.add(obj);
-  const reactiveObj = new Proxy(shallowClone(obj), createReactiveHandler(parentSignal, visited));
-  visited.delete(obj);
+  const reactiveObj = new Proxy(shallowClone(obj), createReactiveHandler(parentSignal, visited, proxyCache));
+  proxyCache.set(obj, reactiveObj);
 
   reactiveObj[REACTIVE_SYMBOL] = true;
 
@@ -214,9 +215,11 @@ function wrapReactive(obj, parentSignal, visited = new WeakSet()) {
   for (const key of keys) {
     const desc = Object.getOwnPropertyDescriptor(obj, key);
     if (desc && !desc.get && !desc.set) {
-      reactiveObj[key] = wrapReactive(obj[key], parentSignal, visited);
+      reactiveObj[key] = wrapReactive(obj[key], parentSignal, visited, proxyCache);
     }
   }
+
+  visited.delete(obj);
 
   return reactiveObj;
 }
@@ -229,7 +232,7 @@ function notifyParent(parentSignal, target) {
   }
 }
 
-function createReactiveHandler(parentSignal, visited) {
+function createReactiveHandler(parentSignal, visited, proxyCache) {
   return {
     get(target, key, receiver) {
       if (key === REACTIVE_SYMBOL) {return true;}
@@ -248,7 +251,7 @@ function createReactiveHandler(parentSignal, visited) {
       }
       const value = Reflect.get(target, key, receiver);
       if (value && typeof value === 'object' && !isReactive(value) && !(value instanceof Date) && !(value instanceof RegExp)) {
-        const wrapped = wrapReactive(value, parentSignal, visited);
+        const wrapped = wrapReactive(value, parentSignal, visited, proxyCache);
         target[key] = wrapped;
         return wrapped;
       }
@@ -257,7 +260,7 @@ function createReactiveHandler(parentSignal, visited) {
     set(target, key, value, receiver) {
       if (key === REACTIVE_SYMBOL) {return true;}
       const oldValue = target[key];
-      value = wrapReactive(value, parentSignal, visited);
+      value = wrapReactive(value, parentSignal, visited, proxyCache);
       const result = Reflect.set(target, key, value, receiver);
       if (!Object.is(oldValue, value)) {
         notifyParent(parentSignal, target);
