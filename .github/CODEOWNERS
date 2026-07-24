@@ -16,7 +16,7 @@
 /packages/create-kupola/     @kupola-cn/maintainers
 
 # VS Code extension
-/packages/vscode-kupola/     @kupola-cn/maintainers
+/vscode-kupola/              @kupola-cn/maintainers
 
 # CSS package
 /packages/css/               @kupola-cn/maintainers
