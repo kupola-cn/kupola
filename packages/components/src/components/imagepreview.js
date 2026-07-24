@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — ImagePreview component built on the 2.0 reactive core.
  *
@@ -22,6 +22,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create an ImagePreview component instance.
@@ -102,10 +103,10 @@ export function ImagePreview(options = {}) {
       </div>
       <div class="ds-image-preview__nav">
         <button class="ds-image-preview__nav-btn ds-image-preview__nav-prev" type="button" aria-label="Previous">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          ${getIconHtml('chevron-left')}
         </button>
         <button class="ds-image-preview__nav-btn ds-image-preview__nav-next" type="button" aria-label="Next">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          ${getIconHtml('chevron-right')}
         </button>
       </div>
     </div>

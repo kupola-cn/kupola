@@ -20,6 +20,7 @@
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
 import { reactive, watch } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a Dropdown component instance.
@@ -170,9 +171,7 @@ export function Dropdown(options = {}) {
     <div class="ds-dropdown">
       <button class="ds-dropdown__trigger" onclick="${onTriggerClick}" aria-haspopup="listbox" aria-expanded="false">
         <span>${placeholder}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
+        ${getIconHtml('chevron-down')}
       </button>
       <div class="ds-dropdown__menu" role="listbox">${itemTemplates}</div>
     </div>

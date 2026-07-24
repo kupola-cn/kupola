@@ -21,6 +21,7 @@
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
 import { reactive, watch } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a Modal component instance.
@@ -117,9 +118,7 @@ export function Modal(options = {}, children = null) {
         <div class="ds-modal__header">
           <span class="ds-modal__title" id="modal-title">${title}</span>
           <button class="ds-modal__close" onclick="${close}" aria-label="Close" type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
+            ${getIconHtml('x')}
           </button>
         </div>
         <div class="ds-modal__body">${children}</div>

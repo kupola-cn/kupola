@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — FileUpload component built on the 2.0 reactive core.
  *
@@ -21,6 +21,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a FileUpload component instance.
@@ -152,9 +153,7 @@ export function FileUpload(options = {}) {
   const tpl = html`
     <div class="ds-fileupload">
       <div class="ds-fileupload__dropzone">
-        <div class="ds-fileupload__icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </div>
+        <div class="ds-fileupload__icon">${getIconHtml('upload')}</div>
         <div class="ds-fileupload__text">
           <span class="ds-fileupload__title"></span>
           <span class="ds-fileupload__subtitle"></span>

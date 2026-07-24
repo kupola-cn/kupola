@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Empty state component built on the 2.0 reactive core.
  *
@@ -20,6 +20,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create an Empty state component instance.
@@ -46,8 +47,7 @@ export function Empty(options = {}) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   // Default icon: simple empty-state SVG
-  const defaultIcon = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>';
-  const iconHtml = icon || defaultIcon;
+  const iconHtml = icon || getIconHtml('table');
 
   const tpl = html`
     <div class="ds-empty">

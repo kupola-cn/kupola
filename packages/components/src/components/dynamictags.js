@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — DynamicTags component built on the 2.0 reactive core.
  *
@@ -19,6 +19,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a DynamicTags component instance.
@@ -132,7 +133,7 @@ export function DynamicTags(options = {}) {
     <div class="ds-dynamic-tags">
       <input class="ds-dynamic-tags__input" type="text" />
       <button class="ds-dynamic-tags__add" type="button" aria-label="Add tag">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        ${getIconHtml('plus')}
       </button>
     </div>
   `;

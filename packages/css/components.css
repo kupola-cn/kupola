@@ -19,7 +19,7 @@ body {
 a { color: var(--text-default); text-decoration: none; }
 a:hover { color: var(--text-default); }
 img, svg, video, canvas { max-width: 100%; }
-img.icon { opacity: 1; filter: var(--icon-filter, none); }
+.ds-icon { opacity: 1; filter: var(--icon-filter, none); }
 
 /* ── Button ───────────────────────────────────────────────── */
 .ds-btn {

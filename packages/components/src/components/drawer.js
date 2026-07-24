@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Drawer component built on the 2.0 reactive core.
  *
@@ -20,6 +20,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a Drawer component instance.
@@ -96,9 +97,7 @@ export function Drawer(options = {}, children = null) {
         <div class="ds-drawer__header">
           <span class="ds-drawer__title" id="drawer-title">${title}</span>
           <button class="ds-drawer__close" onclick="${close}" aria-label="Close" type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
+            ${getIconHtml('x')}
           </button>
         </div>
         <div class="ds-drawer__body">${children}</div>

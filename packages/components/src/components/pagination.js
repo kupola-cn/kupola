@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Pagination component built on the 2.0 reactive core.
  *
@@ -21,6 +21,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a Pagination component instance.
@@ -119,11 +120,11 @@ export function Pagination(options = {}) {
       <nav class="ds-pagination">
         ${totalText}
         <button class="ds-pagination__item ds-pagination__prev" ${isFirst ? 'disabled' : ''} aria-label="Previous">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          ${getIconHtml('chevron-left')}
         </button>
         ${pageButtons}
         <button class="ds-pagination__item ds-pagination__next" ${isLast ? 'disabled' : ''} aria-label="Next">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          ${getIconHtml('chevron-right')}
         </button>
       </nav>
     `;

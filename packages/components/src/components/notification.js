@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Notification (toast) component built on the 2.0 reactive core.
  *
@@ -28,11 +28,13 @@ let _container = null;
 let _position = 'top-right';
 let _idCounter = 0;
 
-const ICONS = {
-  success: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
-  warning: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-  error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-  info: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+import { getIconHtml } from './icon-helper';
+
+const ICON_NAMES = {
+  success: 'check-circle',
+  warning: 'alert-triangle',
+  error: 'x-circle',
+  info: 'info-circle',
   normal: '',
 };
 
@@ -84,7 +86,7 @@ function _open(options = {}) {
 
   const container = _ensureContainer();
   const id = ++_idCounter;
-  const iconHtml = ICONS[type] || ICONS.normal;
+  const iconHtml = ICON_NAMES[type] ? getIconHtml(ICON_NAMES[type]) : '';
 
   // Create notification item element directly (not via template, for simpler lifecycle)
   const itemEl = document.createElement('div');

@@ -26,6 +26,7 @@ import { html } from '@kupola/core';
 import { render } from '@kupola/core';
 import { t } from '@kupola/core/i18n';
 import { reactive, watch } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a Select component instance.
@@ -306,9 +307,7 @@ export function Select(options = {}) {
       <div class="ds-select__trigger" id="${_id}">
         <span class="ds-select__value${!displayText ? ' ds-select__value--placeholder' : ''}" aria-live="polite">${displayText || _placeholder}</span>
         ${clearable ? html`<button class="ds-select__clear" aria-label="Clear selection">&times;</button>` : ''}
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
+        ${getIconHtml('chevron-down')}
       </div>
       <div class="ds-select__menu" role="listbox" id="ds-select-menu-${_id}" aria-multiselectable="${multiple}">
         ${searchable ? html`<div class="ds-select__search"><input class="ds-select__search-input" placeholder="Search..." /></div>` : ''}

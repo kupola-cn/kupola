@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Timepicker component built on the 2.0 reactive core.
  *
@@ -21,6 +21,7 @@
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
 import { t } from '@kupola/core/i18n';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a Timepicker component instance.
@@ -128,9 +129,7 @@ export function Timepicker(options = {}) {
     <div class="ds-timepicker">
       <div class="ds-timepicker__input-wrap">
         <input class="ds-timepicker__input" type="text" readonly placeholder="${t('timepicker.placeholder')}" />
-        <span class="ds-timepicker__icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </span>
+        <span class="ds-timepicker__icon">${getIconHtml('clock')}</span>
       </div>
       <div class="ds-timepicker__panel">
         <div class="ds-timepicker__body">

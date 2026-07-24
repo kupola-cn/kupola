@@ -111,6 +111,74 @@ Icons.registerIcons({
 });
 ```
 
+### Custom Icon Replacement
+
+Kupola components use built-in icons, but you can replace them globally using `registerIcons`:
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+
+registerIcons({
+  'x': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  'chevron-down': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
+  'check-circle': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+});
+```
+
+Available icon names for replacement:
+- `x` - Close icon (Modal, Drawer)
+- `chevron-left` - Left arrow (Carousel, Datepicker, Pagination, ImagePreview)
+- `chevron-right` - Right arrow (Carousel, Datepicker, Pagination, ImagePreview)
+- `chevron-down` - Down arrow (Dropdown, Select, Collapse)
+- `check-circle` - Success icon (Dialog, Message, Notification)
+- `alert-triangle` - Warning icon (Dialog, Message, Notification)
+- `x-circle` - Error icon (Dialog, Message, Notification)
+- `info-circle` - Info icon (Dialog, Message, Notification)
+- `calendar` - Calendar icon (Datepicker)
+- `clock` - Clock icon (Timepicker)
+- `plus` - Plus icon (DynamicTags)
+- `upload` - Upload icon (FileUpload)
+- `table` - Table icon (Empty)
+
+### Third-Party Icon Integration
+
+Kupola supports integration with any third-party icon library. Here are examples:
+
+**Lucide Icons:**
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+import { X, ChevronDown, CheckCircle } from 'lucide-static';
+
+registerIcons({
+  'x': X,
+  'chevron-down': ChevronDown,
+  'check-circle': CheckCircle,
+});
+```
+
+**Iconify (Iconify Icon):**
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+import { icon } from '@iconify/iconify';
+
+registerIcons({
+  'x': () => icon.renderHTML({ icon: 'mdi:close' }),
+  'chevron-down': () => icon.renderHTML({ icon: 'mdi:chevron-down' }),
+});
+```
+
+**Custom SVG Strings:**
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+
+registerIcons({
+  'x': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/></svg>',
+});
+```
+
 ## CSS
 
 Include the CSS file:

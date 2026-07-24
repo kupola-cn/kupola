@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Collapse (accordion) component built on the 2.0 reactive core.
  *
@@ -23,6 +23,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a Collapse component instance.
@@ -112,9 +113,7 @@ export function Collapse(options = {}) {
         <div class="ds-collapse__header">
           <span class="ds-collapse__title">${item.title}</span>
           ${hasContent ? html`
-            <svg class="ds-collapse__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
+            <span class="ds-collapse__icon">${getIconHtml('chevron-down')}</span>
           ` : ''}
         </div>
         ${hasContent ? html`<div class="ds-collapse__content"></div>` : ''}

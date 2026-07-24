@@ -22,6 +22,7 @@ import { html } from '@kupola/core';
 import { render } from '@kupola/core';
 import { t } from '@kupola/core/i18n';
 import { reactive, watch } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 const MONTHS = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
 const WEEKDAYS = [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ];
@@ -319,22 +320,17 @@ export function Datepicker(options = {}) {
       <div class="ds-datepicker__input-wrap" onclick="${onInputClick}">
         <input class="ds-datepicker__input" type="text" readonly placeholder="${_placeholder}" value="${displayValue}" />
         <button class="ds-datepicker__icon" onclick="${onIconClick}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
+          ${getIconHtml('calendar')}
         </button>
       </div>
       <div class="ds-datepicker__calendar" style="display:none">
         <div class="ds-datepicker__header">
           <button class="ds-datepicker__nav" onclick="${_prevMonth}" aria-label="Previous month">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            ${getIconHtml('chevron-left')}
           </button>
           <span class="ds-datepicker__title">${titleText}</span>
           <button class="ds-datepicker__nav" onclick="${_nextMonth}" aria-label="Next month">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            ${getIconHtml('chevron-right')}
           </button>
         </div>
         <div class="ds-datepicker__weekdays">${weekdaySpans}</div>

@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Carousel component built on the 2.0 reactive core.
  *
@@ -20,6 +20,7 @@
 
 import { html } from '@kupola/core';
 import { render } from '@kupola/core';
+import { getIconHtml } from './icon-helper';
 
 /**
  * Create a Carousel component instance.
@@ -110,10 +111,10 @@ export function Carousel(options = {}) {
     <div class="ds-carousel">
       <div class="ds-carousel__track"></div>
       <button class="ds-carousel__prev" type="button" aria-label="Previous">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        ${getIconHtml('chevron-left')}
       </button>
       <button class="ds-carousel__next" type="button" aria-label="Next">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        ${getIconHtml('chevron-right')}
       </button>
       <div class="ds-carousel__indicators"></div>
     </div>
