@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Badge component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Badge } from '../../src/components/badge.js';
+import { Badge } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

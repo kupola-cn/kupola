@@ -18,7 +18,29 @@ export interface ReadonlySignal<T = unknown> {
 export function signal<T = unknown>(initialValue: T): Signal<T>;
 export function computed<T = unknown>(fn: () => T): ReadonlySignal<T>;
 export function effect(fn: () => void): Cleanup;
+
+export interface WatchOptions {
+  immediate?: boolean;
+  deep?: boolean;
+}
+
+export function watch<T = unknown>(
+  getter: () => T,
+  callback: (value: T, oldValue: T | undefined) => void | (() => void),
+  options?: WatchOptions
+): Cleanup;
 export function batch<T>(fn: () => T): T;
+
+export type Reactive<T> = T extends object ? {
+  [K in keyof T]: T[K] extends object ? Reactive<T[K]> : T[K];
+} & {
+  _signal: Signal<T>;
+  dispose(): void;
+} : T;
+
+export function reactive<T extends object>(obj: T): Reactive<T>;
+export function isReactive(obj: unknown): boolean;
+export function nextTick(callback: () => void): void;
 
 export class TemplateResult {
   strings: TemplateStringsArray;
@@ -39,13 +61,17 @@ export function hydrate(tpl: TemplateResult, container: Element): TemplateInstan
 
 export interface ComponentInstance {
   readonly element: DocumentFragment;
+  on(eventName: string, handler: (...args: unknown[]) => void): () => void;
   destroy(): void;
   update(newProps: Record<string, unknown>): void;
 }
 
 export interface ComponentDefinition<Props extends Record<string, unknown> = Record<string, unknown>> {
   props?: (keyof Props & string)[];
-  setup(props: Record<keyof Props, Signal<unknown>>, children?: TemplateResult | string | null): () => TemplateResult;
+  setup(props: Record<keyof Props, Signal<unknown>>, children?: TemplateResult | string | null, emit?: (eventName: string, ...args: unknown[]) => void): () => TemplateResult;
+  created?: () => void;
+  mounted?: () => void;
+  destroyed?: () => void;
 }
 
 export type ComponentFactory<Props extends Record<string, unknown> = Record<string, unknown>> = {
@@ -61,6 +87,8 @@ export function register(name: string, componentFactory: Function): void;
 export function getComponent(name: string): Function | undefined;
 export function hasComponent(name: string): boolean;
 export function clearRegistry(): void;
+export function provide<T = unknown>(key: string, value: T): void;
+export function inject<T = unknown>(key: string, defaultValue?: T): T | undefined;
 
 export interface WalkResult {
   root: Element;
@@ -130,10 +158,61 @@ export function $$<T extends Element = Element>(selector: string, context?: Pare
 export function flushJobs(): void;
 export function resetScheduler(): void;
 
+export interface Messages {
+  [key: string]: string;
+}
+
+export interface FormatDateOptions {
+  weekday?: 'narrow' | 'short' | 'long';
+  era?: 'narrow' | 'short' | 'long';
+  year?: 'numeric' | '2-digit';
+  month?: 'numeric' | '2-digit' | 'narrow' | 'short' | 'long';
+  day?: 'numeric' | '2-digit';
+  hour?: 'numeric' | '2-digit';
+  minute?: 'numeric' | '2-digit';
+  second?: 'numeric' | '2-digit';
+  timeZoneName?: 'short' | 'long';
+  formatMatcher?: 'basic' | 'best fit';
+  timeZone?: string;
+  localeMatcher?: 'lookup' | 'best fit';
+}
+
+export interface FormatNumberOptions {
+  localeMatcher?: 'lookup' | 'best fit';
+  style?: 'decimal' | 'currency' | 'percent';
+  currency?: string;
+  currencyDisplay?: 'symbol' | 'code' | 'name';
+  useGrouping?: boolean;
+  minimumIntegerDigits?: number;
+  minimumFractionDigits?: number;
+  maximumFractionDigits?: number;
+  minimumSignificantDigits?: number;
+  maximumSignificantDigits?: number;
+}
+
+export interface FormatRelativeTimeOptions {
+  localeMatcher?: 'lookup' | 'best fit';
+  numeric?: 'always' | 'auto';
+  style?: 'long' | 'short' | 'narrow';
+}
+
+export type RelativeTimeUnit = 'year' | 'quarter' | 'month' | 'week' | 'day' | 'hour' | 'minute' | 'second';
+
 export function setLocale(locale: string): void;
 export function getLocale(): string;
-export function t(key: string, params?: Record<string, string | number>): string;
-export function addMessages(locale: string, messages: Record<string, string>): void;
+export function t(key: string, params?: Record<string, unknown>): string;
+export function addMessages(locale: string, messages: Messages): void;
+export function getMessages(locale: string): Messages;
+export function getSupportedLocales(): string[];
+export function formatDate(date: Date | number, options?: FormatDateOptions): string;
+export function formatNumber(num: number, options?: FormatNumberOptions): string;
+export function formatCurrency(num: number, currency?: string, options?: Omit<FormatNumberOptions, 'style'>): string;
+export function formatRelativeTime(value: number, unit: RelativeTimeUnit, options?: FormatRelativeTimeOptions): string;
+export function isRTL(locale?: string): boolean;
+export function getDirection(locale?: string): 'ltr' | 'rtl';
+export function onLocaleChange(callback: (newLocale: string, oldLocale: string) => void): () => void;
+
+export const localeSignal: Signal<string>;
 
 export interface ErrorBoundaryOptions {
   fallback?: string | HTMLElement | ((error: unknown) => string | HTMLElement);

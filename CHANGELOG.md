@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.2.0 (2026-07-24)
+
+### Accessibility (A11Y)
+
+- Enhanced ARIA attributes for Switch, Radio, Checkbox, Select, and Dialog components
+- Added `role="switch"` and `aria-checked`/`aria-disabled` to Switch
+- Added `role="radiogroup"` with `aria-posinset`/`aria-setsize` to Radio group
+- Added `role="checkbox"` with `aria-checked`/`aria-disabled` to Checkbox
+- Added `role="combobox"`/`role="listbox"`/`role="option"` to Select with full ARIA support
+- Added `role="alertdialog"` with `aria-modal`/`aria-labelledby`/`aria-describedby` to Dialog
+
+### Internationalization (i18n)
+
+- Added reactive `localeSignal` for automatic component updates on language change
+- Implemented `detectLocale()` with priority: URL param → localStorage → browser settings
+- Added `formatDate()`, `formatNumber()`, `formatCurrency()`, `formatRelativeTime()` using Intl API
+- Added `isRTL()` and `getDirection()` for text direction support
+- Added `onLocaleChange()` for language change event listening
+- Built-in English (en-US) and Chinese (zh-CN) language packs with 300+ translation keys
+- External language packs can be added via `addMessages()` API
+
+### Core enhancements
+
+- Added `watch()` API with `immediate` and `deep` options
+- Added component lifecycle hooks: `created`, `mounted`, `destroyed`
+- Added `provide()`/`inject()` for global state sharing
+- Enhanced `k-model` to support dot notation (`obj.key`) and array indexing (`arr[0]`)
+
 ## 2.1.1 (2026-07-24)
 
 ### Core directives and release quality

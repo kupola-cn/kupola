@@ -1,0 +1,276 @@
+{
+  "name": "@kupola/components",
+  "version": "1.0.0",
+  "description": "Kupola UI components — 48+ accessible, responsive components for building modern web interfaces.",
+  "type": "module",
+  "main": "dist/components.cjs",
+  "module": "dist/components.esm.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/components.esm.js",
+      "require": "./dist/components.cjs",
+      "types": "./src/index.d.ts"
+    },
+    "./alert": {
+      "import": "./dist/kupola-components-alert.esm.js",
+      "require": "./dist/kupola-components-alert.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./avatar": {
+      "import": "./dist/kupola-components-avatar.esm.js",
+      "require": "./dist/kupola-components-avatar.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./badge": {
+      "import": "./dist/kupola-components-badge.esm.js",
+      "require": "./dist/kupola-components-badge.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./breadcrumb": {
+      "import": "./dist/kupola-components-breadcrumb.esm.js",
+      "require": "./dist/kupola-components-breadcrumb.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./calendar": {
+      "import": "./dist/kupola-components-calendar.esm.js",
+      "require": "./dist/kupola-components-calendar.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./carousel": {
+      "import": "./dist/kupola-components-carousel.esm.js",
+      "require": "./dist/kupola-components-carousel.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./checkbox": {
+      "import": "./dist/kupola-components-checkbox.esm.js",
+      "require": "./dist/kupola-components-checkbox.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./collapse": {
+      "import": "./dist/kupola-components-collapse.esm.js",
+      "require": "./dist/kupola-components-collapse.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./colorpicker": {
+      "import": "./dist/kupola-components-colorpicker.esm.js",
+      "require": "./dist/kupola-components-colorpicker.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./countdown": {
+      "import": "./dist/kupola-components-countdown.esm.js",
+      "require": "./dist/kupola-components-countdown.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./datepicker": {
+      "import": "./dist/kupola-components-datepicker.esm.js",
+      "require": "./dist/kupola-components-datepicker.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./dialog": {
+      "import": "./dist/kupola-components-dialog.esm.js",
+      "require": "./dist/kupola-components-dialog.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./divider": {
+      "import": "./dist/kupola-components-divider.esm.js",
+      "require": "./dist/kupola-components-divider.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./drawer": {
+      "import": "./dist/kupola-components-drawer.esm.js",
+      "require": "./dist/kupola-components-drawer.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./dropdown": {
+      "import": "./dist/kupola-components-dropdown.esm.js",
+      "require": "./dist/kupola-components-dropdown.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./dynamictags": {
+      "import": "./dist/kupola-components-dynamictags.esm.js",
+      "require": "./dist/kupola-components-dynamictags.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./empty": {
+      "import": "./dist/kupola-components-empty.esm.js",
+      "require": "./dist/kupola-components-empty.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./fileupload": {
+      "import": "./dist/kupola-components-fileupload.esm.js",
+      "require": "./dist/kupola-components-fileupload.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./form": {
+      "import": "./dist/kupola-components-form.esm.js",
+      "require": "./dist/kupola-components-form.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./heatmap": {
+      "import": "./dist/kupola-components-heatmap.esm.js",
+      "require": "./dist/kupola-components-heatmap.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./icons": {
+      "import": "./dist/kupola-components-icons.esm.js",
+      "require": "./dist/kupola-components-icons.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./imagepreview": {
+      "import": "./dist/kupola-components-imagepreview.esm.js",
+      "require": "./dist/kupola-components-imagepreview.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./input": {
+      "import": "./dist/kupola-components-input.esm.js",
+      "require": "./dist/kupola-components-input.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./kbd": {
+      "import": "./dist/kupola-components-kbd.esm.js",
+      "require": "./dist/kupola-components-kbd.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./menu": {
+      "import": "./dist/kupola-components-menu.esm.js",
+      "require": "./dist/kupola-components-menu.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./message": {
+      "import": "./dist/kupola-components-message.esm.js",
+      "require": "./dist/kupola-components-message.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./modal": {
+      "import": "./dist/kupola-components-modal.esm.js",
+      "require": "./dist/kupola-components-modal.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./notification": {
+      "import": "./dist/kupola-components-notification.esm.js",
+      "require": "./dist/kupola-components-notification.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./numberinput": {
+      "import": "./dist/kupola-components-numberinput.esm.js",
+      "require": "./dist/kupola-components-numberinput.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./pagination": {
+      "import": "./dist/kupola-components-pagination.esm.js",
+      "require": "./dist/kupola-components-pagination.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./progress": {
+      "import": "./dist/kupola-components-progress.esm.js",
+      "require": "./dist/kupola-components-progress.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./radio": {
+      "import": "./dist/kupola-components-radio.esm.js",
+      "require": "./dist/kupola-components-radio.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./select": {
+      "import": "./dist/kupola-components-select.esm.js",
+      "require": "./dist/kupola-components-select.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./skeleton": {
+      "import": "./dist/kupola-components-skeleton.esm.js",
+      "require": "./dist/kupola-components-skeleton.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./slider": {
+      "import": "./dist/kupola-components-slider.esm.js",
+      "require": "./dist/kupola-components-slider.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./spin": {
+      "import": "./dist/kupola-components-spin.esm.js",
+      "require": "./dist/kupola-components-spin.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./statcard": {
+      "import": "./dist/kupola-components-statcard.esm.js",
+      "require": "./dist/kupola-components-statcard.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./switch": {
+      "import": "./dist/kupola-components-switch.esm.js",
+      "require": "./dist/kupola-components-switch.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./table": {
+      "import": "./dist/kupola-components-table.esm.js",
+      "require": "./dist/kupola-components-table.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./tabs": {
+      "import": "./dist/kupola-components-tabs.esm.js",
+      "require": "./dist/kupola-components-tabs.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./tag": {
+      "import": "./dist/kupola-components-tag.esm.js",
+      "require": "./dist/kupola-components-tag.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./textarea": {
+      "import": "./dist/kupola-components-textarea.esm.js",
+      "require": "./dist/kupola-components-textarea.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./timeline": {
+      "import": "./dist/kupola-components-timeline.esm.js",
+      "require": "./dist/kupola-components-timeline.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./timepicker": {
+      "import": "./dist/kupola-components-timepicker.esm.js",
+      "require": "./dist/kupola-components-timepicker.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./tooltip": {
+      "import": "./dist/kupola-components-tooltip.esm.js",
+      "require": "./dist/kupola-components-tooltip.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./tree": {
+      "import": "./dist/kupola-components-tree.esm.js",
+      "require": "./dist/kupola-components-tree.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./validation": {
+      "import": "./dist/kupola-components-validation.esm.js",
+      "require": "./dist/kupola-components-validation.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./virtuallist": {
+      "import": "./dist/kupola-components-virtuallist.esm.js",
+      "require": "./dist/kupola-components-virtuallist.cjs",
+      "types": "./src/components/types.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "src/"
+  ],
+  "keywords": [
+    "ui-components",
+    "components",
+    "kupola",
+    "web-components"
+  ],
+  "author": "kupola-cn",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kupola-cn/kupola",
+    "directory": "packages/components"
+  },
+  "peerDependencies": {
+    "@kupola/core": "^3.0.0"
+  }
+}

@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Pagination component.
  * @jest-environment jsdom
  */
 
 import { html, resetScheduler } from '../../src/index.js';
-import { Pagination } from '../../src/components/pagination.js';
+import { Pagination } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

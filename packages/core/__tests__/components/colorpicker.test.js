@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the ColorPicker component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { ColorPicker } from '../../src/components/colorpicker.js';
+import { ColorPicker } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

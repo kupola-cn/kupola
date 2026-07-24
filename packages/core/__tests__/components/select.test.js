@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Select component.
  * @jest-environment jsdom
  */
 
 import { html, resetScheduler } from '../../src/index.js';
-import { Select } from '../../src/components/select.js';
+import { Select } from '@kupola/components';
 
 const ITEMS = [
   { value: 'a', text: 'Alpha' },

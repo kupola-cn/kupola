@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Dialog component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Dialog } from '../../src/components/dialog.js';
+import { Dialog } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

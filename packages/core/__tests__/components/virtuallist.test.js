@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the VirtualList component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { VirtualList } from '../../src/components/virtuallist.js';
+import { VirtualList } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

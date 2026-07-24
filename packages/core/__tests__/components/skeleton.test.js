@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Skeleton component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Skeleton } from '../../src/components/skeleton.js';
+import { Skeleton } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Tabs component.
  * @jest-environment jsdom
  */
 
 import { html, resetScheduler } from '../../src/index.js';
-import { Tabs } from '../../src/components/tabs.js';
+import { Tabs } from '@kupola/components';
 
 const TABS = [
   { key: 'a', label: 'Tab A' },

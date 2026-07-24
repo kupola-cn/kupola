@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the NumberInput component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { NumberInput } from '../../src/components/numberinput.js';
+import { NumberInput } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

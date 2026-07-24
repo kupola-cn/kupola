@@ -1,11 +1,11 @@
-/**
+﻿/**
  * Table Component Tests
  *
  * Tests for Table: basic rendering, columns, data, empty/loading,
  * sort, filter, pagination, selection, expand, inline edit,
  * column resize, row drag, CSV export, tree data, and destroy.
  */
-import { Table } from '../../src/components/table.js';
+import { Table } from '@kupola/components';
 
 describe('Table', () => {
   const sampleData = [

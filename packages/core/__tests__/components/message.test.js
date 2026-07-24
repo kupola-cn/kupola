@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-import { Message } from '../../src/components/message.js';
+﻿// SPDX-License-Identifier: MIT
+import { Message } from '@kupola/components';
 
 describe('Message', () => {
   afterEach(() => {

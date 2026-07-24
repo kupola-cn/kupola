@@ -1,9 +1,9 @@
 {
   "name": "@kupola/ai-adapter",
-  "version": "2.0.3",
+  "version": "3.0.0",
   "description": "AI operation engine for Kupola — natural language → structured commands with Query/Action/Flow engines",
   "type": "module",
-  "main": "dist/ai-adapter.esm.js",
+  "main": "dist/ai-adapter.cjs",
   "module": "dist/ai-adapter.esm.js",
   "types": "src/types.d.ts",
   "exports": {
@@ -15,7 +15,7 @@
   },
   "files": [
     "dist/",
-    "src/types.d.ts",
+    "src/",
     "README.md"
   ],
   "keywords": [
@@ -34,13 +34,13 @@
     "directory": "packages/ai-adapter"
   },
   "peerDependencies": {
-    "@kupola/kupola": "^2.0.0"
+    "@kupola/core": "^3.0.0"
   },
   "devDependencies": {
-    "@kupola/kupola": "^2.0.0"
+    "@kupola/core": "^3.0.0"
   },
   "scripts": {
     "test": "jest",
-    "build": "rollup -c ../../rollup.config.cjs --environment PACKAGE:ai-adapter"
+    "build": "rollup -c ../../rollup.config.cjs"
   }
 }

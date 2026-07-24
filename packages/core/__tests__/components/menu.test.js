@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Menu component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Menu } from '../../src/components/menu.js';
+import { Menu } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

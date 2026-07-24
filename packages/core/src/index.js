@@ -15,7 +15,7 @@ export { signal, Signal, reactive, isReactive } from './signal.js';
 export { computed } from './computed.js';
 
 // ── Effect ───────────────────────────────────────────────────────────────────
-export { effect } from './effect.js';
+export { effect, watch } from './effect.js';
 
 // ── Batch ────────────────────────────────────────────────────────────────────
 export { batch } from './batch.js';
@@ -30,7 +30,7 @@ export { render } from './render.js';
 export { hydrate } from './server.js';
 
 // ── Component ────────────────────────────────────────────────────────────────
-export { defineComponent, register, getComponent, hasComponent, clearRegistry } from './component.js';
+export { defineComponent, register, getComponent, hasComponent, clearRegistry, provide, inject } from './component.js';
 
 // ── Directives ───────────────────────────────────────────────────────────────
 export {
@@ -41,7 +41,11 @@ export {
 export { flushJobs, resetScheduler, nextTick } from './scheduler.js';
 
 // ── i18n ─────────────────────────────────────────────────────────────────────
-export { setLocale, getLocale, t, addMessages } from './i18n.js';
+export {
+  setLocale, getLocale, t, addMessages, getMessages, getSupportedLocales,
+  formatDate, formatNumber, formatCurrency, formatRelativeTime,
+  isRTL, getDirection, onLocaleChange, localeSignal,
+} from './i18n.js';
 
 // ── Error Boundary ───────────────────────────────────────────────────────────
 export { ErrorBoundary } from './errors.js';

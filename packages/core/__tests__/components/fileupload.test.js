@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the FileUpload component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { FileUpload } from '../../src/components/fileupload.js';
+import { FileUpload } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

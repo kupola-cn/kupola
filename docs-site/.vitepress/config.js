@@ -28,6 +28,7 @@ export default defineConfig({
             { text: '项目结构', link: '/guide/project-structure' },
             { text: '生命周期', link: '/guide/lifecycle' },
             { text: '核心概念', link: '/guide/core-concepts' },
+            { text: '国际化', link: '/guide/i18n' },
             { text: '指令系统', link: '/guide/directives' },
             { text: '指令能力矩阵', link: '/guide/directive-matrix' },
             { text: '表单状态策略', link: '/guide/form-state' },

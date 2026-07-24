@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Dropdown component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Dropdown } from '../../src/components/dropdown.js';
+import { Dropdown } from '@kupola/components';
 
 const TEST_ITEMS = [
   { value: 'a', text: 'Option A' },

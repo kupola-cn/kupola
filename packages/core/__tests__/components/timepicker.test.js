@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Timepicker component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Timepicker } from '../../src/components/timepicker.js';
+import { TimePicker as Timepicker } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

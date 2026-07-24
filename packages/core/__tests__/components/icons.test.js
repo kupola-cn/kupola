@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Icons, svg, render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups } from '../../src/components/icons.js';
+import { Icons, svg, render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups } from '@kupola/components';
 
 describe('Icons', () => {
   // ── svg() ──

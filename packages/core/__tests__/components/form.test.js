@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-import { Form } from '../../src/components/form.js';
+﻿// SPDX-License-Identifier: MIT
+import { Form } from '@kupola/components';
 
 describe('Form', () => {
   function makeForm(html) {

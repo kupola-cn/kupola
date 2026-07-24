@@ -184,7 +184,10 @@ function isPrototypeKey(key) {
 }
 
 function isSafeScopePropertyName(name) {
-  return typeof name === 'string' && /^[A-Za-z_$][\w$]*$/.test(name) && !isPrototypeKey(name);
+  if (typeof name !== 'string') {return false;}
+  if (/^[A-Za-z_$][\w$]*$/.test(name)) {return !isPrototypeKey(name);}
+  const safePattern = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\[\d+\]|\[\w+\])*$/;
+  return safePattern.test(name) && !name.includes('__proto__') && !name.includes('constructor') && !name.includes('prototype');
 }
 
 function createDomContext(root, disposers, refs = Object.create(null), appRefs = refs, sanitizer) {
@@ -1195,7 +1198,7 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
     warn(
       'W024',
       `${describeElement(el)} uses k-model with an unsafe assignment target "${expr}". ` +
-      'k-model only supports safe top-level scope property names.',
+      'k-model supports safe property names, dot notation (obj.key), and array indices (arr[0]).',
     );
     return;
   }

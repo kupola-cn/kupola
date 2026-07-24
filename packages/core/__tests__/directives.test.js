@@ -783,7 +783,7 @@ describe('k-model', () => {
     view.destroy();
   });
 
-  test('only accepts safe top-level k-model targets', () => {
+  test('only accepts safe k-model targets', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const container = document.createElement('div');
     container.innerHTML = `
@@ -795,11 +795,10 @@ describe('k-model', () => {
     document.body.appendChild(container);
 
     const view = walk(container);
-    expect(container.querySelector('.path').value).toBe('');
+    expect(container.querySelector('.path').value).toBe('Ada');
     expect(container.querySelector('.prototype').value).toBe('');
-    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W024]'));
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('safe top-level scope property names'));
     view.destroy();
   });
 

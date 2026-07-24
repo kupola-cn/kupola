@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the ImagePreview component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { ImagePreview } from '../../src/components/imagepreview.js';
+import { ImagePreview } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

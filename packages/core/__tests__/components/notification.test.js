@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Notification component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Notification } from '../../src/components/notification.js';
+import { Notification } from '@kupola/components';
 
 afterEach(() => {
   Notification.destroy();

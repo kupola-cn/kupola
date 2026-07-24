@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Statcard component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Statcard } from '../../src/components/statcard.js';
+import { StatCard as Statcard } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

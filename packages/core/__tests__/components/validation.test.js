@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-import { Validation } from '../../src/components/validation.js';
+﻿// SPDX-License-Identifier: MIT
+import { Validation } from '@kupola/components';
 
 describe('Validation', () => {
   let v;

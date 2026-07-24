@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Collapse component.
  * @jest-environment jsdom
  */
 
 import { html, resetScheduler } from '../../src/index.js';
-import { Collapse } from '../../src/components/collapse.js';
+import { Collapse } from '@kupola/components';
 
 const ITEMS = [
   { key: 'a', title: 'Section A', content: html`<p>Content A</p>` },

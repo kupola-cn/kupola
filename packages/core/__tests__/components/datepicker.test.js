@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Datepicker component.
  * @jest-environment jsdom
  */
 
 import { html, resetScheduler } from '../../src/index.js';
-import { Datepicker } from '../../src/components/datepicker.js';
+import { DatePicker as Datepicker } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

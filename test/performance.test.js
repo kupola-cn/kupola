@@ -91,7 +91,7 @@ describe('Performance: Signal reactivity', () => {
 
 describe('Performance: VirtualList creation', () => {
   test('VirtualList with 10,000 items creates in < 200ms', () => {
-    const { VirtualList } = require('../packages/core/src/components/virtuallist.js');
+    const { VirtualList } = require('@kupola/components');
 
     const items = Array.from({ length: 10000 }, (_, i) => ({
       title: `Item ${i + 1}`,
@@ -112,7 +112,7 @@ describe('Performance: VirtualList creation', () => {
   });
 
   test('VirtualList with 100,000 items creates in < 500ms', () => {
-    const { VirtualList } = require('../packages/core/src/components/virtuallist.js');
+    const { VirtualList } = require('@kupola/components');
 
     const items = Array.from({ length: 100000 }, (_, i) => ({
       title: `Item ${i + 1}`,
@@ -134,7 +134,7 @@ describe('Performance: VirtualList creation', () => {
 
 describe('Performance: Table component', () => {
   test('Table with 1,000 rows creates in < 500ms', () => {
-    const { Table } = require('../packages/core/src/components/table.js');
+    const { Table } = require('@kupola/components');
 
     const data = Array.from({ length: 1000 }, (_, i) => ({
       id: i + 1,
@@ -163,7 +163,7 @@ describe('Performance: Table component', () => {
   });
 
   test('Table with 5,000 rows creates in < 2000ms', () => {
-    const { Table } = require('../packages/core/src/components/table.js');
+    const { Table } = require('@kupola/components');
 
     const data = Array.from({ length: 5000 }, (_, i) => ({
       id: i + 1,

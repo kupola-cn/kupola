@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Spin component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Spin } from '../../src/components/spin.js';
+import { Spin } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

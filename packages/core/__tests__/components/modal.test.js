@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Modal component.
  * @jest-environment jsdom
  */
 
 import { html, resetScheduler } from '../../src/index.js';
-import { Modal } from '../../src/components/modal.js';
+import { Modal } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

@@ -301,3 +301,55 @@ export function printProfileReport() {
   }
   console.log('═══════════════════════════════════════════════════════');
 }
+
+// ── DevTools Extension Protocol ──────────────────────────────────────────────
+
+const _devtoolsListeners = new Map();
+
+function _sendToDevTools(message) {
+  if (typeof window !== 'undefined' && window.__KUPOLA_DEVTOOLS__) {
+    window.__KUPOLA_DEVTOOLS__.postMessage(message);
+  }
+}
+
+function _handleDevToolsMessage(event) {
+  if (event.source !== window) {return;}
+  const { type, payload } = event.data || {};
+  const handlers = _devtoolsListeners.get(type) || [];
+  handlers.forEach(handler => handler(payload));
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', _handleDevToolsMessage);
+}
+
+export function onDevToolsMessage(type, handler) {
+  const handlers = _devtoolsListeners.get(type) || [];
+  handlers.push(handler);
+  _devtoolsListeners.set(type, handlers);
+  return () => {
+    const currentHandlers = _devtoolsListeners.get(type) || [];
+    _devtoolsListeners.set(type, currentHandlers.filter(h => h !== handler));
+  };
+}
+
+export function sendDevToolsMessage(type, payload = {}) {
+  _sendToDevTools({ type: `kupola:${type}`, payload });
+}
+
+export function exposeDevToolsAPI() {
+  if (typeof window === 'undefined') {return;}
+  
+  window.__KUPOLA__ = {
+    enableProfiler,
+    disableProfiler,
+    resetProfiler,
+    getProfileReport,
+    printProfileReport,
+    isProfilerEnabled,
+    sendMessage: sendDevToolsMessage,
+    onMessage: onDevToolsMessage,
+  };
+  
+  console.log('[Kupola] DevTools API exposed. Use window.__KUPOLA__ to access.');
+}

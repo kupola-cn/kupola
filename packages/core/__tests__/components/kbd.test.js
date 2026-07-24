@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Kbd component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Kbd } from '../../src/components/kbd.js';
+import { Kbd } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Textarea component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Textarea } from '../../src/components/textarea.js';
+import { TextArea as Textarea } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

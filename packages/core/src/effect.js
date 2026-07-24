@@ -101,3 +101,63 @@ function dispose(eff) {
   eff._disposed = true;
   cleanupDeps(eff);
 }
+
+/**
+ * Watch a signal or computed value and call a callback when it changes.
+ *
+ * @param {Function} getter  Function that returns the value to watch.
+ * @param {Function} callback  Called when the value changes: (newValue, oldValue) => void.
+ * @param {Object} options  Optional configuration.
+ * @param {boolean} options.immediate  If true, call callback immediately with current value.
+ * @param {boolean} options.deep  If true, perform deep comparison.
+ * @returns {Function} Dispose function.
+ */
+export function watch(getter, callback, options = {}) {
+  const { immediate = false, deep = false } = options;
+  let oldValue = deep ? structuredClone(getter()) : getter();
+  let initialized = !immediate;
+
+  const dispose = effect(() => {
+    const newValue = getter();
+    if (initialized) {
+      const changed = deep
+        ? !areDeepEqual(oldValue, newValue)
+        : oldValue !== newValue;
+      if (changed) {
+        const result = callback(newValue, oldValue);
+        if (typeof result === 'function') {
+          result();
+        }
+        oldValue = deep ? structuredClone(newValue) : newValue;
+      }
+    } else {
+      initialized = true;
+      oldValue = deep ? structuredClone(newValue) : newValue;
+    }
+  });
+
+  if (immediate) {
+    const newValue = getter();
+    const result = callback(newValue, undefined);
+    if (typeof result === 'function') {
+      result();
+    }
+  }
+
+  return dispose;
+}
+
+function areDeepEqual(a, b) {
+  if (a === b) {return true;}
+  if (typeof a !== 'object' || typeof b !== 'object') {return false;}
+  if (a === null || b === null) {return a === b;}
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) {return false;}
+    return a.every((val, i) => areDeepEqual(val, b[i]));
+  }
+  if (Array.isArray(a) || Array.isArray(b)) {return false;}
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) {return false;}
+  return keysA.every(key => areDeepEqual(a[key], b[key]));
+}

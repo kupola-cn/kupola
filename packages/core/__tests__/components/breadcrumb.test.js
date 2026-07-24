@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Breadcrumb component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Breadcrumb } from '../../src/components/breadcrumb.js';
+import { Breadcrumb } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

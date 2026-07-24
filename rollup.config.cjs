@@ -41,11 +41,12 @@ function bundle(input, outputBase, include, options = {}) {
       },
     ],
     plugins: plugins(include),
-    external: ['@babel/runtime'],
+    external: ['@babel/runtime', '@kupola/core', '@kupola/core/i18n', '@kupola/core/server', '@kupola/core/directives'],
   };
 }
 
 const coreInclude = ['packages/core/src/**/*.js'];
+const componentsInclude = ['packages/components/src/**/*.js'];
 const aiAdapterInclude = ['packages/ai-adapter/src/**/*.js'];
 
 const coreEntries = [
@@ -55,22 +56,27 @@ const coreEntries = [
   ['packages/core/src/i18n.js', 'dist/kupola-core-i18n'],
 ];
 
-const componentDir = path.join(__dirname, 'packages/core/src/components');
+const componentsDir = path.join(__dirname, 'packages/components/src/components');
 const componentEntries = fs
-  .readdirSync(componentDir)
+  .readdirSync(componentsDir)
   .filter(file => file.endsWith('.js'))
   .sort()
   .map(file => {
     const name = path.basename(file, '.js');
     return [
-      `packages/core/src/components/${file}`,
-      `dist/kupola-core-${name}`,
+      `packages/components/src/components/${file}`,
+      `dist/kupola-components-${name}`,
     ];
   });
 
+const componentsMainEntry = [
+  ['packages/components/src/index.js', 'dist/kupola-components'],
+];
+
 module.exports = [
   ...coreEntries.map(([input, outputBase]) => bundle(input, outputBase, coreInclude)),
-  ...componentEntries.map(([input, outputBase]) => bundle(input, outputBase, coreInclude)),
+  ...componentsMainEntry.map(([input, outputBase]) => bundle(input, outputBase, componentsInclude)),
+  ...componentEntries.map(([input, outputBase]) => bundle(input, outputBase, componentsInclude)),
   bundle(
     'packages/ai-adapter/src/index.js',
     'packages/ai-adapter/dist/ai-adapter',

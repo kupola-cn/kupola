@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Avatar component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Avatar } from '../../src/components/avatar.js';
+import { Avatar } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

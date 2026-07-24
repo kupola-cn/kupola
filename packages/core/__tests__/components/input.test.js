@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Input component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Input } from '../../src/components/input.js';
+import { Input } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

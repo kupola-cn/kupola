@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Progress component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Progress } from '../../src/components/progress.js';
+import { Progress } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

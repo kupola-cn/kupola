@@ -14,6 +14,17 @@ import { signal } from './signal.js';
 import { render } from './render.js';
 import { TemplateResult } from './template.js';
 
+/** @type {Map<string, unknown>} Global provide/inject registry. */
+const provideRegistry = new Map();
+
+export function provide(key, value) {
+  provideRegistry.set(key, value);
+}
+
+export function inject(key, defaultValue = undefined) {
+  return provideRegistry.has(key) ? provideRegistry.get(key) : defaultValue;
+}
+
 // ─── defineComponent ─────────────────────────────────────────────────────────
 
 /**
@@ -32,6 +43,12 @@ import { TemplateResult } from './template.js';
  *         ${children}
  *       </div>
  *     `;
+ *   },
+ *   mounted() {
+ *     console.log('Component mounted');
+ *   },
+ *   destroyed() {
+ *     console.log('Component destroyed');
  *   }
  * });
  *
@@ -40,55 +57,86 @@ import { TemplateResult } from './template.js';
  * render(view, container);
  * ```
  *
- * @param {{ props?: string[], setup: Function }} definition
+ * @param {{ props?: string[], setup: Function, created?: Function, mounted?: Function, destroyed?: Function }} definition
  * @returns {Function} Component factory: (initialProps?, children?) => TemplateResult
  */
 export function defineComponent(definition) {
-  const { props: propNames = [], setup } = definition;
+  const { props: propNames = [], setup, created, mounted, destroyed } = definition;
 
   /**
    * Component factory function.
    *
    * @param {Object} [initialProps={}]  Initial prop values.
    * @param {TemplateResult|string} [children]  Slot content (children).
-   * @returns {{ template: TemplateResult, destroy: Function, update: Function }}
+   * @returns {{ template: TemplateResult, destroy: Function, update: Function, on: Function }}
    */
   function component(initialProps = {}, children = null) {
-    // Create reactive prop signals — exposed directly so that templates
-    // receive signal objects (which the render system tracks reactively).
     const propSignals = {};
+    const eventHandlers = new Map();
 
     for (const name of propNames) {
       propSignals[name] = signal(initialProps[name]);
     }
 
-    // Call setup to get the render function.
-    // props are signal objects: props.title.value reads the current value.
-    const renderFn = setup(propSignals, children);
+    const emit = (eventName, ...args) => {
+      const handlers = eventHandlers.get(eventName) || [];
+      handlers.forEach(handler => handler(...args));
+    };
 
-    // Execute the render function to get the template
+    const renderFn = setup(propSignals, children, emit);
+
     const template = renderFn();
 
-    // Render into a temporary container (DocumentFragment)
     const fragment = document.createDocumentFragment();
     const instance = render(template, fragment);
 
+    let mountedCalled = false;
+    const checkMounted = () => {
+      if (mountedCalled) {return;}
+      let node = fragment.firstChild;
+      while (node) {
+        if (node.isConnected) {
+          mountedCalled = true;
+          mounted?.();
+          observer.disconnect();
+          break;
+        }
+        node = node.nextSibling;
+      }
+    };
+
+    const observer = new MutationObserver(() => {
+      checkMounted();
+    });
+    observer.observe(document, { childList: true, subtree: true });
+
+    checkMounted();
+
+    if (created) {
+      created();
+    }
+
     return {
-      /** The rendered DOM content (DocumentFragment). */
       get element() { return fragment; },
 
-      /** The TemplateInstance (for destroy). */
       _instance: instance,
 
-      /** Destroy the component: clean up all effects and listeners. */
-      destroy() {
-        instance.destroy();
+      on(eventName, handler) {
+        const handlers = eventHandlers.get(eventName) || [];
+        handlers.push(handler);
+        eventHandlers.set(eventName, handlers);
+        return () => {
+          const currentHandlers = eventHandlers.get(eventName) || [];
+          eventHandlers.set(eventName, currentHandlers.filter(h => h !== handler));
+        };
       },
 
-      /**
-       * Update component props.
-       * @param {Object} newProps  New prop values to set.
-       */
+      destroy() {
+        observer.disconnect();
+        instance.destroy();
+        destroyed?.();
+      },
+
       update(newProps) {
         for (const name of propNames) {
           if (name in newProps && propSignals[name]) {
@@ -99,7 +147,6 @@ export function defineComponent(definition) {
     };
   }
 
-  // Mark as a Kupola component (for identification)
   component._isKupolaComponent = true;
   component._propNames = propNames;
 

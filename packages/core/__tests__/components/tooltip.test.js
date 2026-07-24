@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Tooltip component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Tooltip } from '../../src/components/tooltip.js';
+import { Tooltip } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

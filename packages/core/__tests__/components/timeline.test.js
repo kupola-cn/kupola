@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Timeline component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Timeline } from '../../src/components/timeline.js';
+import { Timeline } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

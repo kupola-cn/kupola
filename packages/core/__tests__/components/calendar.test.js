@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-import { Calendar } from '../../src/components/calendar.js';
+﻿// SPDX-License-Identifier: MIT
+import { Calendar } from '@kupola/components';
 
 describe('Calendar', () => {
   // ── Rendering ──

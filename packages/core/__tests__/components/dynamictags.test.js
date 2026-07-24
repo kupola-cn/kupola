@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the DynamicTags component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { DynamicTags } from '../../src/components/dynamictags.js';
+import { DynamicTags } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

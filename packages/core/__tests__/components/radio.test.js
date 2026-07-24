@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Radio component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Radio } from '../../src/components/radio.js';
+import { Radio } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

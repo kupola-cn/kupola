@@ -295,5 +295,11 @@ export function reactive(obj) {
   const sig = new Signal(obj);
   const reactiveObj = wrapReactive(obj, sig);
   Object.defineProperty(reactiveObj, '_signal', { value: sig, enumerable: false });
+  Object.defineProperty(reactiveObj, 'dispose', {
+    value: () => {
+      sig._subscribers.clear();
+    },
+    enumerable: false,
+  });
   return reactiveObj;
 }

@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Checkbox component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Checkbox } from '../../src/components/checkbox.js';
+import { Checkbox } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

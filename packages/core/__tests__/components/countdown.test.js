@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Countdown component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Countdown } from '../../src/components/countdown.js';
+import { Countdown } from '@kupola/components';
 
 beforeEach(() => {
   jest.useFakeTimers();

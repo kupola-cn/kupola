@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Alert component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Alert } from '../../src/components/alert.js';
+import { Alert } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';

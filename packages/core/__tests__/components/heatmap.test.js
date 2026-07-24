@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-import { Heatmap } from '../../src/components/heatmap.js';
+﻿// SPDX-License-Identifier: MIT
+import { Heatmap } from '@kupola/components';
 
 describe('Heatmap', () => {
   const sampleData = [

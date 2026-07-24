@@ -1,5 +1,12 @@
 module.exports = {
   testEnvironment: 'jsdom',
+  moduleNameMapper: {
+    '@kupola/components': '<rootDir>/packages/components/src/index.js',
+    '@kupola/core': '<rootDir>/packages/core/src/index.js',
+    '@kupola/core/i18n': '<rootDir>/packages/core/src/i18n.js',
+    '@kupola/core/server': '<rootDir>/packages/core/src/server.js',
+    '@kupola/core/directives': '<rootDir>/packages/core/src/directives.js',
+  },
   testMatch: [
     '**/test/**/*.test.js',
     '**/test/**/*.spec.js',

@@ -72,6 +72,20 @@ directives 核心变更。
 - 所有组件遵循工厂函数模式：`Component(options) → { element, destroy, ... }`
 - CSS 类名统一使用 `kupola-` 前缀（如 `kupola-modal-overlay`）
 
+**可访问性 (A11Y) 规则**：
+
+- 交互组件必须添加适当的 ARIA 属性（`role`、`aria-*`）
+- 支持键盘导航（Tab、Enter、Escape、方向键）
+- 表单组件必须有标签关联（`label` 或 `aria-label`）
+- 颜色对比度符合 WCAG AA 标准（至少 4.5:1）
+
+**国际化 (i18n) 规则**：
+
+- 所有用户可见的文本必须使用 `t()` 函数翻译
+- 翻译键名使用小写英文，用点分隔（如 `modal.close`）
+- 支持参数插值（如 `t('form.min', { min: 10 })`）
+- 日期/数字格式化使用 `formatDate()` / `formatNumber()` 等 API
+
 ---
 
 ## 新增组件流程

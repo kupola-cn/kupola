@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Carousel component.
  * @jest-environment jsdom
  */
 
 import { resetScheduler } from '../../src/index.js';
-import { Carousel } from '../../src/components/carousel.js';
+import { Carousel } from '@kupola/components';
 
 afterEach(() => {
   document.body.innerHTML = '';
