@@ -84,6 +84,7 @@ export interface WalkResult {
 
 export interface WalkOptions {
   autoDestroy?: boolean;
+  sanitizer?: ((html: string, element: Element) => string) | null;
 }
 
 export interface ScopeContext {
@@ -113,11 +114,14 @@ export type ScopeDefinition =
   | ((ctx: ScopeContext) => Record<string, unknown>);
 
 export function walk(root: Element | string, options?: WalkOptions): WalkResult;
-export function walkAuto(root: Element | string): WalkResult;
+export function walkAuto(root: Element | string, options?: WalkOptions): WalkResult;
 export function walkOnce(root: Element | string, options?: WalkOptions): WalkResult;
 export function getWalk(root: Element | string): WalkResult | null;
 export function hasWalk(root: Element | string): boolean;
 export function destroyWalk(root: Element | string): boolean;
+export function setHtmlSanitizer(
+  sanitizer: ((html: string, element: Element) => string) | null
+): void;
 export function defineScope(name: string, definition: ScopeDefinition): void;
 export function $(selector: string, context?: ParentNode): Element | null;
 export function $(selector: Element | null, context?: ParentNode): Element | null;

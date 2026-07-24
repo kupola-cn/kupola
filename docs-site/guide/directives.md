@@ -57,10 +57,20 @@ Kupola 提供声明式指令操作 DOM。
 事件表达式可以直接使用 `event` 或 `$event`。常用修饰符：
 
 - 流程：`.stop` `.prevent` `.once` `.self`
-- 键盘：`.enter` `.escape` `.esc` `.space` `.tab` `.up` `.down` `.left` `.right`
+- 键盘：`.enter` `.escape` `.esc` `.space` `.tab` `.up` `.down` `.left` `.right`，以及 `.k` `.s` 这样的单字母按键
+- 组合键：`.ctrl` `.shift` `.alt` `.meta`
+- 监听选项：`.capture` `.passive`
 - 行为：`.outside` `.debounce`，可写成 `.debounce.300`
 
 `.once` 会在其他过滤条件通过后才生效，例如 `@keydown.enter.once` 不会被 Escape 按键消耗，`@click.outside.once` 不会被元素内部点击消耗。
+
+```html
+<input @keydown.ctrl.k="openSearch()" />
+<section @click.capture="trackClick()">...</section>
+```
+
+`.passive` 表示处理器不会取消默认行为，因此与 `.prevent` 同时使用时 `.prevent` 不生效。
+未知修饰符、非键盘事件上的按键修饰符，以及 `.passive.prevent` 会输出稳定 code 的诊断警告，但不会中断页面初始化。
 
 ## k-init
 
@@ -110,7 +120,26 @@ Kupola 提供声明式指令操作 DOM。
 <input k-model.number="age" />
 <input k-model.lazy="keyword" />
 <input k-model.debounce.300="keyword" />
+<select k-model.boolean="enabled">
+  <option value="true">是</option>
+  <option value="false">否</option>
+</select>
 ```
+
+`.boolean` 会把表单值 `"true"` / `"false"` 转换为布尔值，适用于 radio 和 select。文本输入会在中文等 IME 组合输入结束后再写入状态，不会把未确认的拼写中间值提前暴露给 effect。
+`.boolean` 只转换明确的 `"true"` 和 `"false"`；`"0"`、`"no"` 等其他值保持原样，避免静默转换成错误的布尔值。`.number.boolean` 属于冲突组合，会输出诊断警告。
+
+`k-model` 只接受安全的顶层 scope 属性名，例如 `k-model="username"`；不支持 `user.name`、数组下标、`__proto__`、`constructor` 或 `prototype`。`<input type="file">` 和 `contenteditable` 也不支持 `k-model`。文件选择由浏览器拥有，业务代码应通过 `change` 事件读取 `event.target.files`；富文本需要专门的编辑器和清洗策略。表单 reset、异步提交、可访问性与输入法边界见 [表单状态策略](/guide/form-state)。
+
+## k-key
+
+给 `k-for` 提供稳定的行标识，让排序、插入和删除时可以复用正确的 DOM 和事件绑定。也支持 `:key`。
+
+```html
+<li k-for="user in users" k-key="user.id" k-text="user.name"></li>
+```
+
+`k-key` 只能用在带 `k-for` 的同一元素上。优先使用业务稳定 id，不要使用会随排序变化的下标。`k-key`、`:key`、`k-bind:key` 同时出现会触发 `W021`；优先级固定为 `k-key > :key > k-bind:key`，应只保留一个写法。
 
 ## k-ref
 
@@ -273,6 +302,8 @@ walk(document.body)
 ```
 
 大列表优先使用 `VirtualList` 或业务层分页。普通业务列表如果需要保留行内输入、焦点或临时 DOM 状态，应提供稳定 `:key`。
+
+列表行只能依赖同次渲染内唯一且稳定的 key。对象引用和 `Symbol` 可以作为内存中的 key，但不能跨服务端渲染、序列化或重新创建的对象保持身份；对象枚举时第二个变量是对象属性名。完整规则见 [指令能力矩阵](/guide/directive-matrix)。
 
 ## 表达式报错
 

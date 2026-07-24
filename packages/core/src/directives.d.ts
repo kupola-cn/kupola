@@ -8,6 +8,9 @@ export type KupolaRefValue = Element | Element[];
 export function $(selector: string, context?: ParentNode): Element | null;
 export function $(selector: Element | null, context?: ParentNode): Element | null;
 export function $$<T extends Element = Element>(selector: string, context?: ParentNode): T[];
+export function setHtmlSanitizer(
+  sanitizer: ((html: string, element: Element) => string) | null
+): void;
 
 export interface ScopeContext {
   root: Element;
@@ -37,6 +40,7 @@ export type ScopeDefinition =
 
 export interface WalkOptions {
   autoDestroy?: boolean;
+  sanitizer?: ((html: string, element: Element) => string) | null;
 }
 
 /** Result of walking a DOM tree — call destroy() to clean up all effects and listeners. */
@@ -77,7 +81,7 @@ export function walk(root: Element | string, options?: WalkOptions): WalkResult;
 /**
  * Walk a DOM tree and automatically destroy the instance when the root is removed.
  */
-export function walkAuto(root: Element | string): WalkResult;
+export function walkAuto(root: Element | string, options?: WalkOptions): WalkResult;
 
 /**
  * Return the existing walk instance for a root, or create one if needed.

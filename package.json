@@ -1,16 +1,19 @@
 {
   "name": "@kupola/kupola",
   "version": "2.1.1",
-  "description": "A modern, modular UI component library for any web project. Zero framework dependencies, tree-shakeable imports. 这是一个现代、模块化的 UI 组件库，适用于任何 Web 项目。零框架依赖，支持按需引入（tree-shakeable）。",
-  "main": "dist/kupola-core.esm.js",
+  "description": "A zero-framework interaction layer and optional native component library for server-rendered HTML.",
+  "main": "dist/kupola-core.cjs",
   "module": "dist/kupola-core.esm.js",
   "types": "packages/core/src/index.d.ts",
   "type": "module",
   "sideEffects": [
-    "*.css"
+    "**/*.css"
   ],
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "exports": {
     ".": {
@@ -286,19 +289,28 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "rollup -c && npm run build:css",
+    "clean": "node scripts/clean-build.mjs",
+    "build": "npm run clean && rollup -c && npm run build:css",
     "build:rollup": "rollup -c",
     "build:css": "node scripts/build-css.cjs",
-    "build:core": "rollup -c --configPlugin @rollup/plugin-commonjs 2>nul || npx rollup -c",
+    "build:core": "rollup -c",
     "lint": "eslint .",
+    "lint:core": "eslint packages/core/src packages/core/__tests__",
+    "lint:directives": "eslint packages/core/src/directives.js packages/core/__tests__/directives.test.js",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "types:check": "tsc -p tsconfig.public-api.json",
+    "package:smoke": "node scripts/package-smoke.mjs",
+    "package:contents": "node scripts/package-contents-smoke.mjs",
+    "release:metadata": "node scripts/release-metadata.mjs",
     "size": "size-limit",
     "size:why": "size-limit --why",
-    "prepublishOnly": "npm run build",
+    "verify": "npm run lint:directives && npm run release:metadata && npm run types:check && npm run test:coverage && npm run build && npm run package:smoke && npm run package:contents && npm run docs:build && npm run size",
+    "release:check": "npm run verify",
+    "prepublishOnly": "npm run release:check",
     "docs:dev": "vitepress dev docs-site",
     "docs:build": "vitepress build docs-site",
     "docs:preview": "vitepress preview docs-site",
@@ -332,11 +344,14 @@
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
-  "homepage": "https://github.com/kupola-cn/kupola",
+  "homepage": "https://kupola-cn.github.io/kupola/",
   "files": [
     "dist/",
-    "packages/core/",
-    "packages/css/",
+    "packages/core/src/index.d.ts",
+    "packages/core/src/directives.d.ts",
+    "packages/core/src/i18n.d.ts",
+    "packages/core/src/server.d.ts",
+    "packages/core/src/components/types.d.ts",
     "version.json"
   ],
   "devDependencies": {
@@ -348,7 +363,7 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^1.0.0",
-    "@size-limit/preset-app": "^12.1.0",
+    "@size-limit/file": "^12.1.0",
     "@storybook/addon-essentials": "^8.6.14",
     "@storybook/builder-vite": "^8.6.14",
     "@storybook/html": "^8.6.14",

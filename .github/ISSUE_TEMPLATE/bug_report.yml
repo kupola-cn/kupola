@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a reproducible Kupola defect.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not report security vulnerabilities here. Use the Security tab instead.
+  - type: input
+    id: version
+    attributes:
+      label: Kupola version
+      placeholder: 2.1.1
+    validations:
+      required: true
+  - type: dropdown
+    id: entry
+    attributes:
+      label: Affected area
+      options:
+        - Core reactivity
+        - Directives
+        - SSR or hydration
+        - Component library
+        - CSS or themes
+        - Build or package exports
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide a repository, runnable snippet, or exact steps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, browser, Node version, and bundler where relevant.
+    validations:
+      required: true

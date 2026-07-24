@@ -32,6 +32,7 @@ import { flushJobs } from './scheduler.js';
 
 /** @type {Map<string, Object|Function>} */
 const scopeRegistry = new Map();
+let htmlSanitizer = null;
 
 function formatDiagnostic(code, message) {
   return `[kupola ${code}] ${message}`;
@@ -39,6 +40,18 @@ function formatDiagnostic(code, message) {
 
 function warn(code, message) {
   console.warn(formatDiagnostic(code, message));
+}
+
+/**
+ * Configure HTML processing for k-html. Pass null to restore trusted passthrough behavior.
+ *
+ * @param {((html: string, element: Element) => string)|null} sanitizer
+ */
+export function setHtmlSanitizer(sanitizer) {
+  if (sanitizer !== null && typeof sanitizer !== 'function') {
+    throw new TypeError('[kupola] setHtmlSanitizer() expects a function or null.');
+  }
+  htmlSanitizer = sanitizer;
 }
 
 /**
@@ -92,9 +105,9 @@ export function defineScope(name, definition) {
  * @returns {Proxy}
  */
 function createScope(data) {
-  const signals = {};
+  const signals = Object.create(null);
   for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key)) {
+    if (Object.prototype.hasOwnProperty.call(data, key) && !isPrototypeKey(key)) {
       signals[key] = signal(data[key]);
     }
   }
@@ -108,6 +121,9 @@ function createScope(data) {
         return s ? s.value : undefined;
       },
       set(_, key, val) {
+        if (typeof key !== 'string' || isPrototypeKey(key)) {
+          return true;
+        }
         const s = signals[key];
         if (s) {
           s.value = val;
@@ -140,8 +156,8 @@ function instantiateScopeDefinition(definition, ctx) {
 }
 
 function assertScopeKey(name, helperName) {
-  if (!name || typeof name !== 'string' || name.includes('.')) {
-    throw new TypeError(`[kupola] ctx.${helperName}() expects a top-level scope property name.`);
+  if (!name || typeof name !== 'string' || name.includes('.') || isPrototypeKey(name)) {
+    throw new TypeError(`[kupola] ctx.${helperName}() expects a safe top-level scope property name.`);
   }
 }
 
@@ -155,7 +171,15 @@ function isPatchableObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function createDomContext(root, disposers, refs = {}, appRefs = refs) {
+function isPrototypeKey(key) {
+  return key === '__proto__' || key === 'prototype' || key === 'constructor';
+}
+
+function isSafeScopePropertyName(name) {
+  return typeof name === 'string' && /^[A-Za-z_$][\w$]*$/.test(name) && !isPrototypeKey(name);
+}
+
+function createDomContext(root, disposers, refs = Object.create(null), appRefs = refs, sanitizer) {
   const queryRoot = root && root.querySelector ? root : document;
 
   const queryOne = (selector, context = queryRoot) => $(selector, context);
@@ -252,6 +276,7 @@ function createDomContext(root, disposers, refs = {}, appRefs = refs) {
     root,
     refs,
     appRefs,
+    sanitizer,
     $: queryOne,
     $$: queryAll,
     on,
@@ -288,7 +313,7 @@ function createDomContext(root, disposers, refs = {}, appRefs = refs) {
 
 function addRef(refs, name, el) {
   if (!name) {return () => {};}
-  const current = refs[name];
+  const current = Object.prototype.hasOwnProperty.call(refs, name) ? refs[name] : null;
   if (!current) {
     refs[name] = el;
   } else if (Array.isArray(current)) {
@@ -300,7 +325,7 @@ function addRef(refs, name, el) {
 }
 
 function removeRef(refs, name, el) {
-  const current = refs[name];
+  const current = Object.prototype.hasOwnProperty.call(refs, name) ? refs[name] : null;
   if (!current) {return;}
   if (Array.isArray(current)) {
     const next = current.filter(item => item !== el);
@@ -334,6 +359,15 @@ function resolveData(expr, ctx, el) {
 
 /** Cache compiled expression functions. */
 const exprCache = new Map();
+const MAX_CACHED_EXPRESSIONS = 500;
+
+function cacheExpression(key, fn) {
+  exprCache.set(key, fn);
+  if (exprCache.size > MAX_CACHED_EXPRESSIONS) {
+    exprCache.delete(exprCache.keys().next().value);
+  }
+  return fn;
+}
 
 /**
  * Evaluate an expression for reading (returns a value).
@@ -375,7 +409,7 @@ function createEvaluationScope(scope, locals) {
 }
 
 function createLocalScope(scope, locals) {
-  const localSignals = {};
+  const localSignals = Object.create(null);
   for (const [ key, value ] of Object.entries(locals)) {
     localSignals[key] = signal(value);
   }
@@ -457,7 +491,7 @@ function evaluate(expr, scope, locals, meta) {
     let fn = exprCache.get(expr);
     if (!fn) {
       fn = new Function('__s__', `with(__s__){return(${expr})}`);
-      exprCache.set(expr, fn);
+      cacheExpression(expr, fn);
     }
     return fn(createEvaluationScope(scope, locals));
   } catch (error) {
@@ -479,7 +513,7 @@ function evaluateStatement(expr, scope, locals, meta) {
     let fn = exprCache.get(cacheKey);
     if (!fn) {
       fn = new Function('__s__', `with(__s__){${expr}}`);
-      exprCache.set(cacheKey, fn);
+      cacheExpression(cacheKey, fn);
     }
     fn(createEvaluationScope(scope, locals));
   } catch (error) {
@@ -584,9 +618,30 @@ function handleText(el, expr, scope, disposers) {
 /**
  * Apply k-html directive: reactive innerHTML.
  */
-function handleHtml(el, expr, scope, disposers) {
+function sanitizeHtml(html, el, sanitizer) {
+  const activeSanitizer = sanitizer === undefined ? htmlSanitizer : sanitizer;
+  if (!activeSanitizer) {return html;}
+  try {
+    const result = activeSanitizer(html, el);
+    if (result && typeof result.then === 'function') {
+      warn('W023', `${describeElement(el)} sanitizer returned a Promise; k-html sanitizers must be synchronous.`);
+      return '';
+    }
+    if (typeof result !== 'string') {
+      warn('W023', `${describeElement(el)} sanitizer must return a string.`);
+      return '';
+    }
+    return result;
+  } catch (error) {
+    warn('W023', `${describeElement(el)} sanitizer failed: ${error?.message || String(error)}.`);
+    return '';
+  }
+}
+
+function handleHtml(el, expr, scope, disposers, sanitizer) {
   const dispose = effect(() => {
-    el.innerHTML = String(evaluate(expr, scope, null, { directive: 'k-html', element: el }) ?? '');
+    const html = String(evaluate(expr, scope, null, { directive: 'k-html', element: el }) ?? '');
+    el.innerHTML = sanitizeHtml(html, el, sanitizer);
   });
   disposers.push(dispose);
 }
@@ -594,7 +649,107 @@ function handleHtml(el, expr, scope, disposers) {
 /**
  * Apply k-bind directive: reactive attribute.
  */
+const URL_ATTRIBUTES = new Set([
+  'href', 'src', 'action', 'formaction', 'poster', 'xlink:href', 'data', 'codebase',
+]);
+const BLOCKED_DYNAMIC_ATTRIBUTES = new Set([ 'srcdoc', 'codebase' ]);
+const ACTIVE_URL_CONTEXTS = new Set([
+  'iframe:src', 'object:data', 'embed:src', 'script:src',
+]);
+const FORM_URL_CONTEXTS = new Set([ 'form:action', 'button:formaction', 'input:formaction' ]);
+const LINK_URL_CONTEXTS = new Set([ 'a:href', 'area:href' ]);
+const MEDIA_URL_CONTEXTS = new Set([
+  'audio:src', 'img:src', 'image:href', 'image:xlink:href', 'source:src', 'track:src', 'video:src', 'video:poster',
+]);
+const SAFE_MEDIA_DATA_URL = /^data:image\/(?:avif|bmp|gif|jpeg|jpg|png|webp);base64,/i;
+const URL_ALLOWED_PROTOCOLS = new Set([ 'http:', 'https:' ]);
+
+function hasUrlConfusionChars(value) {
+  for (const char of String(value)) {
+    const code = char.codePointAt(0);
+    if (
+      code <= 0x1f ||
+      (code >= 0x7f && code <= 0x9f) ||
+      code > 0x7e ||
+      (code >= 0x200b && code <= 0x200f) ||
+      (code >= 0x202a && code <= 0x202e) ||
+      (code >= 0x2060 && code <= 0x206f) ||
+      code === 0xfeff
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function decodeUrlForInspection(value) {
+  let decoded = value;
+  for (let i = 0; i < 3; i += 1) {
+    try {
+      const next = decodeURIComponent(decoded);
+      if (next === decoded) {break;}
+      decoded = next;
+    } catch {
+      break;
+    }
+  }
+  return decoded;
+}
+
+function getUrlContext(el, attrName) {
+  return `${String(el.tagName || '').toLowerCase()}:${String(attrName).toLowerCase()}`;
+}
+
+function isSafeDynamicUrl(el, attrName, value) {
+  const raw = String(value).trim();
+  const decoded = decodeUrlForInspection(raw);
+  const compact = decoded.replace(/\s+/g, '').toLowerCase();
+  const context = getUrlContext(el, attrName);
+
+  if (!raw || hasUrlConfusionChars(raw) || hasUrlConfusionChars(decoded)) {return false;}
+  if (raw.startsWith('//') || decoded.startsWith('//')) {return false;}
+  if (/^(?:javascript|vbscript):/i.test(compact)) {return false;}
+  if (compact.startsWith('data:')) {
+    return MEDIA_URL_CONTEXTS.has(context) && SAFE_MEDIA_DATA_URL.test(decoded);
+  }
+  if (ACTIVE_URL_CONTEXTS.has(context)) {return false;}
+
+  let parsed;
+  try {
+    const baseURI = el.ownerDocument?.baseURI || (typeof document !== 'undefined' ? document.baseURI : 'http://localhost/');
+    parsed = new URL(decoded, baseURI);
+  } catch {
+    return false;
+  }
+
+  if (LINK_URL_CONTEXTS.has(context)) {
+    return URL_ALLOWED_PROTOCOLS.has(parsed.protocol) || parsed.protocol === 'mailto:' || parsed.protocol === 'tel:';
+  }
+  if (FORM_URL_CONTEXTS.has(context)) {
+    return URL_ALLOWED_PROTOCOLS.has(parsed.protocol);
+  }
+  return URL_ALLOWED_PROTOCOLS.has(parsed.protocol);
+}
+
+function isDangerousBoundAttribute(el, attrName, value) {
+  const name = String(attrName).toLowerCase();
+  const tagName = String(el.tagName || '').toLowerCase();
+  if (isPrototypeKey(name) || /^on/i.test(name) || BLOCKED_DYNAMIC_ATTRIBUTES.has(name)) {return true;}
+  if (tagName === 'meta' && name === 'http-equiv') {return true;}
+  if (tagName === 'base' && name === 'href') {return true;}
+  if (!URL_ATTRIBUTES.has(name) || value == null) {return false;}
+  return !isSafeDynamicUrl(el, name, value);
+}
+
 function setBoundAttribute(el, attrName, val) {
+  if (isDangerousBoundAttribute(el, attrName, val)) {
+    el.removeAttribute(attrName);
+    warn(
+      'W020',
+      `${describeElement(el)} blocked unsafe dynamic attribute "${attrName}".`,
+    );
+    return;
+  }
   if (val === false || val == null) {
     el.removeAttribute(attrName);
   } else if (val === true) {
@@ -643,6 +798,7 @@ function handleBind(el, expr, attrName, scope, disposers) {
  * Apply k-on directive: event listener.
  */
 function handleOn(el, expr, eventName, modifiers, scope, disposers) {
+  validateEventModifiers(el, eventName, modifiers);
   const stop = modifiers.includes('stop');
   const prevent = modifiers.includes('prevent');
   const once = modifiers.includes('once');
@@ -698,7 +854,7 @@ function handleOn(el, expr, eventName, modifiers, scope, disposers) {
   const stopListening = () => {
     if (!listening) {return;}
     listening = false;
-    target.removeEventListener(eventName, handler);
+    target.removeEventListener(eventName, handler, listenerOptions);
   };
 
   const cleanup = () => {
@@ -747,6 +903,75 @@ function normalizeEventKey(key) {
   return key === ' ' ? ' ' : String(key || '').toLowerCase();
 }
 
+const EVENT_KEY_ALIASES = new Set([
+  'enter', 'escape', 'esc', 'space', 'tab', 'up', 'down', 'left', 'right',
+]);
+const EVENT_STANDARD_MODIFIERS = new Set([
+  'stop', 'prevent', 'once', 'self', 'outside', 'debounce', 'capture', 'passive',
+  'ctrl', 'shift', 'alt', 'meta',
+]);
+const KEYBOARD_EVENTS = new Set([ 'keydown', 'keyup', 'keypress' ]);
+
+function warnUnknownModifiers(el, directive, modifiers, knownModifiers) {
+  const unknown = modifiers.filter(modifier => !knownModifiers(modifier));
+  if (unknown.length === 0) {return;}
+  warn(
+    'W014',
+    `${describeElement(el)} has unknown ${directive} modifier(s): ${unknown.map(item => `.${item}`).join(', ')}.`,
+  );
+}
+
+function validateEventModifiers(el, eventName, modifiers) {
+  const hasDebounce = modifiers.includes('debounce');
+  warnUnknownModifiers(el, `k-on:${eventName}`, modifiers, modifier => (
+    EVENT_STANDARD_MODIFIERS.has(modifier) ||
+    EVENT_KEY_ALIASES.has(modifier) ||
+    /^[a-z]$/i.test(modifier) ||
+    (hasDebounce && /^\d+$/.test(modifier))
+  ));
+
+  if (modifiers.includes('passive') && modifiers.includes('prevent')) {
+    warn(
+      'W015',
+      `${describeElement(el)} combines .passive and .prevent on k-on:${eventName}; .prevent is ignored.`,
+    );
+  }
+
+  const keyModifiers = modifiers.filter(modifier => (
+    EVENT_KEY_ALIASES.has(modifier) || /^[a-z]$/i.test(modifier)
+  ));
+  if (keyModifiers.length > 0 && !KEYBOARD_EVENTS.has(eventName.toLowerCase())) {
+    warn(
+      'W016',
+      `${describeElement(el)} uses keyboard modifier(s) ${keyModifiers.map(item => `.${item}`).join(', ')} ` +
+      `on non-keyboard event "${eventName}".`,
+    );
+  }
+}
+
+function validateModelModifiers(el, modifiers) {
+  const hasDebounce = modifiers.includes('debounce');
+  const known = new Set([ 'trim', 'number', 'boolean', 'lazy', 'debounce' ]);
+  warnUnknownModifiers(el, 'k-model', modifiers, modifier => (
+    known.has(modifier) || (hasDebounce && /^\d+$/.test(modifier))
+  ));
+
+  if (modifiers.includes('number') && modifiers.includes('boolean')) {
+    warn(
+      'W015',
+      `${describeElement(el)} combines incompatible k-model modifiers .number and .boolean; .boolean takes precedence.`,
+    );
+  }
+
+  const supportsBoolean = el.tagName === 'SELECT' || /^(checkbox|radio)$/.test(el.type);
+  if (modifiers.includes('boolean') && !supportsBoolean) {
+    warn(
+      'W016',
+      `${describeElement(el)} uses k-model.boolean on a text-like input; prefer explicit parsing in JavaScript.`,
+    );
+  }
+}
+
 /**
  * Apply k-model directive: two-way binding for form inputs.
  */
@@ -761,7 +986,7 @@ function castModelValue(value, modifiers) {
       if (normalized === 'true') {return true;}
       if (normalized === 'false') {return false;}
     }
-    return Boolean(next);
+    return next;
   }
   if (modifiers.includes('number')) {
     const parsed = parseFloat(next);
@@ -831,9 +1056,29 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
     return;
   }
 
+  if (el.type === 'file') {
+    warn(
+      'W022',
+      `${describeElement(el)} uses k-model on a file input. Read FileList from an explicit change handler instead.`,
+    );
+    return;
+  }
+
+  if (!isSafeScopePropertyName(expr.trim())) {
+    warn(
+      'W024',
+      `${describeElement(el)} uses k-model with an unsafe assignment target "${expr}". ` +
+      'k-model only supports safe top-level scope property names.',
+    );
+    return;
+  }
+
+  validateModelModifiers(el, modifiers);
+
   const debounce = modifiers.includes('debounce');
   const debounceDelay = Number(modifiers.find(item => /^\d+$/.test(item)) || 250);
   let timer = null;
+  let composing = false;
 
   // Set initial value
   const dispose = effect(() => {
@@ -849,7 +1094,8 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
     flushJobs();
   };
 
-  const inputHandler = () => {
+  const inputHandler = (event) => {
+    if (composing || event?.isComposing) {return;}
     if (debounce) {
       clearTimeout(timer);
       timer = setTimeout(commit, debounceDelay);
@@ -863,9 +1109,26 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
     : 'input';
 
   el.addEventListener(eventName, inputHandler);
+  const usesCompositionEvents = eventName === 'input';
+  const compositionStartHandler = () => {
+    composing = true;
+  };
+  const compositionEndHandler = () => {
+    if (!composing) {return;}
+    composing = false;
+    inputHandler();
+  };
+  if (usesCompositionEvents) {
+    el.addEventListener('compositionstart', compositionStartHandler);
+    el.addEventListener('compositionend', compositionEndHandler);
+  }
   disposers.push(() => {
     clearTimeout(timer);
     el.removeEventListener(eventName, inputHandler);
+    if (usesCompositionEvents) {
+      el.removeEventListener('compositionstart', compositionStartHandler);
+      el.removeEventListener('compositionend', compositionEndHandler);
+    }
   });
 }
 
@@ -980,7 +1243,8 @@ function runTransition(el, type, done = () => {}) {
   let finished = false;
   let timer = null;
 
-  const cleanup = () => {
+  const cleanup = (event) => {
+    if (event && event.target !== el) {return;}
     if (finished) {return;}
     finished = true;
     clearTimeout(timer);
@@ -1029,8 +1293,19 @@ function handleClass(el, expr, scope, disposers) {
   disposers.push(dispose);
 }
 
+function containsUnsafeCssUrl(value) {
+  return /url\s*\(\s*['"]?\s*(?:javascript:|vbscript:|data:\s*(?:text\/html|image\/svg\+xml))/i.test(
+    String(value || '').replace(/\s+/g, ''),
+  );
+}
+
 function setStyleProperty(el, prop, value) {
   const name = prop.replace(/[A-Z]/g, match => '-' + match.toLowerCase());
+  if (value != null && value !== false && containsUnsafeCssUrl(value)) {
+    el.style.removeProperty(name);
+    warn('W020', `${describeElement(el)} blocked unsafe dynamic CSS value for "${name}".`);
+    return;
+  }
   if (value == null || value === false) {
     el.style.removeProperty(name);
   } else {
@@ -1049,7 +1324,12 @@ function handleStyle(el, expr, scope, disposers) {
     const value = evaluate(expr, scope, null, { directive: 'k-style', element: el });
 
     if (typeof value === 'string') {
-      el.setAttribute('style', staticStyle ? staticStyle + ';' + value : value);
+      if (containsUnsafeCssUrl(value)) {
+        el.setAttribute('style', staticStyle);
+        warn('W020', `${describeElement(el)} blocked unsafe dynamic CSS value.`);
+      } else {
+        el.setAttribute('style', staticStyle ? staticStyle + ';' + value : value);
+      }
       previousProps = new Set();
       return;
     }
@@ -1108,13 +1388,26 @@ function handleIf(el, expr, scope, disposers, ctx) {
   while (next && (next.hasAttribute('k-else-if') || next.hasAttribute('k-else'))) {
     const current = next;
     next = next.nextElementSibling;
+    if (current.hasAttribute('k-for')) {
+      // Leave invalid list branches for the regular walker so it can diagnose
+      // and retain the node instead of silently absorbing it into this chain.
+      break;
+    }
     addBranch(
       current,
       current.hasAttribute('k-else-if') ? current.getAttribute('k-else-if') : null,
       current.hasAttribute('k-else-if') ? 'k-else-if' : 'k-else',
     );
     parent.removeChild(current);
-    if (current.hasAttribute('k-else')) {break;}
+    if (current.hasAttribute('k-else')) {
+      if (next && (next.hasAttribute('k-else-if') || next.hasAttribute('k-else'))) {
+        warn(
+          'W021',
+          `${describeElement(next)} appears after k-else. An else branch must be the final branch in its chain.`,
+        );
+      }
+      break;
+    }
   }
 
   parent.replaceChild(marker, el);
@@ -1246,14 +1539,32 @@ function formatKey(key) {
   }
 }
 
+function getForKeyExpression(el) {
+  const keyAttributes = [ 'k-key', ':key', 'k-bind:key' ]
+    .filter(name => el.hasAttribute(name));
+  if (keyAttributes.length > 1) {
+    warn(
+      'W021',
+      `${describeElement(el)} has conflicting k-for keys (${keyAttributes.join(', ')}). ` +
+      'Use one key binding; precedence is k-key, then :key, then k-bind:key.',
+    );
+  }
+
+  const selected = keyAttributes[0];
+  if (!selected) {return null;}
+  const expression = el.getAttribute(selected);
+  return isBlankExpression(expression) ? null : expression;
+}
+
 function handleFor(el, expr, scope, disposers, ctx) {
   const parent = el.parentNode;
   if (!parent) {return;}
 
   const marker = document.createComment(`k-for: ${expr}`);
   const template = el.cloneNode(true);
-  const keyExpr = el.getAttribute(':key') || el.getAttribute('k-bind:key');
+  const keyExpr = getForKeyExpression(el);
   template.removeAttribute('k-for');
+  template.removeAttribute('k-key');
   template.removeAttribute(':key');
   template.removeAttribute('k-bind:key');
   parent.replaceChild(marker, el);
@@ -1308,7 +1619,7 @@ function handleFor(el, expr, scope, disposers, ctx) {
     for (let index = 0; index < items.length; index += 1) {
       const entry = items[index];
       const locals = createLocals(entry);
-      const rawKey = evaluate(keyExpr, scope, locals, { directive: ':key', element: el });
+      const rawKey = evaluate(keyExpr, scope, locals, { directive: 'k-key', element: el });
       let key = rawKey;
 
       if (seenKeys.has(rawKey)) {
@@ -1383,6 +1694,45 @@ function normalizeDirective(name) {
   return name;
 }
 
+const KNOWN_DIRECTIVES = new Set([
+  'k-data', 'k-show', 'k-text', 'k-html', 'k-bind', 'k-on', 'k-model', 'k-ref',
+  'k-init', 'k-cloak', 'k-class', 'k-style', 'k-transition', 'k-if', 'k-else-if',
+  'k-else', 'k-for', 'k-key',
+]);
+
+function validateDirectiveSyntax(el, directiveName, base, arg, modifiers) {
+  if (!KNOWN_DIRECTIVES.has(base)) {
+    warn('W017', `${describeElement(el)} has unknown directive "${directiveName}".`);
+    return false;
+  }
+
+  if (arg && base !== 'k-on' && base !== 'k-bind') {
+    warn(
+      'W018',
+      `${describeElement(el)} has unsupported argument "${arg}" on ${base}.`,
+    );
+  }
+
+  if (modifiers.length > 0 && base !== 'k-on' && base !== 'k-model') {
+    warn(
+      'W019',
+      `${describeElement(el)} has unsupported modifier(s) on ${base}: ` +
+      modifiers.map(item => `.${item}`).join(', ') + '.',
+    );
+  }
+
+  if (
+    modifiers.some(item => /^\d+$/.test(item)) &&
+    !modifiers.includes('debounce')
+  ) {
+    warn(
+      'W019',
+      `${describeElement(el)} uses a numeric modifier without .debounce on ${base}.`,
+    );
+  }
+  return true;
+}
+
 function hasAnyAttribute(el, names) {
   return names.some(name => el.hasAttribute(name));
 }
@@ -1394,6 +1744,38 @@ function warnDirectiveCombinations(el) {
       `${describeElement(el)} combines k-for and k-if on the same element. ` +
       'Prefer wrapping one directive around the other so list and branch lifecycles stay explicit.',
     );
+  }
+
+  const branchDirectives = [ 'k-if', 'k-else-if', 'k-else' ].filter(name => el.hasAttribute(name));
+  if (branchDirectives.length > 1) {
+    warn(
+      'W021',
+      `${describeElement(el)} combines structural branches ${branchDirectives.join(', ')} on one element. ` +
+      'Use one branch directive per sibling.',
+    );
+  }
+
+  if (el.hasAttribute('k-for') && (el.hasAttribute('k-else-if') || el.hasAttribute('k-else'))) {
+    warn(
+      'W021',
+      `${describeElement(el)} combines k-for with k-else-if/k-else. ` +
+      'Place the branch directive on a separate sibling.',
+    );
+  }
+
+  if (el.hasAttribute('k-key') && !el.hasAttribute('k-for')) {
+    warn(
+      'W021',
+      `${describeElement(el)} has k-key outside k-for. k-key only identifies rows rendered by k-for.`,
+    );
+  }
+
+  if (el.hasAttribute('k-for')) {
+    for (const keyAttribute of [ 'k-key', ':key', 'k-bind:key' ]) {
+      if (el.hasAttribute(keyAttribute) && isBlankExpression(el.getAttribute(keyAttribute))) {
+        warnEmptyDirectiveExpression(el, keyAttribute);
+      }
+    }
   }
 
   if (el.hasAttribute('k-class') && hasAnyAttribute(el, [ ':class', 'k-bind:class' ])) {
@@ -1523,6 +1905,8 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
     const { base, arg, modifiers } = parseDirective(full);
     const directiveName = name.startsWith(':') || name.startsWith('@') ? name : full;
 
+    if (!validateDirectiveSyntax(el, directiveName, base, arg, modifiers)) {continue;}
+
     if (base === 'k-on' && !arg) {
       warnMissingDirectiveArgument(el, directiveName, 'an event name');
       continue;
@@ -1541,7 +1925,7 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
       handleText(el, expr, scope, disposers);
       break;
     case 'k-html':
-      handleHtml(el, expr, scope, disposers);
+      handleHtml(el, expr, scope, disposers, ctx.sanitizer);
       break;
     case 'k-bind':
       handleBind(el, expr, arg, scope, disposers);
@@ -1583,16 +1967,16 @@ function getDirectDataChildren(el) {
   ));
 }
 
-function processNestedDataChildren(children, disposers, appRefs) {
+function processNestedDataChildren(children, disposers, appRefs, sanitizer) {
   for (const child of children) {
     if (!child.parentElement || !child.hasAttribute('k-data')) {continue;}
-    processDataElement(child, disposers, appRefs);
+    processDataElement(child, disposers, appRefs, sanitizer);
   }
 }
 
 function processSubtree(el, scope, disposers, ctx, allowRootTransition = false) {
   if (el.hasAttribute('k-data')) {
-    processDataElement(el, disposers, ctx.appRefs);
+    processDataElement(el, disposers, ctx.appRefs, ctx.sanitizer);
     return;
   }
 
@@ -1600,7 +1984,7 @@ function processSubtree(el, scope, disposers, ctx, allowRootTransition = false) 
   const nestedDataChildren = skipChildren ? [] : getDirectDataChildren(el);
   if (!skipChildren) {
     walkChildren(el, scope, disposers, ctx);
-    processNestedDataChildren(nestedDataChildren, disposers, ctx.appRefs);
+    processNestedDataChildren(nestedDataChildren, disposers, ctx.appRefs, ctx.sanitizer);
   }
 }
 
@@ -1622,9 +2006,9 @@ function walkChildren(parent, scope, disposers, ctx) {
 /**
  * Process a k-data element: create scope, process self + children.
  */
-function processDataElement(el, disposers, appRefs = {}) {
+function processDataElement(el, disposers, appRefs = Object.create(null), sanitizer) {
   const expr = el.getAttribute('k-data');
-  const ctx = createDomContext(el, disposers, {}, appRefs);
+  const ctx = createDomContext(el, disposers, Object.create(null), appRefs, sanitizer);
   let data = {};
   if (isBlankExpression(expr)) {
     warnEmptyDirectiveExpression(el, 'k-data');
@@ -1654,7 +2038,7 @@ function processDataElement(el, disposers, appRefs = {}) {
 
   // Handle nested k-data elements
   if (!skipChildren) {
-    processNestedDataChildren(nestedDataChildren, disposers, appRefs);
+    processNestedDataChildren(nestedDataChildren, disposers, appRefs, sanitizer);
   }
 
   return ctx;
@@ -1744,54 +2128,62 @@ function resolveOptionalWalkRoot(root) {
 export function walk(root, options = {}) {
   root = resolveWalkRoot(root);
   warnDuplicateWalk(root);
+  if (options.sanitizer != null && typeof options.sanitizer !== 'function') {
+    throw new TypeError('[kupola] walk() sanitizer option expects a function or null.');
+  }
 
   /** @type {Function[]} */
   const disposers = [];
-  const ctx = createDomContext(root, disposers, {});
+  const ctx = createDomContext(root, disposers, Object.create(null), undefined, options.sanitizer);
 
-  if (root.hasAttribute && root.hasAttribute('k-data')) {
-    processDataElement(root, disposers, ctx.refs);
-  } else {
-    // Find top-level k-data elements within root
-    const dataElements = root.querySelectorAll
-      ? root.querySelectorAll('[k-data]')
-      : [];
-
-    if (dataElements.length > 0) {
-      // Check if any data element is a direct child — process it
-      // For elements nested inside non-data parents, process them
-      for (const el of dataElements) {
-        // Only process if no ancestor (up to root) owns this subtree.
-        // Nested scopes and dynamic directive fragments are handled by
-        // their parent processDataElement/handleIf/handleFor path.
-        let isNested = false;
-        let parent = el.parentElement;
-        while (parent && parent !== root) {
-          if (
-            parent.hasAttribute('k-data') ||
-            parent.hasAttribute('k-if') ||
-            parent.hasAttribute('k-else-if') ||
-            parent.hasAttribute('k-else') ||
-            parent.hasAttribute('k-for')
-          ) {
-            isNested = true;
-            break;
-          }
-          parent = parent.parentElement;
-        }
-        if (!isNested) {
-          processDataElement(el, disposers, ctx.refs);
-        }
-      }
+  try {
+    if (root.hasAttribute && root.hasAttribute('k-data')) {
+      processDataElement(root, disposers, ctx.refs, ctx.sanitizer);
     } else {
-      // No k-data found — process directives on all children with empty scope
-      const scope = createScope({});
-      ctx.scope = scope;
-      for (const child of [ ...root.children ]) {
-        if (child.parentElement !== root) {continue;}
-        processSubtree(child, scope, disposers, ctx);
+      // Find top-level k-data elements within root
+      const dataElements = root.querySelectorAll
+        ? root.querySelectorAll('[k-data]')
+        : [];
+
+      if (dataElements.length > 0) {
+        // Check if any data element is a direct child — process it
+        // For elements nested inside non-data parents, process them
+        for (const el of dataElements) {
+          // Only process if no ancestor (up to root) owns this subtree.
+          // Nested scopes and dynamic directive fragments are handled by
+          // their parent processDataElement/handleIf/handleFor path.
+          let isNested = false;
+          let parent = el.parentElement;
+          while (parent && parent !== root) {
+            if (
+              parent.hasAttribute('k-data') ||
+              parent.hasAttribute('k-if') ||
+              parent.hasAttribute('k-else-if') ||
+              parent.hasAttribute('k-else') ||
+              parent.hasAttribute('k-for')
+            ) {
+              isNested = true;
+              break;
+            }
+            parent = parent.parentElement;
+          }
+          if (!isNested) {
+            processDataElement(el, disposers, ctx.refs, ctx.sanitizer);
+          }
+        }
+      } else {
+        // No k-data found — process directives on all children with empty scope
+        const scope = createScope({});
+        ctx.scope = scope;
+        for (const child of [ ...root.children ]) {
+          if (child.parentElement !== root) {continue;}
+          processSubtree(child, scope, disposers, ctx);
+        }
       }
     }
+  } catch (error) {
+    cleanDisposers(disposers);
+    throw error;
   }
 
   let active = true;
@@ -1829,8 +2221,8 @@ export function walk(root, options = {}) {
  * @param {Element|string} root  Root element or selector to walk.
  * @returns {ReturnType<typeof walk>}
  */
-export function walkAuto(root) {
-  return walk(root, { autoDestroy: true });
+export function walkAuto(root, options = {}) {
+  return walk(root, { ...options, autoDestroy: true });
 }
 
 /**

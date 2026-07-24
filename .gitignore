@@ -26,3 +26,7 @@ coverage/
 
 # Storybook build
 storybook-static/
+
+# VitePress generated output
+docs-site/.vitepress/.temp/
+docs-site/.vitepress/dist/

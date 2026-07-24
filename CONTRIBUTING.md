@@ -9,8 +9,8 @@
 ## 开发环境准备
 
 ```
-Node.js >= 16.x
-npm >= 8.x
+Node.js >= 18.x
+npm >= 9.x
 ```
 
 ---
@@ -20,10 +20,9 @@ npm >= 8.x
 ```bash
 git clone https://github.com/kupola-cn/kupola.git
 cd kupola
-npm install
-npm run build:core   # 构建核心引擎
-npm run test         # 运行全部测试
-npm run dev          # 启动开发服务器
+npm ci
+npm run verify       # 执行核心 lint、类型、测试、构建、包和文档门禁
+npm run docs:dev     # 启动文档开发服务器
 ```
 
 ---
@@ -55,11 +54,15 @@ kupola/
 ## 代码规范
 
 ```bash
-npm run lint       # ESLint 检查
-npm run lint:fix   # 自动修复
-npm run test       # 单元测试（883 个用例，53 个套件）
-npm run format     # Prettier 格式化
+npm run lint:directives  # 当前发布阻断的指令核心 ESLint 检查
+npm run types:check      # 公开消费者类型检查
+npm run test             # 单元与集成测试
+npm run format           # Prettier 格式化
 ```
+
+`npm run lint` 是全仓债务报告，目前不是发布门禁。组件库、AI adapter、
+主题和其他模块的 lint 问题应在各自专项中修复，不要把无关批量格式化混入
+directives 核心变更。
 
 **核心规则**：
 
@@ -87,10 +90,10 @@ npm run format     # Prettier 格式化
 
 ## 提交 PR 前检查清单
 
-- [ ] 代码通过所有 CI 检查（`npm run lint` + `npm run test`）
+- [ ] 代码通过核心 CI 检查（`npm run verify`）
 - [ ] 新增功能 / 组件包含测试用例
 - [ ] 更新了相关文档（README / INTEGRATION / JSDoc）
-- [ ] `npm run build:core` 构建成功
+- [ ] `npm run build` 构建成功
 - [ ] 新增组件体积未超过 `.size-limit.json` 中的限制
 - [ ] 已在 Chrome / Firefox / Safari 最新版手动测试
 

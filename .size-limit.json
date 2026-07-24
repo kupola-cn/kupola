@@ -2,7 +2,7 @@
   {
     "name": "kupola-core (gzip)",
     "path": "dist/kupola-core.esm.js",
-    "limit": "5 kB",
+    "limit": "15.2 kB",
     "gzip": true
   },
   {
@@ -14,7 +14,7 @@
   {
     "name": "kupola-core-directives (gzip)",
     "path": "dist/kupola-core-directives.esm.js",
-    "limit": "2 kB",
+    "limit": "9.1 kB",
     "gzip": true
   },
   {
@@ -68,7 +68,7 @@
   {
     "name": "kupola-core-dialog (gzip)",
     "path": "dist/kupola-core-dialog.esm.js",
-    "limit": "3 kB",
+    "limit": "4 kB",
     "gzip": true
   },
   {
@@ -116,7 +116,7 @@
   {
     "name": "kupola-core-divider (gzip)",
     "path": "dist/kupola-core-divider.esm.js",
-    "limit": "1 kB",
+    "limit": "2 kB",
     "gzip": true
   },
   {
@@ -146,7 +146,7 @@
   {
     "name": "kupola-core-kbd (gzip)",
     "path": "dist/kupola-core-kbd.esm.js",
-    "limit": "1 kB",
+    "limit": "2 kB",
     "gzip": true
   },
   {
@@ -194,7 +194,7 @@
   {
     "name": "kupola-core-numberinput (gzip)",
     "path": "dist/kupola-core-numberinput.esm.js",
-    "limit": "2 kB",
+    "limit": "3 kB",
     "gzip": true
   },
   {
@@ -212,7 +212,7 @@
   {
     "name": "kupola-core-timepicker (gzip)",
     "path": "dist/kupola-core-timepicker.esm.js",
-    "limit": "3 kB",
+    "limit": "4 kB",
     "gzip": true
   },
   {

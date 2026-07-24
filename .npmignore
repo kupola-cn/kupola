@@ -33,6 +33,7 @@ package-lock.json
 
 # Maps
 *.map
+dist/ai-adapter.*
 
 # Misc
 showcase.html

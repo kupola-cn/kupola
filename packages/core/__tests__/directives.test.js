@@ -10,6 +10,7 @@ import {
   destroyWalk,
   getWalk,
   hasWalk,
+  setHtmlSanitizer,
   walk,
   walkAuto,
   walkOnce,
@@ -17,6 +18,7 @@ import {
 import { flushJobs, resetScheduler, signal } from '../src/index.js';
 
 afterEach(() => {
+  setHtmlSanitizer(null);
   document.body.innerHTML = '';
   resetScheduler();
   jest.restoreAllMocks();
@@ -163,6 +165,35 @@ describe('k-show', () => {
     view.destroy();
     jest.useRealTimers();
   });
+
+  test('ignores transition completion events bubbled from descendants', () => {
+    jest.useFakeTimers();
+
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ visible: true }">
+        <button @click="visible = false">Hide</button>
+        <p k-show="visible" k-transition><span>Content</span></p>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const p = container.querySelector('p');
+    const child = container.querySelector('span');
+    container.querySelector('button').click();
+    flushJobs();
+    jest.advanceTimersByTime(32);
+
+    child.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    expect(p.style.display).toBe('');
+
+    p.dispatchEvent(new Event('transitionend'));
+    expect(p.style.display).toBe('none');
+
+    view.destroy();
+    jest.useRealTimers();
+  });
 });
 
 // ─── k-html ──────────────────────────────────────────────────────────────────
@@ -272,6 +303,93 @@ describe('k-bind', () => {
     flushJobs();
     expect(span.getAttribute('class')).toBe('b');
 
+    view.destroy();
+  });
+
+  test('uses an optional global sanitizer before writing HTML', () => {
+    setHtmlSanitizer(html => html.replace(/<script[\s\S]*?<\/script>/gi, ''));
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ content: '<b>safe</b><script>unsafe()</script>' }">
+        <div k-html="content"></div>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(container.querySelector('[k-html]').innerHTML).toBe('<b>safe</b>');
+    view.destroy();
+  });
+
+  test('isolates per-walk sanitizers and rejects asynchronous sanitizer output', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const first = document.createElement('div');
+    const second = document.createElement('div');
+    const third = document.createElement('div');
+    first.innerHTML = '<div k-data="{ html: \'<b>one</b>\' }"><p k-html="html"></p></div>';
+    second.innerHTML = '<div k-data="{ html: \'<b>two</b>\' }"><p k-html="html"></p></div>';
+    third.innerHTML = '<div k-data="{ html: \'<b>three</b>\' }"><p k-html="html"></p></div>';
+    document.body.append(first, second, third);
+
+    const firstView = walk(first, { sanitizer: html => html.replace(/<[^>]+>/g, '') });
+    const secondView = walk(second, { sanitizer: html => html.toUpperCase() });
+    const thirdView = walk(third, { sanitizer: () => Promise.resolve('later') });
+
+    expect(first.querySelector('p').innerHTML).toBe('one');
+    expect(second.querySelector('p').innerHTML).toBe('<b>TWO</b>');
+    expect(third.querySelector('p').innerHTML).toBe('');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W023]'));
+
+    firstView.destroy();
+    secondView.destroy();
+    thirdView.destroy();
+  });
+
+  test('uses one sanitizer configuration throughout nested scopes and lets null disable the global fallback', () => {
+    setHtmlSanitizer(() => '<i>global</i>');
+    const first = document.createElement('div');
+    const second = document.createElement('div');
+    first.innerHTML = `
+      <section k-data="{ html: '<b>outer</b>' }">
+        <p class="outer" k-html="html"></p>
+        <div k-data="{ html: '<b>inner</b>' }"><p class="inner" k-html="html"></p></div>
+      </section>
+    `;
+    second.innerHTML = '<div k-data="{ html: \'<b>trusted</b>\' }"><p k-html="html"></p></div>';
+    document.body.append(first, second);
+
+    const firstView = walk(first, { sanitizer: html => html.replace(/<[^>]+>/g, '') });
+    const secondView = walk(second, { sanitizer: null });
+
+    expect(first.querySelector('.outer').innerHTML).toBe('outer');
+    expect(first.querySelector('.inner').innerHTML).toBe('inner');
+    expect(second.querySelector('p').innerHTML).toBe('<b>trusted</b>');
+
+    firstView.destroy();
+    secondView.destroy();
+  });
+
+  test('clears k-html when a sanitizer returns a non-string value', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = '<div k-data="{ html: \'<b>content</b>\' }"><p k-html="html"></p></div>';
+    document.body.appendChild(container);
+
+    const view = walk(container, { sanitizer: () => ({ html: 'not a string' }) });
+    expect(container.querySelector('p').innerHTML).toBe('');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('sanitizer must return a string'));
+    view.destroy();
+  });
+
+  test('clears k-html when a sanitizer throws', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = '<div k-data="{ html: \'<b>content</b>\' }"><p k-html="html"></p></div>';
+    document.body.appendChild(container);
+
+    const view = walk(container, { sanitizer: () => { throw new Error('sanitizer failed'); } });
+    expect(container.querySelector('p').innerHTML).toBe('');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('sanitizer failed'));
     view.destroy();
   });
 
@@ -456,6 +574,37 @@ describe('k-on', () => {
     view.destroy();
   });
 
+  test('supports system keys, letter keys, capture, and passive modifiers', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ keys: 0, order: '' }" @click.capture="order += 'parent'">
+        <input @keydown.ctrl.k="keys++" />
+        <button @click.passive.prevent="order += ':button'">Run</button>
+        <span k-text="keys + ':' + order"></span>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const input = container.querySelector('input');
+    const button = container.querySelector('button');
+    const span = container.querySelector('span');
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'k' }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', ctrlKey: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'K', ctrlKey: true }));
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    flushJobs();
+
+    expect(span.textContent).toBe('1:parent:button');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W015]'));
+
+    view.destroy();
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(span.textContent).toBe('1:parent:button');
+  });
+
   test('supports outside and debounce modifiers', () => {
     jest.useFakeTimers();
 
@@ -619,6 +768,41 @@ describe('k-model', () => {
     view.destroy();
   });
 
+  test('warns and skips file inputs because their value is browser-owned', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ upload: '' }">
+        <input type="file" k-model="upload" />
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W022]'));
+    view.destroy();
+  });
+
+  test('only accepts safe top-level k-model targets', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ user: { name: 'Ada' } }">
+        <input class="path" k-model="user.name" />
+        <input class="prototype" k-model="__proto__" />
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(container.querySelector('.path').value).toBe('');
+    expect(container.querySelector('.prototype').value).toBe('');
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W024]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('safe top-level scope property names'));
+    view.destroy();
+  });
+
   test('binds checkbox arrays', () => {
     const container = document.createElement('div');
     container.innerHTML = `
@@ -643,6 +827,31 @@ describe('k-model', () => {
 
     expect(span.textContent).toBe('a,b');
 
+    view.destroy();
+  });
+
+  test('normalizes duplicate checkbox array values by strict equality', () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ tags: ['a', 'a'] }">
+        <input type="checkbox" value="a" k-model="tags" />
+        <span k-text="tags.join(',')"></span>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const checkbox = container.querySelector('input');
+    const output = container.querySelector('span');
+    expect(checkbox.checked).toBe(true);
+
+    checkbox.checked = false;
+    checkbox.dispatchEvent(new Event('change'));
+    expect(output.textContent).toBe('');
+
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change'));
+    expect(output.textContent).toBe('a');
     view.destroy();
   });
 
@@ -717,6 +926,72 @@ describe('k-model', () => {
     expect(span.textContent).toBe('a,b:42:Alice');
 
     view.destroy();
+  });
+
+  test('supports boolean values for radios and multiple selects', () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ enabled: true, flags: [false] }">
+        <input type="radio" value="true" k-model.boolean="enabled" />
+        <input type="radio" value="false" k-model.boolean="enabled" />
+        <select multiple k-model.boolean="flags">
+          <option value="true">Enabled</option>
+          <option value="false">Disabled</option>
+        </select>
+        <span k-text="enabled + ':' + flags.join(',')"></span>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const radios = container.querySelectorAll('input');
+    const select = container.querySelector('select');
+    const span = container.querySelector('span');
+
+    expect(radios[0].checked).toBe(true);
+    expect(radios[1].checked).toBe(false);
+    expect(select.options[1].selected).toBe(true);
+
+    radios[1].checked = true;
+    radios[1].dispatchEvent(new Event('change'));
+    select.options[0].selected = true;
+    select.options[1].selected = false;
+    select.dispatchEvent(new Event('change'));
+    flushJobs();
+
+    expect(span.textContent).toBe('false:true');
+    view.destroy();
+  });
+
+  test('does not commit text input until IME composition ends', () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ text: '' }">
+        <input k-model="text" />
+        <span k-text="text"></span>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const input = container.querySelector('input');
+    const span = container.querySelector('span');
+
+    input.dispatchEvent(new CompositionEvent('compositionstart'));
+    input.value = 'zhong';
+    input.dispatchEvent(new InputEvent('input', { isComposing: true }));
+    flushJobs();
+    expect(span.textContent).toBe('');
+
+    input.value = '中';
+    input.dispatchEvent(new CompositionEvent('compositionend'));
+    flushJobs();
+    expect(span.textContent).toBe('中');
+
+    view.destroy();
+    input.value = '文';
+    input.dispatchEvent(new Event('input'));
+    expect(span.textContent).toBe('中');
   });
 
   test('supports debounce modifier', () => {
@@ -887,6 +1162,24 @@ describe('k-style', () => {
     expect(p.style.color).toBe('');
     expect(p.style.backgroundColor).toBe('blue');
 
+    view.destroy();
+  });
+
+  test('blocks unsafe URL values in dynamic styles', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ bg: 'url(javascript:alert(1))', css: 'background: url(data:image/svg+xml,unsafe)' }">
+        <p class="object" k-style="{ backgroundImage: bg }"></p>
+        <p class="string" k-style="css"></p>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(container.querySelector('.object').style.backgroundImage).toBe('');
+    expect(container.querySelector('.string').getAttribute('style')).toBe('');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W020]'));
     view.destroy();
   });
 });
@@ -1130,6 +1423,59 @@ describe('k-for', () => {
     expect(ids).toEqual([ 'b', 'a' ]);
     expect(values).toEqual([ 'Bob', 'Typed' ]);
 
+    view.destroy();
+  });
+
+  test('supports k-key as an explicit k-for key directive', () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ items: [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }] }">
+        <button @click="items = [items[1], items[0]]">Reorder</button>
+        <p k-for="item in items" k-key="item.id" k-text="item.label"></p>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const firstRow = container.querySelectorAll('p')[0];
+    container.querySelector('button').click();
+    flushJobs();
+
+    expect(container.querySelectorAll('p')[1]).toBe(firstRow);
+    expect([ ...container.querySelectorAll('p') ].map(node => node.textContent)).toEqual([ 'B', 'A' ]);
+    view.destroy();
+  });
+
+  test('reuses rows keyed by object references and symbols', () => {
+    const objectKey = {};
+    const symbolKey = Symbol('row');
+    defineScope('referenceKeyPage', () => ({
+      items: [
+        { key: objectKey, label: 'Object' },
+        { key: symbolKey, label: 'Symbol' },
+      ],
+      reorder() {
+        this.items = [ ...this.items ].reverse();
+      },
+    }));
+
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <section k-data="referenceKeyPage">
+        <button class="reorder" @click="reorder()">Reorder</button>
+        <p k-for="item in items" :key="item.key" k-text="item.label"></p>
+      </section>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const [ objectRow, symbolRow ] = container.querySelectorAll('p');
+    container.querySelector('.reorder').click();
+    flushJobs();
+
+    const rows = container.querySelectorAll('p');
+    expect(rows[0]).toBe(symbolRow);
+    expect(rows[1]).toBe(objectRow);
     view.destroy();
   });
 
@@ -1526,6 +1872,24 @@ describe('walk destroy', () => {
 
     second.destroy();
   });
+
+  test('walkAuto keeps an instance alive when its root moves within the document', async () => {
+    const firstHost = document.createElement('div');
+    const secondHost = document.createElement('div');
+    const root = document.createElement('section');
+    root.innerHTML = '<div k-data="{ count: 0 }"><button @click="count++"></button><span k-text="count"></span></div>';
+    firstHost.appendChild(root);
+    document.body.append(firstHost, secondHost);
+
+    const view = walkAuto(root);
+    secondHost.appendChild(root);
+    await nextMutationTick();
+    root.querySelector('button').click();
+    flushJobs();
+
+    expect(root.querySelector('span').textContent).toBe('1');
+    view.destroy();
+  });
 });
 
 // ─── Scope API ───────────────────────────────────────────────────────────────
@@ -1603,6 +1967,22 @@ describe('scope api', () => {
     expect(Array.isArray(view.refs.row)).toBe(true);
     expect(view.refs.row).toHaveLength(2);
 
+    view.destroy();
+  });
+
+  test('stores prototype-like k-ref names as ordinary references', () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{}">
+        <button k-ref="__proto__"></button>
+        <input k-ref="constructor" />
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(view.refs.__proto__).toBe(container.querySelector('button'));
+    expect(view.refs.constructor).toBe(container.querySelector('input'));
     view.destroy();
   });
 
@@ -1906,7 +2286,39 @@ describe('scope api', () => {
     document.body.appendChild(container);
 
     expect(() => walk(container)).toThrow(
-      /ctx\.update\(\) expects a top-level scope property name/,
+      /ctx\.update\(\) expects a safe top-level scope property name/,
+    );
+  });
+
+  test('ctx.update and ctx.patch reject prototype-chain keys', () => {
+    defineScope('prototypeKeyHelperPage', () => ({
+      user: { name: 'Alice' },
+      mounted({ update }) {
+        update('__proto__', value => value);
+      },
+    }));
+
+    const updateContainer = document.createElement('div');
+    updateContainer.innerHTML = '<section k-data="prototypeKeyHelperPage"></section>';
+    document.body.appendChild(updateContainer);
+
+    expect(() => walk(updateContainer)).toThrow(
+      /ctx\.update\(\) expects a safe top-level scope property name/,
+    );
+
+    defineScope('constructorKeyHelperPage', () => ({
+      user: { name: 'Alice' },
+      mounted({ patch }) {
+        patch('constructor', { value: 1 });
+      },
+    }));
+
+    const patchContainer = document.createElement('div');
+    patchContainer.innerHTML = '<section k-data="constructorKeyHelperPage"></section>';
+    document.body.appendChild(patchContainer);
+
+    expect(() => walk(patchContainer)).toThrow(
+      /ctx\.patch\(\) expects a safe top-level scope property name/,
     );
   });
 
@@ -1949,6 +2361,248 @@ describe('warnings and cleanup', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('Unknown k-data scope "missingScope"'));
 
     view.destroy();
+  });
+
+  test('warns for unknown directives, unsupported arguments, and unsupported modifiers', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ visible: true }">
+        <span k-tetx="visible"></span>
+        <span k-text:name="visible"></span>
+        <span k-show.lazy="visible"></span>
+        <button @click.300="visible = false"></button>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W017]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('k-tetx'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W018]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('argument "name"'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W019]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('.lazy'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('numeric modifier without .debounce'));
+    view.destroy();
+  });
+
+  test('blocks executable dynamic attributes in named and object bindings', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ url: 'java script:alert(1)', attrs: { onclick: 'alert(1)', title: 'safe' } }">
+        <a :href="url">Link</a>
+        <button k-bind="attrs">Run</button>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const link = container.querySelector('a');
+    const button = container.querySelector('button');
+
+    expect(link.hasAttribute('href')).toBe(false);
+    expect(button.hasAttribute('onclick')).toBe(false);
+    expect(button.getAttribute('title')).toBe('safe');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W020]'));
+    view.destroy();
+  });
+
+  test('blocks sensitive element attributes and reports structural directive mistakes', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ html: '<p>unsafe</p>', href: 'https://example.com' }">
+        <iframe :srcdoc="html"></iframe>
+        <base :href="href" />
+        <meta :http-equiv="'refresh'" />
+        <object :data="'javascript:alert(1)'"></object>
+        <p k-key="id">Outside key</p>
+        <p k-if="true" k-else>Invalid branch</p>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(container.querySelector('iframe').hasAttribute('srcdoc')).toBe(false);
+    expect(container.querySelector('base').hasAttribute('href')).toBe(false);
+    expect(container.querySelector('meta').hasAttribute('http-equiv')).toBe(false);
+    expect(container.querySelector('object').hasAttribute('data')).toBe(false);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W020]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W021]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('k-key outside k-for'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('combines structural branches'));
+    view.destroy();
+  });
+
+  test('diagnoses conflicting structural branches, empty key aliases, and repeated else chains', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ items: [1] }">
+        <p k-if="true" k-else>Invalid branch</p>
+        <p k-for="item in items" k-else>Invalid list branch</p>
+        <p k-for="item in items" :key="" k-text="item"></p>
+        <p k-for="item in items" k-bind:key="" k-text="item"></p>
+        <p k-if="false">First</p>
+        <p k-else>Second</p>
+        <p k-else>Repeated</p>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('combines structural branches'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('combines k-for with k-else'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('empty :key expression'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('empty k-bind:key expression'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('without an adjacent k-if branch'));
+    view.destroy();
+  });
+
+  test('applies element-aware URL policy to dynamic attributes', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{
+        safeHref: 'https://example.com/page',
+        mailHref: 'mailto:ops@example.com',
+        encodedScript: 'jav%61script:alert(1)',
+        bidiScript: 'java' + String.fromCharCode(0x202e) + 'script:alert(1)',
+        controlScript: 'java' + String.fromCharCode(0) + 'script:alert(1)',
+        unicodeHost: 'https://ex' + String.fromCharCode(0x0430) + 'mple.com',
+        protocolRelative: '//cdn.example.com/app.css',
+        pngData: 'data:image/png;base64,iVBORw0KGgo=',
+        svgData: 'data:image/svg+xml,<svg></svg>'
+      }">
+        <a class="safe" :href="safeHref">Safe</a>
+        <a class="mail" :href="mailHref">Mail</a>
+        <form :action="encodedScript"></form>
+        <a class="bidi" :href="bidiScript">Bidi</a>
+        <a class="control" :href="controlScript">Control</a>
+        <a class="unicode" :href="unicodeHost">Unicode</a>
+        <link rel="stylesheet" :href="protocolRelative" />
+        <iframe :src="'/frame.html'"></iframe>
+        <object :data="'https://example.com/file.pdf'"></object>
+        <embed :src="'https://example.com/file.pdf'" />
+        <script :src="'https://example.com/app.js'"></script>
+        <img class="png" :src="pngData" />
+        <img class="svg" :src="svgData" />
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(container.querySelector('.safe').getAttribute('href')).toBe('https://example.com/page');
+    expect(container.querySelector('.mail').getAttribute('href')).toBe('mailto:ops@example.com');
+    expect(container.querySelector('form').hasAttribute('action')).toBe(false);
+    expect(container.querySelector('.bidi').hasAttribute('href')).toBe(false);
+    expect(container.querySelector('.control').hasAttribute('href')).toBe(false);
+    expect(container.querySelector('.unicode').hasAttribute('href')).toBe(false);
+    expect(container.querySelector('link').hasAttribute('href')).toBe(false);
+    expect(container.querySelector('iframe').hasAttribute('src')).toBe(false);
+    expect(container.querySelector('object').hasAttribute('data')).toBe(false);
+    expect(container.querySelector('embed').hasAttribute('src')).toBe(false);
+    expect(container.querySelector('script').hasAttribute('src')).toBe(false);
+    expect(container.querySelector('.png').getAttribute('src')).toBe('data:image/png;base64,iVBORw0KGgo=');
+    expect(container.querySelector('.svg').hasAttribute('src')).toBe(false);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W020]'));
+    view.destroy();
+  });
+
+  test('blocks prototype-chain names from object k-bind values', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ attrs: Object.assign(Object.create(null), { constructor: 'unsafe', title: 'safe' }) }">
+        <button k-bind="attrs">Run</button>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const button = container.querySelector('button');
+    expect(button.hasAttribute('constructor')).toBe(false);
+    expect(button.getAttribute('title')).toBe('safe');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W020]'));
+    view.destroy();
+  });
+
+  test('warns about k-for key conflicts and applies the documented precedence', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ items: [{ id: 'a', alternate: 'x' }] }">
+        <p k-for="item in items" k-key="item.id" :key="item.alternate" k-text="item.id"></p>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(container.querySelector('p').textContent).toBe('a');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('conflicting k-for keys'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('precedence is k-key, then :key, then k-bind:key'));
+    view.destroy();
+  });
+
+  test('cleans initialized listeners when walk fails partway through setup', () => {
+    const handler = jest.fn();
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ handler: null }">
+        <button class="action" @click="handler()">Action</button>
+        <p k-init="throw new Error('mount failed')"></p>
+      </div>
+    `;
+    document.body.appendChild(container);
+    const root = container.querySelector('[k-data]');
+
+    root.__kupolaHandler = handler;
+    root.setAttribute('k-data', '{ handler: () => document.querySelector("[k-data]").__kupolaHandler() }');
+
+    expect(() => walk(container)).toThrow(/mount failed/);
+    container.querySelector('.action').click();
+    expect(handler).not.toHaveBeenCalled();
+    expect(hasWalk(container)).toBe(false);
+  });
+
+  test('repeated k-if and k-for updates clean row listeners and watches', () => {
+    defineScope('lifecycleStressPage', ({ on, watch }) => ({
+      visible: true,
+      items: [ 1, 2, 3 ],
+      clicks: 0,
+      watchRuns: 0,
+      mounted() {
+        watch(() => this.items, () => { this.watchRuns++; });
+        on('click', '.row', () => { this.clicks++; });
+      },
+    }));
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <section k-data="lifecycleStressPage">
+        <button class="toggle" @click="visible = !visible"></button>
+        <button class="reorder" @click="items = [...items].reverse()"></button>
+        <div k-if="visible"><button class="row" k-for="item in items" k-key="item" k-text="item"></button></div>
+        <span k-text="clicks + ':' + watchRuns"></span>
+      </section>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    for (let index = 0; index < 25; index += 1) {
+      container.querySelector('.row').click();
+      container.querySelector('.reorder').click();
+      container.querySelector('.toggle').click();
+      container.querySelector('.toggle').click();
+      flushJobs();
+    }
+    const row = container.querySelector('.row');
+    const state = container.querySelector('span');
+    expect(state.textContent).toBe('25:25');
+    view.destroy();
+    row.click();
+    expect(state.textContent).toBe('25:25');
   });
 
   test('warns and skips directives with empty expressions', () => {
@@ -2016,6 +2670,70 @@ describe('warnings and cleanup', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W002]'));
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('k-on without an event name'));
     expect(container.querySelector('span').textContent).toBe('0');
+
+    view.destroy();
+  });
+
+  test('warns for unknown, conflicting, and inapplicable event modifiers', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ count: 0 }">
+        <button @click.pervent="count++"></button>
+        <button @click.passive.prevent="count++"></button>
+        <button @click.enter="count++"></button>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W014]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('.pervent'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W015]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('.passive and .prevent'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W016]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('non-keyboard event "click"'));
+
+    view.destroy();
+  });
+
+  test('warns for invalid k-model modifiers without changing explicit conversions', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div k-data="{ value: '', mixed: '' }">
+        <input k-model.booleen="value" />
+        <input k-model.boolean="value" />
+        <select k-model.number.boolean="mixed">
+          <option value="no">No</option>
+          <option value="false">False</option>
+        </select>
+        <span k-text="typeof mixed + ':' + mixed"></span>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    const select = container.querySelector('select');
+    const span = container.querySelector('span');
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W014]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('.booleen'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W015]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('.number and .boolean'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[kupola W016]'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('text-like input'));
+
+    select.value = 'no';
+    select.dispatchEvent(new Event('change'));
+    flushJobs();
+    expect(span.textContent).toBe('string:no');
+
+    select.value = 'false';
+    select.dispatchEvent(new Event('change'));
+    flushJobs();
+    expect(span.textContent).toBe('boolean:false');
 
     view.destroy();
   });

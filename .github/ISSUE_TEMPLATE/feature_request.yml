@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a focused capability or API change.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the user workflow or limitation, not only the desired API.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include native DOM, existing Kupola APIs, or external libraries considered.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This proposal does not require attacker-controlled template expressions.
+          required: true
+        - label: I have checked the documentation and existing issues.
+          required: true

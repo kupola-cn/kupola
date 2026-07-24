@@ -320,6 +320,7 @@ describe('Directive complex scenarios', () => {
 describe('Error boundary', () => {
   test('ErrorBoundary catches factory errors', () => {
     const { ErrorBoundary } = require('../packages/core/src/errors.js');
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const view = ErrorBoundary(
       () => { throw new Error('test error'); },
@@ -329,6 +330,7 @@ describe('Error boundary', () => {
     expect(view.element).toBeDefined();
     expect(view.error).toBeDefined();
     expect(view.error.message).toBe('test error');
+    expect(error).toHaveBeenCalledWith('[Kupola ErrorBoundary]', view.error);
   });
 
   test('ErrorBoundary passes through on success', () => {
@@ -343,13 +345,15 @@ describe('Error boundary', () => {
   test('ErrorBoundary calls onError callback', () => {
     const { ErrorBoundary } = require('../packages/core/src/errors.js');
     const errors = [];
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    ErrorBoundary(
+    const view = ErrorBoundary(
       () => { throw new Error('callback test'); },
       { onError: (err) => errors.push(err.message) }
     );
 
     expect(errors).toEqual(['callback test']);
+    expect(error).toHaveBeenCalledWith('[Kupola ErrorBoundary]', view.error);
   });
 });
 

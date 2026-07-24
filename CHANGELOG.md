@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.1 (2026-07-24)
+
+### Core directives and release quality
+
+- Hardened dynamic URL binding with element-aware protocol policies, encoded URL checks, Unicode/control-character rejection, and prototype-key protection.
+- Defined per-walk HTML sanitizer behavior for synchronous, asynchronous, non-string, and throwing sanitizers.
+- Added structural directive diagnostics, keyed list precedence, lifecycle cleanup on failed initialization, and transition event-target filtering.
+- Added public API type checks, ESM/CJS package smoke tests, Windows-safe bundle-size checks, and VitePress generated-file isolation.
+- Documented directive capabilities, form state, dynamic fragments, security policy integration, and performance boundaries.
+
 ## 2.0.0 (2026-07-15)
 
 First stable release of Kupola 2.0 — a zero-dependency, modular UI component library.
