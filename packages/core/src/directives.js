@@ -1068,37 +1068,55 @@ function castModelValue(value, modifiers) {
   return next;
 }
 
-function areValuesEqual(a, b) {
+function areValuesEqual(a, b, seen = new WeakSet()) {
   if (a === b) {return true;}
   if (typeof a !== typeof b) {return false;}
   if (typeof a === 'number' && typeof b === 'number' && Number.isNaN(a) && Number.isNaN(b)) {return true;}
   if (typeof a === 'object' && a && b) {
+    if (seen.has(a) || seen.has(b)) {return seen.has(a) && seen.has(b);}
+    seen.add(a);
+    seen.add(b);
     if (Array.isArray(a) && Array.isArray(b)) {
       if (a.length !== b.length) {return false;}
       for (let i = 0; i < a.length; i += 1) {
-        if (!areValuesEqual(a[i], b[i])) {return false;}
+        if (!areValuesEqual(a[i], b[i], seen)) {return false;}
       }
       return true;
     }
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
+    const keysA = [ ...Object.keys(a), ...Object.getOwnPropertySymbols(a) ];
+    const keysB = [ ...Object.keys(b), ...Object.getOwnPropertySymbols(b) ];
     if (keysA.length !== keysB.length) {return false;}
     for (const key of keysA) {
-      if (!keysB.includes(key) || !areValuesEqual(a[key], b[key])) {return false;}
+      if (!keysB.includes(key) || !areValuesEqual(a[key], b[key], seen)) {return false;}
     }
     return true;
   }
   return false;
 }
 
-function deepClone(value) {
+function deepClone(value, seen = new WeakSet()) {
   if (!value || typeof value !== 'object') {return value;}
-  if (Array.isArray(value)) {return value.map(deepClone);}
+  if (seen.has(value)) {return value;}
+  seen.add(value);
+  if (Array.isArray(value)) {return value.map(item => deepClone(item, seen));}
   if (value instanceof Date) {return new Date(value.getTime());}
   if (value instanceof RegExp) {return new RegExp(value);}
-  const clone = {};
-  for (const key of Object.keys(value)) {
-    clone[key] = deepClone(value[key]);
+  const clone = Object.create(Object.getPrototypeOf(value));
+  for (const key of Object.getOwnPropertyNames(value)) {
+    const desc = Object.getOwnPropertyDescriptor(value, key);
+    if (desc && !desc.get && !desc.set) {
+      clone[key] = deepClone(value[key], seen);
+    } else {
+      Object.defineProperty(clone, key, desc);
+    }
+  }
+  for (const key of Object.getOwnPropertySymbols(value)) {
+    const desc = Object.getOwnPropertyDescriptor(value, key);
+    if (desc && !desc.get && !desc.set) {
+      clone[key] = deepClone(value[key], seen);
+    } else {
+      Object.defineProperty(clone, key, desc);
+    }
   }
   return clone;
 }

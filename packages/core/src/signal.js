@@ -178,9 +178,8 @@ const REACTIVE_SYMBOL = Symbol('kupola-reactive');
 const ARRAY_MUTATION_METHODS = new Set([
   'push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse',
 ]);
-const visited = new WeakSet();
 
-function isReactive(obj) {
+export function isReactive(obj) {
   return obj && obj[REACTIVE_SYMBOL] === true;
 }
 
@@ -198,7 +197,7 @@ function shallowClone(obj) {
   return clone;
 }
 
-function wrapReactive(obj, parentSignal) {
+function wrapReactive(obj, parentSignal, visited = new WeakSet()) {
   if (!obj || typeof obj !== 'object') {return obj;}
   if (isReactive(obj)) {return obj;}
   if (obj instanceof Signal) {return obj;}
@@ -206,7 +205,7 @@ function wrapReactive(obj, parentSignal) {
   if (visited.has(obj)) {return obj;}
 
   visited.add(obj);
-  const reactiveObj = new Proxy(shallowClone(obj), createReactiveHandler(parentSignal));
+  const reactiveObj = new Proxy(shallowClone(obj), createReactiveHandler(parentSignal, visited));
   visited.delete(obj);
 
   reactiveObj[REACTIVE_SYMBOL] = true;
@@ -215,7 +214,7 @@ function wrapReactive(obj, parentSignal) {
   for (const key of keys) {
     const desc = Object.getOwnPropertyDescriptor(obj, key);
     if (desc && !desc.get && !desc.set) {
-      reactiveObj[key] = wrapReactive(obj[key], parentSignal);
+      reactiveObj[key] = wrapReactive(obj[key], parentSignal, visited);
     }
   }
 
@@ -224,18 +223,19 @@ function wrapReactive(obj, parentSignal) {
 
 function notifyParent(parentSignal, target) {
   if (!parentSignal) {return;}
-  const newValue = Array.isArray(target) ? [ ...target ] : { ...target };
+  const newValue = shallowClone(target);
   if (!Object.is(parentSignal._value, newValue)) {
     parentSignal.value = newValue;
   }
 }
 
-function createReactiveHandler(parentSignal) {
+function createReactiveHandler(parentSignal, visited) {
   return {
     get(target, key, receiver) {
       if (key === REACTIVE_SYMBOL) {return true;}
       if (key === 'toJSON') {return () => target;}
       if (key === '_signal') {return parentSignal;}
+      track(parentSignal);
       if (typeof target[key] === 'function') {
         if (ARRAY_MUTATION_METHODS.has(key)) {
           return function(...args) {
@@ -246,12 +246,18 @@ function createReactiveHandler(parentSignal) {
         }
         return target[key].bind(receiver);
       }
-      return Reflect.get(target, key, receiver);
+      const value = Reflect.get(target, key, receiver);
+      if (value && typeof value === 'object' && !isReactive(value) && !(value instanceof Date) && !(value instanceof RegExp)) {
+        const wrapped = wrapReactive(value, parentSignal, visited);
+        target[key] = wrapped;
+        return wrapped;
+      }
+      return value;
     },
     set(target, key, value, receiver) {
       if (key === REACTIVE_SYMBOL) {return true;}
       const oldValue = target[key];
-      value = wrapReactive(value, parentSignal);
+      value = wrapReactive(value, parentSignal, visited);
       const result = Reflect.set(target, key, value, receiver);
       if (!Object.is(oldValue, value)) {
         notifyParent(parentSignal, target);
@@ -267,12 +273,15 @@ function createReactiveHandler(parentSignal) {
       return result;
     },
     has(target, key) {
+      track(parentSignal);
       return Reflect.has(target, key);
     },
     ownKeys(target) {
+      track(parentSignal);
       return Reflect.ownKeys(target);
     },
     getOwnPropertyDescriptor(target, key) {
+      track(parentSignal);
       return Reflect.getOwnPropertyDescriptor(target, key);
     },
   };
