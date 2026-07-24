@@ -1,4 +1,4 @@
-﻿# Kupola 集成
+# Kupola 集成
 
 AI Adapter 提供三个独立 UI 组件 + 丰富的事件系统，与 Kupola UI 深度联动。
 
@@ -247,7 +247,7 @@ adapter.wildcard('action:*', (eventName, data) => {
 ### 查询结果 → Table
 
 ```js
-import { Table } from '@kupola/kupola';
+import { Table } from '@kupola/components';
 
 adapter.on('result', ({ command, result }) => {
   if (command.engine === 'query' && result.table) {
@@ -263,7 +263,7 @@ adapter.on('result', ({ command, result }) => {
 ### 操作确认 → Modal
 
 ```js
-import { Modal } from '@kupola/kupola';
+import { Modal } from '@kupola/components';
 
 const adapter = new AIAdapter({
   action: {
@@ -284,7 +284,7 @@ const adapter = new AIAdapter({
 ### 操作结果 → Notification
 
 ```js
-import { Notification } from '@kupola/kupola';
+import { Notification } from '@kupola/components';
 
 adapter.on('action:after', ({ action, result }) => {
   if (result.success) {
@@ -300,7 +300,7 @@ adapter.on('action:after', ({ action, result }) => {
 ### 流程执行 → Timeline / Progress
 
 ```js
-import { Notification } from '@kupola/kupola';
+import { Notification } from '@kupola/components';
 
 adapter.on('flow:step', ({ step, label, status }) => {
   if (status === 'running') {
@@ -318,7 +318,7 @@ adapter.on('flow:step', ({ step, label, status }) => {
 ```js
 import { AIAdapter, AIPanel, AIDashboard, VoiceController } from '@kupola/ai-adapter';
 import { createRateLimiter, createAuthGuard } from '@kupola/ai-adapter';
-import { Table, Modal, Notification } from '@kupola/kupola';
+import { Table, Modal, Notification } from '@kupola/components';
 
 // 创建 adapter
 const adapter = new AIAdapter({

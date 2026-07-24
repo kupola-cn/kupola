@@ -3,7 +3,7 @@
 用于选择日期，适合表单、筛选器和计划类界面。
 
 ```js
-import { Datepicker } from '@kupola/kupola/components/datepicker'
+import { Datepicker } from '@kupola/components/datepicker'
 
 const picker = Datepicker({
   value: '2026-07-17',

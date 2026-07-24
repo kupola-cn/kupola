@@ -11,7 +11,7 @@
  * ```html
  * <head>
  *   <script type="module">
- *     import { themePreload } from '@kupola/kupola';
+ *     import { themePreload } from '@kupola/platform';
  *     themePreload(); // sets data-theme BEFORE first paint
  *   </script>
  * </head>
@@ -391,7 +391,7 @@ export function attachBrandColorPicker(trigger, options = {}) {
  * ```html
  * <head>
  *   <script type="module">
- *     import { themePreload } from '@kupola/kupola';
+ *     import { themePreload } from '@kupola/platform';
  *     themePreload();
  *   </script>
  * </head>

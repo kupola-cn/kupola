@@ -18,8 +18,8 @@
  * @module components/empty
  */
 
-import { html } from '@kupola/core/template';
-import { render } from '@kupola/core/render';
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
 import { getIconHtml } from './icon-helper';
 
 /**

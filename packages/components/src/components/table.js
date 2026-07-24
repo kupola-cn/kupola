@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Table - 2.0
  *
  * Full-featured data table with sorting, filtering, pagination,
@@ -8,7 +8,7 @@
  * @module Table
  */
 
-import { t } from '@kupola/core/i18n';
+import { t } from '@kupola/platform/i18n';
 
 /**
  * @typedef {Object} TableColumn

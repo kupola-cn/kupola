@@ -14,7 +14,7 @@
 </div>
 
 <script type="module">
-  import { walk } from 'https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core-directives.esm.js';
+  import { walk } from 'https://cdn.jsdelivr.net/npm/@kupola/platform/dist/kupola-platform-directives.esm.js';
   walk(document.body);
 </script>
 ```
@@ -24,7 +24,8 @@
 ```html
 <div id="app"></div>
 <script type="module">
-  import { signal, html, render } from 'https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core.esm.js';
+  import { signal } from 'https://cdn.jsdelivr.net/npm/@kupola/core/dist/kupola-core.esm.js';
+  import { html, render } from 'https://cdn.jsdelivr.net/npm/@kupola/platform/dist/kupola-platform.esm.js';
 
   const count = signal(0);
   render(
@@ -41,8 +42,9 @@
 核心引擎的 `renderToString` 不依赖任何浏览器 API，可直接在 Node.js 中运行：
 
 ```javascript
-import { signal, html } from '@kupola/kupola';
-import { renderToString } from '@kupola/kupola/server';
+import { signal } from '@kupola/core';
+import { html } from '@kupola/platform';
+import { renderToString } from '@kupola/platform/server';
 
 const title = signal('Hello World');
 const items = signal(['Apple', 'Banana', 'Cherry']);
@@ -64,8 +66,9 @@ res.send(`<!DOCTYPE html>
 客户端水合（hydration）— 不重建 DOM，仅绑定响应式：
 
 ```javascript
-import { signal, html } from '@kupola/kupola';
-import { hydrate } from '@kupola/kupola/server';
+import { signal } from '@kupola/core';
+import { html } from '@kupola/platform';
+import { hydrate } from '@kupola/platform/server';
 
 const title = signal('Hello World');
 hydrate(html`<h1>${title}</h1>`, document.querySelector('h1').parentElement);
@@ -77,17 +80,18 @@ hydrate(html`<h1>${title}</h1>`, document.querySelector('h1').parentElement);
 ## 3. Vite / Webpack 工程化项目
 
 ```bash
-npm install @kupola/kupola
+npm install @kupola/core @kupola/platform
 ```
 
 ```javascript
 // 引入核心引擎
-import { signal, computed, html, render } from '@kupola/kupola';
+import { signal, computed } from '@kupola/core';
+import { html, render } from '@kupola/platform';
 
 // 按需引入组件（tree-shaking 友好）
-import { Modal } from '@kupola/kupola/components/modal';
-import { Table } from '@kupola/kupola/components/table';
-import { Dropdown } from '@kupola/kupola/components/dropdown';
+import { Modal } from '@kupola/components/modal';
+import { Table } from '@kupola/components/table';
+import { Dropdown } from '@kupola/components/dropdown';
 
 const modal = Modal({
   title: '提示',
@@ -104,8 +108,8 @@ Kupola 组件可以在 React 中通过 `useEffect` 管理生命周期：
 
 ```jsx
 import { useEffect, useRef } from 'react';
-import { Modal } from '@kupola/kupola/components/modal';
-import { Table } from '@kupola/kupola/components/table';
+import { Modal } from '@kupola/components/modal';
+import { Table } from '@kupola/components/table';
 
 function UserTable({ data }) {
   const containerRef = useRef(null);
@@ -138,7 +142,7 @@ function UserTable({ data }) {
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { Modal } from '@kupola/kupola/components/modal';
+import { Modal } from '@kupola/components/modal';
 
 const container = ref(null);
 let modal;
@@ -171,7 +175,7 @@ A：核心引擎的 `renderToString` 不依赖任何浏览器 API，可直接在
 
 **Q：我只需要 Table 组件，不想引入整个库？**
 
-A：`import { Table } from '@kupola/kupola/components/table'` 即可。每个组件独立打包，不会引入其他组件代码。
+A：`import { Table } from '@kupola/components/table'` 即可。每个组件独立打包，不会引入其他组件代码。
 
 **Q：Kupola 和 Vue / React 的响应式系统会冲突吗？**
 

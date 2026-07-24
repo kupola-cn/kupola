@@ -3,7 +3,7 @@
 用于页面角落的全局通知，适合异步任务、状态变化和系统提醒。
 
 ```js
-import { Notification } from '@kupola/kupola/components/notification'
+import { Notification } from '@kupola/components/notification'
 
 const notification = Notification()
 notification.success({

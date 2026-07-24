@@ -5,9 +5,9 @@
  */
 
 import { signal, computed } from '../src/index.js';
-import { html } from '../src/template.js';
+import { html } from '../../platform/src/template.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
-import { renderToString, hydrate } from '../src/server.js';
+import { renderToString, hydrate } from '../../platform/src/server.js';
 
 afterEach(() => {
   document.body.innerHTML = '';

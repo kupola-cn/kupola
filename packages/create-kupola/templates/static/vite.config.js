@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { kupola } from '@kupola/kupola/vite';
+import { kupola } from '@kupola/platform/vite';
 import path from 'path';
 
 export default defineConfig({
@@ -11,12 +11,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: [
-      { find: /^kupola$/, replacement: '@kupola/kupola' },
-      { find: /^kupola\/core$/, replacement: '@kupola/kupola/core' },
-      { find: /^kupola\/components$/, replacement: '@kupola/kupola/components' },
-      { find: /^kupola\/components\/(.*)$/, replacement: '@kupola/kupola/components/$1' },
-      { find: /^kupola\/icons$/, replacement: '@kupola/kupola/icons' },
-      { find: /^kupola\/kupola\.css$/, replacement: '@kupola/kupola/dist/css/kupola.css' },
+      { find: /^kupola$/, replacement: '@kupola/platform' },
+      { find: /^kupola\/core$/, replacement: '@kupola/core' },
+      { find: /^kupola\/components$/, replacement: '@kupola/components' },
+      { find: /^kupola\/components\/(.*)$/, replacement: '@kupola/components/$1' },
     ],
   },
   assetsInclude: [ '**/*.svg', '**/*.png', '**/*.jpg' ],

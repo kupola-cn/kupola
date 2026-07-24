@@ -5,10 +5,10 @@
 ### Q: 如何安装 Kupola 2.0？
 
 ```bash
-npm install @kupola/kupola
+npm install @kupola/core @kupola/platform
 ```
 
-> 正式版已发布，可直接 `npm install @kupola/kupola`。
+> 正式版已发布，可直接 `npm install @kupola/core @kupola/platform`。
 
 ### Q: Kupola 依赖 React 或 Vue 吗？
 
@@ -30,7 +30,7 @@ npm install
 
 ```html
 <script type="module">
-  import { Modal } from '@kupola/kupola';
+  import { Modal } from '@kupola/components';
   Modal({ title: 'Hello', content: 'World' }).open();
 </script>
 ```
@@ -174,7 +174,7 @@ defineScope('usersPage', () => ({
 ### Q: 如何使用 Modal / Dialog / Drawer？
 
 ```js
-import { Modal, Dialog, Drawer } from '@kupola/kupola';
+import { Modal, Dialog, Drawer } from '@kupola/components';
 
 // 模态框
 Modal({ title: 'Title', content: 'Content' }).open();
@@ -189,7 +189,7 @@ Drawer({ title: 'Settings', content: '...' }).open();
 ### Q: Table 如何支持排序和分页？
 
 ```js
-import { Table } from '@kupola/kupola';
+import { Table } from '@kupola/components';
 
 Table({
   columns: [
@@ -204,7 +204,7 @@ Table({
 ### Q: 如何使用 Notification？
 
 ```js
-import { Notification } from '@kupola/kupola';
+import { Notification } from '@kupola/components';
 
 Notification({
   title: 'Success',
@@ -217,7 +217,7 @@ Notification({
 ### Q: 如何使用 DatePicker / TimePicker？
 
 ```js
-import { DatePicker, TimePicker } from '@kupola/kupola';
+import { DatePicker, TimePicker } from '@kupola/components';
 
 const dp = DatePicker({ container: '#date', onChange: (date) => console.log(date) });
 const tp = TimePicker({ container: '#time', onChange: (time) => console.log(time) });
@@ -255,12 +255,12 @@ Kupola 使用 CSS 设计令牌（design tokens），覆盖 CSS 变量即可：
 
 ```js
 // 完整 CSS（tokens + 组件 + 主题）
-import '@kupola/kupola/css/kupola.css';
+import '@kupola/platform/css/kupola.css';
 
 // 或按需引入
-import '@kupola/kupola/css/tokens.css';
-import '@kupola/kupola/css/components.css';
-import '@kupola/kupola/css/theme.css';
+import '@kupola/platform/css/tokens.css';
+import '@kupola/platform/css/components.css';
+import '@kupola/platform/css/theme.css';
 ```
 
 Vite/Webpack 用户可使用自动注入插件，无需手动导入 CSS。
@@ -274,14 +274,14 @@ Vite/Webpack 用户可使用自动注入插件，无需手动导入 CSS。
 当前内置 `en-US` 和 `zh-CN`。
 
 ```js
-import { setLocale } from '@kupola/kupola/i18n';
+import { setLocale } from '@kupola/platform/i18n';
 setLocale('zh-CN');
 ```
 
 ### Q: 如何自定义翻译文本？
 
 ```js
-import { setMessages, t } from '@kupola/kupola/i18n';
+import { setMessages, t } from '@kupola/platform/i18n';
 
 setMessages('zh-CN', {
   'table.empty': '暂无数据',
@@ -297,11 +297,11 @@ setMessages('zh-CN', {
 ### Q: 如何进行服务端渲染？
 
 ```js
-import { renderToString } from '@kupola/kupola/server';
+import { renderToString } from '@kupola/platform/server';
 
 const html = renderToString(template);
 // 发送到客户端后水合：
-import { hydrate } from '@kupola/kupola';
+import { hydrate } from '@kupola/platform/render';
 hydrate(template, container);
 ```
 
@@ -326,7 +326,7 @@ hydrate(template, container);
 使用 `VirtualList` 组件，仅渲染可视区域内的元素：
 
 ```js
-import { VirtualList } from '@kupola/kupola';
+import { VirtualList } from '@kupola/platform';
 
 VirtualList({
   items: largeArray,      // 支持 100K+ 数据
@@ -351,7 +351,7 @@ VirtualList({
 使用 `ErrorBoundary` 包裹组件：
 
 ```js
-import { ErrorBoundary } from '@kupola/kupola';
+import { ErrorBoundary } from '@kupola/platform';
 
 ErrorBoundary(() => MyComponent(), {
   fallback: '组件加载失败',
@@ -368,7 +368,7 @@ ErrorBoundary(() => MyComponent(), {
 支持。按需导入只打包使用到的组件：
 
 ```js
-import { Modal } from '@kupola/kupola'; // 只包含 Modal 相关代码
+import { Modal } from '@kupola/components'; // 只包含 Modal 相关代码
 ```
 
 ### Q: 如何在 Vite/Webpack 中使用？
@@ -377,13 +377,13 @@ import { Modal } from '@kupola/kupola'; // 只包含 Modal 相关代码
 
 ```js
 // vite.config.js
-import { kupolaPlugin } from '@kupola/kupola/plugins/vite';
+import { kupolaPlugin } from '@kupola/platform/plugins/vite';
 export default { plugins: [kupolaPlugin()] };
 ```
 
 ```js
 // webpack.config.js
-const { KupolaPlugin } = require('@kupola/kupola/plugins/webpack');
+const { KupolaPlugin } = require('@kupola/platform/plugins/webpack');
 module.exports = { plugins: [new KupolaPlugin()] };
 ```
 
@@ -391,9 +391,9 @@ module.exports = { plugins: [new KupolaPlugin()] };
 
 ```html
 <script type="module">
-  import { signal, html, render } from 'https://unpkg.com/@kupola/kupola/dist/kupola-core.esm.js';
+  import { signal, html, render } from 'https://unpkg.com/@kupola/core/dist/kupola-core.esm.js';
 </script>
-<link rel="stylesheet" href="https://unpkg.com/@kupola/kupola/dist/css/kupola.css" />
+<link rel="stylesheet" href="https://unpkg.com/@kupola/platform/dist/css/index.css" />
 ```
 
 ---
@@ -414,7 +414,7 @@ module.exports = { plugins: [new KupolaPlugin()] };
 
 ### Q: 如何从 1.x 升级到 2.0？
 
-1. 安装：`npm install @kupola/kupola`
+1. 安装：`npm install @kupola/core @kupola/platform`
 2. 指令语法基本兼容（`k-data`、`k-show`、`k-bind` 等）
 3. 组件 API 有变化，参考组件文档更新调用方式
 4. 移除旧的 CSS 引用，使用新的 CSS 设计令牌系统

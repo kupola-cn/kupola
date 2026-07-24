@@ -3,7 +3,7 @@
 用于增删标签列表。
 
 ```js
-import { DynamicTags } from '@kupola/kupola/components/dynamictags'
+import { DynamicTags } from '@kupola/components/dynamictags'
 
 const tags = DynamicTags({
   value: ['急诊', '重点'],

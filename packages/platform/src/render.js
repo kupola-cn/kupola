@@ -6,7 +6,7 @@
  * @module render
  */
 
-import { effect } from './effect.js';
+import { effect } from '@kupola/core';
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 /** Minimal HTML entity escaping for text content. */

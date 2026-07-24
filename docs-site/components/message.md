@@ -3,7 +3,7 @@
 用于轻量级成功、失败、警告和信息反馈。
 
 ```js
-import { Message } from '@kupola/kupola/components/message'
+import { Message } from '@kupola/components/message'
 
 const message = Message()
 message.success('保存成功')

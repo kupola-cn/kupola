@@ -1,17 +1,26 @@
 ---
 name: kupola-dev
-description: Kupola UI framework development standards and best practices. Enforces proper use of Signal reactivity, template literals, directives, and component factory patterns. Use when developing with @kupola/kupola, creating components, or when the user mentions Kupola, k-* directives, or kupola components.
+description: Kupola UI framework development standards and best practices. Enforces proper use of Signal reactivity, template literals, directives, and component factory patterns. Use when developing with @kupola/core or @kupola/platform, creating components, or when the user mentions Kupola, k-* directives, or kupola components.
 ---
 
 # Kupola Development Standards
 
 ## Core Architecture
 
-Kupola 2.0 is a zero-dependency UI framework with:
-- **Signal-based reactivity**: `signal`, `computed`, `effect`
-- **Template literals**: `html` tagged template + `render()`
+Kupola is a zero-dependency UI framework with modular architecture, split into a pure reactivity core and a platform layer:
+
+### Core Package (`@kupola/core`)
+- **Pure reactivity (仅 4.4KB)**: `signal`, `computed`, `effect`, `batch`, `reactive`, `watch`, `withoutTracking`, `flushJobs`, `queueJob`
+
+### Platform Package (`@kupola/platform`, 按需加载)
+- **Template literals**: `html` tagged template
+- **Render**: `render()` for DOM rendering
 - **Declarative directives**: `k-data`, `k-show`, `k-bind`, `k-on`, `k-model`, `k-for`
+- **Components**: `defineComponent`, `provide`, `inject`
+- **Theme**: `themePreload`, `setTheme`, `toggleTheme`
+- **Lazy**: `lazyComponent`, `preloadComponent`
 - **SSR support**: `renderToString` + `hydrate`
+- **i18n & errors**: `setLocale`, `t`, `ErrorBoundary`
 
 ## Component Pattern
 
@@ -101,7 +110,12 @@ batch(() => {
 ## Template & Render
 
 ```javascript
-import { signal, html, render } from '@kupola/kupola';
+import { signal } from '@kupola/core';
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
+
+// 或者从 platform 一次性导入
+import { signal, html, render } from '@kupola/platform';
 
 const count = signal(0);
 
@@ -143,37 +157,36 @@ render(view(), document.getElementById('app'));
 ## Import Paths
 
 ```javascript
-// Core engine
-import { signal, html, render } from '@kupola/kupola';
+// Core reactivity (仅 4.4KB)
+import { signal, computed, effect, batch } from '@kupola/core';
+
+// Platform module - 一次性导入所有平台功能
+import { signal, html, render, defineComponent, walk, $, $$ } from '@kupola/platform';
+
+// 按需导入各模块
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
+import { defineComponent, provide, inject } from '@kupola/platform/component';
+import { walk, $$, $, defineScope } from '@kupola/platform/directives';
+import { themePreload, setTheme, toggleTheme } from '@kupola/platform/theme';
+import { lazyComponent, preloadComponent } from '@kupola/platform/lazy';
 
 // Components - each independently bundled
-import { Modal } from '@kupola/kupola/components/modal';
-import { Table } from '@kupola/kupola/components/table';
-import { Dropdown } from '@kupola/kupola/components/dropdown';
+import { Modal } from '@kupola/components/modal';
+import { Table } from '@kupola/components/table';
+import { Dropdown } from '@kupola/components/dropdown';
 
 // SSR
-import { renderToString, hydrate } from '@kupola/kupola/server';
-
-// Directives
-import { walk } from '@kupola/kupola/directives';
-
-// Theme (anti-FOUC)
-import { themePreload, setTheme, toggleTheme, getPreferredTheme, onThemeChange, getThemeInlineScript } from '@kupola/kupola';
-
-// Lazy loading
-import { lazyComponent, preloadComponent } from '@kupola/kupola';
-
-// DevTools
-import { enableProfiler, getProfileReport } from '@kupola/kupola';
+import { renderToString, hydrate } from '@kupola/platform/server';
 
 // i18n
-import { setLocale, getLocale, t, addMessages } from '@kupola/kupola';
+import { setLocale, getLocale, t, addMessages } from '@kupola/platform/i18n';
 
 // CSS
-import '@kupola/kupola/css';              // full bundle
-import '@kupola/kupola/css/tokens';        // tokens only
-import '@kupola/kupola/css/components';    // components only
-import '@kupola/kupola/css/responsive';     // responsive utilities
+import '@kupola/platform/css';              // full bundle
+import '@kupola/platform/css/tokens';        // tokens only
+import '@kupola/platform/css/components';    // components only
+import '@kupola/platform/css/responsive';     // responsive utilities
 ```
 
 ## Theme System (Anti-FOUC)
@@ -226,37 +239,47 @@ CSS: `[k-cloak] { display: none !important; }` — hides elements until JS remov
 
 When creating a new component, update these files:
 
-1. **Source**: `packages/core/src/components/{name}.js`
+1. **Source**: `packages/components/src/components/{name}.js`
 2. **Test**: `packages/core/__tests__/components/{name}.test.js`
 3. **Build entry**: `rollup.config.cjs` — add input entry
-4. **Exports**: `packages/core/package.json` — add to `exports`
+4. **Exports**: `packages/components/package.json` — add to `exports`
 5. **Size limit**: `.size-limit.json` — add limit entry
-6. **Types**: `packages/core/src/components/types.d.ts` — add interfaces
+6. **Types**: `packages/components/src/components/types.d.ts` — add interfaces
 
 ## File Structure
 
 ```
-packages/core/
+packages/core/                  # @kupola/core — pure reactivity (~4.4KB)
 ├── src/
-│   ├── components/     # UI components (one file each)
+│   ├── signal.js       # signal, reactive, withoutTracking
+│   ├── computed.js     # computed values
+│   ├── effect.js       # effect, watch
+│   ├── batch.js        # batch updates
+│   ├── scheduler.js    # flushJobs, queueJob, nextTick
+│   ├── devtools.js     # Signal profiler
+│   └── index.js        # Public API entry
+└── __tests__/
+
+packages/platform/              # @kupola/platform — template/render/component/directives/theme/lazy/server/i18n/errors
+├── src/
+│   ├── template.js     # html`` template
+│   ├── render.js       # DOM renderer (render, hydrate)
+│   ├── component.js    # defineComponent, provide, inject
+│   ├── directives.js   # k-* directive system (walk, defineScope, ...)
+│   ├── theme.js        # Theme utilities (anti-FOUC)
+│   ├── lazy.js         # Lazy component loading
+│   ├── server.js       # SSR (renderToString + hydrate)
+│   ├── i18n.js         # Internationalization
+│   ├── errors.js       # ErrorBoundary
+│   └── platform.js     # Aggregated entry (re-exports core + all modules)
+
+packages/components/            # @kupola/components — 48+ UI components (one file each)
+├── src/
+│   ├── components/
 │   │   ├── modal.js
 │   │   ├── table.js
 │   │   └── types.d.ts  # TypeScript definitions
-│   ├── signal.js       # Signal primitive
-│   ├── computed.js     # Computed values
-│   ├── effect.js       # Effect system
-│   ├── template.js     # html`` template
-│   ├── render.js       # DOM renderer
-│   ├── server.js       # SSR (renderToString + hydrate)
-│   ├── directives.js   # k-* directive system
-│   ├── theme.js        # Theme utilities (anti-FOUC)
-│   ├── lazy.js         # Lazy component loading
-│   ├── devtools.js     # Signal profiler
-│   ├── i18n.js         # Internationalization
-│   ├── errors.js       # ErrorBoundary
-│   └── index.js        # Public API entry
-├── __tests__/
-│   └── components/     # Component tests
+│   └── index.js
 
 packages/ai-adapter/
 ├── src/
@@ -268,7 +291,7 @@ packages/ai-adapter/
 │   ├── types.d.ts        # TypeScript definitions
 │   └── index.js          # Public API entry
 ├── __tests__/            # 97 tests
-└── package.json          # peerDep: @kupola/kupola ^2.0.0
+└── package.json          # peerDep: @kupola/core ^3.0.0
 ```
 
 ## Testing
@@ -305,11 +328,11 @@ Avoid wasting tokens/credits:
 
 | Need | Read |
 |------|------|
-| Component source | `packages/core/src/components/{name}.js` |
+| Component source | `packages/components/src/components/{name}.js` |
 | Component test | `packages/core/__tests__/components/{name}.test.js` |
 | Build config | `rollup.config.cjs` (line ~1600-1800 for component entries) |
-| Type definitions | `packages/core/src/components/types.d.ts` |
+| Type definitions | `packages/components/src/components/types.d.ts` |
 | Core API | `packages/core/src/index.js` (55 lines) |
-| Theme API | `packages/core/src/theme.js` |
+| Theme API | `packages/platform/src/theme.js` |
 | Responsive CSS | `packages/css/responsive.css` |
 | CSS build | `scripts/build-css.cjs` |

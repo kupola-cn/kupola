@@ -7,7 +7,7 @@
  * is rendered in place of the failed component.
  *
  * ```js
- * import { ErrorBoundary } from '@kupola/core/errors';
+ * import { ErrorBoundary } from '@kupola/platform/errors';
  *
  * const view = ErrorBoundary(
  *   () => SomeRiskyComponent({ data: badData }),

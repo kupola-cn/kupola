@@ -3,7 +3,7 @@
 用于垂直或水平导航。
 
 ```js
-import { Menu } from '@kupola/kupola/components/menu'
+import { Menu } from '@kupola/components/menu'
 
 const menu = Menu({
   selectedKey: 'users',

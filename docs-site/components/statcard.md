@@ -3,7 +3,7 @@
 用于展示核心指标。
 
 ```js
-import { Statcard } from '@kupola/kupola/components/statcard'
+import { Statcard } from '@kupola/components/statcard'
 
 const card = Statcard({
   title: '今日订单',

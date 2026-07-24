@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Textarea component built on the 2.0 reactive core.
  *
@@ -19,8 +19,8 @@
  * @module components/textarea
  */
 
-import { html } from '@kupola/core/template';
-import { render } from '@kupola/core/render';
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
 
 /**
  * Create a Textarea component instance.

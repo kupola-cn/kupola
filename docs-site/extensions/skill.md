@@ -1,6 +1,6 @@
 ---
 name: kupola-dev
-description: Kupola UI framework development standards and best practices. Enforces proper use of Signal reactivity, template literals, directives, and component factory patterns. Use when developing with @kupola/kupola, creating components, or when the user mentions Kupola, k-* directives, or kupola components.
+description: Kupola UI framework development standards and best practices. Enforces proper use of Signal reactivity, template literals, directives, and component factory patterns. Use when developing with @kupola/platform, creating components, or when the user mentions Kupola, k-* directives, or kupola components.
 ---
 
 # Kupola Development Standards
@@ -101,7 +101,8 @@ batch(() => {
 ## Template & Render
 
 ```javascript
-import { signal, html, render } from '@kupola/kupola';
+import { signal } from '@kupola/core';
+import { html, render } from '@kupola/platform';
 
 const count = signal(0);
 
@@ -144,36 +145,37 @@ render(view(), document.getElementById('app'));
 
 ```javascript
 // Core engine
-import { signal, html, render } from '@kupola/kupola';
+import { signal } from '@kupola/core';
+import { html, render } from '@kupola/platform';
 
 // Components - each independently bundled
-import { Modal } from '@kupola/kupola/components/modal';
-import { Table } from '@kupola/kupola/components/table';
-import { Dropdown } from '@kupola/kupola/components/dropdown';
+import { Modal } from '@kupola/components/modal';
+import { Table } from '@kupola/components/table';
+import { Dropdown } from '@kupola/components/dropdown';
 
 // SSR
-import { renderToString, hydrate } from '@kupola/kupola/server';
+import { renderToString, hydrate } from '@kupola/platform/server';
 
 // Directives
-import { walk } from '@kupola/kupola/directives';
+import { walk } from '@kupola/platform/directives';
 
 // Theme (anti-FOUC)
-import { themePreload, setTheme, toggleTheme, getPreferredTheme, onThemeChange, getThemeInlineScript } from '@kupola/kupola';
+import { themePreload, setTheme, toggleTheme, getPreferredTheme, onThemeChange, getThemeInlineScript } from '@kupola/platform';
 
 // Lazy loading
-import { lazyComponent, preloadComponent } from '@kupola/kupola';
+import { lazyComponent, preloadComponent } from '@kupola/platform';
 
 // DevTools
-import { enableProfiler, getProfileReport } from '@kupola/kupola';
+import { enableProfiler, getProfileReport } from '@kupola/core';
 
 // i18n
-import { setLocale, getLocale, t, addMessages } from '@kupola/kupola';
+import { setLocale, getLocale, t, addMessages } from '@kupola/platform';
 
 // CSS
-import '@kupola/kupola/css';              // full bundle
-import '@kupola/kupola/css/tokens';        // tokens only
-import '@kupola/kupola/css/components';    // components only
-import '@kupola/kupola/css/responsive';     // responsive utilities
+import '@kupola/platform/css';              // full bundle
+import '@kupola/platform/css/tokens';        // tokens only
+import '@kupola/platform/css/components';    // components only
+import '@kupola/platform/css/responsive';     // responsive utilities
 ```
 
 ## Theme System (Anti-FOUC)

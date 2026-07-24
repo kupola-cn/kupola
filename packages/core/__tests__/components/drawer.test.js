@@ -1,10 +1,10 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Unit tests for the Drawer component.
  * @jest-environment jsdom
  */
 
-import { html } from '../../src/template.js';
+import { html } from '../../../platform/src/template.js';
 import { resetScheduler } from '../../src/scheduler.js';
 import { Drawer } from '@kupola/components';
 

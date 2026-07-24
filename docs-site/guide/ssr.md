@@ -5,8 +5,9 @@ Kupola 支持 SSR 和 hydration。
 ## 服务端渲染
 
 ```js
-import { html, signal } from '@kupola/kupola'
-import { renderToString } from '@kupola/kupola/server'
+import { html } from '@kupola/platform/template'
+import { signal } from '@kupola/core'
+import { renderToString } from '@kupola/platform/server'
 
 const count = signal(42)
 const template = html`<p>Count: ${count}</p>`
@@ -18,7 +19,7 @@ const html = renderToString(template)
 ## 客户端 Hydration
 
 ```js
-import { hydrate } from '@kupola/kupola'
+import { hydrate } from '@kupola/platform/render'
 
 // 服务端渲染的 HTML 已存在于 DOM 中
 const template = html`<p>Count: ${count}</p>`
@@ -36,8 +37,9 @@ hydrate(template, document.getElementById('app'))
 ```js
 // server.js
 import express from 'express'
-import { html, signal } from '@kupola/kupola'
-import { renderToString } from '@kupola/kupola/server'
+import { html } from '@kupola/platform/template'
+import { signal } from '@kupola/core'
+import { renderToString } from '@kupola/platform/server'
 
 const app = express()
 

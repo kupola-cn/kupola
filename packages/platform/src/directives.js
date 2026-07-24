@@ -24,9 +24,7 @@
  * @module directives
  */
 
-import { signal, withoutTracking } from './signal.js';
-import { effect } from './effect.js';
-import { flushJobs } from './scheduler.js';
+import { signal, withoutTracking, effect, flushJobs } from '@kupola/core';
 
 // ─── Scope Registry ──────────────────────────────────────────────────────────
 

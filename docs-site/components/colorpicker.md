@@ -3,7 +3,7 @@
 用于选择预设色或自定义颜色。
 
 ```js
-import { ColorPicker } from '@kupola/kupola/components/colorpicker'
+import { ColorPicker } from '@kupola/components/colorpicker'
 
 const picker = ColorPicker({
   value: '#22C55E',

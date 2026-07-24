@@ -33,7 +33,7 @@
 ```
 
 ```js
-import { defineScope, walkOnce } from '@kupola/kupola'
+import { defineScope, walkOnce } from '@kupola/platform/directives'
 
 defineScope('usersPage', () => ({
   keyword: '',
@@ -120,7 +120,7 @@ defineScope('usersPage', () => ({
 如果后端返回局部 HTML，例如弹窗内容、表格片段、Tab 内容或筛选结果，推荐在替换前销毁旧实例，替换后初始化新片段：
 
 ```js
-import { destroyWalk, walkOnce } from '@kupola/kupola'
+import { destroyWalk, walkOnce } from '@kupola/platform/directives'
 
 async function reloadUsersPanel() {
   const root = document.querySelector('#users-panel')
@@ -134,7 +134,7 @@ async function reloadUsersPanel() {
 如果片段会被外部工具移除，例如弹窗库、HTMX、Turbo 或页面局部替换，可以用 `walkAuto()`：
 
 ```js
-import { walkAuto } from '@kupola/kupola'
+import { walkAuto } from '@kupola/platform/directives'
 
 document.addEventListener('fragment:mounted', event => {
   walkAuto(event.detail.root)
@@ -148,7 +148,7 @@ document.addEventListener('fragment:mounted', event => {
 和 HTMX、Turbo 这类工具集成时，推荐只在新增片段 root 上初始化：
 
 ```js
-import { walkOnce } from '@kupola/kupola'
+import { walkOnce } from '@kupola/platform/directives'
 
 document.body.addEventListener('htmx:afterSwap', event => {
   walkOnce(event.detail.elt, { autoDestroy: true })
@@ -156,7 +156,7 @@ document.body.addEventListener('htmx:afterSwap', event => {
 ```
 
 ```js
-import { walkOnce } from '@kupola/kupola'
+import { walkOnce } from '@kupola/platform/directives'
 
 document.addEventListener('turbo:frame-load', event => {
   walkOnce(event.target, { autoDestroy: true })
@@ -189,7 +189,7 @@ static/
 `kupola-init.js` 只负责通用初始化：
 
 ```js
-import { walkOnce } from '@kupola/kupola'
+import { walkOnce } from '@kupola/platform/directives'
 
 const root = document.querySelector('[data-kupola-app]') || document.body
 walkOnce(root)
@@ -198,7 +198,7 @@ walkOnce(root)
 页面脚本只注册当前页面需要的 scope：
 
 ```js
-import { defineScope } from '@kupola/kupola'
+import { defineScope } from '@kupola/platform/directives'
 
 defineScope('ordersPage', () => ({
   orders: [],

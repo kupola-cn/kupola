@@ -3,7 +3,7 @@
 用于展示剩余时间。
 
 ```js
-import { Countdown } from '@kupola/kupola/components/countdown'
+import { Countdown } from '@kupola/components/countdown'
 
 const countdown = Countdown({
   target: Date.now() + 60_000,

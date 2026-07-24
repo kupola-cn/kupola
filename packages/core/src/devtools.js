@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```js
- * import { enableProfiler, getProfileReport, resetProfiler } from '@kupola/kupola/devtools';
+ * import { enableProfiler, getProfileReport, resetProfiler } from '@kupola/core/devtools';
  *
  * enableProfiler();
  * // ... run your app ...

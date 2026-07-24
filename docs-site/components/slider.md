@@ -3,7 +3,7 @@
 用于在范围内选择数值。
 
 ```js
-import { Slider } from '@kupola/kupola/components/slider'
+import { Slider } from '@kupola/components/slider'
 
 const slider = Slider({
   min: 0,

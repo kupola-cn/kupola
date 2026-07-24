@@ -23,7 +23,7 @@
   "Kupola: import walk (directives)": {
     "prefix": "kwalk",
     "body": [
-      "import { walk } from '@kupola/core/directives';",
+      "import { walk } from '@kupola/platform/directives';",
       "walk(document.body);"
     ],
     "description": "Import and initialize Kupola directive system"
@@ -111,7 +111,7 @@
   "Kupola: i18n setup": {
     "prefix": "ki18n",
     "body": [
-      "import { setLocale, t, formatDate, formatNumber } from '@kupola/core/i18n';",
+      "import { setLocale, t, formatDate, formatNumber } from '@kupola/platform/i18n';",
       "",
       "setLocale('${1|en-US,zh-CN|}');"
     ],
@@ -211,7 +211,7 @@
   "Kupola: renderToString (SSR)": {
     "prefix": "kssr",
     "body": [
-      "import { renderToString } from '@kupola/core/server';",
+      "import { renderToString } from '@kupola/platform/server';",
       "",
       "const html = renderToString(${1:template});"
     ],

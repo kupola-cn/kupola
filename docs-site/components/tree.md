@@ -3,7 +3,7 @@
 用于展示层级结构。
 
 ```js
-import { Tree } from '@kupola/kupola/components/tree'
+import { Tree } from '@kupola/components/tree'
 
 const tree = Tree({
   data: [

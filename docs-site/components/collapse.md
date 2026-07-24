@@ -3,7 +3,7 @@
 用于展开或收起内容区块。
 
 ```js
-import { Collapse } from '@kupola/kupola/components/collapse'
+import { Collapse } from '@kupola/components/collapse'
 
 const collapse = Collapse({
   title: '高级设置',

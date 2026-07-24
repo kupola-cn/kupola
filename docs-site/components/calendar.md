@@ -3,7 +3,7 @@
 用于展示日期网格和日期事件。
 
 ```js
-import { Calendar } from '@kupola/kupola/components/calendar'
+import { Calendar } from '@kupola/components/calendar'
 
 const calendar = Calendar({
   value: new Date(),

@@ -1,6 +1,6 @@
 /**
  * @kupola/core — TypeScript type definitions for the directive system.
- * @module @kupola/core/directives
+ * @module @kupola/platform/directives
  */
 
 export type KupolaRefValue = Element | Element[];

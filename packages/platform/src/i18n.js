@@ -8,7 +8,7 @@
  * @module i18n
  */
 
-import { signal } from './signal.js';
+import { signal } from '@kupola/core';
 
 const _messages = {
   'en-US': {

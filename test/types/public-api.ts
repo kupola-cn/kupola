@@ -1,7 +1,7 @@
 import {
   $, $$, defineScope, destroyWalk, setHtmlSanitizer, walkOnce,
-} from '@kupola/kupola';
-import { walkAuto } from '@kupola/kupola/directives';
+} from '@kupola/platform';
+import { walkAuto } from '@kupola/platform/directives';
 
 const root = document.createElement('section');
 

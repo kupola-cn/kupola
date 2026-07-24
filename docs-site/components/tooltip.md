@@ -3,7 +3,7 @@
 用于在悬停或聚焦时显示短提示。
 
 ```js
-import { Tooltip } from '@kupola/kupola/components/tooltip'
+import { Tooltip } from '@kupola/components/tooltip'
 
 const tooltip = Tooltip({
   target: document.querySelector('#saveBtn'),

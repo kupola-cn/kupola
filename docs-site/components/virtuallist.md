@@ -3,7 +3,7 @@
 用于高性能渲染大量列表数据。
 
 ```js
-import { VirtualList } from '@kupola/kupola/components/virtuallist'
+import { VirtualList } from '@kupola/components/virtuallist'
 
 const list = VirtualList({
   items: Array.from({ length: 10000 }, (_, i) => ({ name: `Item ${i}` })),

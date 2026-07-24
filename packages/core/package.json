@@ -1,7 +1,7 @@
 {
   "name": "@kupola/core",
-  "version": "3.0.1",
-  "description": "Kupola core reactivity engine — Signal, computed, effect, batch, template, SSR, i18n.",
+  "version": "3.1.0",
+  "description": "Kupola core reactivity engine — Signal, computed, effect, batch.",
   "type": "module",
   "main": "dist/kupola-core.cjs",
   "module": "dist/kupola-core.esm.js",
@@ -12,20 +12,9 @@
       "require": "./dist/kupola-core.cjs",
       "types": "./src/index.d.ts"
     },
-    "./server": {
-      "import": "./dist/kupola-core-server.esm.js",
-      "require": "./dist/kupola-core-server.cjs",
-      "types": "./src/server.d.ts"
-    },
-    "./directives": {
-      "import": "./dist/kupola-core-directives.esm.js",
-      "require": "./dist/kupola-core-directives.cjs",
-      "types": "./src/directives.d.ts"
-    },
-    "./i18n": {
-      "import": "./dist/kupola-core-i18n.esm.js",
-      "require": "./dist/kupola-core-i18n.cjs",
-      "types": "./src/i18n.d.ts"
+    "./devtools": {
+      "import": "./dist/kupola-core-devtools.esm.js",
+      "require": "./dist/kupola-core-devtools.cjs"
     }
   },
   "files": [

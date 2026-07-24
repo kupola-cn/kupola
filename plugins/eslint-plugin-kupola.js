@@ -8,7 +8,7 @@
  * Usage:
  * ```js
  * // .eslintrc.cjs
- * const kupolaPlugin = require('@kupola/kupola/plugins/eslint-plugin-kupola');
+ * const kupolaPlugin = require('@kupola/platform/plugins/eslint-plugin-kupola');
  *
  * module.exports = {
  *   plugins: ['kupola'],

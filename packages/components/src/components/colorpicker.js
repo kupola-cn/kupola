@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — ColorPicker component built on the 2.0 reactive core.
  *
@@ -18,8 +18,8 @@
  * @module components/colorpicker
  */
 
-import { html } from '@kupola/core/template';
-import { render } from '@kupola/core/render';
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
 
 const DEFAULT_COLORS = [
   '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',

@@ -4,7 +4,7 @@
  * Initializes the Kupola directive system and sets up interactive features.
  */
 
-import { $, walk } from '@kupola/core/directives';
+import { $, walk } from '@kupola/platform/directives';
 
 // ── Initialize directives ────────────────────────────────────────────────────
 walk(document.body);

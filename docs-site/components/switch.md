@@ -3,7 +3,7 @@
 用于开启/关闭状态。
 
 ```js
-import { Switch } from '@kupola/kupola/components/switch'
+import { Switch } from '@kupola/components/switch'
 
 const sw = Switch({
   checked: true,

@@ -3,7 +3,7 @@
 用于展示任务完成进度。
 
 ```js
-import { Progress } from '@kupola/kupola/components/progress'
+import { Progress } from '@kupola/components/progress'
 
 const progress = Progress({
   percent: 60,

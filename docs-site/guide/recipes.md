@@ -20,7 +20,7 @@
 ```
 
 ```js
-import { defineScope } from '@kupola/kupola'
+import { defineScope } from '@kupola/platform/directives'
 
 defineScope('usersSearch', () => ({
   keyword: '',
@@ -120,7 +120,7 @@ defineScope('todosPage', () => ({
 局部刷新、弹窗内容、后端片段替换时，先销毁旧实例，再替换 HTML，最后 `walk()` 新片段：
 
 ```js
-import { walk } from '@kupola/kupola'
+import { walk } from '@kupola/platform/directives'
 
 let panel
 
@@ -144,7 +144,7 @@ function removePanel() {
 如果初始化入口可能被重复调用，或者不方便保存实例引用，可以使用生命周期工具组：
 
 ```js
-import { destroyWalk, walkOnce } from '@kupola/kupola'
+import { destroyWalk, walkOnce } from '@kupola/platform/directives'
 
 async function reloadPanel() {
   const root = document.querySelector('#users-panel')

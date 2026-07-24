@@ -3,7 +3,7 @@
 用于图片查看、切换和关闭。
 
 ```js
-import { ImagePreview } from '@kupola/kupola/components/imagepreview'
+import { ImagePreview } from '@kupola/components/imagepreview'
 
 const preview = ImagePreview({
   images: ['/a.png', '/b.png'],

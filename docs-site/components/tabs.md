@@ -3,7 +3,7 @@
 用于在同一页面区域内切换多个内容面板。
 
 ```js
-import { Tabs } from '@kupola/kupola/components/tabs'
+import { Tabs } from '@kupola/components/tabs'
 
 const tabs = Tabs({
   activeKey: 'profile',

@@ -3,7 +3,7 @@
 独立校验引擎，适合表单外的校验场景。
 
 ```js
-import { Validation } from '@kupola/kupola/components/validation'
+import { Validation } from '@kupola/components/validation'
 
 const validation = Validation()
 const result = validation.validate('test@example.com', ['required', 'email'])

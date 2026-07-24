@@ -3,7 +3,7 @@
 用于一次性确认、提示和警告，返回 Promise。
 
 ```js
-import { Dialog } from '@kupola/kupola/components/dialog'
+import { Dialog } from '@kupola/components/dialog'
 
 const ok = await Dialog.confirm({
   title: '确认删除',

@@ -3,7 +3,7 @@
 用于标记状态、分类或属性。
 
 ```js
-import { Tag } from '@kupola/kupola/components/tag'
+import { Tag } from '@kupola/components/tag'
 
 const tag = Tag({
   text: '启用',

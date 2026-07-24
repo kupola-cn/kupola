@@ -20,9 +20,9 @@
  * @module components/dialog
  */
 
-import { html } from '@kupola/core/template';
-import { render } from '@kupola/core/render';
-import { t } from '@kupola/core/i18n';
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
+import { t } from '@kupola/platform/i18n';
 import { getIconHtml } from './icon-helper';
 
 const ICON_NAMES = {

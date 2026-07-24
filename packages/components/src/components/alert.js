@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Alert component built on the 2.0 reactive core.
  *
@@ -20,8 +20,8 @@
  * @module components/alert
  */
 
-import { html } from '@kupola/core/template';
-import { render } from '@kupola/core/render';
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
 
 /**
  * Create an Alert component instance.

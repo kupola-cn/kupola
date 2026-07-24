@@ -10,7 +10,8 @@
     "preview": "nuxt preview"
   },
   "dependencies": {
-    "@kupola/kupola": "^3.0.0",
+    "@kupola/core": "^3.1.0",
+    "@kupola/platform": "^3.1.0",
     "nuxt": "^3.14.0",
     "vue": "^3.5.0",
     "vue-router": "^4.4.0"

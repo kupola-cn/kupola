@@ -3,7 +3,7 @@
 用于长文本输入。
 
 ```js
-import { Textarea } from '@kupola/kupola/components/textarea'
+import { Textarea } from '@kupola/components/textarea'
 
 const textarea = Textarea({
   value: '',

@@ -3,18 +3,18 @@
 这一组组件用于文件、图片、标签和可视化输入交互。
 
 ```js
-import { FileUpload } from '@kupola/kupola/components/fileupload'
+import { FileUpload } from '@kupola/components/fileupload'
 ```
 
 ## 组件清单
 
 | 组件 | 导入 | 说明 |
 | --- | --- | --- |
-| FileUpload | `@kupola/kupola/components/fileupload` | 文件上传 |
-| DynamicTags | `@kupola/kupola/components/dynamictags` | 动态标签输入 |
-| ImagePreview | `@kupola/kupola/components/imagepreview` | 图片预览 |
-| ColorPicker | `@kupola/kupola/components/colorpicker` | 颜色选择器 |
-| VirtualList | `@kupola/kupola/components/virtuallist` | 虚拟列表 |
+| FileUpload | `@kupola/components/fileupload` | 文件上传 |
+| DynamicTags | `@kupola/components/dynamictags` | 动态标签输入 |
+| ImagePreview | `@kupola/components/imagepreview` | 图片预览 |
+| ColorPicker | `@kupola/components/colorpicker` | 颜色选择器 |
+| VirtualList | `@kupola/components/virtuallist` | 虚拟列表 |
 
 ## 重点
 

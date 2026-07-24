@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { walk } from '@kupola/kupola/directives';
+import { walk } from '@kupola/platform/directives';
 
 /**
  * KupolaApp — Client component that initializes Kupola directives.

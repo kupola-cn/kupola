@@ -3,7 +3,7 @@
 用于按时间顺序展示事件。
 
 ```js
-import { Timeline } from '@kupola/kupola/components/timeline'
+import { Timeline } from '@kupola/components/timeline'
 
 const timeline = Timeline({
   items: [

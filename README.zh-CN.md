@@ -3,15 +3,15 @@
 # Kupola
 
 [![CI](https://github.com/kupola-cn/kupola/actions/workflows/ci.yml/badge.svg)](https://github.com/kupola-cn/kupola/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@kupola/kupola)](https://www.npmjs.com/package/@kupola/kupola)
-[![License](https://img.shields.io/npm/l/@kupola/kupola)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/@kupola/platform)](https://www.npmjs.com/package/@kupola/platform)
+[![License](https://img.shields.io/npm/l/@kupola/platform)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
 
 Kupola 是面向服务端渲染 HTML 的零框架交互层。小型局部交互使用指令运行时，JavaScript 主导的视图使用 signal / template API，需要复用的复杂交互再选择可选组件库。
 
 ## 安装
 
 ```bash
-npm install @kupola/kupola
+npm install @kupola/platform
 ```
 
 ```html
@@ -19,7 +19,7 @@ npm install @kupola/kupola
   <button @click="count++" k-text="count"></button>
 </div>
 <script type="module">
-  import { walk } from '@kupola/kupola/directives'
+  import { walk } from '@kupola/platform/directives'
   walk(document.body)
 </script>
 ```

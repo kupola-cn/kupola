@@ -43,7 +43,7 @@ Kupola 的推荐写法是：HTML 负责结构和声明式绑定，JavaScript 负
 ```
 
 ```js
-import { defineScope } from '@kupola/kupola'
+import { defineScope } from '@kupola/platform/directives'
 
 defineScope('usersPage', () => ({
   selectedId: null,
@@ -288,7 +288,7 @@ defineScope('profilePage', ({ update, patch }) => ({
 ```
 
 ```js
-import { defineScope } from '@kupola/kupola'
+import { defineScope } from '@kupola/platform/directives'
 
 defineScope('usersPage', () => ({
   keyword: '',
@@ -304,7 +304,7 @@ defineScope('usersPage', () => ({
 Kupola 提供轻量 `$`、`$$`，用于减少重复的 `document.querySelector`。它们只是原生 DOM 查询的薄封装，不返回 jQuery 风格包装对象。
 
 ```js
-import { $, $$ } from '@kupola/kupola'
+import { $, $$ } from '@kupola/platform/directives'
 
 const form = $('#user-form')
 const rows = $$('[data-row]', form)
@@ -313,7 +313,7 @@ const rows = $$('[data-row]', form)
 在 scope 内更推荐使用局部版本，默认限定在当前 `k-data` 根元素：
 
 ```js
-import { defineScope } from '@kupola/kupola'
+import { defineScope } from '@kupola/platform/directives'
 
 defineScope('usersPage', ({ $, $$, refs }) => ({
   mounted() {
@@ -335,8 +335,8 @@ defineScope('usersPage', ({ $, $$, refs }) => ({
 ```
 
 ```js
-import { Modal } from '@kupola/kupola/components/modal'
-import { defineScope } from '@kupola/kupola'
+import { Modal } from '@kupola/components/modal'
+import { defineScope } from '@kupola/platform/directives'
 
 defineScope('usersPage', () => ({
   openCreateUserModal() {

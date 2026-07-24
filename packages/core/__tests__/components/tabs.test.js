@@ -4,7 +4,7 @@
  * @jest-environment jsdom
  */
 
-import { html } from '../../src/template.js';
+import { html } from '../../../platform/src/template.js';
 import { resetScheduler } from '../../src/scheduler.js';
 import { Tabs } from '@kupola/components';
 

@@ -9,7 +9,7 @@ import {
   resetBrandColor,
   setBrandColor,
   themePreload,
-} from '../src/theme.js';
+} from '../../platform/src/theme.js';
 
 beforeEach(() => {
   localStorage.clear();

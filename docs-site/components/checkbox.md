@@ -3,7 +3,7 @@
 用于布尔选择或多选项。
 
 ```js
-import { Checkbox } from '@kupola/kupola/components/checkbox'
+import { Checkbox } from '@kupola/components/checkbox'
 
 const checkbox = Checkbox({
   label: '启用',

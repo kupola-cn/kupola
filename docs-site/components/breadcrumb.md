@@ -3,7 +3,7 @@
 用于展示页面层级路径。
 
 ```js
-import { Breadcrumb } from '@kupola/kupola/components/breadcrumb'
+import { Breadcrumb } from '@kupola/components/breadcrumb'
 
 const breadcrumb = Breadcrumb({
   items: [

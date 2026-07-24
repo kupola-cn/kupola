@@ -5,7 +5,7 @@
  * Reuses the existing `ds-drawer-*` CSS classes for styling.
  *
  * ```js
- * import { html } from '@kupola/core/template';
+ * import { html } from '@kupola/platform/template';
  * import { Drawer } from '@kupola/components/drawer';
  *
  * const view = Drawer({ title: 'Settings', placement: 'right', width: '400px' }, html`<p>Content</p>`);
@@ -18,8 +18,8 @@
  * @module components/drawer
  */
 
-import { html } from '@kupola/core/template';
-import { render } from '@kupola/core/render';
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
 import { getIconHtml } from './icon-helper';
 
 /**

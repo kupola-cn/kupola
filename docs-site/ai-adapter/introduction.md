@@ -107,7 +107,7 @@ AI Adapter 是 Kupola 的独立扩展包，提供**自然语言 → 结构化命
 npm install @kupola/ai-adapter
 ```
 
-> `@kupola/kupola ^2.0.0` 作为 peer dependency 自动要求安装。
+> `@kupola/core ^3.0.0` 和 `@kupola/platform ^3.0.0` 作为 peer dependency 自动要求安装。
 
 ## 快速开始
 

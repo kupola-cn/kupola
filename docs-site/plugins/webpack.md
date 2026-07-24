@@ -6,7 +6,7 @@
 
 ```js
 // webpack.config.js
-const KupolaPlugin = require('@kupola/kupola/plugins/webpack');
+const KupolaPlugin = require('@kupola/platform/plugins/webpack');
 
 module.exports = {
   plugins: [
@@ -38,5 +38,5 @@ module.exports = {
 
 ```js
 // 入口文件
-import '@kupola/kupola/css';
+import '@kupola/platform/css';
 ```

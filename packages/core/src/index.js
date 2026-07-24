@@ -9,7 +9,7 @@
  */
 
 // ── Signal ───────────────────────────────────────────────────────────────────
-export { signal, Signal, reactive, isReactive } from './signal.js';
+export { signal, Signal, reactive, isReactive, withoutTracking } from './signal.js';
 
 // ── Computed ─────────────────────────────────────────────────────────────────
 export { computed } from './computed.js';
@@ -19,3 +19,6 @@ export { effect, watch } from './effect.js';
 
 // ── Batch ────────────────────────────────────────────────────────────────────
 export { batch } from './batch.js';
+
+// ── Scheduler (internal, used by @kupola/platform) ───────────────────────────
+export { flushJobs, queueJob, nextTick } from './scheduler.js';

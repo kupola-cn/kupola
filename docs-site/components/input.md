@@ -3,7 +3,7 @@
 用于文本输入。
 
 ```js
-import { Input } from '@kupola/kupola/components/input'
+import { Input } from '@kupola/components/input'
 
 const input = Input({
   value: '',

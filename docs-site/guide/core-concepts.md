@@ -2,10 +2,10 @@
 
 ## Signal
 
-响应式数据的基本单元：
+响应式数据的基本单元（核心库仅 4.4KB）：
 
 ```js
-import { signal, computed, effect } from '@kupola/kupola'
+import { signal, computed, effect } from '@kupola/core'
 
 const count = signal(0)
 const doubled = computed(() => count.value * 2)
@@ -22,7 +22,7 @@ count.value = 5 // 自动触发 effect
 使用模板字面量创建 DOM：
 
 ```js
-import { html } from '@kupola/kupola'
+import { html } from '@kupola/platform/template'
 
 const name = signal('World')
 const template = html`<h1>Hello, ${name}!</h1>`
@@ -33,7 +33,7 @@ const template = html`<h1>Hello, ${name}!</h1>`
 将模板渲染到 DOM：
 
 ```js
-import { render } from '@kupola/kupola'
+import { render } from '@kupola/platform/render'
 
 render(template, document.getElementById('app'))
 ```
@@ -43,7 +43,9 @@ render(template, document.getElementById('app'))
 定义可复用组件：
 
 ```js
-import { defineComponent, html, signal } from '@kupola/kupola'
+import { defineComponent } from '@kupola/platform/component'
+import { html } from '@kupola/platform/template'
+import { signal } from '@kupola/core'
 
 const Counter = defineComponent({
   props: ['initial'],
@@ -58,12 +60,14 @@ const Counter = defineComponent({
 })
 ```
 
+> 提示：也可以从 `@kupola/platform` 一次性导入所有平台模块
+
 ## Reactive
 
 深层响应式对象，支持嵌套对象和数组：
 
 ```js
-import { reactive, effect } from '@kupola/kupola'
+import { reactive, effect } from '@kupola/core'
 
 const state = reactive({
   user: {
@@ -110,7 +114,7 @@ state.dispose()
 监听响应式数据变化：
 
 ```js
-import { watch, signal } from '@kupola/kupola'
+import { watch, signal } from '@kupola/core'
 
 const count = signal(0)
 
@@ -146,7 +150,8 @@ unwatch()
 组件间全局状态共享：
 
 ```js
-import { provide, inject, defineComponent } from '@kupola/kupola'
+import { provide, inject, defineComponent } from '@kupola/platform/component'
+import { html } from '@kupola/platform/template'
 
 // 在父组件中提供
 provide('theme', 'dark')
@@ -167,7 +172,7 @@ const Child = defineComponent({
 批量更新后执行回调：
 
 ```js
-import { nextTick, signal, effect } from '@kupola/kupola'
+import { nextTick, signal, effect } from '@kupola/core'
 
 const count = signal(0)
 
@@ -191,7 +196,7 @@ nextTick(() => {
 手动批量更新：
 
 ```js
-import { batch, signal, effect } from '@kupola/kupola'
+import { batch, signal, effect } from '@kupola/core'
 
 const a = signal(0)
 const b = signal(0)
@@ -212,7 +217,8 @@ batch(() => {
 组件支持 `created`、`mounted`、`destroyed` 钩子：
 
 ```js
-import { defineComponent, html } from '@kupola/kupola'
+import { defineComponent } from '@kupola/platform/component'
+import { html } from '@kupola/platform/template'
 
 const MyComponent = defineComponent({
   props: ['name'],

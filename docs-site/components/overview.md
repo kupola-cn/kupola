@@ -1,24 +1,24 @@
 # 组件概览
 
-Kupola 的组件按能力分组维护，所有组件都支持主包引入和按需引入。公开库使用时推荐按需引入，配合 `@kupola/kupola/css` 或 `@kupola/kupola/css/components` 使用库内置样式。
+Kupola 的组件按能力分组维护，所有组件都支持主包引入和按需引入。公开库使用时推荐按需引入，配合 `@kupola/platform/css` 或 `@kupola/platform/css/components` 使用库内置样式。
 
 ## 安装
 
 ```bash
-npm install @kupola/kupola
+npm install @kupola/core @kupola/platform
 ```
 
 ## 引入方式
 
 ```js
-import '@kupola/kupola/css'
+import '@kupola/platform/css'
 
 // 完整入口
-import { Modal, Table, Form } from '@kupola/kupola'
+import { Modal, Table, Form } from '@kupola/components'
 
 // 按需入口
-import { Modal } from '@kupola/kupola/components/modal'
-import { Table } from '@kupola/kupola/components/table'
+import { Modal } from '@kupola/components/modal'
+import { Table } from '@kupola/components/table'
 ```
 
 ## 分类导航

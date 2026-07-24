@@ -12,7 +12,7 @@
  * @module server
  */
 
-import { effect } from './effect.js';
+import { effect } from '@kupola/core';
 import {
   escapeHtml,
   isSignalLike,

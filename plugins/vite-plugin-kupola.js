@@ -2,7 +2,7 @@
 /**
  * vite-plugin-kupola
  *
- * Vite plugin for @kupola/kupola.
+ * Vite plugin for @kupola/platform.
  * - Auto-imports CSS tokens when Kupola components are used
  * - Optional: inject theme configuration
  *
@@ -34,7 +34,7 @@ export default function kupolaPlugin(options = {}) {
       cssInjected = true;
 
       // Inject CSS import at the top of the module
-      const cssImport = `import '@kupola/kupola/css';\n`;
+      const cssImport = `import '@kupola/platform/css';\n`;
       const themeAttr = theme ? `\n// Auto-set theme: document.documentElement.dataset.theme = '${theme}';` : '';
 
       return {

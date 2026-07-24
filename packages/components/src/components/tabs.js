@@ -1,11 +1,11 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Tabs component built on the 2.0 reactive core.
  *
  * Reuses the existing `ds-tabs` / `ds-tab` CSS classes for styling.
  *
  * ```js
- * import { html } from '@kupola/core/template';
+ * import { html } from '@kupola/platform/template';
  * import { Tabs } from '@kupola/components/tabs';
  *
  * const view = Tabs({
@@ -26,8 +26,8 @@
  * @module components/tabs
  */
 
-import { html } from '@kupola/core/template';
-import { render } from '@kupola/core/render';
+import { html } from '@kupola/platform/template';
+import { render } from '@kupola/platform/render';
 
 /**
  * Create a Tabs component instance.

@@ -14,7 +14,7 @@ import {
   walk,
   walkAuto,
   walkOnce,
-} from '../src/directives.js';
+} from '../../platform/src/directives.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
 import { signal } from '../src/index.js';
 

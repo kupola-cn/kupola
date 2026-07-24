@@ -75,7 +75,7 @@ my-kupola-app/
 ├── static/          # Kupola dist assets (Flask/FastAPI/Gin)
 ├── templates/       # HTML templates (Flask/FastAPI/Gin)
 ├── index.html       # Entry HTML (static)
-├── package.json     # @kupola/kupola dependency
+├── package.json     # @kupola/core, @kupola/platform dependency
 ├── nuxt.config.ts   # Nuxt config (nuxt)
 ├── next.config.mjs  # Next.js config (nextjs)
 ├── app.py           # Flask entry (flask template)
@@ -89,17 +89,18 @@ my-kupola-app/
 If you prefer not to use the CLI, you can install Kupola directly:
 
 ```bash
-npm install @kupola/kupola
+npm install @kupola/core @kupola/platform
 ```
 
 Then import in your code:
 
 ```js
 // Core engine (Signal + template + SSR)
-import { signal, html, render } from '@kupola/kupola';
+import { signal } from '@kupola/core';
+import { html, render } from '@kupola/platform';
 
 // Directive system (optional, for declarative HTML)
-import { walk } from '@kupola/kupola/directives';
+import { walk } from '@kupola/platform/directives';
 walk(document.body);
 ```
 

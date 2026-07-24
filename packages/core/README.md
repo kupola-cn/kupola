@@ -146,7 +146,7 @@ console.log(theme.value);
 ## Server-Side Rendering
 
 ```js
-import { renderToString } from '@kupola/core/server';
+import { renderToString } from '@kupola/platform/server';
 
 const html = await renderToString(() => html`<div>SSR Content</div>`);
 ```
@@ -154,7 +154,7 @@ const html = await renderToString(() => html`<div>SSR Content</div>`);
 ## i18n
 
 ```js
-import { t, setLocale, addMessages } from '@kupola/core/i18n';
+import { t, setLocale, addMessages } from '@kupola/platform/i18n';
 
 setLocale('zh-CN');
 console.log(t('hello'));

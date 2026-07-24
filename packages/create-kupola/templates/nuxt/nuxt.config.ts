@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   css: [
-    '@kupola/kupola/css',
+    '@kupola/platform/css',
     '~/assets/css/main.css',
   ],
 

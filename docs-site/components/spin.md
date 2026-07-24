@@ -3,7 +3,7 @@
 用于局部或全局加载状态。
 
 ```js
-import { Spin } from '@kupola/kupola/components/spin'
+import { Spin } from '@kupola/components/spin'
 
 const spin = Spin({
   text: '加载中...',

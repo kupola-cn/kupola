@@ -5,7 +5,7 @@
 ## 基础用法
 
 ```js
-import { Table } from '@kupola/kupola/components/table'
+import { Table } from '@kupola/components/table'
 
 const table = Table({
   columns: [

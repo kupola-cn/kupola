@@ -3,7 +3,7 @@
 用于从一组菜单项中选择一个值，适合工具栏、筛选器和紧凑表单。
 
 ```js
-import { Dropdown } from '@kupola/kupola/components/dropdown'
+import { Dropdown } from '@kupola/components/dropdown'
 
 const dropdown = Dropdown({
   placeholder: '请选择',

@@ -152,7 +152,7 @@ Kupola 提供声明式指令操作 DOM。
 ```
 
 ```js
-import { defineScope, walk } from '@kupola/kupola'
+import { defineScope, walk } from '@kupola/platform/directives'
 
 defineScope('usersPage', () => ({
   keyword: '',
@@ -325,6 +325,6 @@ walk(document.body)
 ## 初始化
 
 ```js
-import { walk } from '@kupola/kupola'
+import { walk } from '@kupola/platform/directives'
 walk(document.body) // 扫描并初始化所有 k-data
 ```

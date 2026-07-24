@@ -3,7 +3,7 @@
 用于展示按日期或分组聚合的数据强度。
 
 ```js
-import { Heatmap } from '@kupola/kupola/components/heatmap'
+import { Heatmap } from '@kupola/components/heatmap'
 
 const heatmap = Heatmap({
   data: [

@@ -2,7 +2,7 @@ import {
   setLocale, getLocale, t, addMessages, getMessages, getSupportedLocales,
   formatDate, formatNumber, formatCurrency, formatRelativeTime,
   isRTL, getDirection, onLocaleChange, localeSignal,
-} from '../src/i18n.js';
+} from '../../platform/src/i18n.js';
 
 describe('i18n', () => {
   beforeEach(() => {

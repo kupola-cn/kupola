@@ -3,7 +3,7 @@
 用于列表、表格、搜索结果为空时的占位展示。
 
 ```js
-import { Empty } from '@kupola/kupola/components/empty'
+import { Empty } from '@kupola/components/empty'
 
 const empty = Empty({
   title: '暂无数据',

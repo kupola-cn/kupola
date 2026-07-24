@@ -3,7 +3,7 @@
 用于分隔内容区块。
 
 ```js
-import { Divider } from '@kupola/kupola/components/divider'
+import { Divider } from '@kupola/components/divider'
 
 const divider = Divider({
   text: '基础信息',

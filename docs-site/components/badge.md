@@ -3,7 +3,7 @@
 用于展示计数、状态或短标签。
 
 ```js
-import { Badge } from '@kupola/kupola/components/badge'
+import { Badge } from '@kupola/components/badge'
 
 const badge = Badge({
   text: '12',

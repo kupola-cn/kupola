@@ -35,7 +35,7 @@ npx @kupola/create-kupola my-app --template=nextjs
 </div>
 
 <script type="module">
-  import { walk } from '@kupola/kupola/directives';
+  import { walk } from '@kupola/platform/directives';
   walk(document.body);
 </script>
 ```
@@ -47,7 +47,7 @@ npx @kupola/create-kupola my-app --template=nextjs
 在 Static 基础上添加 TypeScript 支持，通过 Vite 编译。入口文件 `src/main.ts` 初始化指令系统。
 
 ```typescript
-import { walk } from '@kupola/kupola/directives';
+import { walk } from '@kupola/platform/directives';
 walk(document.body);
 ```
 
@@ -71,7 +71,7 @@ layout.tsx (Server)     → CSS 导入 + 防 FOUC 脚本
 // src/components/KupolaApp.tsx
 'use client';
 import { useEffect } from 'react';
-import { walk } from '@kupola/kupola/directives';
+import { walk } from '@kupola/platform/directives';
 
 export default function KupolaApp() {
   useEffect(() => {
@@ -126,7 +126,7 @@ app.vue                 → <NuxtPage />
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { walk } from '@kupola/kupola/directives';
+import { walk } from '@kupola/platform/directives';
 
 const sectionRef = ref(null);
 const counterHTML = `<div k-data="{ count: 0 }">...</div>`;

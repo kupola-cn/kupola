@@ -3,7 +3,7 @@
 用于数据加载前的占位状态。
 
 ```js
-import { Skeleton } from '@kupola/kupola/components/skeleton'
+import { Skeleton } from '@kupola/components/skeleton'
 
 const skeleton = Skeleton({
   rows: 3,

@@ -12,7 +12,7 @@ Version 2.0.3 adds a centralized capability registry: projects can declare resou
 npm install @kupola/ai-adapter
 ```
 
-**Peer dependency**: `@kupola/kupola ^2.0.0`
+**Peer dependency**: `@kupola/core ^3.0.0` 和 `@kupola/platform ^3.0.0`
 
 ## Quick Start
 

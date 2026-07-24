@@ -21,7 +21,7 @@ Kupola 优先用于增强已经存在的 HTML 页面。你可以先不引入构�
 </div>
 
 <script type="module">
-  import { walk } from 'https://cdn.jsdelivr.net/npm/@kupola/kupola/dist/kupola-core-directives.esm.js'
+  import { walk } from 'https://cdn.jsdelivr.net/npm/@kupola/platform/dist/kupola-platform-directives.esm.js'
   walk(document.body)
 </script>
 ```
@@ -31,7 +31,7 @@ Kupola 优先用于增强已经存在的 HTML 页面。你可以先不引入构�
 ## npm 安装
 
 ```bash
-npm install @kupola/kupola
+npm install @kupola/platform
 ```
 
 ## 指令系统
@@ -45,7 +45,7 @@ npm install @kupola/kupola
 ```
 
 ```js
-import { walk } from '@kupola/kupola'
+import { walk } from '@kupola/platform/directives'
 
 walk(document.body)
 ```
@@ -63,7 +63,7 @@ walk(document.body)
 ```
 
 ```js
-import { defineScope, walk } from '@kupola/kupola'
+import { defineScope, walk } from '@kupola/platform/directives'
 
 defineScope('usersPage', () => ({
   keyword: '',
@@ -82,7 +82,7 @@ walk(document.body)
 也可以直接导入轻量 DOM 查询函数：
 
 ```js
-import { $, $$ } from '@kupola/kupola'
+import { $, $$ } from '@kupola/platform/directives'
 
 const app = $('#users-page')
 const buttons = $$('button', app)
@@ -93,7 +93,7 @@ const buttons = $$('button', app)
 当你需要在 JavaScript 中声明视图时，可以使用 `signal`、`html` 和 `render`：
 
 ```js
-import { signal, html, render } from '@kupola/kupola'
+import { signal, html, render } from '@kupola/platform'
 
 const count = signal(0)
 
@@ -106,14 +106,22 @@ const template = html`
 render(template, document.getElementById('app'))
 ```
 
+或者按需导入：
+
+```js
+import { signal } from '@kupola/core'
+import { html } from '@kupola/platform/template'
+import { render } from '@kupola/platform/render'
+```
+
 ## 按需组件
 
 组件库是可选扩展。需要常见业务 UI 时再按需引入：
 
 ```js
-import '@kupola/kupola/css'
-import { Modal } from '@kupola/kupola/components/modal'
-import { Table } from '@kupola/kupola/components/table'
+import '@kupola/platform/css'
+import { Modal } from '@kupola/components/modal'
+import { Table } from '@kupola/components/table'
 ```
 
 ## 下一步

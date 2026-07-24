@@ -3,7 +3,7 @@
 用于从一组选项中选择一个值。
 
 ```js
-import { Radio } from '@kupola/kupola/components/radio'
+import { Radio } from '@kupola/components/radio'
 
 const radio = Radio({
   name: 'gender',

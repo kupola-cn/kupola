@@ -1,0 +1,87 @@
+{
+  "name": "@kupola/platform",
+  "version": "3.1.0",
+  "description": "Kupola platform — Template rendering, component system, directives, theme, lazy loading, SSR, i18n.",
+  "type": "module",
+  "main": "dist/kupola-platform.cjs",
+  "module": "dist/kupola-platform.esm.js",
+  "types": "src/platform.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/kupola-platform.esm.js",
+      "require": "./dist/kupola-platform.cjs",
+      "types": "./src/platform.d.ts"
+    },
+    "./template": {
+      "import": "./dist/kupola-platform-template.esm.js",
+      "require": "./dist/kupola-platform-template.cjs"
+    },
+    "./render": {
+      "import": "./dist/kupola-platform-render.esm.js",
+      "require": "./dist/kupola-platform-render.cjs"
+    },
+    "./component": {
+      "import": "./dist/kupola-platform-component.esm.js",
+      "require": "./dist/kupola-platform-component.cjs"
+    },
+    "./directives": {
+      "import": "./dist/kupola-platform-directives.esm.js",
+      "require": "./dist/kupola-platform-directives.cjs",
+      "types": "./src/directives.d.ts"
+    },
+    "./theme": {
+      "import": "./dist/kupola-platform-theme.esm.js",
+      "require": "./dist/kupola-platform-theme.cjs"
+    },
+    "./lazy": {
+      "import": "./dist/kupola-platform-lazy.esm.js",
+      "require": "./dist/kupola-platform-lazy.cjs"
+    },
+    "./server": {
+      "import": "./dist/kupola-platform-server.esm.js",
+      "require": "./dist/kupola-platform-server.cjs",
+      "types": "./src/server.d.ts"
+    },
+    "./i18n": {
+      "import": "./dist/kupola-platform-i18n.esm.js",
+      "require": "./dist/kupola-platform-i18n.cjs",
+      "types": "./src/i18n.d.ts"
+    },
+    "./errors": {
+      "import": "./dist/kupola-platform-errors.esm.js",
+      "require": "./dist/kupola-platform-errors.cjs"
+    },
+    "./css": "./dist/css/index.css",
+    "./css/tokens": "./dist/css/tokens.css",
+    "./css/components": "./dist/css/components.css",
+    "./css/responsive": "./dist/css/responsive.css"
+  },
+  "files": [
+    "dist/",
+    "src/"
+  ],
+  "keywords": [
+    "kupola",
+    "platform",
+    "template",
+    "render",
+    "directives",
+    "theme",
+    "ssr",
+    "i18n"
+  ],
+  "author": "kupola-cn",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kupola-cn/kupola",
+    "directory": "packages/platform"
+  },
+  "bugs": {
+    "url": "https://github.com/kupola-cn/kupola/issues"
+  },
+  "homepage": "https://kupola-cn.github.io/kupola/",
+  "dependencies": {
+    "@kupola/core": "^3.1.0"
+  }
+}

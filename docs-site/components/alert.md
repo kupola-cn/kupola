@@ -3,7 +3,7 @@
 用于页面内展示重要状态或提示信息。
 
 ```js
-import { Alert } from '@kupola/kupola/components/alert'
+import { Alert } from '@kupola/components/alert'
 
 const alert = Alert({
   title: '注意',

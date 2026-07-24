@@ -3,7 +3,7 @@
 用于选择和上传文件。
 
 ```js
-import { FileUpload } from '@kupola/kupola/components/fileupload'
+import { FileUpload } from '@kupola/components/fileupload'
 
 const upload = FileUpload({
   accept: '.pdf,.doc',

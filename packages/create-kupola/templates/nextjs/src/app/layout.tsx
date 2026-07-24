@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import '@kupola/kupola/css';
+import '@kupola/platform/css';
 import './globals.css';
 
 export const metadata: Metadata = {

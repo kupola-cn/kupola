@@ -5,8 +5,8 @@
  */
 
 import { signal, computed, effect, batch } from '../src/index.js';
-import { html } from '../src/template.js';
-import { render } from '../src/render.js';
+import { html } from '../../platform/src/template.js';
+import { render } from '../../platform/src/render.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
 
 afterEach(() => {

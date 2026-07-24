@@ -10,7 +10,7 @@
  * @module component
  */
 
-import { signal } from './signal.js';
+import { signal } from '@kupola/core';
 import { render } from './render.js';
 import { TemplateResult } from './template.js';
 

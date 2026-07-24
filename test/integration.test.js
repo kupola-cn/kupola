@@ -5,9 +5,9 @@
 
 import { signal, computed, effect } from '../packages/core/src/index.js';
 import { flushJobs, resetScheduler } from '../packages/core/src/scheduler.js';
-import { html } from '../packages/core/src/template.js';
-import { setLocale, getLocale, t, addMessages } from '../packages/core/src/i18n.js';
-import { renderToString } from '../packages/core/src/server.js';
+import { html } from '../packages/platform/src/template.js';
+import { setLocale, getLocale, t, addMessages } from '../packages/platform/src/i18n.js';
+import { renderToString } from '../packages/platform/src/server.js';
 
 describe('i18n module', () => {
   afterEach(() => {
@@ -226,7 +226,7 @@ describe('Directive complex scenarios', () => {
   });
 
   test('k-show toggles display based on signal', () => {
-    const { walk } = require('../packages/core/src/directives.js');
+    const { walk } = require('../packages/platform/src/directives.js');
 
     container.innerHTML = `
       <div k-data="{ visible: true }">
@@ -242,7 +242,7 @@ describe('Directive complex scenarios', () => {
   });
 
   test('k-text updates textContent reactively', () => {
-    const { walk } = require('../packages/core/src/directives.js');
+    const { walk } = require('../packages/platform/src/directives.js');
 
     container.innerHTML = `
       <div k-data="{ name: 'World' }">
@@ -258,7 +258,7 @@ describe('Directive complex scenarios', () => {
   });
 
   test('k-bind sets attributes dynamically', () => {
-    const { walk } = require('../packages/core/src/directives.js');
+    const { walk } = require('../packages/platform/src/directives.js');
 
     container.innerHTML = `
       <div k-data="{ url: 'https://example.com' }">
@@ -274,7 +274,7 @@ describe('Directive complex scenarios', () => {
   });
 
   test('k-model two-way binds input value', () => {
-    const { walk } = require('../packages/core/src/directives.js');
+    const { walk } = require('../packages/platform/src/directives.js');
 
     container.innerHTML = `
       <div k-data="{ text: 'hello' }">
@@ -301,7 +301,7 @@ describe('Directive complex scenarios', () => {
   });
 
   test('nested k-data creates child scope', () => {
-    const { walk } = require('../packages/core/src/directives.js');
+    const { walk } = require('../packages/platform/src/directives.js');
 
     container.innerHTML = `
       <div k-data="{ name: 'parent' }">
@@ -322,7 +322,7 @@ describe('Directive complex scenarios', () => {
 
 describe('Error boundary', () => {
   test('ErrorBoundary catches factory errors', () => {
-    const { ErrorBoundary } = require('../packages/core/src/errors.js');
+    const { ErrorBoundary } = require('../packages/platform/src/errors.js');
     const error = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const view = ErrorBoundary(
@@ -337,7 +337,7 @@ describe('Error boundary', () => {
   });
 
   test('ErrorBoundary passes through on success', () => {
-    const { ErrorBoundary } = require('../packages/core/src/errors.js');
+    const { ErrorBoundary } = require('../packages/platform/src/errors.js');
 
     const mockResult = { element: document.createElement('div') };
     const view = ErrorBoundary(() => mockResult);
@@ -346,7 +346,7 @@ describe('Error boundary', () => {
   });
 
   test('ErrorBoundary calls onError callback', () => {
-    const { ErrorBoundary } = require('../packages/core/src/errors.js');
+    const { ErrorBoundary } = require('../packages/platform/src/errors.js');
     const errors = [];
     const error = jest.spyOn(console, 'error').mockImplementation(() => {});
 

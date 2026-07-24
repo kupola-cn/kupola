@@ -3,8 +3,8 @@
 用于从屏幕边缘滑出的面板，适合详情、设置和辅助操作区。
 
 ```js
-import { html } from '@kupola/kupola'
-import { Drawer } from '@kupola/kupola/components/drawer'
+import { html } from '@kupola/platform'
+import { Drawer } from '@kupola/components/drawer'
 
 const drawer = Drawer({ title: '详情', placement: 'right' }, html`<p>内容</p>`)
 document.body.appendChild(drawer.element)

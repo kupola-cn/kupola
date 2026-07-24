@@ -1,17 +1,17 @@
 # Vite 插件
 
-自动检测 Kupola 组件导入并注入 CSS tokens，无需手动 `import '@kupola/kupola/css'`。
+自动检测 Kupola 组件导入并注入 CSS tokens，无需手动 `import '@kupola/platform/css'`。
 
 ## 安装
 
-插件已内置于 `@kupola/kupola`，无需额外安装。
+插件已内置于 `@kupola/platform`，无需额外安装。
 
 ## 配置
 
 ```js
 // vite.config.js
 import { defineConfig } from 'vite';
-import kupola from '@kupola/kupola/plugins/vite';
+import kupola from '@kupola/platform/plugins/vite';
 
 export default defineConfig({
   plugins: [
@@ -26,7 +26,7 @@ export default defineConfig({
 ## 工作原理
 
 1. 扫描源码中 `from '@kupola/...'` 的导入语句
-2. 自动在模块顶部注入 `import '@kupola/kupola/css'`
+2. 自动在模块顶部注入 `import '@kupola/platform/css'`
 3. HMR 热更新时自动重置注入状态
 
 ## 选项
@@ -41,8 +41,8 @@ export default defineConfig({
 如果不想使用自动注入，可以手动引入 CSS：
 
 ```js
-import '@kupola/kupola/css';           // 完整样式
-import '@kupola/kupola/css/tokens';    // 仅 tokens
-import '@kupola/kupola/css/components'; // 仅组件样式
-import '@kupola/kupola/css/responsive'; // 响应式工具类
+import '@kupola/platform/css';           // 完整样式
+import '@kupola/platform/css/tokens';    // 仅 tokens
+import '@kupola/platform/css/components'; // 仅组件样式
+import '@kupola/platform/css/responsive'; // 响应式工具类
 ```

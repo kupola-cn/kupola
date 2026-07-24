@@ -3,7 +3,7 @@
 用于展示用户或实体头像。
 
 ```js
-import { Avatar } from '@kupola/kupola/components/avatar'
+import { Avatar } from '@kupola/components/avatar'
 
 const avatar = Avatar({
   name: '张三',

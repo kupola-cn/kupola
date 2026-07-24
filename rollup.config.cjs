@@ -44,7 +44,7 @@ function plugins(include, resolveOptions = {}) {
   ];
 }
 
-function bundle(input, outputBase, include, options = {}, resolveOptions = {}) {
+function bundle(input, outputBase, include, options = {}, resolveOptions = {}, externalPkgs = ['@babel/runtime']) {
   return {
     input,
     output: [
@@ -63,22 +63,36 @@ function bundle(input, outputBase, include, options = {}, resolveOptions = {}) {
       },
     ],
     plugins: plugins(include, resolveOptions),
-    external: ['@babel/runtime', '@kupola/core', '@kupola/core/i18n', '@kupola/core/server', '@kupola/core/directives'],
+    external: externalPkgs,
   };
 }
 
 const coreInclude = ['packages/core/src/**/*.js'];
+const platformInclude = ['packages/platform/src/**/*.js'];
 const componentsInclude = ['packages/components/src/**/*.js'];
 const aiAdapterInclude = ['packages/ai-adapter/src/**/*.js'];
 
+// ── @kupola/core entries ─────────────────────────────────────────────────────
 const coreEntries = [
   ['packages/core/src/index.js', 'dist/kupola-core'],
-  ['packages/core/src/platform.js', 'dist/kupola-platform'],
-  ['packages/core/src/server.js', 'dist/kupola-core-server'],
-  ['packages/core/src/directives.js', 'dist/kupola-core-directives'],
-  ['packages/core/src/i18n.js', 'dist/kupola-core-i18n'],
+  ['packages/core/src/devtools.js', 'dist/kupola-core-devtools'],
 ];
 
+// ── @kupola/platform entries ─────────────────────────────────────────────────
+const platformEntries = [
+  ['packages/platform/src/platform.js', 'dist/kupola-platform'],
+  ['packages/platform/src/template.js', 'dist/kupola-platform-template'],
+  ['packages/platform/src/render.js', 'dist/kupola-platform-render'],
+  ['packages/platform/src/component.js', 'dist/kupola-platform-component'],
+  ['packages/platform/src/directives.js', 'dist/kupola-platform-directives'],
+  ['packages/platform/src/theme.js', 'dist/kupola-platform-theme'],
+  ['packages/platform/src/lazy.js', 'dist/kupola-platform-lazy'],
+  ['packages/platform/src/server.js', 'dist/kupola-platform-server'],
+  ['packages/platform/src/i18n.js', 'dist/kupola-platform-i18n'],
+  ['packages/platform/src/errors.js', 'dist/kupola-platform-errors'],
+];
+
+// ── @kupola/components entries ───────────────────────────────────────────────
 const componentsDir = path.join(__dirname, 'packages/components/src/components');
 const componentEntries = fs
   .readdirSync(componentsDir)
@@ -96,14 +110,39 @@ const componentsMainEntry = [
   ['packages/components/src/index.js', 'dist/kupola-components'],
 ];
 
-const coreResolveOptions = {
-  resolveDirs: [path.join(__dirname, 'packages/core/src')],
+// ── Resolve options ──────────────────────────────────────────────────────────
+const platformResolveOptions = {
+  resolveDirs: [
+    path.join(__dirname, 'packages/core/src'),
+    path.join(__dirname, 'packages/platform/src'),
+  ],
 };
 
+// ── External packages ────────────────────────────────────────────────────────
+const coreExternal = ['@babel/runtime'];
+const platformExternal = ['@babel/runtime', '@kupola/core'];
+const componentsExternal = ['@babel/runtime', '@kupola/core', '@kupola/platform'];
+
 module.exports = [
-  ...coreEntries.map(([input, outputBase]) => bundle(input, outputBase, coreInclude)),
-  ...componentsMainEntry.map(([input, outputBase]) => bundle(input, outputBase, componentsInclude, {}, coreResolveOptions)),
-  ...componentEntries.map(([input, outputBase]) => bundle(input, outputBase, componentsInclude, {}, coreResolveOptions)),
+  // @kupola/core
+  ...coreEntries.map(([input, outputBase]) =>
+    bundle(input, outputBase, coreInclude, {}, {}, coreExternal),
+  ),
+
+  // @kupola/platform
+  ...platformEntries.map(([input, outputBase]) =>
+    bundle(input, outputBase, platformInclude, {}, platformResolveOptions, platformExternal),
+  ),
+
+  // @kupola/components
+  ...componentsMainEntry.map(([input, outputBase]) =>
+    bundle(input, outputBase, componentsInclude, {}, platformResolveOptions, componentsExternal),
+  ),
+  ...componentEntries.map(([input, outputBase]) =>
+    bundle(input, outputBase, componentsInclude, {}, platformResolveOptions, componentsExternal),
+  ),
+
+  // @kupola/ai-adapter
   bundle(
     'packages/ai-adapter/src/index.js',
     'packages/ai-adapter/dist/ai-adapter',

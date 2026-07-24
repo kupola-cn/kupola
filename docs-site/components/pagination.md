@@ -3,7 +3,7 @@
 用于分页浏览大量数据。
 
 ```js
-import { Pagination } from '@kupola/kupola/components/pagination'
+import { Pagination } from '@kupola/components/pagination'
 
 const pagination = Pagination({
   current: 1,

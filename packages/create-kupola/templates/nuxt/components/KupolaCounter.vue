@@ -7,7 +7,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { walk } from '@kupola/kupola/directives';
+import { walk } from '@kupola/platform/directives';
 
 const sectionRef = ref(null);
 

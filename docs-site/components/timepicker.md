@@ -3,7 +3,7 @@
 用于选择时间。
 
 ```js
-import { Timepicker } from '@kupola/kupola/components/timepicker'
+import { Timepicker } from '@kupola/components/timepicker'
 
 const picker = Timepicker({
   value: '09:30',

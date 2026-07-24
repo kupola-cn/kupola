@@ -26,7 +26,7 @@ static/
 `kupola-init.js` 负责统一初始化：
 
 ```js
-import { walk } from '@kupola/kupola/directives'
+import { walk } from '@kupola/platform/directives'
 
 const app = document.querySelector('[data-kupola-app]')
 const instance = walk(app || document.body)
@@ -39,7 +39,7 @@ window.addEventListener('beforeunload', () => {
 页面脚本负责暴露当前页面 controller：
 
 ```js
-import { defineScope } from '@kupola/kupola'
+import { defineScope } from '@kupola/platform/directives'
 
 defineScope('usersPage', () => ({
   keyword: '',

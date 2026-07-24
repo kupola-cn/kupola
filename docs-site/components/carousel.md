@@ -3,7 +3,7 @@
 用于图片或内容轮播。
 
 ```js
-import { Carousel } from '@kupola/kupola/components/carousel'
+import { Carousel } from '@kupola/components/carousel'
 
 const carousel = Carousel({
   items: [

@@ -3,7 +3,7 @@
  * @kupola/core — Unit tests for the lazy component loading.
  */
 
-import { lazyComponent, preloadComponent } from '../src/lazy.js';
+import { lazyComponent, preloadComponent } from '../../platform/src/lazy.js';
 
 describe('lazy', () => {
   // ─── lazyComponent ───────────────────────────────────────────────────────────

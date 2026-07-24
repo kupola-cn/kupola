@@ -5,8 +5,8 @@
 ## 基础用法
 
 ```js
-import { html } from '@kupola/kupola'
-import { Modal } from '@kupola/kupola/components/modal'
+import { html } from '@kupola/platform'
+import { Modal } from '@kupola/components/modal'
 
 const modal = Modal({ title: '提示', width: '480px' }, html`<p>内容</p>`)
 document.body.appendChild(modal.element)

@@ -13,11 +13,8 @@
  * @module @kupola/platform
  */
 
-// ── Core Reactivity ────────────────────────────────────────────────────────────
-export { signal, Signal, reactive, isReactive } from './signal.js';
-export { computed } from './computed.js';
-export { effect, watch } from './effect.js';
-export { batch } from './batch.js';
+// ── Core Reactivity (re-exported from @kupola/core) ──────────────────────────
+export { signal, Signal, reactive, isReactive, computed, effect, watch, batch } from '@kupola/core';
 
 // ── Template & Render ──────────────────────────────────────────────────────────
 export { html, TemplateResult } from './template.js';

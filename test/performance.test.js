@@ -9,8 +9,8 @@
 import { signal, computed, effect } from '../packages/core/src/index.js';
 import { flushJobs, resetScheduler } from '../packages/core/src/scheduler.js';
 import { Table, VirtualList } from '@kupola/components';
-import { renderToString } from '../packages/core/src/server.js';
-import { html } from '../packages/core/src/template.js';
+import { renderToString } from '../packages/platform/src/server.js';
+import { html } from '../packages/platform/src/template.js';
 
 describe('Performance: Signal reactivity', () => {
   afterEach(() => {

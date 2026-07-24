@@ -3,7 +3,7 @@
 用于数字输入和步进调整。
 
 ```js
-import { NumberInput } from '@kupola/kupola/components/numberinput'
+import { NumberInput } from '@kupola/components/numberinput'
 
 const input = NumberInput({
   min: 0,

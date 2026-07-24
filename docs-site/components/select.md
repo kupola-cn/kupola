@@ -3,7 +3,7 @@
 用于从选项列表中选择值。
 
 ```js
-import { Select } from '@kupola/kupola/components/select'
+import { Select } from '@kupola/components/select'
 
 const select = Select({
   options: [

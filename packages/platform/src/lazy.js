@@ -7,10 +7,10 @@
  *
  * Usage:
  * ```js
- * import { lazyComponent } from '@kupola/kupola';
+ * import { lazyComponent } from '@kupola/platform';
  *
  * // Lazy-load a component — only fetches the bundle when first used
- * const LazyTable = lazyComponent(() => import('@kupola/kupola/components/table'));
+ * const LazyTable = lazyComponent(() => import('@kupola/components/table'));
  *
  * // Later, when you need it:
  * const table = await LazyTable({ columns: [...], data: [...] });
@@ -19,9 +19,9 @@
  *
  * Or with preloading:
  * ```js
- * import { lazyComponent, preloadComponent } from '@kupola/kupola';
+ * import { lazyComponent, preloadComponent } from '@kupola/platform';
  *
- * const LazyCalendar = lazyComponent(() => import('@kupola/kupola/components/calendar'));
+ * const LazyCalendar = lazyComponent(() => import('@kupola/components/calendar'));
  *
  * // Start loading in the background
  * preloadComponent(LazyCalendar);

@@ -5,9 +5,9 @@
  */
 
 import { signal } from '../src/index.js';
-import { html } from '../src/template.js';
+import { html } from '../../platform/src/template.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
-import { defineComponent, register, getComponent, hasComponent, clearRegistry } from '../src/component.js';
+import { defineComponent, register, getComponent, hasComponent, clearRegistry } from '../../platform/src/component.js';
 
 afterEach(() => {
   document.body.innerHTML = '';

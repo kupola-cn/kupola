@@ -5,7 +5,7 @@ Kupola 不做全局 DOM 自动扫描。后端片段、AJAX 替换和局部渲染
 ## 替换顺序
 
 ```js
-import { destroyWalk, walkOnce } from '@kupola/kupola'
+import { destroyWalk, walkOnce } from '@kupola/platform/directives'
 
 async function replaceUsers(root) {
   destroyWalk(root)
