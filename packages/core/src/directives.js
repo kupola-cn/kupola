@@ -704,7 +704,7 @@ function handleHtml(el, expr, scope, disposers, sanitizer) {
 
 /**
  * Apply k-bind directive: reactive attribute.
- * 
+ *
  * Security strategy: whitelist approach for dynamic attribute binding.
  * Only explicitly allowed attributes can be bound dynamically.
  */

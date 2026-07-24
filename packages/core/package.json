@@ -3,13 +3,13 @@
   "version": "3.0.0",
   "description": "Kupola core reactivity engine — Signal, computed, effect, batch, template, SSR, i18n.",
   "type": "module",
-  "main": "dist/core.cjs",
-  "module": "dist/core.esm.js",
+  "main": "dist/kupola-core.cjs",
+  "module": "dist/kupola-core.esm.js",
   "types": "src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/core.esm.js",
-      "require": "./dist/core.cjs",
+      "import": "./dist/kupola-core.esm.js",
+      "require": "./dist/kupola-core.cjs",
       "types": "./src/index.d.ts"
     },
     "./server": {

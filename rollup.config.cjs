@@ -10,9 +10,9 @@ const terserOptions = {
   mangle: { properties: { regex: /^_/ } },
 };
 
-function plugins(include) {
+function plugins(include, resolveOptions = {}) {
   return [
-    nodeResolve({ browser: true }),
+    nodeResolve({ browser: true, ...resolveOptions }),
     commonjs({ include, requireReturnsDefault: 'auto' }),
     babel({
       babelHelpers: 'runtime',
@@ -22,7 +22,7 @@ function plugins(include) {
   ];
 }
 
-function bundle(input, outputBase, include, options = {}) {
+function bundle(input, outputBase, include, options = {}, resolveOptions = {}) {
   return {
     input,
     output: [
@@ -40,7 +40,7 @@ function bundle(input, outputBase, include, options = {}) {
         plugins: [terser(terserOptions)],
       },
     ],
-    plugins: plugins(include),
+    plugins: plugins(include, resolveOptions),
     external: ['@babel/runtime', '@kupola/core', '@kupola/core/i18n', '@kupola/core/server', '@kupola/core/directives'],
   };
 }
@@ -73,10 +73,14 @@ const componentsMainEntry = [
   ['packages/components/src/index.js', 'dist/kupola-components'],
 ];
 
+const coreResolveOptions = {
+  resolveDirs: [path.join(__dirname, 'packages/core/src')],
+};
+
 module.exports = [
   ...coreEntries.map(([input, outputBase]) => bundle(input, outputBase, coreInclude)),
-  ...componentsMainEntry.map(([input, outputBase]) => bundle(input, outputBase, componentsInclude)),
-  ...componentEntries.map(([input, outputBase]) => bundle(input, outputBase, componentsInclude)),
+  ...componentsMainEntry.map(([input, outputBase]) => bundle(input, outputBase, componentsInclude, {}, coreResolveOptions)),
+  ...componentEntries.map(([input, outputBase]) => bundle(input, outputBase, componentsInclude, {}, coreResolveOptions)),
   bundle(
     'packages/ai-adapter/src/index.js',
     'packages/ai-adapter/dist/ai-adapter',

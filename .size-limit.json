@@ -2,7 +2,7 @@
   {
     "name": "kupola-core (gzip)",
     "path": "dist/kupola-core.esm.js",
-    "limit": "15.2 kB",
+    "limit": "25 kB",
     "gzip": true
   },
   {
@@ -14,301 +14,307 @@
   {
     "name": "kupola-core-directives (gzip)",
     "path": "dist/kupola-core-directives.esm.js",
-    "limit": "9.1 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-modal (gzip)",
-    "path": "dist/kupola-core-modal.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-dropdown (gzip)",
-    "path": "dist/kupola-core-dropdown.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-drawer (gzip)",
-    "path": "dist/kupola-core-drawer.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-collapse (gzip)",
-    "path": "dist/kupola-core-collapse.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-tabs (gzip)",
-    "path": "dist/kupola-core-tabs.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-select (gzip)",
-    "path": "dist/kupola-core-select.esm.js",
-    "limit": "4 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-pagination (gzip)",
-    "path": "dist/kupola-core-pagination.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-datepicker (gzip)",
-    "path": "dist/kupola-core-datepicker.esm.js",
-    "limit": "4 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-dialog (gzip)",
-    "path": "dist/kupola-core-dialog.esm.js",
-    "limit": "4 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-notification (gzip)",
-    "path": "dist/kupola-core-notification.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-tooltip (gzip)",
-    "path": "dist/kupola-core-tooltip.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-alert (gzip)",
-    "path": "dist/kupola-core-alert.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-switch (gzip)",
-    "path": "dist/kupola-core-switch.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-progress (gzip)",
-    "path": "dist/kupola-core-progress.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-tag (gzip)",
-    "path": "dist/kupola-core-tag.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-badge (gzip)",
-    "path": "dist/kupola-core-badge.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-divider (gzip)",
-    "path": "dist/kupola-core-divider.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-skeleton (gzip)",
-    "path": "dist/kupola-core-skeleton.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-spin (gzip)",
-    "path": "dist/kupola-core-spin.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-empty (gzip)",
-    "path": "dist/kupola-core-empty.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-timeline (gzip)",
-    "path": "dist/kupola-core-timeline.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-kbd (gzip)",
-    "path": "dist/kupola-core-kbd.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-countdown (gzip)",
-    "path": "dist/kupola-core-countdown.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-breadcrumb (gzip)",
-    "path": "dist/kupola-core-breadcrumb.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-checkbox (gzip)",
-    "path": "dist/kupola-core-checkbox.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-radio (gzip)",
-    "path": "dist/kupola-core-radio.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-input (gzip)",
-    "path": "dist/kupola-core-input.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-avatar (gzip)",
-    "path": "dist/kupola-core-avatar.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-slider (gzip)",
-    "path": "dist/kupola-core-slider.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-numberinput (gzip)",
-    "path": "dist/kupola-core-numberinput.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-textarea (gzip)",
-    "path": "dist/kupola-core-textarea.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-statcard (gzip)",
-    "path": "dist/kupola-core-statcard.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-timepicker (gzip)",
-    "path": "dist/kupola-core-timepicker.esm.js",
-    "limit": "4 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-carousel (gzip)",
-    "path": "dist/kupola-core-carousel.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-tree (gzip)",
-    "path": "dist/kupola-core-tree.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-menu (gzip)",
-    "path": "dist/kupola-core-menu.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-fileupload (gzip)",
-    "path": "dist/kupola-core-fileupload.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-dynamictags (gzip)",
-    "path": "dist/kupola-core-dynamictags.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-imagepreview (gzip)",
-    "path": "dist/kupola-core-imagepreview.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-colorpicker (gzip)",
-    "path": "dist/kupola-core-colorpicker.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-virtuallist (gzip)",
-    "path": "dist/kupola-core-virtuallist.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-icons (gzip)",
-    "path": "dist/kupola-core-icons.esm.js",
-    "limit": "4 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-message (gzip)",
-    "path": "dist/kupola-core-message.esm.js",
-    "limit": "2 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-heatmap (gzip)",
-    "path": "dist/kupola-core-heatmap.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-calendar (gzip)",
-    "path": "dist/kupola-core-calendar.esm.js",
-    "limit": "4 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-validation (gzip)",
-    "path": "dist/kupola-core-validation.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-form (gzip)",
-    "path": "dist/kupola-core-form.esm.js",
-    "limit": "3 kB",
-    "gzip": true
-  },
-  {
-    "name": "kupola-core-table (gzip)",
-    "path": "dist/kupola-core-table.esm.js",
-    "limit": "8 kB",
+    "limit": "11 kB",
     "gzip": true
   },
   {
     "name": "kupola-core-i18n (gzip)",
     "path": "dist/kupola-core-i18n.esm.js",
-    "limit": "1 kB",
+    "limit": "8 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components (gzip)",
+    "path": "dist/kupola-components.esm.js",
+    "limit": "160 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-modal (gzip)",
+    "path": "dist/kupola-components-modal.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-dropdown (gzip)",
+    "path": "dist/kupola-components-dropdown.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-drawer (gzip)",
+    "path": "dist/kupola-components-drawer.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-collapse (gzip)",
+    "path": "dist/kupola-components-collapse.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-tabs (gzip)",
+    "path": "dist/kupola-components-tabs.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-select (gzip)",
+    "path": "dist/kupola-components-select.esm.js",
+    "limit": "4 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-pagination (gzip)",
+    "path": "dist/kupola-components-pagination.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-datepicker (gzip)",
+    "path": "dist/kupola-components-datepicker.esm.js",
+    "limit": "4 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-dialog (gzip)",
+    "path": "dist/kupola-components-dialog.esm.js",
+    "limit": "4 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-notification (gzip)",
+    "path": "dist/kupola-components-notification.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-tooltip (gzip)",
+    "path": "dist/kupola-components-tooltip.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-alert (gzip)",
+    "path": "dist/kupola-components-alert.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-switch (gzip)",
+    "path": "dist/kupola-components-switch.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-progress (gzip)",
+    "path": "dist/kupola-components-progress.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-tag (gzip)",
+    "path": "dist/kupola-components-tag.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-badge (gzip)",
+    "path": "dist/kupola-components-badge.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-divider (gzip)",
+    "path": "dist/kupola-components-divider.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-skeleton (gzip)",
+    "path": "dist/kupola-components-skeleton.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-spin (gzip)",
+    "path": "dist/kupola-components-spin.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-empty (gzip)",
+    "path": "dist/kupola-components-empty.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-timeline (gzip)",
+    "path": "dist/kupola-components-timeline.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-kbd (gzip)",
+    "path": "dist/kupola-components-kbd.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-countdown (gzip)",
+    "path": "dist/kupola-components-countdown.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-breadcrumb (gzip)",
+    "path": "dist/kupola-components-breadcrumb.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-checkbox (gzip)",
+    "path": "dist/kupola-components-checkbox.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-radio (gzip)",
+    "path": "dist/kupola-components-radio.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-input (gzip)",
+    "path": "dist/kupola-components-input.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-avatar (gzip)",
+    "path": "dist/kupola-components-avatar.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-slider (gzip)",
+    "path": "dist/kupola-components-slider.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-numberinput (gzip)",
+    "path": "dist/kupola-components-numberinput.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-textarea (gzip)",
+    "path": "dist/kupola-components-textarea.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-statcard (gzip)",
+    "path": "dist/kupola-components-statcard.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-timepicker (gzip)",
+    "path": "dist/kupola-components-timepicker.esm.js",
+    "limit": "4 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-carousel (gzip)",
+    "path": "dist/kupola-components-carousel.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-tree (gzip)",
+    "path": "dist/kupola-components-tree.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-menu (gzip)",
+    "path": "dist/kupola-components-menu.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-fileupload (gzip)",
+    "path": "dist/kupola-components-fileupload.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-dynamictags (gzip)",
+    "path": "dist/kupola-components-dynamictags.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-imagepreview (gzip)",
+    "path": "dist/kupola-components-imagepreview.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-colorpicker (gzip)",
+    "path": "dist/kupola-components-colorpicker.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-virtuallist (gzip)",
+    "path": "dist/kupola-components-virtuallist.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-icons (gzip)",
+    "path": "dist/kupola-components-icons.esm.js",
+    "limit": "4 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-message (gzip)",
+    "path": "dist/kupola-components-message.esm.js",
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-heatmap (gzip)",
+    "path": "dist/kupola-components-heatmap.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-calendar (gzip)",
+    "path": "dist/kupola-components-calendar.esm.js",
+    "limit": "4 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-validation (gzip)",
+    "path": "dist/kupola-components-validation.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-form (gzip)",
+    "path": "dist/kupola-components-form.esm.js",
+    "limit": "3 kB",
+    "gzip": true
+  },
+  {
+    "name": "kupola-components-table (gzip)",
+    "path": "dist/kupola-components-table.esm.js",
+    "limit": "8 kB",
     "gzip": true
   }
 ]

@@ -1,6 +1,30 @@
 # Changelog
 
-## 2.2.0 (2026-07-24)
+## 3.0.0 (2026-07-24)
+
+### Architecture
+
+- Separated UI components into standalone `@kupola/components` package (v1.0.0)
+- Updated `@kupola/core` to v3.0.0 - pure reactivity engine without UI components
+- Updated `@kupola/ai-adapter` to v3.0.0 - now depends on `@kupola/core` instead of `@kupola/kupola`
+- `@kupola/kupola` v3.0.0 serves as unified entry point re-exporting all sub-packages
+- Added proper module aliases for jest testing
+
+### Breaking Changes
+
+- Components no longer exported from `@kupola/core`
+- Import paths changed: `@kupola/kupola/components/button` → `@kupola/components/button`
+- `@kupola/ai-adapter` peerDependency changed from `@kupola/kupola` to `@kupola/core`
+
+### Features
+
+- Added `watch()` API for reactive data observation with `immediate` and `deep` options
+- Added `provide()`/`inject()` for global state sharing between components
+- Added `nextTick()` for batched update callbacks
+- Added lifecycle hooks (`created`, `mounted`, `destroyed`) to `defineComponent`
+- Added `reactive()` with `dispose()` method for proper cleanup
+
+## 2.2.0 (2026-07-21)
 
 ### Accessibility (A11Y)
 
@@ -28,7 +52,7 @@
 - Added `provide()`/`inject()` for global state sharing
 - Enhanced `k-model` to support dot notation (`obj.key`) and array indexing (`arr[0]`)
 
-## 2.1.1 (2026-07-24)
+## 2.1.1 (2026-07-18)
 
 ### Core directives and release quality
 
