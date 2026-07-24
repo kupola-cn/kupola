@@ -1,4 +1,4 @@
-﻿# Source / dev files
+# Source / dev files
 test/
 skills/
 node_modules/
@@ -59,3 +59,6 @@ storybook-static/
 # Git
 .gitignore
 .npmignore
+
+# Release scripts
+release.mjs

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.1 (2026-07-24)
+
+### Maintenance
+
+- Bug fixes and improvements
+
 ## 3.0.0 (2026-07-24)
 
 ### Architecture

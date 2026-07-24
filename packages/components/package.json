@@ -1,6 +1,6 @@
 {
   "name": "@kupola/components",
-  "version": "1.0.0",
+  "version": "3.0.1",
   "description": "Kupola UI components — 48+ accessible, responsive components for building modern web interfaces.",
   "type": "module",
   "main": "dist/components.cjs",

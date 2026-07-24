@@ -1,4 +1,4 @@
-﻿# IDE / tools
+# IDE / tools
 .agents/
 .vscode/
 .qoder/
@@ -30,3 +30,6 @@ storybook-static/
 # VitePress generated output
 docs-site/.vitepress/.temp/
 docs-site/.vitepress/dist/
+
+# Release scripts
+release.mjs

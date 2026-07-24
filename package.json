@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A zero-framework interaction layer and optional native component library for server-rendered HTML.",
   "main": "dist/kupola-core.cjs",
   "module": "dist/kupola-core.esm.js",
