@@ -3,8 +3,8 @@
  * Primitives + semantic aliases for dark/light themes.
  *
  * Usage:
- *   import '@kupola/kupola/css';              // full bundle
- *   import '@kupola/kupola/css/tokens.css';   // tokens only
+ *   import '@kupola/platform/css';              // full bundle
+ *   import '@kupola/platform/css/tokens.css';   // tokens only
  */
 
 :root {
