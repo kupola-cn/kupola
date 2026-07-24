@@ -27,12 +27,17 @@
     "workflow",
     "voice-control"
   ],
+  "author": "kupola-cn",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kupola-cn/kupola.git",
+    "url": "https://github.com/kupola-cn/kupola",
     "directory": "packages/ai-adapter"
   },
+  "bugs": {
+    "url": "https://github.com/kupola-cn/kupola/issues"
+  },
+  "homepage": "https://kupola-cn.github.io/kupola/",
   "peerDependencies": {
     "@kupola/core": "^3.0.0"
   },

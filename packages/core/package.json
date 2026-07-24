@@ -45,5 +45,9 @@
     "type": "git",
     "url": "https://github.com/kupola-cn/kupola",
     "directory": "packages/core"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/kupola-cn/kupola/issues"
+  },
+  "homepage": "https://kupola-cn.github.io/kupola/"
 }

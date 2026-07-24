@@ -2,6 +2,10 @@
 
 # Kupola
 
+[![CI](https://github.com/kupola-cn/kupola/actions/workflows/ci.yml/badge.svg)](https://github.com/kupola-cn/kupola/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@kupola/kupola)](https://www.npmjs.com/package/@kupola/kupola)
+[![License](https://img.shields.io/npm/l/@kupola/kupola)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
+
 Kupola is a zero-framework interaction layer for server-rendered HTML. Use its
 directive runtime for small interactive islands, its signal/template APIs for
 JavaScript-owned views, and its optional native component library where a

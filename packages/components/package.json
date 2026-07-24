@@ -270,6 +270,10 @@
     "url": "https://github.com/kupola-cn/kupola",
     "directory": "packages/components"
   },
+  "bugs": {
+    "url": "https://github.com/kupola-cn/kupola/issues"
+  },
+  "homepage": "https://kupola-cn.github.io/kupola/",
   "peerDependencies": {
     "@kupola/core": "^3.0.0"
   }

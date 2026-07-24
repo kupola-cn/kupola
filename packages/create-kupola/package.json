@@ -29,9 +29,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kupola-cn/create-kupola.git"
+    "url": "https://github.com/kupola-cn/kupola",
+    "directory": "packages/create-kupola"
   },
-  "homepage": "https://github.com/kupola-cn/create-kupola",
+  "bugs": {
+    "url": "https://github.com/kupola-cn/kupola/issues"
+  },
+  "homepage": "https://kupola-cn.github.io/kupola/",
   "dependencies": {
     "prompts": "^2.4.2",
     "kleur": "^4.1.5"
