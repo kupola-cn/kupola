@@ -1,0 +1,6 @@
+"use strict";var t=require("@kupola/platform/template"),e=require("@kupola/platform/render");exports.Tabs=function(s={}){function a(t){r!==t&&(r=t,n(),o&&o(t))}function n(){for(const[t,{tab:e,panel:s}]of u)t===r?(e.classList.add("is-active"),s.style.display=""):(e.classList.remove("is-active"),s.style.display="none")}const{tabs:i=[],panels:d={},activeKey:l=(i.length>0?i[0].key:""),variant:c="line",onChange:o=null}=s;let r=l;const u=new Map,b=i.map(e=>t.html`<button class="ds-tab" data-key="${e.key}">${e.label}</button>`),v=i.map(e=>{const s=d[e.key]||"",a=e.key!==r;return t.html`<div class="ds-tabs__panel" data-key="${e.key}" style="${a?"display: none":""}">${s}</div>`}),p="filled"===c?"ds-tabs ds-tabs--filled":"ds-tabs",f=t.html`
+    <div class="${p}">
+      <div class="ds-tabs__list">${b}</div>
+      <div class="ds-tabs__content">${v}</div>
+    </div>
+  `,y=document.createDocumentFragment(),$=e.render(f,y),_=y.querySelector(".ds-tabs");if(_){const t=_.querySelectorAll(".ds-tab"),e=_.querySelectorAll(".ds-tabs__panel");t.forEach(t=>{const s=t.getAttribute("data-key");if(!s)return;const n=[...e].find(t=>t.getAttribute("data-key")===s);n&&u.set(s,{tab:t,panel:n}),t.addEventListener("click",()=>a(s))})}return n(),{get element(){return y},setActive:a,getActive:function(){return r},destroy(){u.clear(),$.destroy()}}};

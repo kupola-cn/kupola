@@ -2,13 +2,13 @@
 
 ## 安装与使用
 
-### Q: 如何安装 Kupola 2.0？
+### Q: 如何安装 Kupola？
 
 ```bash
-npm install @kupola/core @kupola/platform
+npm install @kupola/core @kupola/platform @kupola/components
 ```
 
-> 正式版已发布，可直接 `npm install @kupola/core @kupola/platform`。
+> 正式版已发布，可直接 `npm install @kupola/core @kupola/platform @kupola/components`。
 
 ### Q: Kupola 依赖 React 或 Vue 吗？
 

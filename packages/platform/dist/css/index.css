@@ -1,0 +1,14 @@
+/**
+ * Kupola CSS — Full stylesheet bundle.
+ *
+ * @module @kupola/kupola/css
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="node_modules/@kupola/kupola/dist/kupola.css">
+ *   // or in JS:
+ *   import '@kupola/kupola/css';
+ */
+
+@import './tokens.css';
+@import './components.css';
+@import './responsive.css';

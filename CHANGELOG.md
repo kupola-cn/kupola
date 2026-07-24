@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.1.0 (2026-07-25)
+
+### Architecture
+
+- Split `@kupola/kupola` monolith into two independent packages:
+  - `@kupola/core` (~4.4 KB) — pure reactivity engine (Signal, computed, effect, batch)
+  - `@kupola/platform` (~47 KB) — template rendering, component system, directives, theme, lazy loading, SSR, i18n
+- `@kupola/kupola` is now marked `private: true` and no longer published to npm
+- Module imports support three patterns: full core import, platform import, and subpath imports (e.g., `@kupola/core/signal`, `@kupola/platform/theme`)
+- All 1281 tests pass after module splitting (70 test suites)
+- Updated all documentation, examples, and templates to use new import paths
+
+### Breaking Changes
+
+- `@kupola/kupola` is no longer published; use `@kupola/core` and/or `@kupola/platform` instead
+- Import paths changed:
+  - `signal`, `computed`, `effect`, `batch` → `@kupola/core`
+  - `html`, `render`, `walk`, `defineComponent`, `theme`, `lazy`, `renderToString`, `i18n` → `@kupola/platform`
+- `@kupola/components` peerDependencies updated to require `@kupola/core` and `@kupola/platform`
+- `@kupola/ai-adapter` peerDependency updated to require `@kupola/core`
+
+### Features
+
+- Subpath exports for all packages (e.g., `@kupola/platform/directives`, `@kupola/components/dialog`)
+- Tree-shaking support for removing unused code in final builds
+- Separate build entries for core, platform, directives, i18n, and server modules
+- Backward compatibility: `@kupola/core` still exports all modules via the full import path
+
 ## 3.0.1 (2026-07-24)
 
 ### Maintenance

@@ -2,6 +2,7 @@
 .agents/
 .vscode/
 .qoder/
+.trae/
 
 # Internal / sync
 dgc/
@@ -10,7 +11,7 @@ sync-to-his.ps1
 
 # Dependencies / build
 node_modules/
-dist/
+/dist/
 *.tgz
 
 # OS

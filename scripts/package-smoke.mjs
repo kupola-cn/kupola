@@ -5,15 +5,17 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const rootDir = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-const pkg = JSON.parse(await readFile(path.join(rootDir, 'package.json'), 'utf8'));
-const exportEntries = Object.entries(pkg.exports);
 
-function resolvePackagePath(target) {
-  return path.resolve(rootDir, target.replace(/^\.\//, ''));
+async function readJson(file) {
+  return JSON.parse(await readFile(path.join(rootDir, file), 'utf8'));
 }
 
-async function assertFile(target, label) {
-  const filePath = resolvePackagePath(target);
+function resolvePackagePath(pkgDir, target) {
+  return path.resolve(rootDir, pkgDir, target.replace(/^\.\//, ''));
+}
+
+async function assertFile(pkgDir, target, label) {
+  const filePath = resolvePackagePath(pkgDir, target);
   try {
     await access(filePath);
   } catch {
@@ -22,50 +24,105 @@ async function assertFile(target, label) {
   return filePath;
 }
 
-async function assertImport(target, label) {
-  const filePath = await assertFile(target, `${label} import`);
+async function assertImport(pkgDir, target, label) {
+  const filePath = await assertFile(pkgDir, target, `${label} import`);
   await import(pathToFileURL(filePath).href);
 }
 
-async function assertRequire(target, label) {
-  const filePath = await assertFile(target, `${label} require`);
+async function assertRequire(pkgDir, target, label) {
+  const filePath = await assertFile(pkgDir, target, `${label} require`);
   require(filePath);
 }
 
-for (const [name, entry] of exportEntries) {
-  if (typeof entry === 'string') {
-    await assertFile(entry, name);
-    continue;
+async function testPackage(pkgDir, pkgName) {
+  const pkg = await readJson(path.join(pkgDir, 'package.json'));
+  const exportEntries = Object.entries(pkg.exports || {});
+
+  for (const [name, entry] of exportEntries) {
+    if (typeof entry === 'string') {
+      await assertFile(pkgDir, entry, `${pkgName}${name}`);
+      continue;
+    }
+
+    if (entry.import) {
+      await assertImport(pkgDir, entry.import, `${pkgName}${name}`);
+    }
+    if (entry.require) {
+      await assertRequire(pkgDir, entry.require, `${pkgName}${name}`);
+    }
+    if (entry.types) {
+      await assertFile(pkgDir, entry.types, `${pkgName}${name} types`);
+    }
   }
 
-  if (entry.import) {
-    await assertImport(entry.import, name);
+  if (pkg.main) {
+    await assertRequire(pkgDir, pkg.main, `${pkgName} main`);
   }
-  if (entry.require) {
-    await assertRequire(entry.require, name);
+  if (pkg.module) {
+    await assertImport(pkgDir, pkg.module, `${pkgName} module`);
   }
-  if (entry.types) {
-    await assertFile(entry.types, `${name} types`);
+  if (pkg.types) {
+    await assertFile(pkgDir, pkg.types, `${pkgName} types`);
+  }
+
+  return { pkg, exportCount: exportEntries.length };
+}
+
+// ── @kupola/core ────────────────────────────────────────────────────────────
+const core = await testPackage('packages/core', '@kupola/core');
+const coreRoot = await import(pathToFileURL(resolvePackagePath('packages/core', core.pkg.exports['.'].import)).href);
+
+for (const [name, value] of Object.entries({
+  signal: coreRoot.signal,
+  computed: coreRoot.computed,
+  effect: coreRoot.effect,
+  batch: coreRoot.batch,
+})) {
+  if (typeof value !== 'function') {
+    throw new Error(`Expected @kupola/core to export ${name} as a function.`);
   }
 }
 
-const root = await import(pathToFileURL(resolvePackagePath(pkg.exports['.'].import)).href);
-const directives = await import(pathToFileURL(resolvePackagePath(pkg.exports['./directives'].import)).href);
-
-await assertRequire(pkg.main, 'package main');
-await assertImport(pkg.module, 'package module');
-await assertFile(pkg.types, 'package types');
+// ── @kupola/platform ────────────────────────────────────────────────────────
+const platform = await testPackage('packages/platform', '@kupola/platform');
+const platformRoot = await import(pathToFileURL(resolvePackagePath('packages/platform', platform.pkg.exports['.'].import)).href);
 
 for (const [name, value] of Object.entries({
-  walk: root.walk,
-  walkOnce: root.walkOnce,
-  setHtmlSanitizer: root.setHtmlSanitizer,
+  html: platformRoot.html,
+  render: platformRoot.render,
+  walk: platformRoot.walk,
+  walkOnce: platformRoot.walkOnce,
+  setHtmlSanitizer: platformRoot.setHtmlSanitizer,
+  defineComponent: platformRoot.defineComponent,
+})) {
+  if (typeof value !== 'function') {
+    throw new Error(`Expected @kupola/platform to export ${name} as a function.`);
+  }
+}
+
+// ── @kupola/platform/directives ─────────────────────────────────────────────
+const directives = await import(
+  pathToFileURL(resolvePackagePath('packages/platform', platform.pkg.exports['./directives'].import)).href
+);
+
+for (const [name, value] of Object.entries({
   directivesWalk: directives.walk,
   directivesWalkOnce: directives.walkOnce,
 })) {
   if (typeof value !== 'function') {
-    throw new Error(`Expected ${name} to be exported as a function.`);
+    throw new Error(`Expected @kupola/platform/directives to export ${name} as a function.`);
   }
 }
 
-console.log(`Package smoke test passed for ${exportEntries.length} export entries.`);
+// ── @kupola/components ──────────────────────────────────────────────────────
+const components = await testPackage('packages/components', '@kupola/components');
+
+// ── @kupola/ai-adapter ──────────────────────────────────────────────────────
+const aiAdapter = await testPackage('packages/ai-adapter', '@kupola/ai-adapter');
+
+const totalExports = core.exportCount + platform.exportCount + components.exportCount + aiAdapter.exportCount;
+console.log(
+  `Package smoke test passed for ${totalExports} export entries across 4 packages ` +
+  `(core: ${core.exportCount}, platform: ${platform.exportCount}, ` +
+  `components: ${components.exportCount}, ai-adapter: ${aiAdapter.exportCount}).`,
+);

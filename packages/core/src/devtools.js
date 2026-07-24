@@ -319,10 +319,6 @@ function _handleDevToolsMessage(event) {
   handlers.forEach(handler => handler(payload));
 }
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('message', _handleDevToolsMessage);
-}
-
 export function onDevToolsMessage(type, handler) {
   const handlers = _devtoolsListeners.get(type) || [];
   handlers.push(handler);
@@ -339,7 +335,9 @@ export function sendDevToolsMessage(type, payload = {}) {
 
 export function exposeDevToolsAPI() {
   if (typeof window === 'undefined') {return;}
-  
+
+  window.addEventListener('message', _handleDevToolsMessage);
+
   window.__KUPOLA__ = {
     enableProfiler,
     disableProfiler,
@@ -350,6 +348,6 @@ export function exposeDevToolsAPI() {
     sendMessage: sendDevToolsMessage,
     onMessage: onDevToolsMessage,
   };
-  
+
   console.log('[Kupola] DevTools API exposed. Use window.__KUPOLA__ to access.');
 }

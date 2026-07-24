@@ -1,0 +1,1 @@
+"use strict";var e=require("@kupola/platform/template"),t=require("@kupola/platform/render");exports.Kbd=function(r={}){const{key:s="",size:u="default"}=r,d="sm"===u?" ds-kbd--sm":"",n=e.html`<kbd class="ds-kbd${d}">${s}</kbd>`,o=document.createDocumentFragment(),a=t.render(n,o);return{get element(){return o},destroy:function(){a.destroy()}}};

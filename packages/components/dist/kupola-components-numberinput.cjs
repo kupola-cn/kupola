@@ -1,0 +1,8 @@
+"use strict";var n=require("@kupola/platform/template"),e=require("@kupola/platform/render");exports.NumberInput=function(t={}){function u(n){$=r(Number(n)||0),y&&(y.value=$),l(),f&&f($)}function r(n){return Math.max(o,Math.min(p,n))}function a(n){const e=Number(n.target.value);isNaN(e)||($=r(e),n.target.value=$,l(),f&&f($))}function i(){u($+d)}function s(){u($-d)}function l(){M&&(M.disabled=_||$<=o),q&&(q.disabled=_||$>=p)}const{label:c="",id:b="",min:o=-1/0,max:p=1/0,step:d=1,value:m=0,disabled:_=!1,onChange:f=null}=t,h=b||(c?`ds-numinput-${Math.random().toString(36).slice(2,8)}`:""),k=!!c;let $=r(m);const g=n.html`
+    ${k?n.html`<label class="ds-form-label" for="${h}">${c}</label>`:""}
+    <div class="ds-number-input">
+      <button class="ds-number-input__btn ds-number-input__btn--decrease" type="button" aria-label="Decrease">−</button>
+      <input class="ds-number-input__input" type="number" id="${h}" ${c?"":'aria-label="Number input"'} />
+      <button class="ds-number-input__btn ds-number-input__btn--increase" type="button" aria-label="Increase">+</button>
+    </div>
+  `,N=document.createDocumentFragment(),v=e.render(g,N),y=N.querySelector(".ds-number-input__input"),M=N.querySelector(".ds-number-input__btn--decrease"),q=N.querySelector(".ds-number-input__btn--increase");return y&&(y.value=$,y.min=o,y.max=p,y.step=d,y.disabled=_,y.addEventListener("change",a)),M&&(M.disabled=_||$<=o,M.addEventListener("click",s)),q&&(q.disabled=_||$>=p,q.addEventListener("click",i)),{get element(){return N},getValue:function(){return $},setValue:u,destroy:function(){y&&y.removeEventListener("change",a),M&&M.removeEventListener("click",s),q&&q.removeEventListener("click",i),v.destroy()}}};

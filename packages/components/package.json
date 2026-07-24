@@ -3,13 +3,13 @@
   "version": "3.1.0",
   "description": "Kupola UI components — 48+ accessible, responsive components for building modern web interfaces.",
   "type": "module",
-  "main": "dist/components.cjs",
-  "module": "dist/components.esm.js",
+  "main": "dist/kupola-components.cjs",
+  "module": "dist/kupola-components.esm.js",
   "types": "src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/components.esm.js",
-      "require": "./dist/components.cjs",
+      "import": "./dist/kupola-components.esm.js",
+      "require": "./dist/kupola-components.cjs",
       "types": "./src/index.d.ts"
     },
     "./alert": {

@@ -1,0 +1,1 @@
+function t(t={}){const{key:r="",size:m="default"}=t,d=e`<kbd class="ds-kbd${"sm"===m?" ds-kbd--sm":""}">${r}</kbd>`,n=document.createDocumentFragment(),s=o(d,n);return{get element(){return n},destroy:function(){s.destroy()}}}import{html as e}from"@kupola/platform/template";import{render as o}from"@kupola/platform/render";export{t as Kbd};

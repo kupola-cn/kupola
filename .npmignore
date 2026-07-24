@@ -55,6 +55,7 @@ USAGE_GUIDE.md
 stories/
 .storybook/
 storybook-static/
+.trae/
 
 # Git
 .gitignore

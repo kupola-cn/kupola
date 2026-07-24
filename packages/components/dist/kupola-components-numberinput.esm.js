@@ -1,0 +1,8 @@
+function n(n={}){function u(n){$=r(Number(n)||0),v&&(v.value=$),s(),f&&f($)}function r(n){return Math.max(o,Math.min(m,n))}function a(n){const t=Number(n.target.value);isNaN(t)||($=r(t),n.target.value=$,s(),f&&f($))}function i(){u($+p)}function l(){u($-p)}function s(){M&&(M.disabled=_||$<=o),x&&(x.disabled=_||$>=m)}const{label:c="",id:b="",min:o=-1/0,max:m=1/0,step:p=1,value:d=0,disabled:_=!1,onChange:f=null}=n,h=b||(c?`ds-numinput-${Math.random().toString(36).slice(2,8)}`:""),k=!!c;let $=r(d);const g=t`
+    ${k?t`<label class="ds-form-label" for="${h}">${c}</label>`:""}
+    <div class="ds-number-input">
+      <button class="ds-number-input__btn ds-number-input__btn--decrease" type="button" aria-label="Decrease">−</button>
+      <input class="ds-number-input__input" type="number" id="${h}" ${c?"":'aria-label="Number input"'} />
+      <button class="ds-number-input__btn ds-number-input__btn--increase" type="button" aria-label="Increase">+</button>
+    </div>
+  `,N=document.createDocumentFragment(),y=e(g,N),v=N.querySelector(".ds-number-input__input"),M=N.querySelector(".ds-number-input__btn--decrease"),x=N.querySelector(".ds-number-input__btn--increase");return v&&(v.value=$,v.min=o,v.max=m,v.step=p,v.disabled=_,v.addEventListener("change",a)),M&&(M.disabled=_||$<=o,M.addEventListener("click",l)),x&&(x.disabled=_||$>=m,x.addEventListener("click",i)),{get element(){return N},getValue:function(){return $},setValue:u,destroy:function(){v&&v.removeEventListener("change",a),M&&M.removeEventListener("click",l),x&&x.removeEventListener("click",i),y.destroy()}}}import{html as t}from"@kupola/platform/template";import{render as e}from"@kupola/platform/render";export{n as NumberInput};

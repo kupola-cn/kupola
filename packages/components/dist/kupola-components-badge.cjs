@@ -1,0 +1,3 @@
+"use strict";var e=require("@kupola/platform/template"),t=require("@kupola/platform/render");exports.Badge=function(n={}){const{value:r="",max:u=99,type:s="",dot:a=!1,pulse:o=!1}=n;let d=r;const i=s?` ds-badge--${s}`:"",c=a?" ds-badge--dot":"",l=o?" ds-badge--pulse":"",p=a?"":String(""!==d?function(){const e=Number(d);return!isNaN(e)&&e>u?u+"+":String(d)}():""),g=e.html`
+    <span class="ds-badge${i}${c}${l}">${p}</span>
+  `,f=document.createDocumentFragment(),m=t.render(g,f),b=f.querySelector(".ds-badge");return{get element(){return f},setValue:function(e){d=e,b&&(a||(b.textContent=function(){if(a)return"";const e=Number(d);return!isNaN(e)&&e>u?u+"+":String(d)}()))},getValue:function(){return d},destroy:function(){m.destroy()}}};

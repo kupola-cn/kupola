@@ -1,0 +1,6 @@
+function t(t={}){function e(t){r!==t&&(r=t,n(),c&&c(t))}function n(){for(const[t,{tab:a,panel:s}]of b)t===r?(a.classList.add("is-active"),s.style.display=""):(a.classList.remove("is-active"),s.style.display="none")}const{tabs:i=[],panels:o={},activeKey:d=(i.length>0?i[0].key:""),variant:l="line",onChange:c=null}=t;let r=d;const b=new Map,p=i.map(t=>a`<button class="ds-tab" data-key="${t.key}">${t.label}</button>`),u=i.map(t=>{const s=o[t.key]||"",e=t.key!==r;return a`<div class="ds-tabs__panel" data-key="${t.key}" style="${e?"display: none":""}">${s}</div>`}),f=a`
+    <div class="${"filled"===l?"ds-tabs ds-tabs--filled":"ds-tabs"}">
+      <div class="ds-tabs__list">${p}</div>
+      <div class="ds-tabs__content">${u}</div>
+    </div>
+  `,v=document.createDocumentFragment(),m=s(f,v),y=v.querySelector(".ds-tabs");if(y){const t=y.querySelectorAll(".ds-tab"),a=y.querySelectorAll(".ds-tabs__panel");t.forEach(t=>{const s=t.getAttribute("data-key");if(!s)return;const n=[...a].find(t=>t.getAttribute("data-key")===s);n&&b.set(s,{tab:t,panel:n}),t.addEventListener("click",()=>e(s))})}return n(),{get element(){return v},setActive:e,getActive:function(){return r},destroy(){b.clear(),m.destroy()}}}import{html as a}from"@kupola/platform/template";import{render as s}from"@kupola/platform/render";export{t as Tabs};
