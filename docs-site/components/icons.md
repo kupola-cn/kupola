@@ -74,7 +74,29 @@ registerIcons({
 
 ## 第三方图标库集成
 
-Kupola 支持与所有主流图标库集成。以下是常见图标库的集成示例：
+### 支持情况
+
+| 图标库 | 输出格式 | 支持方式 | 状态 |
+|--------|----------|----------|------|
+| **Lucide** | SVG 字符串 | 直接使用 | ✅ 完全支持 |
+| **Heroicons** | SVG 字符串 | 直接使用 | ✅ 完全支持 |
+| **Phosphor Icons** | SVG 字符串 | 函数包装 | ✅ 完全支持 |
+| **Iconify** | SVG 字符串 | renderHTML | ✅ 完全支持 |
+| **Font Awesome** | SVG / 字体 | SVG 模式或字体模式 | ✅ 完全支持 |
+| **Material Symbols** | 字体 | 字体模式 | ✅ 完全支持 |
+| **Tabler Icons** | SVG 字符串 | 直接使用 | ✅ 完全支持 |
+
+### 图标格式支持
+
+Kupola 的图标系统支持三种格式：
+
+| 格式 | 说明 | 示例 |
+|------|------|------|
+| **SVG 字符串** | 直接传入 SVG HTML 字符串 | `'<svg>...</svg>'` |
+| **函数** | 返回 SVG 字符串的函数，支持动态配置 | `() => '<svg>...</svg>'` |
+| **字体对象** | 用于字体图标 | `{ type: 'font', class: 'material-symbols-outlined' }` |
+
+以下是常见图标库的集成示例：
 
 ### Lucide Icons
 
