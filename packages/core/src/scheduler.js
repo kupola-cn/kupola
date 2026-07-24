@@ -49,3 +49,10 @@ export function resetScheduler() {
   pendingJobs.clear();
   isFlushScheduled = false;
 }
+
+export function nextTick(callback) {
+  queueMicrotask(() => {
+    flushJobs();
+    callback();
+  });
+}

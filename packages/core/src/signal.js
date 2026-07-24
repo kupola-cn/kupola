@@ -173,3 +173,69 @@ export class Signal {
 export function signal(initialValue) {
   return new Signal(initialValue);
 }
+
+const REACTIVE_SYMBOL = Symbol('kupola-reactive');
+const ARRAY_MUTATION_METHODS = new Set([
+  'push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse',
+]);
+
+function isReactive(obj) {
+  return obj && obj[REACTIVE_SYMBOL] === true;
+}
+
+function wrapReactive(obj, parentSignal) {
+  if (!obj || typeof obj !== 'object') {return obj;}
+  if (isReactive(obj)) {return obj;}
+  if (obj instanceof Signal) {return obj;}
+
+  const reactiveObj = Array.isArray(obj)
+    ? new Proxy([ ...obj ], createReactiveHandler(parentSignal))
+    : new Proxy({ ...obj }, createReactiveHandler(parentSignal));
+
+  reactiveObj[REACTIVE_SYMBOL] = true;
+
+  for (const key of Object.keys(obj)) {
+    reactiveObj[key] = wrapReactive(obj[key], parentSignal);
+  }
+
+  return reactiveObj;
+}
+
+function createReactiveHandler(parentSignal) {
+  return {
+    get(target, key, receiver) {
+      if (key === REACTIVE_SYMBOL) {return true;}
+      if (key === 'toJSON') {return () => target;}
+      if (typeof target[key] === 'function') {
+        if (ARRAY_MUTATION_METHODS.has(key)) {
+          return function(...args) {
+            const result = target[key](...args);
+            if (parentSignal) {parentSignal.value = { ...target };}
+            return result;
+          };
+        }
+        return target[key].bind(receiver);
+      }
+      return Reflect.get(target, key, receiver);
+    },
+    set(target, key, value, receiver) {
+      if (key === REACTIVE_SYMBOL) {return true;}
+      value = wrapReactive(value, parentSignal);
+      const result = Reflect.set(target, key, value, receiver);
+      if (parentSignal) {parentSignal.value = { ...target };}
+      return result;
+    },
+    deleteProperty(target, key) {
+      const result = Reflect.deleteProperty(target, key);
+      if (parentSignal) {parentSignal.value = { ...target };}
+      return result;
+    },
+  };
+}
+
+export function reactive(obj) {
+  const sig = new Signal(obj);
+  const reactiveObj = wrapReactive(obj, sig);
+  Object.defineProperty(reactiveObj, '_signal', { value: sig, enumerable: false });
+  return reactiveObj;
+}

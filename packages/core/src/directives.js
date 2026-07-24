@@ -654,6 +654,11 @@ function handleText(el, expr, scope, disposers) {
   disposers.push(dispose);
 }
 
+function handleOnce(el, expr, scope, disposers) {
+  const html = String(evaluate(expr, scope, null, { directive: 'k-once', element: el }) ?? '');
+  el.textContent = html;
+}
+
 /**
  * Apply k-html directive: reactive innerHTML.
  */
@@ -1589,7 +1594,7 @@ function parseForExpression(expr) {
     throw new Error(
       formatDiagnostic(
         'E002',
-        `Invalid k-for expression "${expr}". Use "item in items" or "(item, index) in items".`,
+        `Invalid k-for expression "${expr}". Use "item in items", "(item, index) in items", or "(value, key) in object".`,
       ),
     );
   }
@@ -1603,16 +1608,16 @@ function parseForExpression(expr) {
 function toIterationEntries(value) {
   if (!value) {return [];}
   if (Array.isArray(value)) {
-    return value.map((item, index) => ({ item, index }));
+    return value.map((item, index) => ({ item, index, key: index }));
   }
   if (typeof value === 'string') {
-    return [ ...value ].map((item, index) => ({ item, index }));
+    return [ ...value ].map((item, index) => ({ item, index, key: index }));
   }
   if (typeof value[Symbol.iterator] === 'function') {
-    return [ ...value ].map((item, index) => ({ item, index }));
+    return [ ...value ].map((item, index) => ({ item, index, key: index }));
   }
   if (typeof value === 'object') {
-    return Object.entries(value).map(([ key, item ]) => ({ item, index: key }));
+    return Object.entries(value).map(([ key, item ], index) => ({ item, index, key }));
   }
   return [];
 }
@@ -1683,7 +1688,7 @@ function handleFor(el, expr, scope, disposers, ctx) {
 
   const createLocals = (entry) => {
     const locals = { [itemName]: entry.item };
-    if (indexName) {locals[indexName] = entry.index;}
+    if (indexName) {locals[indexName] = entry.key;}
     return locals;
   };
 
@@ -1790,7 +1795,7 @@ function normalizeDirective(name) {
 const KNOWN_DIRECTIVES = new Set([
   'k-data', 'k-show', 'k-text', 'k-html', 'k-bind', 'k-on', 'k-model', 'k-ref',
   'k-init', 'k-cloak', 'k-class', 'k-style', 'k-transition', 'k-if', 'k-else-if',
-  'k-else', 'k-for', 'k-key',
+  'k-else', 'k-for', 'k-key', 'k-once', 'k-pre',
 ]);
 
 function validateDirectiveSyntax(el, directiveName, base, arg, modifiers) {
@@ -2067,6 +2072,11 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
     case 'k-cloak':
       el.removeAttribute('k-cloak');
       break;
+    case 'k-once':
+      handleOnce(el, expr, scope, disposers);
+      break;
+    case 'k-pre':
+      return true;
     case 'k-ref':
       disposers.push(addRef(ctx.refs, expr, el));
       if (ctx.appRefs && ctx.appRefs !== ctx.refs) {

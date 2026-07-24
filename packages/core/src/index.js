@@ -9,7 +9,7 @@
  */
 
 // ── Signal ───────────────────────────────────────────────────────────────────
-export { signal, Signal } from './signal.js';
+export { signal, Signal, reactive } from './signal.js';
 
 // ── Computed ─────────────────────────────────────────────────────────────────
 export { computed } from './computed.js';
@@ -38,7 +38,7 @@ export {
 } from './directives.js';
 
 // ── Scheduler (advanced / testing) ───────────────────────────────────────────
-export { flushJobs, resetScheduler } from './scheduler.js';
+export { flushJobs, resetScheduler, nextTick } from './scheduler.js';
 
 // ── i18n ─────────────────────────────────────────────────────────────────────
 export { setLocale, getLocale, t, addMessages } from './i18n.js';

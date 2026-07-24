@@ -2777,7 +2777,7 @@ describe('warnings and cleanup', () => {
 
     expect(thrown).toBeDefined();
     expect(thrown.message).toMatch(/\[kupola E002\]/);
-    expect(thrown.message).toMatch(/Use "item in items" or "\(item, index\) in items"/);
+    expect(thrown.message).toMatch(/Use "item in items"/);
   });
 
   test('throws directive expression errors with element and original cause', () => {
