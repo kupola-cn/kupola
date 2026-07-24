@@ -4,11 +4,19 @@
 
 ## 安装
 
+扩展源码位于 `packages/vscode-kupola/`，需先打包为 `.vsix` 再安装：
+
 ```bash
-code --install-extension vscode-kupola-1.0.0.vsix
+# 1. 打包（在项目根目录执行）
+cd packages/vscode-kupola
+npx vsce package --no-dependencies
+# 生成 vscode-kupola-3.1.0.vsix
+
+# 2. 安装
+code --install-extension vscode-kupola-3.1.0.vsix
 ```
 
-也可以在 VS Code 中通过 `Extensions: Install from VSIX...` 安装。
+也可以在 VS Code 中通过 `Extensions: Install from VSIX...` 安装生成的 `.vsix` 文件。
 
 ## 指令补全
 
