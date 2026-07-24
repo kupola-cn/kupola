@@ -157,7 +157,32 @@ registerIcons({
 });
 ```
 
-**Iconify (Iconify Icon):**
+**Heroicons:**
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+import { X, ChevronDown, CheckCircle } from '@heroicons/24-solid';
+
+registerIcons({
+  'x': X,
+  'chevron-down': ChevronDown,
+  'check-circle': CheckCircle,
+});
+```
+
+**Phosphor Icons:**
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+import { X, ChevronDown, CheckCircle } from 'phosphor-react';
+
+registerIcons({
+  'x': () => X({ size: 20, weight: 'bold' }).props.children,
+  'chevron-down': () => ChevronDown({ size: 20, weight: 'bold' }).props.children,
+});
+```
+
+**Iconify:**
 
 ```js
 import { registerIcons } from '@kupola/components/icon-config';
@@ -166,6 +191,53 @@ import { icon } from '@iconify/iconify';
 registerIcons({
   'x': () => icon.renderHTML({ icon: 'mdi:close' }),
   'chevron-down': () => icon.renderHTML({ icon: 'mdi:chevron-down' }),
+});
+```
+
+**Font Awesome (SVG mode):**
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+import { X, ChevronDown, CheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { dom, svg } from '@fortawesome/fontawesome-svg-core';
+dom.i2svg();
+
+registerIcons({
+  'x': () => svg(X).html[0],
+  'chevron-down': () => svg(ChevronDown).html[0],
+  'check-circle': () => svg(CheckCircle).html[0],
+});
+```
+
+**Font Awesome (Font mode):**
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { X, ChevronDown, CheckCircle } from '@fortawesome/free-solid-svg-icons';
+library.add(X, ChevronDown, CheckCircle);
+
+registerIcons({
+  'x': '<i class="fa-solid fa-xmark"></i>',
+  'chevron-down': '<i class="fa-solid fa-chevron-down"></i>',
+  'check-circle': '<i class="fa-solid fa-circle-check"></i>',
+});
+```
+
+**Material Symbols (Font mode):**
+
+```html
+<!-- Add CSS in HTML head -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap">
+```
+
+```js
+import { registerIcons } from '@kupola/components/icon-config';
+
+registerIcons({
+  'x': { type: 'font', class: 'material-symbols-outlined' },
+  'chevron-down': { type: 'font', class: 'material-symbols-outlined' },
+  'check-circle': { type: 'font', class: 'material-symbols-outlined' },
 });
 ```
 

@@ -23,6 +23,9 @@ function getIconHtml(name) {
     if (typeof custom === 'function') {
       return custom();
     }
+    if (typeof custom === 'object' && custom.type === 'font') {
+      return `<span class="${custom.class}"></span>`;
+    }
     return custom;
   }
   return DEFAULT_ICONS[name] || '';
