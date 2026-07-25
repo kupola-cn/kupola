@@ -10,6 +10,7 @@
     "packages/components",
     "packages/ai-adapter",
     "packages/auth",
+    "packages/router",
     "packages/create-kupola"
   ],
   "sideEffects": [
