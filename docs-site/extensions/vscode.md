@@ -40,6 +40,9 @@ code --install-extension vscode-kupola-3.1.0.vsix
 | `k-transition` | `k-show` / `k-if` 过渡 class 生命周期 |
 | `k-bind:*` / `:*` | 动态属性 |
 | `k-on:*` / `@*` | 事件监听 |
+| `k-router-link` | 路由链接导航 |
+| `k-router-view` | 路由视图容器 |
+| `k-permission` | 权限控制显示/隐藏 |
 
 事件补全覆盖 `.stop`、`.prevent`、`.once`、`.self`、`.outside`、`.enter`、`.escape`、`.debounce.300` 等常用写法。
 

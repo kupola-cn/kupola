@@ -157,6 +157,18 @@
     {
       "name": "k-on:mouseleave",
       "description": "Mouseleave event handler.\n\n```html\n<div k-on:mouseleave=\"hovered = false\">...</div>\n```"
+    },
+    {
+      "name": "k-router-link",
+      "description": "Router link navigation. Creates a navigation link that triggers router.push() on click.\n\n```html\n<a k-router-link=\"/dashboard\">Dashboard</a>\n<a k-router-link=\"/users\" k-router-active-class=\"active\">Users</a>\n```"
+    },
+    {
+      "name": "k-router-view",
+      "description": "Router view container. Renders the matched route component.\n\n```html\n<div k-router-view></div>\n<div k-router-view=\"sidebar\"></div>\n```"
+    },
+    {
+      "name": "k-permission",
+      "description": "Permission-based visibility. Shows/hides/disables element based on user permissions.\n\n```html\n<button k-permission=\"admin\">Admin Only</button>\n<button k-permission=\"edit\" k-permission-mode=\"disabled\">Edit</button>\n```"
     }
   ],
   "valueSets": []

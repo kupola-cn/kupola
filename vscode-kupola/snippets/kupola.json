@@ -199,5 +199,20 @@
     "prefix": "kupola-theme",
     "body": "<button k-on:click=\"document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'\">Toggle Theme</button>",
     "description": "Kupola dark/light theme toggle"
+  },
+  "Kupola: k-router-link": {
+    "prefix": "k-router-link",
+    "body": "<${1:a} k-router-link=\"${2:/path}\">${3:Link Text}</${1:a}>",
+    "description": "Kupola router link navigation"
+  },
+  "Kupola: k-router-view": {
+    "prefix": "k-router-view",
+    "body": "<${1:div} k-router-view></${1:div}>",
+    "description": "Kupola router view container"
+  },
+  "Kupola: k-permission": {
+    "prefix": "k-permission",
+    "body": "<${1:button} k-permission=\"${2:permission}\">${3:Button}</${1:button}>",
+    "description": "Kupola permission-based visibility"
   }
 }

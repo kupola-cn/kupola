@@ -11,6 +11,10 @@ directive runtime for small interactive islands, its signal/template APIs for
 JavaScript-owned views, and its optional native component library where a
 reusable component is the better boundary.
 
+Kupola also provides `@kupola/router` for client-side routing and `@kupola/auth`
+for permission management, both designed to work seamlessly with server-rendered
+applications.
+
 ## Install
 
 ```bash

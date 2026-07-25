@@ -22,6 +22,22 @@ Kupola is a zero-dependency UI framework with modular architecture, split into a
 - **SSR support**: `renderToString` + `hydrate`
 - **i18n & errors**: `setLocale`, `t`, `ErrorBoundary`
 
+### Router Package (`@kupola/router`, 独立可选)
+- **Three modes**: Hash / History / Memory
+- **Dynamic routes**: `/users/:id`, `/search/:keyword?`, `/*`
+- **Nested routes**: Parent + children with router-view
+- **Guards**: `beforeEach`, `beforeResolve`, `afterEach`, `beforeEnter`, `beforeLeave`
+- **Directives**: `k-router-link`, `k-router-view`
+- **Transitions**: CSS classes + JS hooks (onEnter/onLeave)
+- **Auth integration**: `setupAuthGuard` with @kupola/auth
+
+### Auth Package (`@kupola/auth`, 独立可选)
+- **RBAC**: `hasRole`, `hasPermission`
+- **ABAC**: Attribute-based filtering
+- **Directive**: `k-permission` (hide/disabled/fallback modes)
+- **HTTP guard**: Request/response interceptors
+- **Auth context**: `createAuthContext`, `hydrateAuthContext`
+
 ## Component Pattern
 
 All components follow the **factory function pattern**:
@@ -153,6 +169,9 @@ render(view(), document.getElementById('app'));
 | `k-on` | `@` | Event listener |
 | `k-model` | — | Two-way binding |
 | `k-for` | — | List rendering |
+| `k-router-link` | — | Router navigation |
+| `k-router-view` | — | Router view container |
+| `k-permission` | — | Permission-based visibility |
 
 ## Import Paths
 
@@ -181,6 +200,18 @@ import { renderToString, hydrate } from '@kupola/platform/server';
 
 // i18n
 import { setLocale, getLocale, t, addMessages } from '@kupola/platform/i18n';
+
+// Router
+import { createRouter, useRouter, useRoute, installRouter } from '@kupola/router';
+import { registerRouterLinkDirective, registerRouterViewDirective } from '@kupola/router';
+import { setupAuthGuard } from '@kupola/router/auth';
+import { matchRouteServer, createServerRouter } from '@kupola/router/server';
+
+// Auth
+import { createAuthContext, hydrateAuthContext, getAuthContext } from '@kupola/auth';
+import { registerPermissionHandler, getPermissionHandler } from '@kupola/auth';
+import { setupHttpGuard } from '@kupola/auth/http';
+import { requireAuth, requirePermission, requireRole } from '@kupola/auth';
 
 // CSS
 import '@kupola/platform/css';              // full bundle
@@ -292,6 +323,32 @@ packages/ai-adapter/
 │   └── index.js          # Public API entry
 ├── __tests__/            # 97 tests
 └── package.json          # peerDep: @kupola/core ^3.0.0
+
+packages/router/          # @kupola/router — SPA routing (~15KB)
+├── src/
+│   ├── router.js         # createRouter, push, replace, guards
+│   ├── matcher.js        # Route matching algorithm
+│   ├── hash.js           # Hash mode
+│   ├── history.js        # History mode
+│   ├── memory.js         # Memory mode
+│   ├── link.js           # k-router-link directive
+│   ├── view.js           # k-router-view directive
+│   ├── transition.js     # Route transitions
+│   ├── scroll.js         # Scroll restoration
+│   ├── auth.js           # Auth guard integration
+│   ├── server.js         # SSR support
+│   └── index.js          # Public API entry
+└── __tests__/            # 18 tests
+
+packages/auth/            # @kupola/auth — Permission guards (~9KB)
+├── src/
+│   ├── auth-context.js   # Auth state management
+│   ├── directive.js      # k-permission directive
+│   ├── http-guard.js     # HTTP interceptors
+│   ├── permission-handler.js  # Permission handlers
+│   ├── router-tools.js   # Router integration utilities
+│   └── index.js          # Public API entry
+└── __tests__/            # Tests
 ```
 
 ## Testing

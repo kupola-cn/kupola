@@ -10,6 +10,7 @@ export default defineConfig({
     nav: [
       { text: '指南', link: '/guide/getting-started' },
       { text: 'AI Adapter', link: '/ai-adapter/introduction' },
+      { text: '路由与权限', link: '/router/introduction' },
       { text: '组件', link: '/components/overview' },
       { text: '插件', link: '/plugins/vite' },
       { text: '扩展', link: '/extensions/vscode' },
@@ -53,6 +54,15 @@ export default defineConfig({
             { text: '中间件', link: '/ai-adapter/middleware' },
             { text: 'Kupola 集成', link: '/ai-adapter/kupola-integration' },
             { text: 'API 参考', link: '/ai-adapter/api' },
+          ],
+        },
+      ],
+      '/router/': [
+        {
+          text: '路由与权限',
+          items: [
+            { text: 'Router 简介', link: '/router/introduction' },
+            { text: 'API 参考', link: '/router/api' },
           ],
         },
       ],

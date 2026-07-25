@@ -140,6 +140,9 @@ render(view(), document.getElementById('app'));
 | `k-on` | `@` | Event listener |
 | `k-model` | — | Two-way binding |
 | `k-for` | — | List rendering |
+| `k-router-link` | — | Router link navigation |
+| `k-router-view` | — | Router view container |
+| `k-permission` | — | Permission-based visibility |
 
 ## Import Paths
 
@@ -170,6 +173,18 @@ import { enableProfiler, getProfileReport } from '@kupola/core';
 
 // i18n
 import { setLocale, getLocale, t, addMessages } from '@kupola/platform';
+
+// Router
+import { createRouter, useRouter, useRoute, installRouter } from '@kupola/router';
+import { registerRouterLinkDirective, registerRouterViewDirective } from '@kupola/router';
+import { setupAuthGuard } from '@kupola/router/auth';
+import { matchRouteServer, createServerRouter } from '@kupola/router/server';
+
+// Auth
+import { createAuthContext, hydrateAuthContext, getAuthContext } from '@kupola/auth';
+import { registerPermissionHandler, getPermissionHandler } from '@kupola/auth';
+import { setupHttpGuard } from '@kupola/auth/http';
+import { requireAuth, requirePermission, requireRole } from '@kupola/auth';
 
 // CSS
 import '@kupola/platform/css';              // full bundle
