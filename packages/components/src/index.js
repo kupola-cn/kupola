@@ -18,7 +18,7 @@ export { Empty } from './components/empty.js';
 export { FileUpload } from './components/fileupload.js';
 export { Form } from './components/form.js';
 export { Heatmap } from './components/heatmap.js';
-export { Icons, svg, render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups } from './components/icons.js';
+export { Icons, svg, render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createIconComponent, setupIconResolver } from './components/icons.js';
 export { ImagePreview } from './components/imagepreview.js';
 export { Input } from './components/input.js';
 export { Kbd } from './components/kbd.js';

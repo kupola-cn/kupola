@@ -72,7 +72,7 @@ const platformInclude = ['packages/platform/src/**/*.js'];
 const componentsInclude = ['packages/components/src/**/*.js'];
 const aiAdapterInclude = ['packages/ai-adapter/src/**/*.js'];
 const authInclude = ['packages/auth/src/**/*.js'];
-const routerInclude = ['packages/router/src/**/*.js'];
+const routerInclude = ['packages/router/src/**/*.js', 'packages/platform/src/**/*.js'];
 
 // ── @kupola/core entries ─────────────────────────────────────────────────────
 const coreEntries = [
@@ -178,25 +178,40 @@ module.exports = [
     'packages/router/src/index.js',
     'packages/router/dist/kupola-router',
     routerInclude,
+    {},
+    platformResolveOptions,
+    ['@babel/runtime', '@kupola/core', '@kupola/platform'],
   ),
   bundle(
     'packages/router/src/link.js',
     'packages/router/dist/kupola-router-link',
     routerInclude,
+    {},
+    platformResolveOptions,
+    ['@babel/runtime', '@kupola/core', '@kupola/platform'],
   ),
   bundle(
     'packages/router/src/view.js',
     'packages/router/dist/kupola-router-view',
     routerInclude,
+    {},
+    platformResolveOptions,
+    ['@babel/runtime', '@kupola/core', '@kupola/platform'],
   ),
   bundle(
     'packages/router/src/auth.js',
     'packages/router/dist/kupola-router-auth',
     routerInclude,
+    {},
+    platformResolveOptions,
+    ['@babel/runtime', '@kupola/core', '@kupola/platform'],
   ),
   bundle(
     'packages/router/src/server.js',
     'packages/router/dist/kupola-router-server',
     routerInclude,
+    {},
+    platformResolveOptions,
+    ['@babel/runtime', '@kupola/core', '@kupola/platform'],
   ),
 ];

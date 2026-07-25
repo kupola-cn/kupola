@@ -6,11 +6,18 @@ export function setupAuthGuard(router, options) {
     notFoundPath = '/404',
   } = options;
   
+  const getAuth = () => {
+    if (typeof authContext === 'function') {
+      return authContext();
+    }
+    return authContext;
+  };
+  
   router.beforeEach((to, from) => {
-    if (!authContext) return true;
+    const currentAuth = getAuth();
     
     if (to.meta.requiresAuth) {
-      if (!authContext.user || !authContext.user.id) {
+      if (!currentAuth || !currentAuth.user || !currentAuth.user.id) {
         const redirectUrl = from ? from.fullPath : to.fullPath;
         return {
           path: loginPath,
@@ -20,13 +27,13 @@ export function setupAuthGuard(router, options) {
     }
     
     if (to.meta.permission) {
-      if (!authContext.hasPermission || !authContext.hasPermission(to.meta.permission)) {
+      if (!currentAuth.hasPermission || !currentAuth.hasPermission(to.meta.permission)) {
         return { path: forbiddenPath };
       }
     }
     
     if (to.meta.role) {
-      if (!authContext.hasRole || !authContext.hasRole(to.meta.role)) {
+      if (!currentAuth.hasRole || !currentAuth.hasRole(to.meta.role)) {
         return { path: forbiddenPath };
       }
     }

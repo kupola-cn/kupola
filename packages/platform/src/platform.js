@@ -17,8 +17,8 @@
 export { signal, Signal, reactive, isReactive, computed, effect, watch, batch } from '@kupola/core';
 
 // ── Template & Render ──────────────────────────────────────────────────────────
-export { html, TemplateResult } from './template.js';
-export { render } from './render.js';
+export { html, TemplateResult, htmlString, HtmlString } from './template.js';
+export { render, setIconResolver } from './render.js';
 
 // ── Component System ──────────────────────────────────────────────────────────
 export { defineComponent, register, getComponent, hasComponent, clearRegistry, provide, inject } from './component.js';
@@ -26,6 +26,7 @@ export { defineComponent, register, getComponent, hasComponent, clearRegistry, p
 // ── Directives ────────────────────────────────────────────────────────────────
 export {
   $, $$, walk, walkAuto, walkOnce, getWalk, hasWalk, destroyWalk, defineScope, setHtmlSanitizer,
+  registerDirective,
 } from './directives.js';
 
 // ── Theme (anti-FOUC) ────────────────────────────────────────────────────────

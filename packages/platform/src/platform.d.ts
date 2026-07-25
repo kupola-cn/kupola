@@ -43,6 +43,16 @@ export declare function html(
   ...values: any[]
 ): TemplateResult;
 
+/** Wrapper for raw HTML strings that should NOT be escaped during template rendering. */
+export declare class HtmlString {
+  constructor(content: string);
+  readonly content: string;
+  toString(): string;
+}
+
+/** Create a raw HTML string that will not be escaped during template rendering. */
+export declare function htmlString(html: string): HtmlString;
+
 /** Manages all Parts created from a single template render. */
 export declare class TemplateInstance {
   parts: any[];

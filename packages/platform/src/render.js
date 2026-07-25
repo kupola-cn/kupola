@@ -7,6 +7,7 @@
  */
 
 import { effect } from '@kupola/core';
+import { HtmlString } from './template.js';
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 /** Minimal HTML entity escaping for text content. */
@@ -42,6 +43,11 @@ export function isTemplateResultLike(v) {
   );
 }
 
+/** Check if a value is an HtmlString (raw HTML that should not be escaped). */
+export function isHtmlString(v) {
+  return v instanceof HtmlString;
+}
+
 // ─── Marker ──────────────────────────────────────────────────────────────────
 
 /** Unique marker prefix — extremely unlikely in real HTML. */
@@ -68,13 +74,12 @@ function serialize(tpl) {
       } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         parts.push(v.map(serializeNested).join(''));
       } else if (typeof v === 'function') {
-        // Functions are always in on* attributes → marker
         parts.push(marker(i));
       } else if (isSignalLike(v)) {
-        // Signal → marker (will be read reactively)
         parts.push(marker(i));
+      } else if (isHtmlString(v)) {
+        parts.push(v.content);
       } else {
-        // Static primitive → inline escaped
         parts.push(escapeHtml(v ?? ''));
       }
     }
@@ -94,8 +99,17 @@ function serializeNested(tpl) {
       } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         parts.push(v.map(serializeNested).join(''));
       } else if (isSignalLike(v)) {
-        parts.push(escapeHtml(v.value));
-      } else if (typeof v !== 'function') {
+        const signalValue = v.value;
+        if (isHtmlString(signalValue)) {
+          parts.push(signalValue.content);
+        } else {
+          parts.push(escapeHtml(signalValue));
+        }
+      } else if (typeof v === 'function') {
+        parts.push(marker(i));
+      } else if (isHtmlString(v)) {
+        parts.push(v.content);
+      } else {
         parts.push(escapeHtml(v ?? ''));
       }
     }
@@ -183,11 +197,41 @@ export class TextPart {
     if (isSignalLike(this.rawValue)) {
       const raw = this.rawValue;
       this._dispose = effect(() => {
-        this.node.textContent = raw.value != null ? String(raw.value) : '';
+        const v = raw.value;
+        if (isHtmlString(v)) {
+          this.node.textContent = '';
+          const fragment = parseHTML(v.content);
+          this.node.parentNode.insertBefore(fragment, this.node);
+          this.node.remove();
+        } else {
+          this.node.textContent = v != null ? String(v) : '';
+        }
+      });
+    } else if (typeof this.rawValue === 'function') {
+      const fn = this.rawValue;
+      this._dispose = effect(() => {
+        const v = fn();
+        if (isTemplateResultLike(v)) {
+          this.node.textContent = '';
+          const fragment = parseHTML(serialize(v));
+          this.node.parentNode.insertBefore(fragment, this.node);
+          this.node.remove();
+        } else if (isHtmlString(v)) {
+          this.node.textContent = '';
+          const fragment = parseHTML(v.content);
+          this.node.parentNode.insertBefore(fragment, this.node);
+          this.node.remove();
+        } else {
+          this.node.textContent = v != null ? String(v) : '';
+        }
       });
     } else if (isTemplateResultLike(this.rawValue)) {
-      // Static nested template (non-reactive for now)
       this.node.textContent = serializeNested(this.rawValue);
+    } else if (isHtmlString(this.rawValue)) {
+      this.node.textContent = '';
+      const fragment = parseHTML(this.rawValue.content);
+      this.node.parentNode.insertBefore(fragment, this.node);
+      this.node.remove();
     } else {
       this.node.textContent = this.rawValue != null ? String(this.rawValue) : '';
     }
@@ -220,6 +264,16 @@ export class AttrPart {
       const raw = this.rawValue;
       this._dispose = effect(() => {
         const v = raw.value;
+        if (v == null || v === false) {
+          this.element.removeAttribute(this.attrName);
+        } else {
+          this.element.setAttribute(this.attrName, String(v));
+        }
+      });
+    } else if (typeof this.rawValue === 'function') {
+      const fn = this.rawValue;
+      this._dispose = effect(() => {
+        const v = fn();
         if (v == null || v === false) {
           this.element.removeAttribute(this.attrName);
         } else {
@@ -266,6 +320,67 @@ export class EventPart {
       this.element.removeEventListener(this.eventName, this._bound);
       this._bound = null;
     }
+  }
+}
+
+function getIconResolver() {
+  if (typeof window !== 'undefined' && window.__kupolaIconResolver) {
+    return window.__kupolaIconResolver;
+  }
+  return null;
+}
+
+export function setIconResolver(resolver) {
+  if (typeof window !== 'undefined') {
+    window.__kupolaIconResolver = resolver;
+  }
+}
+
+/**
+ * IconPart — manages an <icon> element with dynamic name/size.
+ */
+export class IconPart {
+  /**
+   * @param {Element} element
+   * @param {any} nameValue    Icon name (string or signal)
+   * @param {any} sizeValue    Icon size (number or signal)
+   */
+  constructor(element, nameValue, sizeValue) {
+    this.element = element;
+    this.nameValue = nameValue;
+    this.sizeValue = sizeValue;
+    this._dispose = null;
+  }
+
+  async mount() {
+    const resolveIcon = getIconResolver();
+    
+    const renderIcon = async () => {
+      const name = isSignalLike(this.nameValue) ? this.nameValue.value : this.nameValue;
+      const size = isSignalLike(this.sizeValue) ? this.sizeValue.value : this.sizeValue;
+      
+      if (!name) {
+        this.element.innerHTML = '';
+        return;
+      }
+      
+      if (resolveIcon) {
+        const svgContent = await resolveIcon(name, size);
+        this.element.innerHTML = svgContent || '';
+      }
+    };
+    
+    if (isSignalLike(this.nameValue) || isSignalLike(this.sizeValue)) {
+      this._dispose = effect(() => {
+        renderIcon();
+      });
+    } else {
+      renderIcon();
+    }
+  }
+
+  destroy() {
+    this._dispose?.();
   }
 }
 
@@ -405,6 +520,30 @@ function _processTextNode(textNode, values, htmlStr, instance, parent) {
  * Check an element's attributes for markers.
  */
 function _processElement(element, values, htmlStr, instance) {
+  if (element.tagName.toLowerCase() === 'icon') {
+    const nameAttr = element.getAttribute('name');
+    const sizeAttr = element.getAttribute('size');
+    
+    let nameValue = nameAttr;
+    let sizeValue = sizeAttr ? parseInt(sizeAttr, 10) : 16;
+    
+    for (let i = 0; i < values.length; i++) {
+      const m = marker(i);
+      if (nameAttr && nameAttr.includes(m)) {
+        nameValue = values[i];
+        element.removeAttribute('name');
+      }
+      if (sizeAttr && sizeAttr.includes(m)) {
+        sizeValue = values[i];
+        element.removeAttribute('size');
+      }
+    }
+    
+    const part = new IconPart(element, nameValue, sizeValue);
+    instance.parts.push(part);
+    return;
+  }
+
   const attrs = [ ...element.attributes ];
   for (const attr of attrs) {
     for (let i = 0; i < values.length; i++) {

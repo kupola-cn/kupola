@@ -222,21 +222,13 @@ export function createRouter(options) {
         const match = matchRoute(flattenedRecords, path, query);
         if (match) {
           currentRoute = match;
+          afterEachCallbacks.forEach(cb => cb(currentRoute, null));
         }
       });
       history.start();
       
       const initialPath = history.getPath();
-      const { path, query } = parsePath(initialPath);
-      currentRoute = matchRoute(flattenedRecords, path, query) || {
-        path: '/',
-        name: undefined,
-        params: {},
-        query: {},
-        meta: {},
-        fullPath: '/',
-        matched: [],
-      };
+      navigate(initialPath);
     },
     
     destroy() {

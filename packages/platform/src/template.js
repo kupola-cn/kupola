@@ -11,6 +11,7 @@
  *   - Function → event handler (when used in on* attributes)
  *   - TemplateResult (nested html``) → recursive render
  *   - Array of TemplateResults → list rendering
+ *   - HtmlString (from htmlString()) → raw HTML content (NOT escaped)
  *   - Primitives → static escaped text
  *
  * @module template
@@ -31,6 +32,51 @@ export class TemplateResult {
     /** @type {any[]} */
     this.values = values;
   }
+}
+
+/**
+ * Wrapper for raw HTML strings that should NOT be escaped.
+ * Use this for SVG icons, third-party icon library output, or any trusted HTML content.
+ *
+ * ```js
+ * import { html, htmlString } from '@kupola/platform';
+ * import { svg } from '@kupola/components/icons';
+ *
+ * const icon = htmlString(svg('dashboard', 18));
+ * const tpl = html`<span>${icon}</span>`;
+ * ```
+ *
+ * @param {string} html  Raw HTML content
+ * @returns {HtmlString}
+ */
+export class HtmlString {
+  /** @type {string} */
+  #content;
+
+  /** @param {string} content */
+  constructor(content) {
+    this.#content = String(content ?? '');
+  }
+
+  /** @returns {string} */
+  toString() {
+    return this.#content;
+  }
+
+  /** @returns {string} */
+  get content() {
+    return this.#content;
+  }
+}
+
+/**
+ * Create a raw HTML string that will not be escaped during template rendering.
+ *
+ * @param {string} html
+ * @returns {HtmlString}
+ */
+export function htmlString(html) {
+  return new HtmlString(html);
 }
 
 /**

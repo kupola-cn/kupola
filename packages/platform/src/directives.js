@@ -1811,8 +1811,15 @@ const KNOWN_DIRECTIVES = new Set([
   'k-else', 'k-for', 'k-key', 'k-once', 'k-pre',
 ]);
 
+/** @type {Map<string, Object>} */
+const customDirectives = new Map();
+
+export function registerDirective(name, definition) {
+  customDirectives.set(name, definition);
+}
+
 function validateDirectiveSyntax(el, directiveName, base, arg, modifiers) {
-  if (!KNOWN_DIRECTIVES.has(base)) {
+  if (!KNOWN_DIRECTIVES.has(base) && !customDirectives.has(base)) {
     warn('W017', `${describeElement(el)} has unknown directive "${directiveName}".`);
     return false;
   }
@@ -2096,6 +2103,19 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
         disposers.push(addRef(ctx.appRefs, expr, el));
       }
       break;
+    default: {
+      const customDirective = customDirectives.get(base);
+      if (customDirective) {
+        const binding = { value: expr, arg, modifiers };
+        if (customDirective.mount) {
+          const instance = customDirective.mount(el, binding);
+          if (instance && typeof instance.destroy === 'function') {
+            disposers.push(() => instance.destroy());
+          }
+        }
+      }
+      break;
+    }
       // k-data is handled by the walker
     }
   }

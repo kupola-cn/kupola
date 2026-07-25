@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Icons module built on the 2.0 reactive core.
  *
@@ -150,6 +150,8 @@ const iconGroups = {
   misc: MISC_ICONS,
 };
 
+const PROVIDERS = {};
+
 function registerIcons(icons) {
   Object.assign(PATHS, icons);
 }
@@ -169,6 +171,10 @@ function registerAllGroups() {
   });
 }
 
+function registerIconProvider(prefix, resolver) {
+  PROVIDERS[prefix] = resolver;
+}
+
 function svg(name, size = 16, viewBox = '0 0 24 24') {
   const path = PATHS[name];
   if (!path) {return '';}
@@ -177,6 +183,52 @@ function svg(name, size = 16, viewBox = '0 0 24 24') {
     .replace('height="16"', `height="${size}"`)
     .replace('viewBox="0 0 24 24"', `viewBox="${viewBox}"`);
   return `<svg ${attrs}>${path}</svg>`;
+}
+
+async function resolveIcon(name, size = 16) {
+  if (!name) {return '';}
+  
+  const lowerName = name.toLowerCase();
+  
+  if (PATHS[lowerName]) {
+    return svg(lowerName, size);
+  }
+  
+  if (name.includes(':')) {
+    const [prefix, iconName] = name.split(':', 2);
+    if (PROVIDERS[prefix]) {
+      return PROVIDERS[prefix](iconName, size);
+    }
+  }
+  
+  return '';
+}
+
+function setupIconResolver() {
+  if (typeof window !== 'undefined') {
+    window.__kupolaIconResolver = resolveIcon;
+  }
+}
+
+function createIconComponent(defineComponent) {
+  defineComponent('icon', {
+    props: {
+      name: String,
+      size: { type: Number, default: 16 }
+    },
+    async mount(element, props) {
+      const svgContent = await resolveIcon(props.name, props.size);
+      if (svgContent) {
+        element.innerHTML = svgContent;
+      }
+    },
+    async update(element, props, prevProps) {
+      if (props.name !== prevProps.name || props.size !== prevProps.size) {
+        const svgContent = await resolveIcon(props.name, props.size);
+        element.innerHTML = svgContent || '';
+      }
+    }
+  });
 }
 
 function renderIcons(root) {
@@ -199,6 +251,9 @@ const Icons = {
   registerGroup,
   registerAllGroups,
   iconGroups,
+  registerIconProvider,
+  createIconComponent,
+  setupIconResolver,
 };
 
-export { Icons, svg, renderIcons as render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups };
+export { Icons, svg, renderIcons as render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createIconComponent, setupIconResolver };

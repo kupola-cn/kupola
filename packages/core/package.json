@@ -1,6 +1,6 @@
 {
   "name": "@kupola/core",
-  "version": "3.2.1",
+  "version": "3.2.4",
   "description": "Kupola core reactivity engine — Signal, computed, effect, batch.",
   "type": "module",
   "main": "dist/kupola-core.cjs",

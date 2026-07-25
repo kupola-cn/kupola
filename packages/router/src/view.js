@@ -1,5 +1,6 @@
 import { useRouter } from './router.js';
 import { applyTransition, createTransitionManager } from './transition.js';
+import { render, registerDirective } from '@kupola/platform';
 
 export class RouterViewDirective {
   constructor(el, binding) {
@@ -39,9 +40,8 @@ export class RouterViewDirective {
     
     if (!component) return;
     
-    const currentContent = this.el.firstChild;
-    
-    if (currentContent) {
+    while (this.el.firstChild) {
+      const currentContent = this.el.firstChild;
       await applyTransition(currentContent, 'leave', lastRecord.transition);
       currentContent.remove();
     }
@@ -49,17 +49,10 @@ export class RouterViewDirective {
     const componentFn = component.default || component;
     const templateResult = componentFn();
     
-    const container = document.createElement('div');
     if (templateResult && typeof templateResult === 'object') {
-      container.innerHTML = templateResult.html || '';
+      render(templateResult, this.el);
     } else if (typeof templateResult === 'string') {
-      container.innerHTML = templateResult;
-    }
-    
-    const newContent = container.firstChild;
-    if (newContent) {
-      this.el.appendChild(newContent);
-      await applyTransition(newContent, 'enter', lastRecord.transition);
+      this.el.innerHTML = templateResult;
     }
   }
   
@@ -77,23 +70,20 @@ export class RouterViewDirective {
   }
 }
 
-export function registerRouterViewDirective(walk) {
-  walk(document.body, {
-    'router-view': {
-      mount(el, binding) {
-        const instance = new RouterViewDirective(el, binding);
-        el._routerViewInstance = instance;
-      },
-      update(el, binding) {
-        if (el._routerViewInstance) {
-          el._routerViewInstance.update(binding);
-        }
-      },
-      unmount(el) {
-        if (el._routerViewInstance) {
-          el._routerViewInstance.destroy();
-        }
-      },
+export function registerRouterViewDirective() {
+  registerDirective('k-router-view', {
+    mount(el, binding) {
+      return new RouterViewDirective(el, binding);
+    },
+    update(el, binding) {
+      if (el._routerViewInstance) {
+        el._routerViewInstance.update(binding);
+      }
+    },
+    unmount(el) {
+      if (el._routerViewInstance) {
+        el._routerViewInstance.destroy();
+      }
     },
   });
 }

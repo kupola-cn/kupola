@@ -1,4 +1,5 @@
 import { useRouter } from './router.js';
+import { registerDirective } from '@kupola/platform';
 
 export class RouterLinkDirective {
   constructor(el, binding) {
@@ -88,23 +89,20 @@ export class RouterLinkDirective {
   }
 }
 
-export function registerRouterLinkDirective(walk) {
-  walk(document.body, {
-    'router-link': {
-      mount(el, binding) {
-        const instance = new RouterLinkDirective(el, binding);
-        el._routerLinkInstance = instance;
-      },
-      update(el, binding) {
-        if (el._routerLinkInstance) {
-          el._routerLinkInstance.update(binding);
-        }
-      },
-      unmount(el) {
-        if (el._routerLinkInstance) {
-          el._routerLinkInstance.destroy();
-        }
-      },
+export function registerRouterLinkDirective() {
+  registerDirective('k-router-link', {
+    mount(el, binding) {
+      return new RouterLinkDirective(el, binding);
+    },
+    update(el, binding) {
+      if (el._routerLinkInstance) {
+        el._routerLinkInstance.update(binding);
+      }
+    },
+    unmount(el) {
+      if (el._routerLinkInstance) {
+        el._routerLinkInstance.destroy();
+      }
     },
   });
 }

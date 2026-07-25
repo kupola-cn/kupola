@@ -81,16 +81,18 @@ export async function applyTransition(el, type, routeTransition = {}) {
       });
     }
     
-    el.classList.add(classes.enter, classes.enterActive);
-    
-    await awaitTransition(el, routeTransition.duration);
-    
-    el.classList.remove(classes.enter);
-    el.classList.add(classes.enterTo);
-    
-    await awaitTransition(el, routeTransition.duration);
-    
-    el.classList.remove(classes.enterActive, classes.enterTo);
+    if (el.classList) {
+      el.classList.add(classes.enter, classes.enterActive);
+      
+      await awaitTransition(el, routeTransition.duration);
+      
+      el.classList.remove(classes.enter);
+      el.classList.add(classes.enterTo);
+      
+      await awaitTransition(el, routeTransition.duration);
+      
+      el.classList.remove(classes.enterActive, classes.enterTo);
+    }
   } else if (type === 'leave') {
     if (routeTransition.onLeave) {
       return new Promise(resolve => {
@@ -98,16 +100,18 @@ export async function applyTransition(el, type, routeTransition = {}) {
       });
     }
     
-    el.classList.add(classes.leave, classes.leaveActive);
-    
-    await awaitTransition(el, routeTransition.duration);
-    
-    el.classList.remove(classes.leave);
-    el.classList.add(classes.leaveTo);
-    
-    await awaitTransition(el, routeTransition.duration);
-    
-    el.classList.remove(classes.leaveActive, classes.leaveTo);
+    if (el.classList) {
+      el.classList.add(classes.leave, classes.leaveActive);
+      
+      await awaitTransition(el, routeTransition.duration);
+      
+      el.classList.remove(classes.leave);
+      el.classList.add(classes.leaveTo);
+      
+      await awaitTransition(el, routeTransition.duration);
+      
+      el.classList.remove(classes.leaveActive, classes.leaveTo);
+    }
   }
 }
 
