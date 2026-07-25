@@ -20,13 +20,17 @@ export default {
     '^@kupola/platform/server$': '<rootDir>/packages/platform/src/server.js',
     '^@kupola/platform/i18n$': '<rootDir>/packages/platform/src/i18n.js',
     '^@kupola/platform/errors$': '<rootDir>/packages/platform/src/errors.js',
+    '^@kupola/auth$': '<rootDir>/packages/auth/src/index.js',
+    '^@kupola/auth/context$': '<rootDir>/packages/auth/src/auth-context.js',
+    '^@kupola/auth/directive$': '<rootDir>/packages/auth/src/directive.js',
+    '^@kupola/auth/http$': '<rootDir>/packages/auth/src/http-guard.js',
+    '^@kupola/auth/router$': '<rootDir>/packages/auth/src/router-tools.js',
   },
   testMatch: [
     '**/test/**/*.test.js',
     '**/test/**/*.spec.js',
     '**/packages/**/__tests__/**/*.test.js',
     '**/packages/**/__tests__/**/*.spec.js',
-    '**/benchmark/**/*.bench.js',
   ],
   testPathIgnorePatterns: [
     'node_modules/',

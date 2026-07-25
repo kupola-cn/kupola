@@ -71,6 +71,7 @@ const coreInclude = ['packages/core/src/**/*.js'];
 const platformInclude = ['packages/platform/src/**/*.js'];
 const componentsInclude = ['packages/components/src/**/*.js'];
 const aiAdapterInclude = ['packages/ai-adapter/src/**/*.js'];
+const authInclude = ['packages/auth/src/**/*.js'];
 
 // ── @kupola/core entries ─────────────────────────────────────────────────────
 const coreEntries = [
@@ -147,5 +148,27 @@ module.exports = [
     'packages/ai-adapter/src/index.js',
     'packages/ai-adapter/dist/ai-adapter',
     aiAdapterInclude,
+  ),
+
+  // @kupola/auth
+  bundle(
+    'packages/auth/src/index.js',
+    'packages/auth/dist/kupola-auth',
+    authInclude,
+  ),
+  bundle(
+    'packages/auth/src/directive.js',
+    'packages/auth/dist/kupola-auth-directive',
+    authInclude,
+  ),
+  bundle(
+    'packages/auth/src/http-guard.js',
+    'packages/auth/dist/kupola-auth-http',
+    authInclude,
+  ),
+  bundle(
+    'packages/auth/src/auth-context.js',
+    'packages/auth/dist/kupola-auth-context',
+    authInclude,
   ),
 ];

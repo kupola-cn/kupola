@@ -1,0 +1,62 @@
+{
+  "name": "@kupola/auth",
+  "version": "3.2.1",
+  "description": "Kupola auth — RBAC-based permission guard system with ABAC attribute filtering support.",
+  "type": "module",
+  "main": "dist/kupola-auth.cjs",
+  "module": "dist/kupola-auth.esm.js",
+  "types": "src/types.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/kupola-auth.esm.js",
+      "require": "./dist/kupola-auth.cjs",
+      "types": "./src/types.d.ts"
+    },
+    "./directive": {
+      "import": "./dist/kupola-auth-directive.esm.js",
+      "require": "./dist/kupola-auth-directive.cjs"
+    },
+    "./http": {
+      "import": "./dist/kupola-auth-http.esm.js",
+      "require": "./dist/kupola-auth-http.cjs"
+    },
+    "./context": {
+      "import": "./dist/kupola-auth-context.esm.js",
+      "require": "./dist/kupola-auth-context.cjs"
+    }
+  },
+  "files": [
+    "dist/",
+    "src/",
+    "README.md"
+  ],
+  "keywords": [
+    "kupola",
+    "auth",
+    "permission",
+    "rbac",
+    "abac",
+    "guard"
+  ],
+  "author": "kupola-cn",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kupola-cn/kupola",
+    "directory": "packages/auth"
+  },
+  "bugs": {
+    "url": "https://github.com/kupola-cn/kupola/issues"
+  },
+  "homepage": "https://kupola-cn.github.io/kupola/",
+  "peerDependencies": {
+    "@kupola/core": "^3.1.0"
+  },
+  "devDependencies": {
+    "@kupola/core": "^3.1.0"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "rollup -c ../../rollup.config.cjs"
+  }
+}

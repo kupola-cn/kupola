@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "3.1.2",
+  "version": "3.2.1",
   "description": "A zero-framework interaction layer and optional native component library for server-rendered HTML.",
   "private": true,
   "type": "module",
@@ -9,6 +9,7 @@
     "packages/platform",
     "packages/components",
     "packages/ai-adapter",
+    "packages/auth",
     "packages/create-kupola"
   ],
   "sideEffects": [
