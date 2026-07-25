@@ -1,0 +1,86 @@
+[
+  {
+    "test": "Page FCP (First Contentful Paint)",
+    "value": 60,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Page LCP (Largest Contentful Paint)",
+    "value": 60,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Create 10,000 signals",
+    "value": 2.1000000005587935,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Update 10,000 signals",
+    "value": 0.6999999992549419,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Create 1,000 computed",
+    "value": 1.2000000001862645,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Read 1,000 computed",
+    "value": 0.7000000001862645,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Table render (1000 rows)",
+    "value": 3.7000000001862645,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "VirtualList render (10,000 items)",
+    "value": 0.19999999925494194,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Form render (50 fields)",
+    "value": 0.10000000055879354,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "INP (Interaction to Next Paint)",
+    "value": 0,
+    "unit": "ms",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Memory Used JS Heap",
+    "value": 9.54,
+    "unit": "MB",
+    "iterations": 1,
+    "status": "OK"
+  },
+  {
+    "test": "Memory Total JS Heap",
+    "value": 16.31,
+    "unit": "MB",
+    "iterations": 1,
+    "status": "OK"
+  }
+]
