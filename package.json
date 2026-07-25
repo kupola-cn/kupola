@@ -28,6 +28,7 @@
     "lint": "eslint .",
     "lint:core": "eslint packages/core/src packages/core/__tests__",
     "lint:platform": "eslint packages/platform/src packages/core/__tests__",
+    "lint:directives": "eslint packages/platform/src/directives.js packages/platform/__tests__",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "jest --config jest.config.mjs",
