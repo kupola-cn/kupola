@@ -9,8 +9,10 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const reportsDir = path.dirname(import.meta.url).replace('file:///', '');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const reportsDir = __dirname;
 const coreResults = JSON.parse(fs.readFileSync(path.join(reportsDir, 'core-results.json'), 'utf8'));
 const componentsResults = JSON.parse(fs.readFileSync(path.join(reportsDir, 'components-results.json'), 'utf8'));
 

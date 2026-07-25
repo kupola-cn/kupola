@@ -10,8 +10,10 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const reportsDir = path.dirname(import.meta.url).replace('file:///', '');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const reportsDir = __dirname;
 
 // Performance thresholds (in milliseconds)
 const thresholds = {
