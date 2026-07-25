@@ -1,5 +1,49 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### [3.1.2](https://github.com/kupola-cn/kupola/compare/v3.0.0...v3.1.2) (2026-07-25)
+
+
+### Features
+
+* icon customization system and style isolation ([1b0767d](https://github.com/kupola-cn/kupola/commit/1b0767d2dde91aca9d1556f8fc42e10f4c3e7d0a))
+* split @kupola/kupola into @kupola/core and @kupola/platform packages (v3.1.0) ([8507caf](https://github.com/kupola-cn/kupola/commit/8507caf1886ccea30b23d4a2701aabc12044ad41))
+* sync packages with core 3.0.0 and reactive API ([1d6e3c7](https://github.com/kupola-cn/kupola/commit/1d6e3c7ea57f565353151da69c03c4fdf73d88f6))
+
+
+### Bug Fixes
+
+* **benchmark:** use fileURLToPath for proper path handling ([1ad000a](https://github.com/kupola-cn/kupola/commit/1ad000ab9a77fce813abad61e4436f2692732b08))
+* **ci:** update Node.js version to 24.x due to deprecation ([db9ad0f](https://github.com/kupola-cn/kupola/commit/db9ad0f13b6feeab59917bad176e16b2b8a5b8b3))
+* **codeowners:** add missing /packages/platform/ entry ([2e38379](https://github.com/kupola-cn/kupola/commit/2e3837938e73774f2febb6fac54890eed7cf17e1))
+* update tsconfig.json paths for components package ([acf32d4](https://github.com/kupola-cn/kupola/commit/acf32d4c8c4e38586a8679ff3517811256921f33))
+* **vscode-kupola:** add LICENSE and remove missing icon reference for vsce packaging ([fd07425](https://github.com/kupola-cn/kupola/commit/fd07425ae704b8c2f6cd433a6267c1a6d75cfa47))
+* **vscode-kupola:** sync snippets to 3.x import paths and export ErrorBoundary from platform ([d6a8788](https://github.com/kupola-cn/kupola/commit/d6a8788a58ce5b83dc43587888f983447e22af4a))
+
+
+### Chore
+
+* improve package metadata and documentation ([de6b2d1](https://github.com/kupola-cn/kupola/commit/de6b2d1c0ab5c4d144e133f7fdeb29365b52d608))
+* update project configuration and documentation ([5281a88](https://github.com/kupola-cn/kupola/commit/5281a884d30409e77bd0c708a46f5a9b5b17f16d))
+
+
+### Documentation
+
+* add icon library support table to docs-site ([867a0a6](https://github.com/kupola-cn/kupola/commit/867a0a620b20f78b003192e6906277989426e2f9))
+* add integration examples for all major icon libraries ([dbd3c49](https://github.com/kupola-cn/kupola/commit/dbd3c49bebea47952c9ce7e4e791ed97e2f14560))
+* **css:** update CSS comments from @kupola/kupola/css to @kupola/platform/css ([f1e3215](https://github.com/kupola-cn/kupola/commit/f1e32154b1f809f7a3ea86d0dc0216071e654df5))
+* **vscode:** clarify packaging command should run in vscode-kupola directory ([af452fe](https://github.com/kupola-cn/kupola/commit/af452fe0d3dbde4fd99a95be107111ec91767376))
+* **vscode:** fix extension install instructions with correct version and packaging steps ([e7188ae](https://github.com/kupola-cn/kupola/commit/e7188ae48d0ee7f283247e350274675b548d9e39))
+
+
+### Refactor
+
+* **core:** split platform modules from core ([9bd6be2](https://github.com/kupola-cn/kupola/commit/9bd6be20fb22b62204bd494cfa57689aba705250))
+* move vscode-kupola to root directory (sibling of packages/) ([acb77d8](https://github.com/kupola-cn/kupola/commit/acb77d8161c1d5930c1f904e04553d97d2fba383))
+
 ## 3.1.0 (2026-07-25)
 
 ### Architecture
