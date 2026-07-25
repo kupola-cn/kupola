@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+﻿﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — VirtualList component built on the 2.0 reactive core.
  *
@@ -37,6 +37,7 @@ import { render } from '@kupola/platform/render';
  * @param {number}   [options.overscan]    Extra items above/below viewport (default 5)
  * @param {Function} [options.renderItem]  Custom render function (item, index) => string
  * @param {Function} [options.onClick]     Callback when item clicked
+ * @param {number}   [options.virtualThreshold]  Threshold for virtual scroll (default 200)
  * @returns {{ element: DocumentFragment, scrollTo: Function, destroy: Function }}
  */
 export function VirtualList(options = {}) {
@@ -47,9 +48,13 @@ export function VirtualList(options = {}) {
     overscan = 5,
     renderItem = null,
     onClick = null,
+    virtualThreshold = 200,
   } = options;
 
   let _scrollTop = 0;
+  
+  // Determine if virtual scroll should be used
+  const useVirtual = items.length > virtualThreshold;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -70,8 +75,58 @@ export function VirtualList(options = {}) {
     _renderVisible();
   }
 
+  function _createItemElement(item, index) {
+    const el = document.createElement('div');
+    el.className = 'ds-virtual-list__item';
+    
+    if (useVirtual) {
+      el.style.position = 'absolute';
+      el.style.top = `${index * itemHeight}px`;
+      el.style.height = `${itemHeight}px`;
+      el.style.width = '100%';
+    }
+
+    if (renderItem) {
+      el.textContent = renderItem(item, index);
+    } else {
+      if (typeof item === 'string') {
+        el.textContent = item;
+      } else if (item && item.title) {
+        const content = document.createElement('div');
+        content.className = 'ds-virtual-list__item-content';
+        const title = document.createElement('span');
+        title.className = 'ds-virtual-list__item-title';
+        title.textContent = item.title;
+        content.appendChild(title);
+        if (item.subtitle) {
+          const sub = document.createElement('span');
+          sub.className = 'ds-virtual-list__item-subtitle';
+          sub.textContent = item.subtitle;
+          content.appendChild(sub);
+        }
+        el.appendChild(content);
+      }
+    }
+
+    if (onClick) {
+      el.addEventListener('click', () => onClick(item, index));
+    }
+
+    return el;
+  }
+
   function _renderVisible() {
-    if (!containerEl || !spacerEl) {return;}
+    if (!containerEl) {return;}
+
+    // For small data sets, render all items directly without virtualization
+    if (!useVirtual) {
+      items.forEach((item, i) => {
+        containerEl.appendChild(_createItemElement(item, i));
+      });
+      return;
+    }
+
+    if (!spacerEl) {return;}
 
     const totalHeight = items.length * itemHeight;
     spacerEl.style.height = `${totalHeight}px`;
@@ -86,41 +141,7 @@ export function VirtualList(options = {}) {
 
     // Render visible items
     for (let i = startIdx; i < endIdx; i++) {
-      const el = document.createElement('div');
-      el.className = 'ds-virtual-list__item';
-      el.style.position = 'absolute';
-      el.style.top = `${i * itemHeight}px`;
-      el.style.height = `${itemHeight}px`;
-      el.style.width = '100%';
-
-      if (renderItem) {
-        el.textContent = renderItem(items[i], i);
-      } else {
-        const item = items[i];
-        if (typeof item === 'string') {
-          el.textContent = item;
-        } else if (item && item.title) {
-          const content = document.createElement('div');
-          content.className = 'ds-virtual-list__item-content';
-          const title = document.createElement('span');
-          title.className = 'ds-virtual-list__item-title';
-          title.textContent = item.title;
-          content.appendChild(title);
-          if (item.subtitle) {
-            const sub = document.createElement('span');
-            sub.className = 'ds-virtual-list__item-subtitle';
-            sub.textContent = item.subtitle;
-            content.appendChild(sub);
-          }
-          el.appendChild(content);
-        }
-      }
-
-      if (onClick) {
-        el.addEventListener('click', () => onClick(items[i], i));
-      }
-
-      containerEl.appendChild(el);
+      containerEl.appendChild(_createItemElement(items[i], i));
     }
   }
 

@@ -1,0 +1,106 @@
+[
+  {
+    "category": "components",
+    "test": "VirtualList 100 items",
+    "iterations": 1,
+    "totalTime": 19.963999999999942,
+    "avgTime": 19.963999999999942,
+    "timestamp": 1784949061241
+  },
+  {
+    "category": "components",
+    "test": "VirtualList 1,000 items",
+    "iterations": 1,
+    "totalTime": 6.219500000000153,
+    "avgTime": 6.219500000000153,
+    "timestamp": 1784949061290
+  },
+  {
+    "category": "components",
+    "test": "VirtualList 10,000 items",
+    "iterations": 1,
+    "totalTime": 4.031300000000101,
+    "avgTime": 4.031300000000101,
+    "timestamp": 1784949061301
+  },
+  {
+    "category": "components",
+    "test": "VirtualList add/remove 100 times",
+    "iterations": 100,
+    "totalTime": 116.54369999999994,
+    "avgTime": 1.1654369999999994,
+    "timestamp": 1784949061419
+  },
+  {
+    "category": "components",
+    "test": "Table 100×10",
+    "iterations": 1,
+    "totalTime": 17.732500000000073,
+    "avgTime": 17.732500000000073,
+    "timestamp": 1784949061438
+  },
+  {
+    "category": "components",
+    "test": "Table 1,000×5",
+    "iterations": 1,
+    "totalTime": 60.54650000000015,
+    "avgTime": 60.54650000000015,
+    "timestamp": 1784949061501
+  },
+  {
+    "category": "components",
+    "test": "Table sorting 100 times",
+    "iterations": 50,
+    "totalTime": 4211.0688,
+    "avgTime": 84.221376,
+    "timestamp": 1784949065764
+  },
+  {
+    "category": "components",
+    "test": "Table pagination 5,000 rows",
+    "iterations": 1,
+    "totalTime": 1.793100000000777,
+    "avgTime": 1.793100000000777,
+    "timestamp": 1784949065769
+  },
+  {
+    "category": "components",
+    "test": "Form 50 fields",
+    "iterations": 1,
+    "totalTime": 35.06260000000111,
+    "avgTime": 35.06260000000111,
+    "timestamp": 1784949065805
+  },
+  {
+    "category": "components",
+    "test": "Modal open/close 100 times",
+    "iterations": 100,
+    "totalTime": 84.63390000000072,
+    "avgTime": 0.8463390000000072,
+    "timestamp": 1784949065892
+  },
+  {
+    "category": "components",
+    "test": "Tooltip creation 100 times",
+    "iterations": 100,
+    "totalTime": 1.4446000000007189,
+    "avgTime": 0.01444600000000719,
+    "timestamp": 1784949065894
+  },
+  {
+    "category": "components",
+    "test": "SSR renderToString 100 items",
+    "iterations": 1,
+    "totalTime": 0.9344999999993888,
+    "avgTime": 0.9344999999993888,
+    "timestamp": 1784949065896
+  },
+  {
+    "category": "components",
+    "test": "SSR renderToString 1,000 items",
+    "iterations": 1,
+    "totalTime": 1.67909999999938,
+    "avgTime": 1.67909999999938,
+    "timestamp": 1784949065900
+  }
+]

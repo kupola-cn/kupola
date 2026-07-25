@@ -26,6 +26,7 @@ export default {
     '**/test/**/*.spec.js',
     '**/packages/**/__tests__/**/*.test.js',
     '**/packages/**/__tests__/**/*.spec.js',
+    '**/benchmark/**/*.bench.js',
   ],
   testPathIgnorePatterns: [
     'node_modules/',

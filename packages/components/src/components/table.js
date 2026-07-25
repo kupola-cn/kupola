@@ -84,6 +84,9 @@ export function Table(options = {}) {
   const mergeCellsFn = options.mergeCells || null;
   const multiSort = options.multiSort || false;
 
+  // Column index map for O(1) lookup
+  const _columnsMap = new Map(columns.map(col => [col.key, col]));
+
   // State
   let _data = Array.isArray(options.data) ? [ ...options.data ] : [];
   let _loading = false;
@@ -99,6 +102,12 @@ export function Table(options = {}) {
   let _reactiveCleanups = [];
   let _resizeCleanups = [];
   let _filterDebounceTimer = null;
+
+  // Sort cache - Map for multiple sort results, keyed by sort config + data reference
+  let _sortCache = new Map();
+
+  // Processed data cache (for avoiding repeated calls during render)
+  let _processedCache = null;
 
   // Tree expand all
   if (treeConfig?.defaultExpandAll) {
@@ -140,9 +149,22 @@ export function Table(options = {}) {
     return _flattenVisible(data, 0);
   }
 
-  // === Data processing: filter → sort → paginate ===
+  // === Data processing: sort → filter → paginate ===
   function getProcessedData() {
-    let data = [ ..._data ];
+    // Check if cache is valid
+    if (_processedCache) {
+      return _processedCache;
+    }
+
+    let data = _data;
+
+    // Sort FIRST (before copy/filter) to enable cache based on _data reference
+    if (_sorts.length > 0) {
+      data = _sortData(data);
+    }
+
+    // Then copy
+    data = [ ...data ];
 
     // Filter
     if (_filterText) {
@@ -160,11 +182,6 @@ export function Table(options = {}) {
       }
     }
 
-    // Sort
-    if (_sorts.length > 0) {
-      data = _sortData(data);
-    }
-
     const flatData = treeConfig ? _flattenVisible(data, 0) : data;
     const total = flatData.length;
 
@@ -175,7 +192,16 @@ export function Table(options = {}) {
       pageData = flatData.slice(start, start + _pageSize);
     }
 
-    return { pageData, total };
+    // Cache result for current render cycle
+    _processedCache = { pageData, total };
+
+    return _processedCache;
+  }
+
+  // Clear caches when data/state changes
+  function _clearCaches() {
+    _sortCache.clear();
+    _processedCache = null;
   }
 
   function _filterTree(data, text, ck) {
@@ -195,9 +221,21 @@ export function Table(options = {}) {
   }
 
   function _sortData(data) {
+    // Generate cache key from sorts configuration
+    const sortKey = JSON.stringify(_sorts);
+    
+    // Combine data reference with sort config for unique cache key
+    const cacheKey = `${sortKey}-${data}`;
+    
+    // Check cache
+    if (_sortCache.has(cacheKey)) {
+      return _sortCache.get(cacheKey);
+    }
+    
     const sorted = [ ...data ].sort((a, b) => {
       for (const s of _sorts) {
-        const col = columns.find(c => c.key === s.key);
+        // O(1) lookup using Map instead of O(n) find
+        const col = _columnsMap.get(s.key);
         let va = a[s.key], vb = b[s.key];
         let cmp = 0;
         if (col?.sorter) {
@@ -215,15 +253,27 @@ export function Table(options = {}) {
       }
       return 0;
     });
+    
+    let result = sorted;
     if (treeConfig) {
       const ck = treeConfig.childrenKey || 'children';
-      return sorted.map(row => row[ck]?.length ? { ...row, [ck]: _sortData(row[ck]) } : row);
+      result = sorted.map(row => row[ck]?.length ? { ...row, [ck]: _sortData(row[ck]) } : row);
     }
-    return sorted;
+    
+    // Update cache (keep last 5 cache entries)
+    if (_sortCache.size >= 5) {
+      const firstKey = _sortCache.keys().next().value;
+      _sortCache.delete(firstKey);
+    }
+    _sortCache.set(cacheKey, result);
+    
+    return result;
   }
 
   // === Render ===
   function _render() {
+    // Clear cache at start of render cycle
+    _processedCache = null;
     const { pageData, total } = getProcessedData();
     element.innerHTML = '';
 
@@ -567,6 +617,9 @@ export function Table(options = {}) {
 
   // === Sort ===
   function _handleSort(key) {
+    // Only clear processed cache, keep sort cache (it's data-reference based)
+    _processedCache = null;
+    
     const existing = _sorts.find(s => s.key === key);
     if (existing) {
       if (existing.order === 'asc') {existing.order = 'desc';}
@@ -758,10 +811,14 @@ export function Table(options = {}) {
   // === Public API ===
 
   function setData(data) {
+    // Clear caches before data change
+    _clearCaches();
+    
     if (data && typeof data === 'object' && 'value' in data) {
       _data = Array.isArray(data.value) ? [ ...data.value ] : [];
       if (data.subscribe) {
         _reactiveCleanups.push(data.subscribe((newVal) => {
+          _clearCaches();
           _data = Array.isArray(newVal) ? [ ...newVal ] : [];
           _render();
         }));
@@ -847,6 +904,8 @@ export function Table(options = {}) {
   }
 
   function setSort(key, order) {
+    // Only clear processed cache, keep sort cache
+    _processedCache = null;
     if (!multiSort) {_sorts = [ { key, order: order || 'asc' } ];}
     else {
       const existing = _sorts.find(s => s.key === key);
@@ -858,6 +917,8 @@ export function Table(options = {}) {
   }
 
   function clearSort() {
+    // Only clear processed cache, keep sort cache
+    _processedCache = null;
     _sorts = [];
     _render();
   }
@@ -875,6 +936,7 @@ export function Table(options = {}) {
   }
 
   function setFilterText(text) {
+    _clearCaches();
     _filterText = text;
     _currentPage = 1;
     _render();

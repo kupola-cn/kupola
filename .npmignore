@@ -41,6 +41,7 @@ showcase.html
 *.tmp
 .DS_Store
 Thumbs.db
+*.vsix
 
 # Internal docs (not for npm consumers)
 SKILL.md

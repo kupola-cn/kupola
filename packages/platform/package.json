@@ -1,6 +1,6 @@
 {
   "name": "@kupola/platform",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Kupola platform — Template rendering, component system, directives, theme, lazy loading, SSR, i18n.",
   "type": "module",
   "main": "dist/kupola-platform.cjs",

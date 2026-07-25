@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kupola Benchmark Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #f1f5f9; }
+    .subtitle { color: #94a3b8; margin-bottom: 2rem; }
+    .timestamp { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; }
+    
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .summary-item { background: #1e293b; padding: 1rem; border-radius: 0.5rem; text-align: center; }
+    .summary-value { font-size: 1.5rem; font-weight: bold; color: #f1f5f9; }
+    .summary-label { font-size: 0.875rem; color: #94a3b8; margin-top: 0.25rem; }
+    
+    .section { background: #1e293b; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .section-title { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title::before { content: ''; width: 4px; height: 1.25rem; border-radius: 2px; }
+    
+    .chart-bar-container { margin-bottom: 0.75rem; }
+    .chart-label { font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.25rem; }
+    .chart-bar-wrapper { display: flex; align-items: center; gap: 0.75rem; height: 24px; }
+    .chart-bar { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+    .chart-value { font-size: 0.875rem; color: #f1f5f9; font-weight: 500; min-width: 60px; text-align: right; }
+    
+    .table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .table th, .table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #334155; }
+    .table th { color: #94a3b8; font-weight: 500; font-size: 0.875rem; }
+    .table td { color: #f1f5f9; }
+    .table tr:hover { background: #334155; }
+    
+    .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+    .badge-fast { background: #065f46; color: #a7f3d0; }
+    .badge-normal { background: #7c2d12; color: #fed7aa; }
+    .badge-slow { background: #7f1d1d; color: #fca5a5; }
+    
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .chart-bar-wrapper { flex-direction: column; align-items: flex-start; height: auto; }
+      .chart-value { min-width: auto; text-align: left; margin-top: 0.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Kupola Performance Benchmark</h1>
+    <div class="subtitle">24 tests completed</div>
+    <div class="timestamp">Generated at 2026/7/25 11:11:17</div>
+    
+    
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-value">24</div>
+        <div class="summary-label">Total Tests</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value">24/24</div>
+        <div class="summary-label">Passed</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value">10.02ms</div>
+        <div class="summary-label">Avg Time</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value">0.02μs</div>
+        <div class="summary-label">Fastest</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value">84.22ms</div>
+        <div class="summary-label">Slowest</div>
+      </div>
+    </div>
+  
+    
+    
+      <div class="section">
+        <div class="section-title" style="--color: #3B82F6">
+          <span style="background: #3B82F6; width: 4px; height: 1.25rem; border-radius: 2px; display: inline-block; margin-right: 0.5rem;"></span>
+          Core Engine
+        </div>
+        
+        
+    <div class="chart-bar-container">
+      <div class="chart-label">create 10,000 signals</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 100%; background: #3B82F6;"
+          title="1.86ms"
+        ></div>
+        <div class="chart-value">1.86ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">update signal 100,000 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 0.05109147128414715%; background: #3B82F6;"
+          title="0.95μs"
+        ></div>
+        <div class="chart-value">0.95μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">batch update 10,000 signals</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 94.18692191869637%; background: #3B82F6;"
+          title="1.75ms"
+        ></div>
+        <div class="chart-value">1.75ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">signal nested reads 100,000 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 0.001132716713271614%; background: #3B82F6;"
+          title="0.02μs"
+        ></div>
+        <div class="chart-value">0.02μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">create 1,000 computed</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 74.95697999569963%; background: #3B82F6;"
+          title="1.39ms"
+        ></div>
+        <div class="chart-value">1.39ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">3-level computed chain update 10,000 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 0.11985642073564266%; background: #3B82F6;"
+          title="2.23μs"
+        ></div>
+        <div class="chart-value">2.23μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">100 computed sharing signal update</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 1.5272101527166915%; background: #3B82F6;"
+          title="28.40μs"
+        ></div>
+        <div class="chart-value">28.40μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">computed with array filter/map/reduce</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 8.512583351249003%; background: #3B82F6;"
+          title="158.30μs"
+        ></div>
+        <div class="chart-value">158.30μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">create 1,000 effects</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 61.33039363305021%; background: #3B82F6;"
+          title="1.14ms"
+        ></div>
+        <div class="chart-value">1.14ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">effect reaction latency 10,000 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 0.05741933749193474%; background: #3B82F6;"
+          title="1.07μs"
+        ></div>
+        <div class="chart-value">1.07μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">effect cleanup 1,000 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 0.09988169498817476%; background: #3B82F6;"
+          title="1.86μs"
+        ></div>
+        <div class="chart-value">1.86μs</div>
+      </div>
+    </div>
+  
+        
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Test</th>
+              <th>Iterations</th>
+              <th>Avg Time</th>
+              <th>Total Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+                <tr>
+                  <td>create 10,000 signals</td>
+                  <td>1</td>
+                  <td>1.86ms</td>
+                  <td>1.86ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>update signal 100,000 times</td>
+                  <td>100000</td>
+                  <td>0.95μs</td>
+                  <td>95.01ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>batch update 10,000 signals</td>
+                  <td>1</td>
+                  <td>1.75ms</td>
+                  <td>1.75ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>signal nested reads 100,000 times</td>
+                  <td>100000</td>
+                  <td>0.02μs</td>
+                  <td>2.11ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>create 1,000 computed</td>
+                  <td>1</td>
+                  <td>1.39ms</td>
+                  <td>1.39ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>3-level computed chain update 10,000 times</td>
+                  <td>10000</td>
+                  <td>2.23μs</td>
+                  <td>22.29ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>100 computed sharing signal update</td>
+                  <td>1</td>
+                  <td>28.40μs</td>
+                  <td>28.40μs</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>computed with array filter/map/reduce</td>
+                  <td>1</td>
+                  <td>158.30μs</td>
+                  <td>158.30μs</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>create 1,000 effects</td>
+                  <td>1</td>
+                  <td>1.14ms</td>
+                  <td>1.14ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>effect reaction latency 10,000 times</td>
+                  <td>10000</td>
+                  <td>1.07μs</td>
+                  <td>10.68ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>effect cleanup 1,000 times</td>
+                  <td>1000</td>
+                  <td>1.86μs</td>
+                  <td>1.86ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+          </tbody>
+        </table>
+      </div>
+    
+      <div class="section">
+        <div class="section-title" style="--color: #10B981">
+          <span style="background: #10B981; width: 4px; height: 1.25rem; border-radius: 2px; display: inline-block; margin-right: 0.5rem;"></span>
+          Components
+        </div>
+        
+        
+    <div class="chart-bar-container">
+      <div class="chart-label">VirtualList 100 items</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 23.70419595139355%; background: #10B981;"
+          title="19.96ms"
+        ></div>
+        <div class="chart-value">19.96ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">VirtualList 1,000 items</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 7.384704804633152%; background: #10B981;"
+          title="6.22ms"
+        ></div>
+        <div class="chart-value">6.22ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">VirtualList 10,000 items</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 4.786552050633916%; background: #10B981;"
+          title="4.03ms"
+        ></div>
+        <div class="chart-value">4.03ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">VirtualList add/remove 100 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 1.383778151522957%; background: #10B981;"
+          title="1.17ms"
+        ></div>
+        <div class="chart-value">1.17ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">Table 100×10</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 21.054631071332857%; background: #10B981;"
+          title="17.73ms"
+        ></div>
+        <div class="chart-value">17.73ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">Table 1,000×5</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 71.88970648021726%; background: #10B981;"
+          title="60.55ms"
+        ></div>
+        <div class="chart-value">60.55ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">Table sorting 100 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 100%; background: #10B981;"
+          title="84.22ms"
+        ></div>
+        <div class="chart-value">84.22ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">Table pagination 5,000 rows</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 2.129031945525061%; background: #10B981;"
+          title="1.79ms"
+        ></div>
+        <div class="chart-value">1.79ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">Form 50 fields</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 41.63147370092969%; background: #10B981;"
+          title="35.06ms"
+        ></div>
+        <div class="chart-value">35.06ms</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">Modal open/close 100 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 1.0048980914299086%; background: #10B981;"
+          title="846.34μs"
+        ></div>
+        <div class="chart-value">846.34μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">Tooltip creation 100 times</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 0.017152415082849263%; background: #10B981;"
+          title="14.45μs"
+        ></div>
+        <div class="chart-value">14.45μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">SSR renderToString 100 items</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 1.1095757922542%; background: #10B981;"
+          title="934.50μs"
+        ></div>
+        <div class="chart-value">934.50μs</div>
+      </div>
+    </div>
+  
+    <div class="chart-bar-container">
+      <div class="chart-label">SSR renderToString 1,000 items</div>
+      <div class="chart-bar-wrapper">
+        <div 
+          class="chart-bar" 
+          style="width: 1.9936743849915013%; background: #10B981;"
+          title="1.68ms"
+        ></div>
+        <div class="chart-value">1.68ms</div>
+      </div>
+    </div>
+  
+        
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Test</th>
+              <th>Iterations</th>
+              <th>Avg Time</th>
+              <th>Total Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+                <tr>
+                  <td>VirtualList 100 items</td>
+                  <td>1</td>
+                  <td>19.96ms</td>
+                  <td>19.96ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>VirtualList 1,000 items</td>
+                  <td>1</td>
+                  <td>6.22ms</td>
+                  <td>6.22ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>VirtualList 10,000 items</td>
+                  <td>1</td>
+                  <td>4.03ms</td>
+                  <td>4.03ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>VirtualList add/remove 100 times</td>
+                  <td>100</td>
+                  <td>1.17ms</td>
+                  <td>116.54ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>Table 100×10</td>
+                  <td>1</td>
+                  <td>17.73ms</td>
+                  <td>17.73ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>Table 1,000×5</td>
+                  <td>1</td>
+                  <td>60.55ms</td>
+                  <td>60.55ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>Table sorting 100 times</td>
+                  <td>50</td>
+                  <td>84.22ms</td>
+                  <td>4.21s</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>Table pagination 5,000 rows</td>
+                  <td>1</td>
+                  <td>1.79ms</td>
+                  <td>1.79ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>Form 50 fields</td>
+                  <td>1</td>
+                  <td>35.06ms</td>
+                  <td>35.06ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>Modal open/close 100 times</td>
+                  <td>100</td>
+                  <td>846.34μs</td>
+                  <td>84.63ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>Tooltip creation 100 times</td>
+                  <td>100</td>
+                  <td>14.45μs</td>
+                  <td>1.44ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>SSR renderToString 100 items</td>
+                  <td>1</td>
+                  <td>934.50μs</td>
+                  <td>934.50μs</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+                <tr>
+                  <td>SSR renderToString 1,000 items</td>
+                  <td>1</td>
+                  <td>1.68ms</td>
+                  <td>1.68ms</td>
+                  <td><span class="badge badge-fast">OK</span></td>
+                </tr>
+              
+          </tbody>
+        </table>
+      </div>
+    
+  </div>
+</body>
+</html>
