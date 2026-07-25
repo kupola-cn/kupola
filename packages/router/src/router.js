@@ -67,7 +67,7 @@ export function createRouter(options) {
   
   async function navigate(fullPath, replace = false) {
     const { path, query } = parsePath(fullPath);
-    const to = matchRoute(flattenedRecords, path, query);
+    let to = matchRoute(flattenedRecords, path, query);
     
     if (!to) {
       const wildcardMatch = matchRoute(flattenedRecords, '*');
