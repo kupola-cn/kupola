@@ -49,6 +49,7 @@
     "type": "git",
     "url": "git+https://github.com/kupola-cn/kupola.git"
   },
+  "publishConfig": { "access": "public" },
   "peerDependencies": {
     "@kupola/core": "^3.0.0",
     "@kupola/platform": "^3.0.0"

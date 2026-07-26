@@ -36,6 +36,7 @@
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
+  "publishConfig": { "access": "public" },
   "dependencies": {
     "prompts": "^2.4.2",
     "kleur": "^4.1.5"

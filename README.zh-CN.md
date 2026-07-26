@@ -26,6 +26,28 @@ npm install @kupola/platform
 
 指令表达式只适用于可信应用模板。它们基于 `new Function()`，不是沙箱。用户内容使用 `k-text`；使用 `k-html` 前由应用接入 sanitizer。
 
+## 应用生命周期
+
+`createApp` 支持同步和异步插件钩子。仅当所有插件钩子都是同步时，才使用 `mount()` / `destroy()`。对于异步初始化或清理，使用配对的异步生命周期方法：
+
+```js
+import { createApp, html } from '@kupola/platform';
+
+const app = createApp(html`<main>Ready</main>`).use({
+  async install() {
+    await loadFeatureFlags();
+  },
+  async destroy() {
+    await closeFeatureConnection();
+  },
+});
+
+await app.mountAsync(document.querySelector('#app'));
+await app.destroyAsync();
+```
+
+生命周期转换是串行化的。当 `mountAsync()` 或 `destroyAsync()` 处于待处理状态时，应用无法再次挂载或接收其他插件。
+
 ## 文档入口
 
 - [快速开始](https://kupola-cn.github.io/kupola/guide/getting-started)

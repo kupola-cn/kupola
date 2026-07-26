@@ -90,6 +90,7 @@
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
+  "publishConfig": { "access": "public" },
   "dependencies": {
     "@kupola/core": "^3.1.0"
   }

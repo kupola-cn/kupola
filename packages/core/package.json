@@ -40,5 +40,6 @@
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
-  "homepage": "https://kupola-cn.github.io/kupola/"
+  "homepage": "https://kupola-cn.github.io/kupola/",
+  "publishConfig": { "access": "public" }
 }

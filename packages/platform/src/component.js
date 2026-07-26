@@ -144,6 +144,37 @@ export function inject(key, defaultValue = undefined) {
  * render(view, container);
  * ```
  *
+ * ### Async Hooks
+ *
+ * Lifecycle hooks (`created`, `mounted`, `destroyed`) support async functions.
+ * However, the component will NOT wait for async hooks to complete before rendering.
+ * This ensures immediate DOM insertion and prevents blocking the main thread.
+ *
+ * ```js
+ * const DataList = defineComponent({
+ *   setup() {
+ *     const items = signal([]);
+ *     const loading = signal(true);
+ *     const error = signal(null);
+ *     return { items, loading, error };
+ *   },
+ *   async mounted() {
+ *     try {
+ *       items.value = await fetch('/api/items').then(r => r.json());
+ *     } catch (e) {
+ *       error.value = e.message;
+ *     } finally {
+ *       loading.value = false;
+ *     }
+ *   }
+ * });
+ * ```
+ *
+ * ### Error Handling
+ *
+ * Async hook errors are automatically caught and reported. Use `try/catch`
+ * within the hook for custom error handling.
+ *
  * @param {{ props?: string[], setup: Function, created?: Function,
  *   mounted?: Function, destroyed?: Function }} definition
  * @returns {Function} Component factory: (initialProps?, children?) => ComponentInstance

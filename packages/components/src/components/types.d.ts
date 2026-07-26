@@ -458,6 +458,7 @@ export interface InputInstance {
   focus(): void;
   blur(): void;
   clear(): void;
+  destroy(): void;
 }
 export function Input(options?: InputOptions): InputInstance;
 

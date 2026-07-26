@@ -7,12 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 3.3.1 (2026-07-26)
+
 ### Breaking Changes
 
 - `@kupola/core` `Signal#toJSON()` now returns the underlying value instead of
   a pre-serialized JSON string. `JSON.stringify(signal)` remains the normal
   serialization path; use `JSON.stringify(signal.value)` when an explicit
   string is required.
+
+### Features
+
+- Enhanced AIAdapter with priority-based CommandBus, lifecycle management, and
+  improved error handling.
+- Added flow engine persistence with localStorage support.
+- Implemented AIPanel drag-to-resize and "My Flows" tab.
+- Added async lifecycle hook support for components.
+
+### Fixed
+
+- Fixed circular dependency detection in DI Container.
+- Fixed memory leaks in flow engine and panel components.
+- Fixed XSS vulnerability in text rendering.
+- Fixed ReDoS protection in IntentParser.
 
 ## 3.2.4 (2026-07-26)
 

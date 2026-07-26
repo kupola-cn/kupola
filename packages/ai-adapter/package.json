@@ -38,6 +38,7 @@
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
+  "publishConfig": { "access": "public" },
   "peerDependencies": {
     "@kupola/core": "^3.1.0"
   },
