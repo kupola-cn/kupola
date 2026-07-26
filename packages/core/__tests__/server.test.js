@@ -4,7 +4,7 @@
  * @jest-environment jsdom
  */
 
-import { signal, computed } from '../src/index.js';
+import { createScheduler, signal, computed } from '../src/index.js';
 import { html } from '../../platform/src/template.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
 import { renderToString, hydrate } from '../../platform/src/server.js';
@@ -155,6 +155,23 @@ describe('hydrate', () => {
     flushJobs();
     expect(container.querySelector('span').textContent).toBe('99');
 
+    view.destroy();
+  });
+
+  test('hydrate can use an isolated scheduler', () => {
+    const scheduler = createScheduler({ name: 'hydrate' });
+    const count = signal(42);
+    const tpl = html`<span>${count}</span>`;
+    const container = document.createElement('div');
+    container.innerHTML = renderToString(tpl);
+    document.body.appendChild(container);
+
+    const view = hydrate(tpl, container, { scheduler });
+    count.value = 99;
+    flushJobs();
+    expect(container.querySelector('span').textContent).toBe('42');
+    scheduler.flushJobs();
+    expect(container.querySelector('span').textContent).toBe('99');
     view.destroy();
   });
 

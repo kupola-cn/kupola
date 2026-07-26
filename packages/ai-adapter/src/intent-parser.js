@@ -20,12 +20,15 @@ export class IntentParser {
     this.fallback = options.fallback || new RuleBasedParser();
     this.context = [];
     this.maxContext = options.maxContext || 10;
+    this.storage = options.storage || null;
 
     // Confidence thresholds
     this.confidenceThreshold = options.confidenceThreshold || 0.5;
 
     // Slot filling: registered param requirements per engine+type
     this.slotDefs = new Map(); // key: 'engine:type' → { required: string[], optional: string[] }
+
+    this._loadContext();
   }
 
   /**
@@ -90,6 +93,7 @@ export class IntentParser {
     if (this.context.length > this.maxContext) {
       this.context.shift();
     }
+    this._saveContext();
 
     return { ...command, raw: input };
   }
@@ -112,6 +116,7 @@ export class IntentParser {
    */
   clearContext() {
     this.context = [];
+    this._saveContext();
   }
 
   /**
@@ -140,6 +145,27 @@ export class IntentParser {
     }
     return `请提供以下信息: ${missingSlots.join(', ')}`;
   }
+
+  _loadContext() {
+    if (!this.storage) return;
+    try {
+      const data = this.storage.get();
+      if (Array.isArray(data)) {
+        this.context = data;
+      }
+    } catch {
+      // silently fail
+    }
+  }
+
+  _saveContext() {
+    if (!this.storage) return;
+    try {
+      this.storage.set(this.context);
+    } catch {
+      // silently fail
+    }
+  }
 }
 
 /**
@@ -160,14 +186,21 @@ export class RuleBasedParser {
    */
   parse(input, context = {}) {
     const trimmed = input.trim();
+    if (trimmed.length > 500) {
+      return { engine: 'unknown', type: 'input_too_long', params: {}, confidence: 0 };
+    }
 
     // Exact match first
     for (const rule of this.rules) {
-      const match = trimmed.match(rule.pattern);
-      if (match) {
-        const cmd = rule.builder(match, context);
-        cmd.confidence = 0.85;
-        return cmd;
+      try {
+        const match = trimmed.match(rule.pattern);
+        if (match) {
+          const cmd = rule.builder(match, context);
+          cmd.confidence = 0.85;
+          return cmd;
+        }
+      } catch {
+        continue;
       }
     }
 
@@ -176,11 +209,15 @@ export class RuleBasedParser {
       const normalized = this._normalize(trimmed);
       if (normalized !== trimmed) {
         for (const rule of this.rules) {
-          const match = normalized.match(rule.pattern);
-          if (match) {
-            const cmd = rule.builder(match, context);
-            cmd.confidence = 0.6; // lower confidence for fuzzy match
-            return cmd;
+          try {
+            const match = normalized.match(rule.pattern);
+            if (match) {
+              const cmd = rule.builder(match, context);
+              cmd.confidence = 0.6;
+              return cmd;
+            }
+          } catch {
+            continue;
           }
         }
       }

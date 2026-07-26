@@ -28,7 +28,7 @@ describe('AIDashboard', () => {
 
   afterEach(() => {
     dashboard.destroy();
-    if (container.parentNode) container.parentNode.removeChild(container);
+    if (container.parentNode) {container.parentNode.removeChild(container);}
   });
 
   it('should add cards', () => {
@@ -69,7 +69,7 @@ describe('AIDashboard', () => {
 
     // Manually update card data
     const card = dashboard.cards.get('count');
-    card.lastData = { success: true, data: [{ id: 1 }, { id: 2 }, { id: 3 }] };
+    card.lastData = { success: true, data: [ { id: 1 }, { id: 2 }, { id: 3 } ] };
     dashboard._renderCard('count');
 
     const el = container.querySelector('[data-card="count"]');
@@ -81,7 +81,7 @@ describe('AIDashboard', () => {
     dashboard.mount(container);
 
     const card = dashboard.cards.get('sal');
-    card.lastData = { success: true, data: [{ amount: 100 }, { amount: 200 }, { amount: 300 }] };
+    card.lastData = { success: true, data: [ { amount: 100 }, { amount: 200 }, { amount: 300 } ] };
     dashboard._renderCard('sal');
 
     const el = container.querySelector('[data-card="sal"]');
@@ -89,7 +89,7 @@ describe('AIDashboard', () => {
   });
 
   it('should refresh a card', async () => {
-    adapter.query.register('search', async () => [{ id: 1 }]);
+    adapter.query.register('search', async () => [ { id: 1 } ]);
     dashboard.addCard('r', 'search', { label: 'Refresh' });
     dashboard.mount(container);
 
@@ -112,10 +112,10 @@ describe('AIDashboard', () => {
     const card = dashboard.cards.get('tbl');
     card.lastData = {
       success: true,
-      data: [{ name: 'Alice' }, { name: 'Bob' }],
+      data: [ { name: 'Alice' }, { name: 'Bob' } ],
       table: {
-        columns: [{ field: 'name', title: 'Name' }],
-        rows: [{ name: 'Alice' }, { name: 'Bob' }],
+        columns: [ { field: 'name', title: 'Name' } ],
+        rows: [ { name: 'Alice' }, { name: 'Bob' } ],
       },
     };
     dashboard._renderCard('tbl');

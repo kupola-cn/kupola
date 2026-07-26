@@ -1,48 +1,47 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/ai-adapter — Query Engine (v1.1)
+ * @kupola/ai-adapter — Query Engine (v2.0)
  *
- * Enhancements:
- * - Query cache with configurable TTL
- * - Pagination support
- * - Context-aware follow-up queries
- * - Aggregation helpers (count, sum, avg)
+ * 重构改进：
+ * - 支持 per-query cacheTTL 配置
+ * - 集成 EventBus 事件发布
+ * - 支持自定义验证器
  */
 
 export class QueryEngine {
-  constructor(options = {}) {
+  constructor(options = {}, bus = null) {
     this.handlers = new Map();
     this.history = [];
     this.maxHistory = options.maxHistory || 20;
 
-    // Cache
     this.cache = new Map();
-    this.cacheTTL = options.cacheTTL || 30000; // 30s default
+    this.cacheTTL = options.cacheTTL || 30000;
     this.cacheEnabled = options.cacheEnabled !== false;
 
-    // Aggregation functions
     this.aggregations = new Map();
+    this.bus = bus;
+
+    this._registerDefaultAggregations();
   }
 
-  /**
-   * Register a query handler.
-   * @param {string} name
-   * @param {Function} handler — async (params, context?) => result
-   */
-  register(name, handler) {
-    this.handlers.set(name, handler);
+  _registerDefaultAggregations() {
+    this.aggregations.set('count', (data) => data.length);
+    this.aggregations.set('sum', (data, field) => data.reduce((s, r) => s + (Number(r[field]) || 0), 0));
+    this.aggregations.set('avg', (data, field) => data.reduce((s, r) => s + (Number(r[field]) || 0), 0) / (data.length || 1));
+    this.aggregations.set('min', (data, field) => Math.min(...data.map(r => Number(r[field]) || 0)));
+    this.aggregations.set('max', (data, field) => Math.max(...data.map(r => Number(r[field]) || 0)));
   }
 
-  /**
-   * Execute a parsed query command.
-   * @param {object} command — { type, params, context? }
-   * @returns {Promise<{success, data, summary, table?, pagination?, cached?}>}
-   */
-  async execute(command) {
-    const { type, params, context } = command;
-    const handler = this.handlers.get(type);
+  register(name, handler, options = {}) {
+    this.handlers.set(name, { handler, cacheTTL: options.cacheTTL || this.cacheTTL });
+  }
 
-    if (!handler) {
+  async execute(command, context) {
+    const { type, params, context: commandContext } = command;
+    const actualContext = context !== undefined ? context : commandContext;
+    const handlerEntry = this.handlers.get(type);
+
+    if (!handlerEntry) {
       return {
         success: false,
         error: `Unknown query type: "${type}"`,
@@ -50,19 +49,22 @@ export class QueryEngine {
       };
     }
 
-    // Check cache
-    const cacheKey = this._makeCacheKey(type, params, context);
+    const { handler, cacheTTL } = handlerEntry;
+
+    this.bus?.emit('query:before', { type, params, context: actualContext });
+
+    const cacheKey = this._makeCacheKey(type, params, actualContext);
     if (this.cacheEnabled) {
-      const cached = this._getCache(cacheKey);
+      const cached = this._getCache(cacheKey, cacheTTL);
       if (cached) {
+        this.bus?.emit('query:cached', { type, params, context: actualContext });
         return { ...cached, cached: true };
       }
     }
 
     try {
-      const rawResult = await handler(params, context);
+      const rawResult = await handler(params, actualContext);
 
-      // Pagination
       let result = rawResult;
       let pagination = null;
       if (params && (params.page || params.pageSize)) {
@@ -79,19 +81,20 @@ export class QueryEngine {
       };
       if (pagination) output.pagination = pagination;
 
-      // Store in cache
       if (this.cacheEnabled) {
-        this._setCache(cacheKey, output);
+        this._setCache(cacheKey, output, cacheTTL);
       }
 
-      // Store in history for follow-up
-      this.history.push({ type, params, result, timestamp: Date.now() });
+      this.history.push({ type, params, result: rawResult, timestamp: Date.now() });
       if (this.history.length > this.maxHistory) {
         this.history.shift();
       }
 
+      this.bus?.emit('query:after', { type, params, result: output, context: actualContext });
+
       return output;
     } catch (err) {
+      this.bus?.emit('query:error', { type, params, error: err, context: actualContext });
       return {
         success: false,
         error: err.message,
@@ -102,11 +105,6 @@ export class QueryEngine {
     }
   }
 
-  /**
-   * Follow-up query: reuse context from last query.
-   * E.g. "那李四呢？" → reuse type from last query, change keyword.
-   * @param {object} overrides — params to override from last query
-   */
   async followUp(overrides = {}) {
     const last = this.getLastResult();
     if (!last) {
@@ -118,11 +116,6 @@ export class QueryEngine {
     });
   }
 
-  /**
-   * Run aggregation on last query result.
-   * @param {string} op — 'count' | 'sum' | 'avg' | 'min' | 'max'
-   * @param {string} field — field name to aggregate on
-   */
   aggregate(op, field) {
     const last = this.getLastResult();
     if (!last || !Array.isArray(last.result)) {
@@ -130,55 +123,28 @@ export class QueryEngine {
     }
 
     const data = last.result;
+    const fn = this.aggregations.get(op);
 
-    switch (op) {
-      case 'count':
-        return { success: true, value: data.length, label: `Count: ${data.length}` };
-      case 'sum':
-        return {
-          success: true,
-          value: data.reduce((s, r) => s + (Number(r[field]) || 0), 0),
-          label: `Sum of ${field}`,
-        };
-      case 'avg':
-        return {
-          success: true,
-          value: data.reduce((s, r) => s + (Number(r[field]) || 0), 0) / (data.length || 1),
-          label: `Average of ${field}`,
-        };
-      case 'min':
-        return {
-          success: true,
-          value: Math.min(...data.map(r => Number(r[field]) || 0)),
-          label: `Min of ${field}`,
-        };
-      case 'max':
-        return {
-          success: true,
-          value: Math.max(...data.map(r => Number(r[field]) || 0)),
-          label: `Max of ${field}`,
-        };
-      default:
-        return { success: false, error: `Unknown aggregation: ${op}` };
+    if (!fn) {
+      return { success: false, error: `Unknown aggregation: ${op}` };
+    }
+
+    try {
+      const value = fn(data, field);
+      return { success: true, value, label: `${op.toUpperCase()} of ${field}` };
+    } catch {
+      return { success: false, error: `Aggregation failed: ${op}` };
     }
   }
 
-  /**
-   * Get the last query result (for follow-up context).
-   */
   getLastResult() {
     return this.history.length > 0 ? this.history[this.history.length - 1] : null;
   }
 
-  /**
-   * Clear query history and cache.
-   */
   clearHistory() {
     this.history = [];
     this.cache.clear();
   }
-
-  // ── Private ──
 
   _formatSummary(type, result) {
     if (Array.isArray(result)) {
@@ -217,19 +183,18 @@ export class QueryEngine {
     };
   }
 
-  _getCache(key) {
+  _getCache(key, ttl) {
     const entry = this.cache.get(key);
     if (!entry) return null;
-    if (Date.now() - entry.timestamp > this.cacheTTL) {
+    if (Date.now() - entry.timestamp > ttl) {
       this.cache.delete(key);
       return null;
     }
     return entry.data;
   }
 
-  _setCache(key, data) {
-    this.cache.set(key, { data, timestamp: Date.now() });
-    // Limit cache size
+  _setCache(key, data, ttl) {
+    this.cache.set(key, { data, timestamp: Date.now(), ttl });
     if (this.cache.size > 100) {
       const oldest = this.cache.keys().next().value;
       this.cache.delete(oldest);

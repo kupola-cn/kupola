@@ -308,7 +308,7 @@ if (!result.success) {
 
 ### 持久化
 
-流程定义自动存储到 `localStorage`，页面刷新后保留。可注入自定义 storage：
+流程定义和 `actionPatterns`（自动学习记录）自动存储到 `localStorage`，页面刷新后保留。可注入自定义 storage：
 
 ```js
 const adapter = new AIAdapter({
@@ -331,6 +331,36 @@ const adapter = new AIAdapter({
 //   suggest: true,
 //   message: 'You\'ve performed "addEmployee" 3 times. Create a flow?',
 // }
+```
+
+### 我的流程管理
+
+`flow.list()` 返回所有已定义流程，包含创建时间和最后执行时间：
+
+```js
+const flows = await adapter.flow.list();
+// [{ name: '月末统计', createdAt: '2026-07-01', lastRunAt: '2026-07-25' }]
+```
+
+**执行流程**：
+
+```js
+await adapter.flow.execute('月末统计', { month: '2026-07' });
+```
+
+**编辑流程**：重新定义即可覆盖原有配置
+
+```js
+adapter.flow.define('月末统计', {
+  description: '更新后的流程描述',
+  steps: [...],
+});
+```
+
+**删除流程**：
+
+```js
+adapter.flow.remove('月末统计'); // true
 ```
 
 ---

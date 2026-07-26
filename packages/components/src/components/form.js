@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Form module built on the 2.0 reactive core.
  *
@@ -21,19 +21,38 @@
  * @module components/form
  */
 
-export function Form(options = {}) {
-  const formEl = options.element;
-  if (!formEl) {throw new Error('Form: element is required');}
+import { createListenerRegistry } from './listener-registry';
 
-  const onSubmit = options.onSubmit || null;
-  const onValidate = options.onValidate || null;
-  const _fieldHandlers = new Map();
-  let _submitHandler = null;
+const FIELD_SELECTOR = 'input, select, textarea';
+const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+export function Form(options = {}) {
+  const config = options && typeof options === 'object' ? options : {};
+  let formEl = config.element;
+  if (typeof formEl === 'string') {
+    formEl = typeof document === 'undefined' ? null : document.querySelector(formEl);
+  }
+  if (!formEl || typeof formEl.querySelectorAll !== 'function'
+    || typeof formEl.addEventListener !== 'function') {
+    throw new Error('Form: element must be a form element or a selector resolving to one');
+  }
+
+  const onSubmit = typeof config.onSubmit === 'function' ? config.onSubmit : null;
+  const onValidate = typeof config.onValidate === 'function' ? config.onValidate : null;
+  const errorElements = new Map();
+  let destroyed = false;
+  const listeners = createListenerRegistry();
 
   // Collect fields
   function _getFields() {
-    return Array.from(formEl.querySelectorAll('input, select, textarea'))
+    return Array.from(formEl.querySelectorAll(FIELD_SELECTOR))
       .filter(f => !f.hasAttribute('data-kupola-ignore'));
+  }
+
+  function _isManagedField(field) {
+    return Boolean(field?.matches?.(FIELD_SELECTOR)
+      && formEl.contains(field)
+      && !field.hasAttribute('data-kupola-ignore'));
   }
 
   // Get field value (handles checkbox, radio, select-multiple)
@@ -41,7 +60,9 @@ export function Form(options = {}) {
     const type = field.type;
     if (type === 'checkbox') {return field.checked;}
     if (type === 'radio') {
-      const checked = formEl.querySelector(`input[name="${field.name}"]:checked`);
+      const checked = _getFields().find(candidate => candidate.type === 'radio'
+        && candidate.name === field.name
+        && candidate.checked);
       return checked ? checked.value : null;
     }
     if (type === 'select-multiple') {
@@ -51,7 +72,7 @@ export function Form(options = {}) {
   }
 
   // Built-in validators
-  const _validators = {
+  const _validators = Object.assign(Object.create(null), {
     required: (v) => {
       if (typeof v === 'string') {return v.trim() !== '';}
       if (typeof v === 'boolean') {return v === true;}
@@ -66,14 +87,17 @@ export function Form(options = {}) {
     maxlength: (v, max) => !v || v.length <= parseInt(max),
     min: (v, min) => !v || parseFloat(v) >= parseFloat(min),
     max: (v, max) => !v || parseFloat(v) <= parseFloat(max),
-    pattern: (v, pat) => !v || new RegExp(pat).test(v),
+    pattern: (v, pat) => {
+      if (!v) {return true;}
+      try {return new RegExp(pat).test(v);} catch {return false;}
+    },
     equalTo: (v, targetId) => {
       const t = document.getElementById(targetId);
       return !t || v === t.value;
     },
-  };
+  });
 
-  const _messages = {
+  const _messages = Object.assign(Object.create(null), {
     required:  'This field is required',
     email:     'Please enter a valid email address',
     phone:     'Please enter a valid phone number',
@@ -85,10 +109,11 @@ export function Form(options = {}) {
     max:       (p) => `Maximum value is ${p}`,
     pattern:   'Format is incorrect',
     equalTo:   'Values do not match',
-  };
+  });
 
   // Validate a single field
   function validateField(field) {
+    if (destroyed || !_isManagedField(field)) {return false;}
     const value = _getFieldValue(field);
     const errors = [];
 
@@ -114,6 +139,7 @@ export function Form(options = {}) {
 
   // Validate all fields
   function validate() {
+    if (destroyed) {return false;}
     const fields = _getFields();
     let valid = true;
     fields.forEach(f => {
@@ -125,8 +151,10 @@ export function Form(options = {}) {
 
   // Show/clear errors
   function showError(field, message) {
+    if (destroyed || !_isManagedField(field)) {return;}
     clearError(field);
     field.classList.add('ds-form-field--error');
+    field.setAttribute('aria-invalid', 'true');
 
     const errEl = document.createElement('span');
     errEl.className = 'ds-form-error';
@@ -138,23 +166,25 @@ export function Form(options = {}) {
     } else if (field.parentNode) {
       field.parentNode.insertBefore(errEl, field.nextSibling);
     }
+    errorElements.set(field, errEl);
   }
 
   function clearError(field) {
+    if (!field?.classList) {return;}
     field.classList.remove('ds-form-field--error');
-    // Find the error element that directly follows this field
-    let next = field.nextElementSibling;
-    if (next && next.classList.contains('ds-form-error')) {
-      next.remove();
-    }
+    field.setAttribute('aria-invalid', 'false');
+    errorElements.get(field)?.remove();
+    errorElements.delete(field);
   }
 
   function clearAllErrors() {
-    _getFields().forEach(f => clearError(f));
+    const fields = new Set([ ..._getFields(), ...errorElements.keys() ]);
+    fields.forEach(field => clearError(field));
   }
 
   // Data access
   function getData() {
+    if (destroyed) {return {};}
     const data = {};
     _getFields().forEach(field => {
       const name = field.name;
@@ -162,20 +192,36 @@ export function Form(options = {}) {
       const value = _getFieldValue(field);
 
       if (field.type === 'checkbox') {
-        if (!data[name]) {data[name] = [];}
+        if (!hasOwn(data, name)) {
+          Object.defineProperty(data, name, {
+            value: [], enumerable: true, configurable: true, writable: true,
+          });
+        }
         if (field.checked) {data[name].push(field.value);}
       } else if (field.type === 'radio') {
-        if (field.checked) {data[name] = field.value;}
+        if (field.checked) {
+          Object.defineProperty(data, name, {
+            value: field.value, enumerable: true, configurable: true, writable: true,
+          });
+        }
       } else {
-        data[name] = value;
+        Object.defineProperty(data, name, {
+          value, enumerable: true, configurable: true, writable: true,
+        });
       }
     });
     return data;
   }
 
   function setData(data) {
+    if (destroyed || !data || typeof data !== 'object') {return;}
+    const fieldsByName = new Map();
+    _getFields().forEach(field => {
+      if (!fieldsByName.has(field.name)) {fieldsByName.set(field.name, []);}
+      fieldsByName.get(field.name).push(field);
+    });
     Object.keys(data).forEach(name => {
-      const fields = formEl.querySelectorAll(`[name="${name}"]`);
+      const fields = fieldsByName.get(name) || [];
       fields.forEach(field => {
         const type = field.type;
         if (type === 'checkbox') {
@@ -194,54 +240,46 @@ export function Form(options = {}) {
   }
 
   function reset() {
+    if (destroyed) {return;}
     formEl.reset();
     clearAllErrors();
   }
 
   // Custom validator
   function addValidator(name, fn, message) {
+    if (typeof name !== 'string' || !name || typeof fn !== 'function') {
+      throw new TypeError('Form: validator name and function are required');
+    }
     _validators[name] = fn;
     _messages[name] = message || 'Invalid input';
   }
 
-  // Bind events
-  function _bindEvents() {
-    _submitHandler = (e) => {
-      if (!validate()) {
-        e.preventDefault();
-        return;
-      }
-      if (onSubmit) {
-        e.preventDefault();
-        onSubmit(getData());
-      }
-    };
-    formEl.addEventListener('submit', _submitHandler);
-
-    _getFields().forEach(field => {
-      const blurHandler = () => validateField(field);
-      const inputHandler = () => clearError(field);
-      _fieldHandlers.set(field, { blur: blurHandler, input: inputHandler });
-      field.addEventListener('blur', blurHandler);
-      field.addEventListener('input', inputHandler);
-    });
+  for (const [ name, validator ] of Object.entries(config.validators || {})) {
+    if (typeof validator === 'function') {addValidator(name, validator);}
   }
 
-  _bindEvents();
-
-  // Destroy
-  function destroy() {
-    if (_submitHandler) {
-      formEl.removeEventListener('submit', _submitHandler);
+  const submitHandler = (event) => {
+    if (!validate()) {
+      event.preventDefault();
+      return;
     }
-    _fieldHandlers.forEach((handlers, field) => {
-      field.removeEventListener('blur', handlers.blur);
-      field.removeEventListener('input', handlers.input);
-    });
-    _fieldHandlers.clear();
-  }
+    if (onSubmit) {
+      event.preventDefault();
+      onSubmit(getData());
+    }
+  };
+  const blurHandler = (event) => {
+    if (_isManagedField(event.target)) {validateField(event.target);}
+  };
+  const inputHandler = (event) => {
+    if (_isManagedField(event.target)) {clearError(event.target);}
+  };
 
-  return {
+  listeners.on(formEl, 'submit', submitHandler);
+  listeners.on(formEl, 'blur', blurHandler, true);
+  listeners.on(formEl, 'input', inputHandler);
+
+  const api = {
     element: formEl,
     validate,
     validateField,
@@ -252,6 +290,14 @@ export function Form(options = {}) {
     setData,
     reset,
     addValidator,
-    destroy,
+    destroy() {
+      if (destroyed) {return;}
+      clearAllErrors();
+      destroyed = true;
+      listeners.destroy();
+      Object.freeze(api);
+    },
   };
+
+  return api;
 }

@@ -3,12 +3,14 @@
 import prompts from 'prompts';
 import kleur from 'kleur';
 import { fileURLToPath } from 'node:url';
-import { resolve, join, basename } from 'node:path';
+import { resolve, join } from 'node:path';
 import { existsSync, mkdirSync, cpSync, readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const TEMPLATES = join(__dirname, 'templates');
+const VERSION = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8')).version;
+const VALID_TEMPLATES = [ 'static', 'static-ts', 'flask', 'fastapi', 'gin', 'nextjs', 'nuxt' ];
 
 // ── Helpers ─────────────────────────────────────────
 
@@ -33,6 +35,61 @@ function run(cmd, cwd) {
   }
 }
 
+function isValidProjectName(name) {
+  return typeof name === 'string' && /^[a-z0-9-_]+$/i.test(name);
+}
+
+function printHelp() {
+  console.log(`
+Usage: create-kupola [project-name] [options]
+
+Options:
+  -t, --template <name>  Template: ${VALID_TEMPLATES.join(', ')}
+  -T, --typescript       Use the static TypeScript template
+  -f, --force            Replace an existing target directory
+      --no-install        Skip dependency installation
+  -v, --version          Print the CLI version
+  -h, --help             Show this help message
+`);
+}
+
+function parseArgs(args) {
+  const options = {
+    name: null,
+    template: null,
+    useTypeScript: false,
+    force: false,
+    skipInstall: false,
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--template' || arg === '-t') {
+      options.template = args[index + 1];
+      index += 1;
+    } else if (arg.startsWith('--template=')) {
+      options.template = arg.slice('--template='.length);
+    } else if (arg === '--typescript' || arg === '--ts' || arg === '-T') {
+      options.useTypeScript = true;
+    } else if (arg === '--force' || arg === '-f') {
+      options.force = true;
+    } else if (arg === '--no-install') {
+      options.skipInstall = true;
+    } else if (arg.startsWith('-')) {
+      throw new Error(`Unknown option: ${arg}`);
+    } else if (options.name) {
+      throw new Error('Only one project name may be provided.');
+    } else {
+      options.name = arg;
+    }
+  }
+
+  if (options.template !== null && !VALID_TEMPLATES.includes(options.template)) {
+    throw new Error(`Invalid template: ${options.template}. Valid templates: ${VALID_TEMPLATES.join(', ')}`);
+  }
+  return options;
+}
+
 // ── Main ────────────────────────────────────────────
 
 async function main() {
@@ -40,19 +97,23 @@ async function main() {
 
   // Parse CLI arguments
   const args = process.argv.slice(2);
-  const templateArg = args.find(a => a.startsWith('--template='));
-  const nameArg = args.find(a => !a.startsWith('--'));
-  const useTS = args.includes('--typescript') || args.includes('--ts');
+  const {
+    name: nameArg,
+    template: templateArg,
+    useTypeScript: useTS,
+    force,
+    skipInstall,
+  } = parseArgs(args);
 
   // 1. Project name
-  let name = nameArg;
+  let name = nameArg?.trim();
   if (!name) {
     const { name: promptedName } = await prompts({
       type: 'text',
       name: 'name',
       message: 'Project name:',
       initial: 'my-kupola-app',
-      validate: (v) => /^[a-z0-9-_]+$/i.test(v) || 'Use letters, numbers, hyphens, or underscores only',
+      validate: (v) => isValidProjectName(v) || 'Use letters, numbers, hyphens, or underscores only',
     });
     name = promptedName;
   }
@@ -62,29 +123,35 @@ async function main() {
     process.exit(0);
   }
 
+  if (!isValidProjectName(name)) {
+    throw new Error('Project name may contain only letters, numbers, hyphens, and underscores.');
+  }
+
   const targetDir = resolve(process.cwd(), name);
 
   if (existsSync(targetDir)) {
-    const { overwrite } = await prompts({
-      type: 'confirm',
-      name: 'overwrite',
-      message: `Directory "${name}" already exists. Overwrite?`,
-      initial: false,
-    });
+    const { overwrite } = force
+      ? { overwrite: true }
+      : await prompts({
+        type: 'confirm',
+        name: 'overwrite',
+        message: `Directory "${name}" already exists. Overwrite?`,
+        initial: false,
+      });
     if (!overwrite) {
       console.log(kleur.yellow('\n  Cancelled.\n'));
-      process.exit(0);
+      return;
     }
+    rmSync(targetDir, { recursive: true, force: true });
   }
 
   // 2. Backend framework
   let framework;
   if (templateArg) {
-    const templateName = templateArg.split('=')[1];
-    const validTemplates = ['static', 'static-ts', 'flask', 'fastapi', 'gin', 'nextjs', 'nuxt'];
-    if (!validTemplates.includes(templateName)) {
+    const templateName = templateArg;
+    if (!VALID_TEMPLATES.includes(templateName)) {
       console.log(kleur.red(`\n  Invalid template: ${templateName}`));
-      console.log(kleur.gray(`  Valid templates: ${validTemplates.join(', ')}`));
+      console.log(kleur.gray(`  Valid templates: ${VALID_TEMPLATES.join(', ')}`));
       process.exit(1);
     }
     framework = templateName;
@@ -118,7 +185,7 @@ async function main() {
   let features;
   if (templateArg) {
     // Non-interactive: use defaults
-    features = ['dark'];
+    features = [ 'dark' ];
   } else {
     const { features: promptedFeatures } = await prompts({
       type: 'multiselect',
@@ -178,13 +245,15 @@ async function main() {
 
   // ── Install dependencies ──────────────────────────
 
-  console.log(kleur.cyan('\n  Installing dependencies...'));
-
   let hasDeps = false;
-  if (framework === 'gin') {
+  if (skipInstall) {
+    console.log(kleur.gray('\n  Skipping dependency installation.'));
+  } else if (framework === 'gin') {
+    console.log(kleur.cyan('\n  Installing dependencies...'));
     run('npm install', targetDir); // 安装前端 CSS/JS
     hasDeps = run('go mod tidy', targetDir); // 安装 Go 依赖
   } else {
+    console.log(kleur.cyan('\n  Installing dependencies...'));
     hasDeps = run('npm install', targetDir);
   }
 
@@ -240,7 +309,14 @@ async function main() {
   console.log();
 }
 
-main().catch((err) => {
-  console.error(kleur.red('\n  Error:'), err.message);
-  process.exit(1);
-});
+const cliArgs = process.argv.slice(2);
+if (cliArgs.includes('--help') || cliArgs.includes('-h')) {
+  printHelp();
+} else if (cliArgs.includes('--version') || cliArgs.includes('-v')) {
+  console.log(VERSION);
+} else {
+  main().catch((err) => {
+    console.error(kleur.red('\n  Error:'), err.message);
+    process.exit(1);
+  });
+}

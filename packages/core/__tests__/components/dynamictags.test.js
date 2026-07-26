@@ -52,6 +52,19 @@ describe('DynamicTags rendering', () => {
     expect(tags.length).toBe(3);
   });
 
+  test('normalizes, deduplicates, and limits initial tags', () => {
+    const view = DynamicTags({
+      tags: [ ' A ', '', 'A', 1, 'B', 'C' ],
+      maxCount: 2,
+    });
+    document.body.appendChild(view.element);
+
+    expect(view.getTags()).toEqual([ 'A', 'B' ]);
+    expect(document.querySelectorAll('.ds-dynamic-tags__tag')).toHaveLength(2);
+    expect(document.querySelector('.ds-dynamic-tags__input').disabled).toBe(true);
+    view.destroy();
+  });
+
   test('each tag has a remove button', () => {
     const view = DynamicTags({ tags: [ 'A', 'B' ] });
     document.body.appendChild(view.element);
@@ -124,6 +137,27 @@ describe('DynamicTags add', () => {
 
     view.addTag('Test');
     expect(onChange).toHaveBeenCalledWith([ 'Test' ]);
+  });
+
+  test('onChange receives a defensive copy', () => {
+    const onChange = jest.fn(value => value.push('mutated'));
+    const view = DynamicTags({ onChange });
+    view.addTag('Safe');
+
+    expect(view.getTags()).toEqual([ 'Safe' ]);
+    view.destroy();
+  });
+
+  test('setTags normalizes state and only notifies for changes', () => {
+    const onChange = jest.fn();
+    const view = DynamicTags({ tags: [ 'A' ], maxTags: 2, onChange });
+    document.body.appendChild(view.element);
+
+    expect(view.setTags([ ' B ', 'B', 'C', 'D' ])).toBe(true);
+    expect(view.getTags()).toEqual([ 'B', 'C' ]);
+    expect(view.setTags([ 'B', 'C' ])).toBe(false);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    view.destroy();
   });
 
   test('pressing Enter in input adds tag', () => {
@@ -225,6 +259,20 @@ describe('DynamicTags disabled', () => {
     const removeButtons = document.body.querySelectorAll('.ds-dynamic-tags__remove');
     expect(removeButtons.length).toBe(0);
   });
+
+  test('disabled state blocks all mutation APIs and disables add button', () => {
+    const onChange = jest.fn();
+    const view = DynamicTags({ tags: [ 'A' ], disabled: true, onChange });
+    document.body.appendChild(view.element);
+
+    expect(view.addTag('B')).toBe(false);
+    expect(view.removeTag('A')).toBe(false);
+    expect(view.setTags([ 'C' ])).toBe(false);
+    expect(view.getTags()).toEqual([ 'A' ]);
+    expect(document.querySelector('.ds-dynamic-tags__add').disabled).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+    view.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -234,6 +282,13 @@ describe('DynamicTags destroy', () => {
     const view = DynamicTags({ tags: [ 'A' ] });
     document.body.appendChild(view.element);
 
+    const add = document.querySelector('.ds-dynamic-tags__add');
     expect(() => view.destroy()).not.toThrow();
+    expect(() => view.destroy()).not.toThrow();
+    expect(view.addTag('B')).toBe(false);
+    expect(view.removeTag('A')).toBe(false);
+    expect(view.setTags([ 'C' ])).toBe(false);
+    add.click();
+    expect(view.getTags()).toEqual([ 'A' ]);
   });
 });

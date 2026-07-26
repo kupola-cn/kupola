@@ -46,118 +46,128 @@ export function getThemeInlineScript(): string;
 // Modal
 export interface ModalOptions {
   title?: string;
-  content?: string | HTMLElement;
+  content?: unknown;
   width?: string | number;
   closable?: boolean;
+  closableOnMask?: boolean;
   maskClosable?: boolean;
   escClose?: boolean;
-  onConfirm?: () => void | Promise<void>;
-  onCancel?: () => void;
   onClose?: () => void;
 }
-export interface ModalInstance extends Destroyable {
+export interface ModalInstance {
+  element: DocumentFragment;
   open(): void;
   close(): void;
   toggle(): void;
   isVisible(): boolean;
+  destroy(): void;
 }
-export function Modal(options?: ModalOptions): ModalInstance;
+export function Modal(options?: ModalOptions, children?: unknown): ModalInstance;
 
 // Dropdown
 export interface DropdownItem {
-  label: string;
+  label?: string;
+  text?: string;
   value?: string;
   disabled?: boolean;
   divider?: boolean;
   icon?: string;
-  onClick?: () => void;
+  onClick?: (item: DropdownItem) => void;
+}
+export interface DropdownSelection {
+  value?: string;
+  text: string;
+  item: DropdownItem;
 }
 export interface DropdownOptions {
-  trigger?: HTMLElement;
+  trigger?: 'click' | 'hover';
   items?: DropdownItem[];
-  placement?: string;
+  placeholder?: string;
   closeOnClick?: boolean;
-  onSelect?: (item: DropdownItem) => void;
+  onSelect?: (selection: DropdownSelection) => void;
 }
-export interface DropdownInstance extends Destroyable {
+export interface DropdownInstance {
+  element: DocumentFragment;
   open(): void;
   close(): void;
   toggle(): void;
   isOpen(): boolean;
+  destroy(): void;
 }
 export function Dropdown(options?: DropdownOptions): DropdownInstance;
 
 // Drawer
 export interface DrawerOptions {
-  placement?: 'left' | 'right' | 'top' | 'bottom';
+  placement?: 'left' | 'right';
   width?: string | number;
-  height?: string | number;
   title?: string;
+  content?: unknown;
   closable?: boolean;
+  closableOnMask?: boolean;
   maskClosable?: boolean;
   escClose?: boolean;
   onClose?: () => void;
 }
-export interface DrawerInstance extends Destroyable {
+export interface DrawerInstance {
+  element: DocumentFragment;
   open(): void;
   close(): void;
   toggle(): void;
   isOpen(): boolean;
+  destroy(): void;
 }
-export function Drawer(options?: DrawerOptions): DrawerInstance;
+export function Drawer(options?: DrawerOptions, children?: unknown): DrawerInstance;
 
 // Dialog
 export interface DialogOptions {
   title?: string;
-  content?: string | HTMLElement;
-  type?: 'info' | 'success' | 'warning' | 'error' | 'confirm';
+  content?: string;
+  type?: 'normal' | 'info' | 'success' | 'warning' | 'error';
   confirmText?: string;
   cancelText?: string;
   showCancel?: boolean;
-  onConfirm?: () => void | Promise<void>;
-  onCancel?: () => void;
 }
-export interface DialogInstance extends Destroyable {
-  open(): void;
-  close(): void;
+export interface DialogService {
+  confirm(options?: DialogOptions): Promise<boolean>;
+  alert(options?: DialogOptions): Promise<void>;
 }
-export function Dialog(options?: DialogOptions): DialogInstance;
+export const Dialog: DialogService;
 
 // Notification
 export interface NotificationOptions {
   title?: string;
-  message: string;
+  message?: string;
   type?: 'normal' | 'success' | 'error' | 'warning' | 'info';
   duration?: number;
   closable?: boolean;
-  position?: string;
-  onClick?: () => void;
-  onClose?: () => void;
 }
 export interface NotificationItem {
   element: HTMLElement;
   close(): void;
 }
-export interface NotificationInstance extends Destroyable {
-  normal(message: string, options?: Partial<NotificationOptions>): NotificationItem;
-  success(message: string, options?: Partial<NotificationOptions>): NotificationItem;
-  error(message: string, options?: Partial<NotificationOptions>): NotificationItem;
-  warning(message: string, options?: Partial<NotificationOptions>): NotificationItem;
-  info(message: string, options?: Partial<NotificationOptions>): NotificationItem;
-  show(options: NotificationOptions): NotificationItem;
+export interface NotificationService {
+  open(options?: NotificationOptions): NotificationItem;
+  success(options?: NotificationOptions): NotificationItem;
+  error(options?: NotificationOptions): NotificationItem;
+  warning(options?: NotificationOptions): NotificationItem;
+  info(options?: NotificationOptions): NotificationItem;
+  setPosition(position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'bottom'): void;
+  destroy(): void;
 }
-export function Notification(): NotificationInstance;
+export const Notification: NotificationService;
 
 // Tooltip
 export interface TooltipOptions {
-  content: string;
+  target: HTMLElement;
+  content?: string;
   placement?: 'top' | 'bottom' | 'left' | 'right';
   trigger?: 'hover' | 'click' | 'focus';
   delay?: number;
 }
-export interface TooltipInstance extends Destroyable {
+export interface TooltipInstance {
   show(): void;
   hide(): void;
+  destroy(): void;
 }
 export function Tooltip(options: TooltipOptions): TooltipInstance;
 
@@ -168,15 +178,18 @@ export function Tooltip(options: TooltipOptions): TooltipInstance;
 // Tabs
 export interface TabItem {
   key: string;
-  title: string;
-  content?: string | HTMLElement;
+  title?: string;
+  label?: string;
+  content?: unknown;
   disabled?: boolean;
   closable?: boolean;
 }
 export interface TabsOptions {
   tabs?: TabItem[];
+  panels?: Record<string, unknown>;
   activeKey?: string;
   type?: 'line' | 'card' | 'bordered';
+  variant?: 'line' | 'filled' | 'bordered';
   onChange?: (key: string) => void;
   onClose?: (key: string) => void;
 }
@@ -199,29 +212,40 @@ export interface PaginationOptions {
   maxPages?: number;
   onChange?: (page: number, pageSize: number) => void;
 }
-export interface PaginationInstance extends Destroyable {
-  setCurrent(page: number): void;
+export interface PaginationInstance {
+  element: DocumentFragment;
+  setCurrent(page: number): boolean;
   getCurrent(): number;
-  setTotal(total: number): void;
-  setPageSize(size: number): void;
+  getTotal(): number;
+  getPageSize(): number;
+  setTotal(total: number): boolean;
+  setPageSize(size: number): boolean;
+  destroy(): void;
 }
 export function Pagination(options?: PaginationOptions): PaginationInstance;
 
 // Datepicker
 export interface DatepickerOptions {
   value?: Date | string;
-  format?: string;
+  format?: 'YYYY-MM-DD' | 'MM/DD/YYYY' | 'DD/MM/YYYY';
   placeholder?: string;
   minDate?: Date | string;
   maxDate?: Date | string;
+  weekStart?: 0 | 1;
   disabled?: boolean;
   disabledDates?: (date: Date) => boolean;
-  onChange?: (date: Date, dateString: string) => void;
+  onChange?: (dateString: string, date: Date) => void;
 }
-export interface DatepickerInstance extends Destroyable {
+export interface DatepickerInstance {
+  element: DocumentFragment;
+  open(): void;
+  close(): void;
+  toggle(): void;
   setValue(date: Date | string): void;
-  getValue(): Date | null;
+  getValue(): string;
   clear(): void;
+  isOpen(): boolean;
+  destroy(): void;
 }
 export function Datepicker(options?: DatepickerOptions): DatepickerInstance;
 
@@ -242,11 +266,13 @@ export function Breadcrumb(options?: BreadcrumbOptions): BreadcrumbInstance;
 
 // Menu
 export interface MenuItem {
-  key?: string;
-  label: string;
+  key?: string | number;
+  label?: string;
+  type?: 'item' | 'divider';
   icon?: string;
   disabled?: boolean;
   divider?: boolean;
+  danger?: boolean;
   shortcut?: string;
   onClick?: () => void;
   children?: MenuItem[];
@@ -256,7 +282,10 @@ export interface MenuOptions {
   mode?: 'vertical' | 'horizontal';
   onSelect?: (item: MenuItem) => void;
 }
-export interface MenuInstance extends Destroyable {}
+export interface MenuInstance {
+  element: DocumentFragment;
+  destroy(): void;
+}
 export function Menu(options?: MenuOptions): MenuInstance;
 
 // Calendar
@@ -264,31 +293,46 @@ export interface CalendarEvent {
   id?: string | number;
   title: string;
   date: string | Date;
+  end?: string | Date;
   endDate?: string | Date;
   color?: string;
   allDay?: boolean;
 }
 export interface CalendarOptions {
+  currentDate?: Date | string;
   date?: Date | string;
+  selectedDate?: Date | string;
+  rangeStart?: Date | string;
+  rangeEnd?: Date | string;
+  rangeMode?: boolean;
   viewMode?: 'month' | 'week';
   events?: CalendarEvent[];
   selectionMode?: 'none' | 'single' | 'range';
-  onChange?: (date: Date) => void;
-  onSelect?: (date: Date) => void;
-  onRangeSelect?: (start: Date, end: Date) => void;
+  i18n?: Partial<{ months: string[]; shortMonths: string[]; weekdays: string[]; shortWeekdays: string[]; today: string }>;
+  onChange?: (state: CalendarChange) => void;
+  onSelect?: (selection: { date: Date; dateStr: string }) => void;
+  onRangeSelect?: (range: { start: Date; end: Date }) => void;
+  onEventClick?: (event: CalendarEvent, date: Date) => void;
+}
+export interface CalendarChange {
+  date: Date;
+  selectedDate: Date | null;
+  rangeStart: Date | null;
+  rangeEnd: Date | null;
+  viewMode: 'month' | 'week';
 }
 export interface CalendarInstance extends Destroyable {
   setDate(date: Date | string): void;
   getDate(): Date;
-  setSelectedDate(date: Date): void;
+  setSelectedDate(date: Date | string | null): void;
   getSelectedDate(): Date | null;
-  setRange(start: Date, end: Date): void;
+  setRange(start: Date | string | null, end: Date | string | null): void;
   getRange(): { start: Date | null; end: Date | null };
   setEvents(events: CalendarEvent[]): void;
   addEvent(event: CalendarEvent): void;
   removeEvent(id: string | number): void;
   setViewMode(mode: 'month' | 'week'): void;
-  getViewMode(): string;
+  getViewMode(): 'month' | 'week';
   goToToday(): void;
   goToDate(date: Date): void;
   prevMonth(): void;
@@ -319,25 +363,36 @@ export function Switch(options?: SwitchOptions): SwitchInstance;
 
 // Select
 export interface SelectOption {
-  label: string;
+  label?: string;
+  text?: string;
   value: string | number;
   disabled?: boolean;
 }
+export interface SelectChangeEvent {
+  value: string | number | '';
+  text: string;
+  values: (string | number)[];
+}
 export interface SelectOptions {
+  items?: SelectOption[];
   options?: SelectOption[];
   value?: string | number | (string | number)[];
+  values?: (string | number)[];
   multiple?: boolean;
+  label?: string;
   placeholder?: string;
   disabled?: boolean;
   searchable?: boolean;
-  name?: string;
-  onChange?: (value: string | number | (string | number)[]) => void;
+  clearable?: boolean;
+  onChange?: (event: SelectChangeEvent) => void;
 }
 export interface SelectInstance extends Destroyable {
   setValue(value: string | number | (string | number)[]): void;
   getValue(): string | number | (string | number)[];
   open(): void;
   close(): void;
+  toggle(): void;
+  isOpen(): boolean;
 }
 export function Select(options?: SelectOptions): SelectInstance;
 
@@ -390,12 +445,14 @@ export interface InputOptions {
   suffix?: string;
   maxlength?: number;
   name?: string;
+  status?: 'error' | 'success' | 'warning';
   onInput?: (value: string) => void;
   onChange?: (value: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;
 }
-export interface InputInstance extends Destroyable {
+export interface InputInstance {
+  element: DocumentFragment;
   setValue(value: string): void;
   getValue(): string;
   focus(): void;
@@ -450,13 +507,17 @@ export interface TextareaOptions {
   autosize?: boolean;
   showCount?: boolean;
   name?: string;
+  resize?: 'vertical' | 'horizontal' | 'both' | 'none';
   onInput?: (value: string) => void;
+  onChange?: (value: string) => void;
 }
-export interface TextareaInstance extends Destroyable {
+export interface TextareaInstance {
+  element: DocumentFragment;
   setValue(value: string): void;
   getValue(): string;
   focus(): void;
   blur(): void;
+  destroy(): void;
 }
 export function Textarea(options?: TextareaOptions): TextareaInstance;
 
@@ -464,6 +525,7 @@ export function Textarea(options?: TextareaOptions): TextareaInstance;
 export interface TimepickerOptions {
   value?: string;
   format?: '12h' | '24h';
+  step?: number;
   minTime?: string;
   maxTime?: string;
   disabled?: boolean;
@@ -474,7 +536,11 @@ export interface TimepickerOptions {
 export interface TimepickerInstance extends Destroyable {
   setValue(value: string): void;
   getValue(): string;
-  clear(): void;
+  clear(): boolean;
+  destroy(): void;
+  open(): void;
+  close(): void;
+  isOpen(): boolean;
 }
 export function Timepicker(options?: TimepickerOptions): TimepickerInstance;
 
@@ -543,18 +609,18 @@ export function Empty(options?: EmptyOptions): EmptyInstance;
 
 // Countdown
 export interface CountdownOptions {
-  target: Date | number | string;
-  format?: string;
+  target?: Date | number | string;
   onTick?: (remaining: number) => void;
   onFinish?: () => void;
+  onComplete?: () => void;
 }
-export interface CountdownInstance extends Destroyable {
-  start(): void;
-  pause(): void;
-  resume(): void;
-  reset(): void;
+export interface CountdownInstance {
+  element: DocumentFragment;
+  start(target?: Date | number | string): void;
+  stop(): void;
+  destroy(): void;
 }
-export function Countdown(options: CountdownOptions): CountdownInstance;
+export function Countdown(options?: CountdownOptions): CountdownInstance;
 
 // ============================================================
 // Display Components
@@ -673,45 +739,68 @@ export function Statcard(options?: StatcardOptions): StatcardInstance;
 
 // Tree
 export interface TreeNode {
-  key: string | number;
-  title: string;
+  key?: string | number;
+  title?: string;
+  label?: string;
   children?: TreeNode[];
   disabled?: boolean;
   isLeaf?: boolean;
   icon?: string;
+  badge?: string | number;
 }
 export interface TreeOptions {
   data?: TreeNode[];
   checkable?: boolean;
+  lined?: boolean;
+  compact?: boolean;
   expandAll?: boolean;
+  defaultExpandAll?: boolean;
   defaultExpandKeys?: (string | number)[];
+  defaultCheckedKeys?: (string | number)[];
+  defaultSelectedKeys?: (string | number)[];
+  selectedKey?: string | number;
   onSelect?: (keys: (string | number)[], nodes: TreeNode[]) => void;
   onCheck?: (keys: (string | number)[], nodes: TreeNode[]) => void;
   onExpand?: (keys: (string | number)[]) => void;
+  onToggle?: (node: TreeNode, expanded: boolean) => void;
 }
-export interface TreeInstance extends Destroyable {
+export interface TreeInstance {
+  element: DocumentFragment;
+  getSelected(): TreeNode | null;
   getSelectedKeys(): (string | number)[];
   getCheckedKeys(): (string | number)[];
+  getExpandedKeys(): (string | number)[];
   expandAll(): void;
   collapseAll(): void;
   selectKey(key: string | number): void;
+  select(key: string | number): void;
+  checkKey(key: string | number): void;
+  uncheckKey(key: string | number): void;
+  toggleCheck(key: string | number): void;
+  expand(key: string | number): void;
+  collapse(key: string | number): void;
+  destroy(): void;
 }
 export function Tree(options?: TreeOptions): TreeInstance;
 
 // Carousel
 export interface CarouselOptions {
+  items?: Array<string | number>;
+  autoPlay?: boolean;
   autoplay?: boolean;
   interval?: number;
-  loop?: boolean;
+  showIndicators?: boolean;
   showDots?: boolean;
   showArrows?: boolean;
   onChange?: (index: number) => void;
 }
-export interface CarouselInstance extends Destroyable {
+export interface CarouselInstance {
+  element: DocumentFragment;
   next(): void;
   prev(): void;
   goTo(index: number): void;
   getCurrent(): number;
+  destroy(): void;
 }
 export function Carousel(options?: CarouselOptions): CarouselInstance;
 
@@ -725,9 +814,12 @@ export interface FileUploadOptions {
   multiple?: boolean;
   maxSize?: number;
   maxCount?: number;
+  title?: string;
+  subtitle?: string;
   disabled?: boolean;
   onChange?: (files: File[]) => void;
   onRemove?: (file: File) => void;
+  onError?: (message: string) => void;
 }
 export interface FileUploadInstance extends Destroyable {
   getFiles(): File[];
@@ -739,56 +831,84 @@ export function FileUpload(options?: FileUploadOptions): FileUploadInstance;
 export interface DynamicTagsOptions {
   tags?: string[];
   maxCount?: number;
+  maxTags?: number;
   placeholder?: string;
+  disabled?: boolean;
   onChange?: (tags: string[]) => void;
 }
-export interface DynamicTagsInstance extends Destroyable {
+export interface DynamicTagsInstance {
+  element: DocumentFragment;
   getTags(): string[];
-  setTags(tags: string[]): void;
-  addTag(tag: string): void;
-  removeTag(tag: string): void;
+  setTags(tags: string[]): boolean;
+  addTag(tag: string): boolean;
+  removeTag(tag: string): boolean;
+  destroy(): void;
 }
 export function DynamicTags(options?: DynamicTagsOptions): DynamicTagsInstance;
 
 // ImagePreview
+export interface ImagePreviewItem {
+  src: string;
+  alt?: string;
+  title?: string;
+  meta?: string;
+}
 export interface ImagePreviewOptions {
-  images: string[];
+  images: Array<string | ImagePreviewItem>;
   index?: number;
   onClose?: () => void;
 }
 export interface ImagePreviewInstance extends Destroyable {
+  open(index?: number): void;
+  close(): void;
   show(index?: number): void;
   hide(): void;
   next(): void;
   prev(): void;
+  isOpen(): boolean;
+  getIndex(): number;
 }
 export function ImagePreview(options: ImagePreviewOptions): ImagePreviewInstance;
 
 // ColorPicker
 export interface ColorPickerOptions {
+  value?: string;
   color?: string;
-  format?: 'hex' | 'rgb' | 'hsl';
+  colors?: string[];
   presets?: string[];
+  showInput?: boolean;
+  disabled?: boolean;
   onChange?: (color: string) => void;
 }
 export interface ColorPickerInstance extends Destroyable {
+  setValue(color: string): void;
+  getValue(): string;
   setColor(color: string): void;
   getColor(): string;
+  open(): void;
+  close(): void;
+  toggle(): void;
+  isOpen(): boolean;
 }
 export function ColorPicker(options?: ColorPickerOptions): ColorPickerInstance;
 
 // VirtualList
 export interface VirtualListOptions<T = unknown> {
+  items?: T[];
   data?: T[];
   itemHeight?: number;
+  height?: number;
   overscan?: number;
+  virtualThreshold?: number;
   renderItem?: (item: T, index: number) => string | HTMLElement;
+  onClick?: (item: T, index: number) => void;
   onItemClick?: (item: T, index: number) => void;
 }
-export interface VirtualListInstance<T = unknown> extends Destroyable {
+export interface VirtualListInstance<T = unknown> {
+  element: DocumentFragment;
   setData(data: T[]): void;
   scrollTo(index: number): void;
-  scrollToKey(key: string | number): void;
+  destroy(): void;
 }
 export function VirtualList<T = unknown>(options?: VirtualListOptions<T>): VirtualListInstance<T>;
 
@@ -813,19 +933,29 @@ export const PATHS: Record<string, string>;
 export const iconGroups: Record<string, Record<string, string>>;
 
 // Message
+export type MessageType = 'normal' | 'success' | 'error' | 'warning' | 'info';
+export type MessagePosition = 'top' | 'top-right' | 'top-left' | 'bottom' | 'bottom-right' | 'bottom-left';
+export interface MessageShowOptions {
+  duration?: number;
+}
+export interface MessageOptions extends MessageShowOptions {
+  position?: MessagePosition;
+  maxCount?: number;
+}
 export interface MessageItem {
   element: HTMLElement;
   close(): void;
 }
-export interface MessageInstance extends Destroyable {
-  normal(content: string, options?: { duration?: number; position?: string }): MessageItem;
-  success(content: string, options?: { duration?: number; position?: string }): MessageItem;
-  error(content: string, options?: { duration?: number; position?: string }): MessageItem;
-  warning(content: string, options?: { duration?: number; position?: string }): MessageItem;
-  info(content: string, options?: { duration?: number; position?: string }): MessageItem;
-  show(options: { content: string; type?: string; duration?: number; position?: string }): MessageItem;
+export interface MessageInstance {
+  normal(content: string, options?: MessageShowOptions): MessageItem | null;
+  success(content: string, options?: MessageShowOptions): MessageItem | null;
+  error(content: string, options?: MessageShowOptions): MessageItem | null;
+  warning(content: string, options?: MessageShowOptions): MessageItem | null;
+  info(content: string, options?: MessageShowOptions): MessageItem | null;
+  show(content: string, type?: MessageType, options?: MessageShowOptions): MessageItem | null;
+  destroy(): void;
 }
-export function Message(): MessageInstance;
+export function Message(options?: MessageOptions): MessageInstance;
 
 // Heatmap
 export interface HeatmapDataItem {
@@ -836,9 +966,10 @@ export interface HeatmapOptions {
   data?: HeatmapDataItem[];
   startDate?: Date;
   endDate?: Date;
-  cellSize?: number;
   color?: string;
-  onCellClick?: (data: HeatmapDataItem, element: HTMLElement) => void;
+  title?: string;
+  subtitle?: string;
+  onCellClick?: (data: HeatmapDataItem) => void;
 }
 export interface HeatmapInstance extends Destroyable {
   updateData(data: HeatmapDataItem[]): void;
@@ -855,38 +986,61 @@ export interface ValidationResult {
   valid: boolean;
   message: string;
 }
+export interface ValidationState {
+  valid: boolean;
+  errors: Record<string, string>;
+  errorCount: number;
+}
+export type ValidationFunction = (
+  value: unknown,
+  params: string[],
+  input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null,
+) => boolean;
+export type AsyncValidationFunction = (
+  value: unknown,
+  params: string[],
+  input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+) => boolean | Promise<boolean>;
+export interface ValidationOptions {
+  validators?: Record<string, ValidationFunction>;
+  asyncValidators?: Record<string, AsyncValidationFunction>;
+}
 export interface ValidationInstance {
-  check(value: unknown, rules: string | ValidationRule[]): ValidationResult;
-  validateInput(input: HTMLElement, rules: string): ValidationResult;
-  validateForm(form: HTMLFormElement): { valid: boolean; errors: Record<string, string> };
-  validateFormAsync(form: HTMLFormElement): Promise<{ valid: boolean; errors: Record<string, string> }>;
-  addValidator(name: string, fn: (value: unknown, ...params: unknown[]) => boolean): void;
-  addAsyncValidator(name: string, fn: (value: unknown, ...params: unknown[]) => Promise<boolean>): void;
-  parseRules(rulesStr: string): ValidationRule[];
+  check(value: unknown, rules: string): boolean;
+  validateInput(input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): boolean;
+  validateForm(form: HTMLFormElement): boolean;
+  validateFormAsync(form: HTMLFormElement, options?: { group?: string }): Promise<boolean>;
+  validateGroup(form: HTMLFormElement, groupName: string): Promise<boolean>;
+  addValidator(name: string, fn: ValidationFunction): void;
+  addAsyncValidator(name: string, fn: AsyncValidationFunction): void;
+  getFormState(form: HTMLFormElement): ValidationState;
+  parseRules(rulesStr: string): Record<string, string[]>;
   resetForm(form: HTMLFormElement): void;
   destroy(): void;
 }
-export function Validation(): ValidationInstance;
+export function Validation(options?: ValidationOptions): ValidationInstance;
 
 // Form
+export type FormField = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+export type FormValidator = (value: unknown, parameter: string, field: FormField) => boolean;
 export interface FormOptions {
-  element?: HTMLFormElement | string;
-  validators?: Record<string, string>;
+  element: HTMLFormElement | string;
+  validators?: Record<string, FormValidator>;
   onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
   onValidate?: (valid: boolean) => void;
 }
 export interface FormInstance extends Destroyable {
   validate(): boolean;
-  validateField(field: HTMLElement): boolean;
-  showError(field: HTMLElement, message: string): void;
-  clearError(field: HTMLElement): void;
+  validateField(field: FormField): boolean;
+  showError(field: FormField, message: string): void;
+  clearError(field: FormField): void;
   clearAllErrors(): void;
   getData(): Record<string, unknown>;
   setData(data: Record<string, unknown>): void;
   reset(): void;
-  addValidator(field: string, rules: string): void;
+  addValidator(name: string, fn: FormValidator, message?: string): void;
 }
-export function Form(options?: FormOptions): FormInstance;
+export function Form(options: FormOptions): FormInstance;
 
 // ============================================================
 // Table Component
@@ -920,7 +1074,13 @@ export interface TableOptions<T = Record<string, unknown>> {
   resizable?: boolean;
   draggable?: boolean;
   tree?: { childrenKey?: string; defaultExpandAll?: boolean };
-  virtualScroll?: { rowHeight: number; overscan?: number };
+  virtualScroll?: {
+    rowHeight: number;
+    overscan?: number;
+    height?: number | string;
+    viewportHeight?: number | string;
+    visibleRows?: number;
+  };
   mergeCells?: (data: T[]) => Array<{ row: number; col: number; rowSpan: number; colSpan: number }>;
   showFilter?: boolean;
   showToolbar?: boolean;

@@ -67,6 +67,36 @@ describe('Collapse rendering', () => {
 
     view.destroy();
   });
+
+  test('supports numeric keys without string coercion', () => {
+    const view = Collapse({
+      items: [ { key: 1, title: 'Numeric', content: 'Content' } ],
+      defaultOpen: [ 1 ],
+    });
+    document.body.appendChild(view.element);
+
+    expect(view.getActiveKeys()).toEqual([ 1 ]);
+    view.close(1);
+    expect(view.getActiveKeys()).toEqual([]);
+    view.open(1);
+    expect(view.getActiveKeys()).toEqual([ 1 ]);
+    view.destroy();
+  });
+
+  test('renders button and region accessibility semantics', () => {
+    const view = Collapse({ items: ITEMS, defaultOpen: [ 'a' ] });
+    document.body.appendChild(view.element);
+    const header = document.querySelector('.ds-collapse__header');
+    const panel = document.querySelector('.ds-collapse__content');
+
+    expect(header.tagName).toBe('BUTTON');
+    expect(header.type).toBe('button');
+    expect(header.getAttribute('aria-controls')).toBe(panel.id);
+    expect(header.getAttribute('aria-expanded')).toBe('true');
+    expect(panel.getAttribute('aria-labelledby')).toBe(header.id);
+    expect(panel.hidden).toBe(false);
+    view.destroy();
+  });
 });
 
 // ─── Toggle ──────────────────────────────────────────────────────────────────
@@ -184,6 +214,24 @@ describe('Collapse open/close API', () => {
     expect(view.getActiveKeys()).toEqual([]);
     view.destroy();
   });
+
+  test('unknown, leaf, and disabled keys cannot enter active state', () => {
+    const view = Collapse({
+      items: [
+        { key: 'leaf', title: 'Leaf' },
+        { key: 'disabled', title: 'Disabled', content: 'Content', disabled: true },
+      ],
+      defaultOpen: [ 'leaf', 'disabled', 'missing' ],
+    });
+    document.body.appendChild(view.element);
+
+    view.open('leaf');
+    view.open('disabled');
+    view.open('missing');
+    expect(view.getActiveKeys()).toEqual([]);
+    expect(document.querySelectorAll('.ds-collapse__header')[1].disabled).toBe(true);
+    view.destroy();
+  });
 });
 
 // ─── onChange callback ───────────────────────────────────────────────────────
@@ -251,6 +299,23 @@ describe('Collapse destroy', () => {
     document.body.appendChild(container);
 
     view.destroy();
-    // Should not throw
+    view.destroy();
+    view.open('a');
+    view.toggle('b');
+    view.close('a');
+    expect(view.getActiveKeys()).toEqual([]);
+  });
+
+  test('destroys nested component content exactly once', () => {
+    const child = {
+      element: document.createElement('div'),
+      destroy: jest.fn(),
+    };
+    const view = Collapse({ items: [ { key: 'child', title: 'Child', content: child } ] });
+    document.body.appendChild(view.element);
+
+    view.destroy();
+    view.destroy();
+    expect(child.destroy).toHaveBeenCalledTimes(1);
   });
 });

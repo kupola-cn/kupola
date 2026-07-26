@@ -24,6 +24,9 @@ import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
 import { t } from '@kupola/platform/i18n';
 import { getIconHtml } from './icon-helper';
+import { lockBodyScroll } from './body-scroll-lock';
+import { createListenerRegistry } from './listener-registry';
+import { registerOverlayKeydown } from './overlay-stack';
 
 const ICON_NAMES = {
   success: 'check-circle',
@@ -32,6 +35,8 @@ const ICON_NAMES = {
   info: 'info-circle',
   normal: 'info-circle',
 };
+const VALID_TYPES = [ 'normal', 'success', 'warning', 'error', 'info' ];
+let dialogId = 0;
 
 /**
  * Show a confirm dialog.
@@ -46,19 +51,28 @@ const ICON_NAMES = {
  * @returns {Promise<boolean>}
  */
 function confirm(options = {}) {
-  const {
-    title = '',
-    content = '',
-    type = 'normal',
-    confirmText = null,
-    cancelText = null,
-    showCancel = true,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const title = config.title ?? '';
+  const content = config.content ?? '';
+  const type = VALID_TYPES.includes(config.type) ? config.type : 'normal';
+  const confirmText = config.confirmText ?? null;
+  const cancelText = config.cancelText ?? null;
+  const showCancel = config.showCancel ?? true;
   const _confirmText = confirmText || t('dialog.ok');
   const _cancelText = cancelText || t('dialog.cancel');
+  const id = ++dialogId;
+  const titleId = `ds-dialog-title-${id}`;
+  const contentId = `ds-dialog-content-${id}`;
 
   return new Promise((resolve) => {
     const iconHtml = getIconHtml(ICON_NAMES[type] || ICON_NAMES.normal);
+    const listeners = createListenerRegistry();
+    const previousFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    let releaseOverlay = null;
+    let releaseBodyScroll = null;
+    let cleanedUp = false;
 
     const onConfirm = () => {
       cleanup();
@@ -83,12 +97,16 @@ function confirm(options = {}) {
 
     const tpl = html`
       <div class="ds-modal-mask">
-        <div class="ds-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-content" tabindex="-1">
+        <div class="ds-dialog" role="alertdialog" aria-modal="true"
+          aria-labelledby="${titleId}" aria-describedby="${contentId}" tabindex="-1">
           <div class="ds-dialog__icon ds-dialog__icon--${type}"></div>
-          <div class="ds-dialog__title" id="dialog-title">${title}</div>
-          <div class="ds-dialog__content" id="dialog-content">${content}</div>
+          <div class="ds-dialog__title" id="${titleId}">${title}</div>
+          <div class="ds-dialog__content" id="${contentId}">${content}</div>
           <div class="ds-dialog__actions">
-            ${showCancel ? html`<button class="ds-btn ds-btn--ghost" data-action="cancel" type="button">${_cancelText}</button>` : ''}
+            ${showCancel ? html`
+              <button class="ds-btn ds-btn--ghost"
+                data-action="cancel" type="button">${_cancelText}</button>
+            ` : ''}
             <button class="ds-btn ds-btn--primary" data-action="confirm" type="button">${_confirmText}</button>
           </div>
         </div>
@@ -106,7 +124,7 @@ function confirm(options = {}) {
 
     // Show the mask
     if (maskEl) {maskEl.classList.add('is-visible');}
-    document.body.style.overflow = 'hidden';
+    releaseBodyScroll = lockBodyScroll();
 
     // Focus the dialog
     const dialogEl = maskEl?.querySelector('.ds-dialog');
@@ -115,21 +133,23 @@ function confirm(options = {}) {
     // Bind button clicks
     const confirmBtn = maskEl.querySelector('[data-action="confirm"]');
     const cancelBtn = maskEl.querySelector('[data-action="cancel"]');
-    if (confirmBtn) {confirmBtn.addEventListener('click', onConfirm);}
-    if (cancelBtn) {cancelBtn.addEventListener('click', onCancel);}
-    if (maskEl) {maskEl.addEventListener('click', onMaskClick);}
-
-    document.addEventListener('keydown', onKeydown);
+    if (confirmBtn) {listeners.on(confirmBtn, 'click', onConfirm);}
+    if (cancelBtn) {listeners.on(cancelBtn, 'click', onCancel);}
+    if (maskEl) {listeners.on(maskEl, 'click', onMaskClick);}
+    releaseOverlay = registerOverlayKeydown(onKeydown);
 
     function cleanup() {
-      document.removeEventListener('keydown', onKeydown);
-      document.body.style.overflow = '';
+      if (cleanedUp) {return;}
+      cleanedUp = true;
+      releaseOverlay?.();
+      releaseOverlay = null;
+      listeners.destroy();
+      releaseBodyScroll?.();
+      releaseBodyScroll = null;
       if (maskEl) {maskEl.classList.remove('is-visible');}
-      // Small delay for close animation (if any)
-      setTimeout(() => {
-        instance.destroy();
-        if (maskEl && maskEl.parentNode) {maskEl.parentNode.removeChild(maskEl);}
-      }, 50);
+      instance.destroy();
+      maskEl?.remove();
+      if (previousFocus?.isConnected) {previousFocus.focus();}
     }
   });
 }

@@ -35,6 +35,31 @@ Directive expressions are for trusted application templates only. They use
 `new Function()` and therefore are not a sandbox. Use `k-text` for user content;
 provide an application sanitizer before using `k-html`.
 
+## Application Lifecycle
+
+`createApp` supports synchronous and asynchronous plugin hooks. Use `mount()` /
+`destroy()` only when every plugin hook is synchronous. For asynchronous setup or
+cleanup, use the paired async lifecycle methods:
+
+```js
+import { createApp, html } from '@kupola/platform';
+
+const app = createApp(html`<main>Ready</main>`).use({
+  async install() {
+    await loadFeatureFlags();
+  },
+  async destroy() {
+    await closeFeatureConnection();
+  },
+});
+
+await app.mountAsync(document.querySelector('#app'));
+await app.destroyAsync();
+```
+
+Lifecycle transitions are serialized. While `mountAsync()` or `destroyAsync()`
+is pending, the app cannot be mounted again or receive additional plugins.
+
 ## Documentation
 
 - [Getting started](https://kupola-cn.github.io/kupola/guide/getting-started)

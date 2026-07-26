@@ -1,1 +1,1 @@
-function t(t,...r){return new n(t,r)}class n{constructor(t,n){this.strings=t,this.values=n}}export{n as TemplateResult,t as html};
+function t(t){return new s(t)}function n(t,...n){return new r(t,n)}class r{constructor(t,n){this.strings=t,this.values=n}}class s{#t;constructor(t){this.#t=String(t??"")}toString(){return this.#t}get content(){return this.#t}}export{s as HtmlString,r as TemplateResult,n as html,t as htmlString};

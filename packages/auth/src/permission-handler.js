@@ -1,42 +1,16 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/auth — Permission handler registration.
+ * @kupola/auth - Default permission handler API.
  *
- * registerPermissionHandler - Register global permission handler
- * getPermissionHandler - Get current permission handler
+ * The default API remains global for compatibility. Use createAuthStore()
+ * from auth-context.js for isolated application state.
  *
  * @module permission-handler
  */
 
-let permissionHandler = null;
+import { defaultAuthStore } from './auth-context.js';
 
-export function registerPermissionHandler(options) {
-  if (!options || typeof options !== 'object') {
-    throw new TypeError('[kupola/auth] registerPermissionHandler() expects an options object.');
-  }
-
-  if (typeof options.check !== 'function') {
-    throw new TypeError('[kupola/auth] registerPermissionHandler() expects a check function.');
-  }
-
-  permissionHandler = {
-    check: options.check,
-    defaultMode: options.defaultMode || 'hide',
-    disabledClass: options.disabledClass || 'k-permission-disabled',
-    fallback: options.fallback || ((el) => {
-      el.innerHTML = '<span class="text-muted">无权限</span>';
-    }),
-    cache: options.cache !== false,
-    onChange: options.onChange || (() => () => {}),
-  };
-
-  return permissionHandler;
-}
-
-export function getPermissionHandler() {
-  return permissionHandler;
-}
-
-export function clearPermissionHandler() {
-  permissionHandler = null;
-}
+export const registerPermissionHandler = defaultAuthStore.registerPermissionHandler;
+export const getPermissionHandler = defaultAuthStore.getPermissionHandler;
+export const clearPermissionHandler = defaultAuthStore.clearPermissionHandler;
+export const onPermissionHandlerChange = defaultAuthStore.onPermissionHandlerChange;

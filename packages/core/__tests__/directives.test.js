@@ -10,13 +10,14 @@ import {
   destroyWalk,
   getWalk,
   hasWalk,
+  registerDirective,
   setHtmlSanitizer,
   walk,
   walkAuto,
   walkOnce,
 } from '../../platform/src/directives.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
-import { signal } from '../src/index.js';
+import { createScheduler, signal } from '../src/index.js';
 
 afterEach(() => {
   setHtmlSanitizer(null);
@@ -425,6 +426,26 @@ describe('k-bind', () => {
 // ─── k-on ────────────────────────────────────────────────────────────────────
 
 describe('k-on', () => {
+  test('routes event updates through the walk scheduler', () => {
+    const scheduler = createScheduler({ name: 'directives' });
+    const root = document.createElement('section');
+    root.innerHTML = `
+      <div k-data="{ count: 0 }">
+        <button k-on:click="count++"></button>
+        <span k-text="count"></span>
+      </div>`;
+    document.body.appendChild(root);
+
+    const view = walk(root, { scheduler });
+    root.querySelector('button').click();
+
+    expect(root.querySelector('span').textContent).toBe('1');
+    flushJobs();
+    expect(root.querySelector('span').textContent).toBe('1');
+
+    view.destroy();
+  });
+
   test('binds event listener', () => {
     const container = document.createElement('div');
     container.innerHTML = `
@@ -2343,6 +2364,59 @@ describe('scope api', () => {
 // ─── warnings and cleanup ───────────────────────────────────────────────────
 
 describe('warnings and cleanup', () => {
+  test('supports per-walk custom directive registries', () => {
+    registerDirective('k-scoped-test', {
+      mount(el) {
+        el.textContent = 'global';
+      },
+    });
+
+    const container = document.createElement('div');
+    container.innerHTML = '<span k-scoped-test></span>';
+    document.body.appendChild(container);
+
+    const view = walk(container, {
+      customDirectives: {
+        'k-scoped-test': {
+          mount(el) {
+            el.textContent = 'local';
+          },
+        },
+      },
+    });
+
+    expect(container.querySelector('span').textContent).toBe('local');
+    view.destroy();
+  });
+
+  test('rejects invalid per-walk custom directive registries', () => {
+    const container = document.createElement('div');
+    expect(() => walk(container, { customDirectives: [] })).toThrow(/customDirectives/);
+  });
+
+  test('continues directive cleanup after one disposer throws', () => {
+    const destroyed = [];
+    registerDirective('k-cleanup-test', {
+      mount(el) {
+        return {
+          destroy() {
+            destroyed.push(el);
+            if (destroyed.length === 1) {throw new Error('cleanup failed');}
+          },
+        };
+      },
+    });
+
+    const container = document.createElement('div');
+    container.innerHTML = '<span k-cleanup-test></span><span k-cleanup-test></span>';
+    document.body.appendChild(container);
+
+    const view = walk(container);
+    expect(() => view.destroy()).toThrow('cleanup failed');
+    expect(destroyed).toHaveLength(2);
+    expect(() => view.destroy()).not.toThrow();
+  });
+
   test('warns when k-data references an unknown named scope', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -2548,6 +2622,7 @@ describe('warnings and cleanup', () => {
 
   test('cleans initialized listeners when walk fails partway through setup', () => {
     const handler = jest.fn();
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const container = document.createElement('div');
     container.innerHTML = `
       <div k-data="{ handler: null }">
@@ -2565,6 +2640,11 @@ describe('warnings and cleanup', () => {
     container.querySelector('.action').click();
     expect(handler).not.toHaveBeenCalled();
     expect(hasWalk(container)).toBe(false);
+
+    setHtmlSanitizer(() => '<span>sanitized</span>');
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining('[kupola W025]'));
+    setHtmlSanitizer(null);
+    warn.mockRestore();
   });
 
   test('repeated k-if and k-for updates clean row listeners and watches', () => {

@@ -143,6 +143,46 @@ describe('Input API', () => {
     const input = document.body.querySelector('input');
     expect(input.name).toBe('username');
   });
+
+  test('implements readonly, maxlength, prefix, suffix, and clearable options', () => {
+    const onInput = jest.fn();
+    const onChange = jest.fn();
+    const view = Input({
+      value: 'abcdef',
+      maxlength: 4,
+      prefix: '$',
+      suffix: 'USD',
+      clearable: true,
+      onInput,
+      onChange,
+    });
+    document.body.appendChild(view.element);
+    const input = document.querySelector('.ds-input input');
+
+    expect(view.getValue()).toBe('abcd');
+    expect(input.maxLength).toBe(4);
+    expect(document.querySelector('.ds-input__prefix').textContent).toBe('$');
+    expect(document.querySelector('.ds-input__suffix').textContent).toBe('USD');
+    document.querySelector('.ds-input__clear').click();
+    expect(view.getValue()).toBe('');
+    expect(onInput).toHaveBeenCalledWith('');
+    expect(onChange).toHaveBeenCalledWith('');
+    view.destroy();
+  });
+
+  test('supports focus, blur, and invalid type fallback', () => {
+    const onFocus = jest.fn();
+    const onBlur = jest.fn();
+    const view = Input({ type: 'invalid', onFocus, onBlur });
+    document.body.appendChild(view.element);
+
+    view.focus();
+    expect(document.activeElement.type).toBe('text');
+    view.blur();
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    view.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -154,6 +194,11 @@ describe('Input destroy', () => {
     document.body.appendChild(view.element);
 
     view.destroy();
+    view.destroy();
+    view.setValue('ignored');
+    view.focus();
+    view.clear();
+    expect(view.getValue()).toBe('');
 
     const input = document.body.querySelector('input');
     if (input) {

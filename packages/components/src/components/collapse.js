@@ -1,176 +1,188 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/core — Collapse (accordion) component built on the 2.0 reactive core.
- *
- * Reuses the existing `ds-collapse` CSS classes for styling.
- *
- * ```js
- * import { html } from '@kupola/platform/template';
- * import { Collapse } from '@kupola/components/collapse';
- *
- * const view = Collapse({
- *   items: [
- *     { key: 'a', title: 'Section A', content: html`<p>Content A</p>` },
- *     { key: 'b', title: 'Section B', content: html`<p>Content B</p>` },
- *   ],
- *   accordion: true,
- * });
- * container.appendChild(view.element);
- * ```
+ * Accessible collapse/accordion component with deterministic child teardown.
  *
  * @module components/collapse
  */
 
 import { html } from '@kupola/platform/template';
-import { render } from '@kupola/platform/render';
-import { getIconHtml } from './icon-helper';
+import { isTemplateResultLike, render } from '@kupola/platform/render';
+import { getIconTemplate } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
 
-/**
- * Create a Collapse component instance.
- *
- * @param {Object}   [options]
- * @param {Array<{key:string, title:string, content?:import('@kupola/core').TemplateResult|string}>} [options.items]
- * @param {boolean}  [options.accordion]   Only one panel open at a time (default false)
- * @param {string[]} [options.defaultOpen] Keys of initially open panels
- * @param {Function} [options.onChange]     Callback: (activeKeys: string[]) => void
- * @param {Function} [options.onSelect]     Callback for non-expandable item clicks: (item) => void
- * @returns {{ element: DocumentFragment, toggle: Function, open: Function, close: Function, getActiveKeys: Function, destroy: Function }}
- */
+let collapseId = 0;
+
+function normalizeItems(value) {
+  if (!Array.isArray(value)) {return [];}
+
+  const keys = new Set();
+  return value.filter(item => {
+    const validKey = typeof item?.key === 'string'
+      || (typeof item?.key === 'number' && Number.isFinite(item.key));
+    if (!validKey || keys.has(item.key)) {return false;}
+    keys.add(item.key);
+    return true;
+  });
+}
+
 export function Collapse(options = {}) {
-  const {
-    items = [],
-    accordion = false,
-    defaultOpen = [],
-    onChange = null,
-    onSelect = null,
-  } = options;
+  const items = normalizeItems(options.items);
+  const accordion = options.accordion === true;
+  const onChange = typeof options.onChange === 'function' ? options.onChange : null;
+  const onSelect = typeof options.onSelect === 'function' ? options.onSelect : null;
+  const listeners = createListenerRegistry();
+  const id = ++collapseId;
 
-  /** @type {Set<string>} */
-  const activeKeys = new Set(defaultOpen);
+  let destroyed = false;
+  const contentInstances = [];
 
-  // ── Public API ─────────────────────────────────────────────────────────────
+  function hasContent(item) {
+    return item?.content !== undefined && item.content !== null && item.content !== '';
+  }
+
+  function findExpandableItem(key) {
+    return items.find(item => item.key === key && !item.disabled && hasContent(item));
+  }
+
+  const requestedOpen = Array.isArray(options.defaultOpen) ? options.defaultOpen : [];
+  const initialOpen = requestedOpen.filter(key => !!findExpandableItem(key));
+  const activeKeys = new Set(accordion ? initialOpen.slice(0, 1) : initialOpen);
+
+  const itemTemplates = items.map((item, index) => {
+    const expandable = hasContent(item);
+    const isActive = activeKeys.has(item.key);
+    const headerId = `ds-collapse-${id}-header-${index}`;
+    const panelId = `ds-collapse-${id}-panel-${index}`;
+    return html`
+      <div class="ds-collapse__item${isActive ? ' is-active' : ''}" data-index="${index}">
+        <button
+          class="ds-collapse__header"
+          type="button"
+          id="${headerId}"
+          data-collapse-index="${index}"
+          disabled="${!!item.disabled}"
+          aria-disabled="${String(!!item.disabled)}"
+          aria-expanded="${expandable ? String(isActive) : null}"
+          aria-controls="${expandable ? panelId : null}"
+        >
+          <span class="ds-collapse__title">${item.title ?? item.key}</span>
+          ${expandable ? html`
+            <span class="ds-collapse__icon" aria-hidden="true">${getIconTemplate('chevron-down')}</span>
+          ` : ''}
+        </button>
+        ${expandable ? html`
+          <div
+            class="ds-collapse__content"
+            id="${panelId}"
+            role="region"
+            aria-labelledby="${headerId}"
+            hidden="${!isActive}"
+          ></div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  const container = document.createDocumentFragment();
+  const instance = render(html`<div class="ds-collapse">${itemTemplates}</div>`, container);
+  const root = container.querySelector('.ds-collapse');
+  const itemElements = [ ...root.querySelectorAll('.ds-collapse__item') ];
+
+  function registerContentInstance(contentInstance) {
+    if (contentInstance && typeof contentInstance.destroy === 'function') {
+      contentInstances.push(contentInstance);
+    }
+  }
+
+  function mountContent(value, target) {
+    if (value === undefined || value === null) {return;}
+    if (Array.isArray(value)) {
+      value.forEach(entry => mountContent(entry, target));
+      return;
+    }
+    if (typeof Node !== 'undefined' && value instanceof Node) {
+      target.appendChild(value);
+      return;
+    }
+    if (value && typeof value === 'object'
+      && typeof Node !== 'undefined' && value.element instanceof Node) {
+      target.appendChild(value.element);
+      registerContentInstance(value);
+      return;
+    }
+    if (isTemplateResultLike(value)) {
+      registerContentInstance(render(value, target));
+      return;
+    }
+    registerContentInstance(render(html`${value}`, target));
+  }
+
+  itemElements.forEach((element, index) => {
+    const target = element.querySelector('.ds-collapse__content');
+    if (target) {mountContent(items[index].content, target);}
+  });
+
+  function syncDOM() {
+    itemElements.forEach((element, index) => {
+      const isActive = activeKeys.has(items[index].key);
+      const header = element.querySelector('.ds-collapse__header');
+      const panel = element.querySelector('.ds-collapse__content');
+      element.classList.toggle('is-active', isActive);
+      if (panel) {
+        header.setAttribute('aria-expanded', String(isActive));
+        panel.hidden = !isActive;
+      }
+    });
+  }
+
+  function notify() {
+    onChange?.([ ...activeKeys ]);
+  }
 
   function toggle(key) {
+    if (destroyed || !findExpandableItem(key)) {return;}
     if (activeKeys.has(key)) {
       activeKeys.delete(key);
     } else {
       if (accordion) {activeKeys.clear();}
       activeKeys.add(key);
     }
-    _syncDOM();
-    _notify();
+    syncDOM();
+    notify();
   }
 
   function open(key) {
-    if (activeKeys.has(key)) {return;}
+    if (destroyed || activeKeys.has(key) || !findExpandableItem(key)) {return;}
     if (accordion) {activeKeys.clear();}
     activeKeys.add(key);
-    _syncDOM();
-    _notify();
+    syncDOM();
+    notify();
   }
 
   function close(key) {
-    if (!activeKeys.has(key)) {return;}
-    activeKeys.delete(key);
-    _syncDOM();
-    _notify();
+    if (destroyed || !activeKeys.delete(key)) {return;}
+    syncDOM();
+    notify();
   }
 
   function getActiveKeys() {
     return [ ...activeKeys ];
   }
 
-  function _notify() {
-    if (onChange) {onChange(getActiveKeys());}
-  }
+  listeners.on(root, 'click', event => {
+    const header = event.target?.closest?.('[data-collapse-index]');
+    if (!header || !root.contains(header)) {return;}
+    const index = Number(header.getAttribute('data-collapse-index'));
+    if (!Number.isInteger(index) || index < 0 || index >= items.length) {return;}
 
-  function _hasContent(item) {
-    return !!(item?.content && (typeof item.content !== 'string' || item.content.length > 0));
-  }
-
-  // ── DOM sync ───────────────────────────────────────────────────────────────
-
-  /** @type {Map<string, Element>} */
-  const itemEls = new Map();
-
-  function _syncDOM() {
-    for (const [ key, el ] of itemEls) {
-      if (activeKeys.has(key)) {
-        el.classList.add('is-active');
-      } else {
-        el.classList.remove('is-active');
-      }
+    const item = items[index];
+    if (item.disabled) {return;}
+    if (hasContent(item)) {
+      toggle(item.key);
+    } else {
+      onSelect?.(item);
     }
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  const itemTemplates = items.map((item) => {
-    const isActive = activeKeys.has(item.key);
-    const hasContent = _hasContent(item);
-    return html`
-      <div class="ds-collapse__item${isActive ? ' is-active' : ''}" data-key="${item.key}">
-        <div class="ds-collapse__header">
-          <span class="ds-collapse__title">${item.title}</span>
-          ${hasContent ? html`
-            <span class="ds-collapse__icon">${getIconHtml('chevron-down')}</span>
-          ` : ''}
-        </div>
-        ${hasContent ? html`<div class="ds-collapse__content"></div>` : ''}
-      </div>
-    `;
   });
-
-  const tpl = html`<div class="ds-collapse">${itemTemplates}</div>`;
-
-  const container = document.createDocumentFragment();
-  const instance = render(tpl, container);
-
-  // Grab references to collapse items and bind click handlers
-  const collapseEl = container.querySelector('.ds-collapse');
-  if (collapseEl) {
-    const els = collapseEl.querySelectorAll('.ds-collapse__item');
-    els.forEach((el, index) => {
-      const key = el.getAttribute('data-key');
-      if (key) {
-        itemEls.set(key, el);
-        const header = el.querySelector('.ds-collapse__header');
-        if (header) {
-          header.addEventListener('click', () => {
-            const item = items[index];
-            if (_hasContent(item)) {
-              toggle(key);
-              return;
-            }
-            if (onSelect) {
-              onSelect(item);
-            }
-          });
-        }
-        const contentEl = el.querySelector('.ds-collapse__content');
-        if (contentEl && items[index]) {
-          const content = items[index].content;
-          if (content && typeof content === 'object') {
-            if (content.strings && content.values) {
-              render(content, contentEl);
-            } else if (content.element) {
-              contentEl.appendChild(content.element);
-            } else if (Array.isArray(content)) {
-              content.forEach(item => {
-                if (item && item.strings && item.values) {
-                  render(item, contentEl);
-                } else {
-                  contentEl.textContent += String(item);
-                }
-              });
-            }
-          } else if (typeof content === 'string') {
-            contentEl.textContent = content;
-          }
-        }
-      }
-    });
-  }
 
   return {
     get element() { return container; },
@@ -179,8 +191,16 @@ export function Collapse(options = {}) {
     close,
     getActiveKeys,
     destroy() {
-      itemEls.clear();
-      instance.destroy();
+      if (destroyed) {return;}
+      destroyed = true;
+      listeners.destroy();
+
+      let firstError;
+      for (const contentInstance of contentInstances.splice(0)) {
+        try {contentInstance.destroy();} catch (error) {if (!firstError) {firstError = error;}}
+      }
+      try {instance.destroy();} catch (error) {if (!firstError) {firstError = error;}}
+      if (firstError) {throw firstError;}
     },
   };
 }

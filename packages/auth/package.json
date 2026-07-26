@@ -1,33 +1,37 @@
 {
   "name": "@kupola/auth",
-  "version": "3.2.4",
+  "version": "3.3.1",
   "description": "Kupola auth — RBAC-based permission guard system with ABAC attribute filtering support.",
   "type": "module",
+  "sideEffects": false,
   "main": "dist/kupola-auth.cjs",
   "module": "dist/kupola-auth.esm.js",
   "types": "src/types.d.ts",
   "exports": {
     ".": {
+      "types": "./src/types.d.ts",
       "import": "./dist/kupola-auth.esm.js",
-      "require": "./dist/kupola-auth.cjs",
-      "types": "./src/types.d.ts"
+      "require": "./dist/kupola-auth.cjs"
     },
     "./directive": {
+      "types": "./src/types.d.ts",
       "import": "./dist/kupola-auth-directive.esm.js",
       "require": "./dist/kupola-auth-directive.cjs"
     },
     "./http": {
+      "types": "./src/types.d.ts",
       "import": "./dist/kupola-auth-http.esm.js",
       "require": "./dist/kupola-auth-http.cjs"
     },
     "./context": {
+      "types": "./src/types.d.ts",
       "import": "./dist/kupola-auth-context.esm.js",
       "require": "./dist/kupola-auth-context.cjs"
     }
   },
   "files": [
     "dist/",
-    "src/",
+    "src/**/*.d.ts",
     "README.md"
   ],
   "keywords": [

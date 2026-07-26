@@ -21,11 +21,12 @@
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
 import { t } from '@kupola/platform/i18n';
-import { reactive, watch } from '@kupola/core';
-import { getIconHtml } from './icon-helper';
+import { getIconTemplate } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
 
 const MONTHS = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
 const WEEKDAYS = [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ];
+const VALID_FORMATS = [ 'YYYY-MM-DD', 'MM/DD/YYYY', 'DD/MM/YYYY' ];
 
 /**
  * Create a Datepicker component instance.
@@ -38,53 +39,75 @@ const WEEKDAYS = [ 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su' ];
  * @param {string}   [options.minDate]      Min selectable date (formatted string)
  * @param {string}   [options.maxDate]      Max selectable date (formatted string)
  * @param {Function} [options.onChange]      Callback: (dateStr, date) => void
- * @returns {{ element: DocumentFragment, open: Function, close: Function, getValue: Function, setValue: Function, destroy: Function }}
+ * @returns {Object} Datepicker instance with element, value, visibility, and lifecycle methods
  */
 export function Datepicker(options = {}) {
-  const {
-    placeholder = null,
-    format = 'YYYY-MM-DD',
-    value: initialValue = '',
-    weekStart = 1,
-    minDate: minDateStr = null,
-    maxDate: maxDateStr = null,
-    onChange = null,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const placeholder = config.placeholder ?? null;
+  const format = VALID_FORMATS.includes(config.format) ? config.format : 'YYYY-MM-DD';
+  const initialValue = config.value ?? '';
+  const weekStart = config.weekStart === 0 ? 0 : 1;
+  const disabled = config.disabled === true;
+  const disabledDates = typeof config.disabledDates === 'function' ? config.disabledDates : null;
+  const onChange = typeof config.onChange === 'function' ? config.onChange : null;
 
   const _placeholder = placeholder || t('datepicker.placeholder');
-  const _MONTHS = t('datepicker.months').split(',');
-  const _WEEKDAYS = t('datepicker.weekdays').split(',');
+  const localizedMonths = t('datepicker.months').split(',');
+  const localizedWeekdays = t('datepicker.weekdays').split(',');
+  const _MONTHS = localizedMonths.length === 12 ? localizedMonths : MONTHS;
+  const _WEEKDAYS = localizedWeekdays.length === 7 ? localizedWeekdays : WEEKDAYS;
 
   const now = new Date();
-  const state = reactive({
+  const state = {
     isOpen: false,
     viewYear: now.getFullYear(),
     viewMonth: now.getMonth(),
     selectedDate: null,
-  });
+  };
 
-  if (initialValue) {
-    const parsed = _parseDate(initialValue);
-    if (parsed) {
-      state.selectedDate = parsed;
-      state.viewYear = parsed.getFullYear();
-      state.viewMonth = parsed.getMonth();
-    }
+  let _minDate = _parseDate(config.minDate);
+  let _maxDate = _parseDate(config.maxDate);
+  if (_minDate && _maxDate && _minDate > _maxDate) {
+    [ _minDate, _maxDate ] = [ _maxDate, _minDate ];
+  }
+  const parsedInitialValue = _parseDate(initialValue);
+  if (parsedInitialValue && !_isDisabled(parsedInitialValue)) {
+    state.selectedDate = parsedInitialValue;
+    state.viewYear = parsedInitialValue.getFullYear();
+    state.viewMonth = parsedInitialValue.getMonth();
   }
 
-  const _minDate = minDateStr ? _parseDate(minDateStr) : null;
-  const _maxDate = maxDateStr ? _parseDate(maxDateStr) : null;
   let wrapEl = null;
   let _lastInstance = null;
+  let destroyed = false;
+  const listeners = createListenerRegistry();
+  const openListeners = createListenerRegistry();
 
-  function _parseDate(str) {
-    if (!str) {return null;}
-    let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-    if (m) {return new Date(+m[1], +m[2] - 1, +m[3]);}
-    m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (m) {return new Date(+m[3], +m[1] - 1, +m[2]);}
-    m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-    if (m) {return new Date(+m[3], +m[2] - 1, +m[1]);}
+  function _dateFromParts(year, month, day) {
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+      return null;
+    }
+    return date;
+  }
+
+  function _parseDate(value) {
+    if (value instanceof Date) {
+      return Number.isFinite(value.getTime())
+        ? _dateFromParts(value.getFullYear(), value.getMonth() + 1, value.getDate())
+        : null;
+    }
+    if (typeof value !== 'string' || !value) {return null;}
+    let match = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (match) {return _dateFromParts(+match[1], +match[2], +match[3]);}
+    match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (match) {
+      return format === 'DD/MM/YYYY'
+        ? _dateFromParts(+match[3], +match[2], +match[1])
+        : _dateFromParts(+match[3], +match[1], +match[2]);
+    }
+    match = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if (match) {return _dateFromParts(+match[3], +match[2], +match[1]);}
     return null;
   }
 
@@ -95,7 +118,7 @@ export function Datepicker(options = {}) {
     const d = String(date.getDate()).padStart(2, '0');
     switch (format) {
     case 'MM/DD/YYYY': return `${m}/${d}/${y}`;
-    case 'DD/MM/YYYY': return `${d}.${m}.${y}`;
+    case 'DD/MM/YYYY': return `${d}/${m}/${y}`;
     default: return `${y}-${m}-${d}`;
     }
   }
@@ -115,8 +138,10 @@ export function Datepicker(options = {}) {
   }
 
   function _isDisabled(date) {
+    if (disabled) {return true;}
     if (_minDate && date < _minDate) {return true;}
     if (_maxDate && date > _maxDate) {return true;}
+    if (disabledDates && disabledDates(new Date(date.getTime()))) {return true;}
     return false;
   }
 
@@ -169,18 +194,24 @@ export function Datepicker(options = {}) {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
+    if (destroyed || disabled || state.isOpen) {return;}
     state.isOpen = true;
     const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
     if (calEl) {calEl.style.display = 'block';}
+    openListeners.on(document, 'click', onDocumentClick);
+    openListeners.on(document, 'keydown', onKeydown);
   }
 
   function close() {
+    if (destroyed || !state.isOpen) {return;}
     state.isOpen = false;
+    openListeners.clear();
     const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
     if (calEl) {calEl.style.display = 'none';}
   }
 
   function toggle() {
+    if (destroyed) {return;}
     if (state.isOpen) {
       close();
     } else {
@@ -193,7 +224,9 @@ export function Datepicker(options = {}) {
   }
 
   function setValue(val) {
-    state.selectedDate = _parseDate(val);
+    if (destroyed) {return;}
+    const parsed = _parseDate(val);
+    state.selectedDate = parsed && !_isDisabled(parsed) ? parsed : null;
     if (state.selectedDate) {
       state.viewYear = state.selectedDate.getFullYear();
       state.viewMonth = state.selectedDate.getMonth();
@@ -202,9 +235,14 @@ export function Datepicker(options = {}) {
     _rerenderCalendar();
   }
 
+  function clear() {
+    setValue('');
+  }
+
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _selectDate(date) {
+    if (destroyed) {return;}
     if (_isDisabled(date)) {return;}
     state.selectedDate = date;
     state.viewYear = date.getFullYear();
@@ -225,6 +263,7 @@ export function Datepicker(options = {}) {
   }
 
   function _prevMonth() {
+    if (destroyed) {return;}
     if (state.viewMonth === 0) {
       state.viewMonth = 11;
       state.viewYear--;
@@ -235,6 +274,7 @@ export function Datepicker(options = {}) {
   }
 
   function _nextMonth() {
+    if (destroyed) {return;}
     if (state.viewMonth === 11) {
       state.viewMonth = 0;
       state.viewYear++;
@@ -260,7 +300,9 @@ export function Datepicker(options = {}) {
     const days = _getCalendarDays();
     days.forEach(({ date, outside }) => {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.textContent = date.getDate();
+      btn.dataset.date = String(date.getTime());
       if (outside) {btn.classList.add('is-outside');}
       if (_isToday(date)) {btn.classList.add('is-today');}
       if (_isSelected(date)) {btn.classList.add('is-selected');}
@@ -269,10 +311,6 @@ export function Datepicker(options = {}) {
         btn.style.opacity = '0.3';
         btn.style.cursor = 'not-allowed';
       }
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        _selectDate(date);
-      });
       daysEl.appendChild(btn);
     });
   }
@@ -295,15 +333,11 @@ export function Datepicker(options = {}) {
       close();
     }
   };
-  document.addEventListener('click', onDocumentClick);
-
   const onKeydown = (e) => {
     if (e.key === 'Escape' && state.isOpen) {
       close();
     }
   };
-  document.addEventListener('keydown', onKeydown);
-
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const displayValue = state.selectedDate ? _formatDate(state.selectedDate) : '';
@@ -318,19 +352,20 @@ export function Datepicker(options = {}) {
   const tpl = html`
     <div class="ds-datepicker">
       <div class="ds-datepicker__input-wrap" onclick="${onInputClick}">
-        <input class="ds-datepicker__input" type="text" readonly placeholder="${_placeholder}" value="${displayValue}" />
-        <button class="ds-datepicker__icon" onclick="${onIconClick}">
-          ${getIconHtml('calendar')}
+        <input class="ds-datepicker__input" type="text" readonly
+          placeholder="${_placeholder}" value="${displayValue}" />
+        <button class="ds-datepicker__icon" onclick="${onIconClick}" type="button">
+          ${getIconTemplate('calendar')}
         </button>
       </div>
       <div class="ds-datepicker__calendar" style="display:none">
         <div class="ds-datepicker__header">
-          <button class="ds-datepicker__nav" onclick="${_prevMonth}" aria-label="Previous month">
-            ${getIconHtml('chevron-left')}
+          <button class="ds-datepicker__nav" onclick="${_prevMonth}" aria-label="Previous month" type="button">
+            ${getIconTemplate('chevron-left')}
           </button>
           <span class="ds-datepicker__title">${titleText}</span>
-          <button class="ds-datepicker__nav" onclick="${_nextMonth}" aria-label="Next month">
-            ${getIconHtml('chevron-right')}
+          <button class="ds-datepicker__nav" onclick="${_nextMonth}" aria-label="Next month" type="button">
+            ${getIconTemplate('chevron-right')}
           </button>
         </div>
         <div class="ds-datepicker__weekdays">${weekdaySpans}</div>
@@ -344,14 +379,24 @@ export function Datepicker(options = {}) {
 
   wrapEl = container.querySelector('.ds-datepicker');
 
-  _rerenderCalendar();
+  const inputEl = wrapEl?.querySelector('.ds-datepicker__input');
+  const iconEl = wrapEl?.querySelector('.ds-datepicker__icon');
+  const navEls = wrapEl?.querySelectorAll('.ds-datepicker__nav') || [];
+  if (inputEl) {inputEl.disabled = disabled;}
+  if (iconEl) {iconEl.disabled = disabled;}
+  navEls.forEach(element => {element.disabled = disabled;});
 
-  watch(() => state.isOpen, (isOpen) => {
-    const calEl = wrapEl ? wrapEl.querySelector('.ds-datepicker__calendar') : null;
-    if (calEl) {
-      calEl.style.display = isOpen ? 'block' : 'none';
-    }
-  });
+  const daysEl = wrapEl?.querySelector('.ds-datepicker__days');
+  if (daysEl) {
+    listeners.on(daysEl, 'click', event => {
+      const button = event.target.closest?.('button[data-date]');
+      if (!button || !daysEl.contains(button) || button.disabled) {return;}
+      event.stopPropagation();
+      _selectDate(new Date(Number(button.dataset.date)));
+    });
+  }
+
+  _rerenderCalendar();
 
   return {
     get element() { return container; },
@@ -360,10 +405,16 @@ export function Datepicker(options = {}) {
     toggle,
     getValue,
     setValue,
+    clear,
+    isOpen: () => state.isOpen,
     destroy() {
-      document.removeEventListener('click', onDocumentClick);
-      document.removeEventListener('keydown', onKeydown);
+      if (destroyed) {return;}
+      close();
+      destroyed = true;
+      openListeners.destroy();
+      listeners.destroy();
       if (_lastInstance) {_lastInstance.destroy();}
+      _lastInstance = null;
     },
   };
 }

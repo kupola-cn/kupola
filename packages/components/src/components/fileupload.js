@@ -21,7 +21,8 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
-import { getIconHtml } from './icon-helper';
+import { getIconHtml, getIconTemplate } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a FileUpload component instance.
@@ -38,18 +39,27 @@ import { getIconHtml } from './icon-helper';
  * @returns {{ element: DocumentFragment, getFiles: Function, clear: Function, destroy: Function }}
  */
 export function FileUpload(options = {}) {
-  const {
-    accept = '',
-    multiple = false,
-    maxSize = Infinity,
-    title = 'Upload files',
-    subtitle = 'Drag & drop or click to browse',
-    disabled = false,
-    onChange = null,
-    onError = null,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const accept = typeof config.accept === 'string' ? config.accept : '';
+  const multiple = config.multiple === true;
+  const maxSize = Number.isFinite(Number(config.maxSize)) && Number(config.maxSize) >= 0
+    ? Number(config.maxSize)
+    : Infinity;
+  const configuredMaxCount = Number.isFinite(Number(config.maxCount)) && Number(config.maxCount) >= 1
+    ? Math.floor(Number(config.maxCount))
+    : Infinity;
+  const maxCount = multiple ? configuredMaxCount : 1;
+  const title = config.title ?? 'Upload files';
+  const subtitle = config.subtitle ?? 'Drag & drop or click to browse';
+  const disabled = config.disabled === true;
+  const onChange = typeof config.onChange === 'function' ? config.onChange : null;
+  const onRemove = typeof config.onRemove === 'function' ? config.onRemove : null;
+  const onError = typeof config.onError === 'function' ? config.onError : null;
+  const acceptRules = accept.split(',').map(rule => rule.trim().toLowerCase()).filter(Boolean);
 
   let _files = [];
+  let destroyed = false;
+  const listeners = createListenerRegistry();
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -58,18 +68,19 @@ export function FileUpload(options = {}) {
   }
 
   function clear() {
+    if (destroyed || _files.length === 0) {return;}
+    const removedFiles = _files;
     _files = [];
     _renderFileList();
-    if (onChange) {onChange(_files);}
+    if (onRemove) {removedFiles.forEach(file => onRemove(file));}
+    _notifyChange();
   }
 
   function destroy() {
-    if (dropzoneEl) {
-      dropzoneEl.removeEventListener('dragover', _onDragOver);
-      dropzoneEl.removeEventListener('dragleave', _onDragLeave);
-      dropzoneEl.removeEventListener('drop', _onDrop);
-    }
-    if (inputEl) {inputEl.removeEventListener('change', _onInputChange);}
+    if (destroyed) {return;}
+    destroyed = true;
+    _files = [];
+    listeners.destroy();
     instance.destroy();
   }
 
@@ -82,20 +93,52 @@ export function FileUpload(options = {}) {
   }
 
   function _addFiles(fileList) {
+    if (destroyed || disabled) {return;}
     const newFiles = Array.from(fileList);
+    const acceptedFiles = [];
+    const existingCount = multiple ? _files.length : 0;
     for (const file of newFiles) {
-      if (maxSize !== Infinity && file.size > maxSize) {
-        if (onError) {onError(`File "${file.name}" exceeds max size of ${_formatSize(maxSize)}`);}
+      if (!_acceptsFile(file)) {
+        _reportError(`File "${file.name}" does not match accepted file types`);
         continue;
       }
-      _files.push(file);
+      if (maxSize !== Infinity && file.size > maxSize) {
+        _reportError(`File "${file.name}" exceeds max size of ${_formatSize(maxSize)}`);
+        continue;
+      }
+      if ((existingCount + acceptedFiles.length) >= maxCount) {
+        _reportError(`Maximum file count is ${maxCount}`);
+        break;
+      }
+      acceptedFiles.push(file);
     }
+    if (acceptedFiles.length === 0) {return;}
+    _files = multiple ? [ ..._files, ...acceptedFiles ] : [ acceptedFiles[0] ];
     _renderFileList();
-    if (onChange) {onChange(_files);}
+    _notifyChange();
+  }
+
+  function _acceptsFile(file) {
+    if (acceptRules.length === 0) {return true;}
+    const fileName = String(file?.name || '').toLowerCase();
+    const fileType = String(file?.type || '').toLowerCase();
+    return acceptRules.some(rule => {
+      if (rule.startsWith('.')) {return fileName.endsWith(rule);}
+      if (rule.endsWith('/*')) {return fileType.startsWith(rule.slice(0, -1));}
+      return fileType === rule;
+    });
+  }
+
+  function _reportError(message) {
+    if (onError) {onError(message);}
+  }
+
+  function _notifyChange() {
+    if (onChange) {onChange([ ..._files ]);}
   }
 
   function _onInputChange(e) {
-    if (e.target.files) {_addFiles(e.target.files);}
+    if (!disabled && e.target.files) {_addFiles(e.target.files);}
     e.target.value = '';
   }
 
@@ -116,9 +159,21 @@ export function FileUpload(options = {}) {
     if (e.dataTransfer.files) {_addFiles(e.dataTransfer.files);}
   }
 
+  function _onRemoveClick(e) {
+    const button = e.target.closest('.ds-fileupload__remove');
+    if (!button || !listEl?.contains(button)) {return;}
+    e.stopPropagation();
+    const index = Number(button.dataset.index);
+    if (!Number.isInteger(index) || index < 0 || index >= _files.length) {return;}
+    const [ removedFile ] = _files.splice(index, 1);
+    _renderFileList();
+    if (onRemove) {onRemove(removedFile);}
+    _notifyChange();
+  }
+
   function _renderFileList() {
     if (!listEl) {return;}
-    listEl.innerHTML = '';
+    listEl.replaceChildren();
     _files.forEach((file, idx) => {
       const item = document.createElement('div');
       item.className = 'ds-fileupload__item';
@@ -136,12 +191,9 @@ export function FileUpload(options = {}) {
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'ds-fileupload__remove';
-      removeBtn.textContent = '×';
-      removeBtn.addEventListener('click', () => {
-        _files.splice(idx, 1);
-        _renderFileList();
-        if (onChange) {onChange(_files);}
-      });
+      removeBtn.innerHTML = getIconHtml('x');
+      removeBtn.setAttribute('aria-label', `Remove ${file.name}`);
+      removeBtn.dataset.index = String(idx);
       item.appendChild(removeBtn);
 
       listEl.appendChild(item);
@@ -153,7 +205,7 @@ export function FileUpload(options = {}) {
   const tpl = html`
     <div class="ds-fileupload">
       <div class="ds-fileupload__dropzone">
-        <div class="ds-fileupload__icon">${getIconHtml('upload')}</div>
+        <div class="ds-fileupload__icon">${getIconTemplate('upload')}</div>
         <div class="ds-fileupload__text">
           <span class="ds-fileupload__title"></span>
           <span class="ds-fileupload__subtitle"></span>
@@ -179,7 +231,8 @@ export function FileUpload(options = {}) {
   if (inputEl) {
     if (accept) {inputEl.accept = accept;}
     if (multiple) {inputEl.multiple = true;}
-    inputEl.addEventListener('change', _onInputChange);
+    inputEl.disabled = disabled;
+    listeners.on(inputEl, 'change', _onInputChange);
   }
 
   if (disabled) {
@@ -188,10 +241,11 @@ export function FileUpload(options = {}) {
 
   // Drag & drop events
   if (dropzoneEl) {
-    dropzoneEl.addEventListener('dragover', _onDragOver);
-    dropzoneEl.addEventListener('dragleave', _onDragLeave);
-    dropzoneEl.addEventListener('drop', _onDrop);
+    listeners.on(dropzoneEl, 'dragover', _onDragOver);
+    listeners.on(dropzoneEl, 'dragleave', _onDragLeave);
+    listeners.on(dropzoneEl, 'drop', _onDrop);
   }
+  if (listEl) {listeners.on(listEl, 'click', _onRemoveClick);}
 
   return {
     get element() { return container; },

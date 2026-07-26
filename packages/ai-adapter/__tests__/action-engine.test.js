@@ -34,7 +34,7 @@ describe('ActionEngine', () => {
 
       const result = await engine.execute({ type: 'x', params: {} });
 
-      expect(result.available).toEqual(['a', 'b']);
+      expect(result.available).toEqual([ 'a', 'b' ]);
     });
 
     it('should catch handler errors', async () => {
@@ -55,7 +55,7 @@ describe('ActionEngine', () => {
 
       const result = await engine.execute(
         { type: 'delete', params: { id: 1 } },
-        { onConfirm }
+        { onConfirm },
       );
 
       expect(onConfirm).toHaveBeenCalled();
@@ -68,7 +68,7 @@ describe('ActionEngine', () => {
 
       const result = await engine.execute(
         { type: 'delete', params: {} },
-        { onConfirm }
+        { onConfirm },
       );
 
       expect(result.success).toBe(false);
@@ -206,7 +206,7 @@ describe('ActionEngine', () => {
       engine.register('adjust', {
         handler: jest.fn().mockResolvedValue({}),
         confirm: false,
-        dependsOn: ['query'],
+        dependsOn: [ 'query' ],
       });
 
       const result = await engine.execute({ type: 'adjust', params: {} });
@@ -220,7 +220,7 @@ describe('ActionEngine', () => {
       engine.register('adjust', {
         handler: jest.fn().mockResolvedValue({ ok: true }),
         confirm: false,
-        dependsOn: ['query'],
+        dependsOn: [ 'query' ],
       });
 
       // Run dependency first
@@ -236,7 +236,7 @@ describe('ActionEngine', () => {
       engine.register('c', {
         handler: jest.fn().mockResolvedValue({}),
         confirm: false,
-        dependsOn: ['a', 'b'],
+        dependsOn: [ 'a', 'b' ],
       });
 
       // Only a succeeded, b not yet
@@ -253,10 +253,10 @@ describe('ActionEngine', () => {
 
     it('should detect circular dependencies', () => {
       engine.register('x', {
-        handler: jest.fn(), confirm: false, dependsOn: ['y'],
+        handler: jest.fn(), confirm: false, dependsOn: [ 'y' ],
       });
       engine.register('y', {
-        handler: jest.fn(), confirm: false, dependsOn: ['x'],
+        handler: jest.fn(), confirm: false, dependsOn: [ 'x' ],
       });
 
       const err = engine.checkDependencies('x');

@@ -27,6 +27,9 @@ describe('Calendar', () => {
       expect(prev).not.toBeNull();
       expect(next).not.toBeNull();
       expect(today).not.toBeNull();
+      expect(prev.type).toBe('button');
+      expect(next.type).toBe('button');
+      expect(today.type).toBe('button');
       cal.destroy();
     });
 
@@ -165,6 +168,8 @@ describe('Calendar', () => {
       expect(d).not.toBeNull();
       expect(d.getFullYear()).toBe(2024);
       expect(d.getMonth()).toBe(5);
+      d.setFullYear(2000);
+      expect(cal.getSelectedDate().getFullYear()).toBe(2024);
       cal.destroy();
     });
   });
@@ -287,7 +292,16 @@ describe('Calendar', () => {
       document.body.appendChild(container);
       cal.destroy();
       expect(document.querySelector('.ds-calendar')).toBeNull();
+      expect(() => cal.destroy()).not.toThrow();
+      expect(() => cal.goToDate('not-a-date')).not.toThrow();
       document.body.innerHTML = '';
+    });
+
+    test('ignores invalid dates without corrupting current state', () => {
+      const cal = Calendar({ currentDate: new Date(2024, 0, 1) });
+      cal.setDate('not-a-date');
+      expect(cal.getDate().getFullYear()).toBe(2024);
+      cal.destroy();
     });
   });
 });

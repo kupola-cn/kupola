@@ -41,11 +41,28 @@ describe('devtools', () => {
     enableProfiler();
     const signal = {};
     profileSignalWrite(signal, 'test');
-    
+
     // Re-enable should clear data
     enableProfiler();
     const report = getProfileReport();
     expect(report.signals.length).toBe(0);
+  });
+
+  test('starts each profiling session with isolated object IDs', () => {
+    const oldSignal = {};
+    enableProfiler();
+    profileSignalWrite(oldSignal, 'old');
+
+    const currentSignal = {};
+    enableProfiler();
+    profileSignalWrite(currentSignal, 'current');
+    profileSignalWrite(oldSignal, 'old');
+
+    const report = getProfileReport();
+    expect(report.signals).toEqual([
+      { label: 'current', reads: 0, writes: 1, triggers: 0 },
+      { label: 'old', reads: 0, writes: 1, triggers: 0 },
+    ]);
   });
 
   test('enableProfiler logs to console when console option is true', () => {
@@ -75,7 +92,7 @@ describe('devtools', () => {
 
     resetProfiler();
     expect(isProfilerEnabled()).toBe(false);
-    
+
     const report = getProfileReport();
     expect(report.signals.length).toBe(0);
     expect(report.totalTriggers).toBe(0);
@@ -96,10 +113,10 @@ describe('devtools', () => {
   test('profileSignalWrite records signal writes when enabled', () => {
     enableProfiler();
     const signal = {};
-    
+
     profileSignalWrite(signal, 'mySignal');
     profileSignalWrite(signal, 'mySignal');
-    
+
     const report = getProfileReport();
     expect(report.signals.length).toBe(1);
     expect(report.signals[0].label).toBe('mySignal');
@@ -110,7 +127,7 @@ describe('devtools', () => {
     disableProfiler();
     const signal = {};
     profileSignalWrite(signal, 'test');
-    
+
     const report = getProfileReport();
     expect(report.signals.length).toBe(0);
   });
@@ -120,11 +137,11 @@ describe('devtools', () => {
   test('profileSignalRead records signal reads when enabled', () => {
     enableProfiler();
     const signal = {};
-    
+
     profileSignalRead(signal, 'mySignal');
     profileSignalRead(signal, 'mySignal');
     profileSignalRead(signal, 'mySignal');
-    
+
     const report = getProfileReport();
     expect(report.signals.length).toBe(1);
     expect(report.signals[0].reads).toBe(3);
@@ -134,7 +151,7 @@ describe('devtools', () => {
     disableProfiler();
     const signal = {};
     profileSignalRead(signal, 'test');
-    
+
     const report = getProfileReport();
     expect(report.signals.length).toBe(0);
   });
@@ -144,11 +161,11 @@ describe('devtools', () => {
   test('profileTrigger records triggers when enabled', () => {
     enableProfiler();
     const signal = {};
-    
+
     profileSignalWrite(signal, 'test'); // Create the signal first
     profileTrigger(signal, 5);
     profileTrigger(signal, 3);
-    
+
     const report = getProfileReport();
     expect(report.totalTriggers).toBe(8);
     expect(report.signals[0].triggers).toBe(8);
@@ -158,7 +175,7 @@ describe('devtools', () => {
     disableProfiler();
     const signal = {};
     profileTrigger(signal, 5);
-    
+
     const report = getProfileReport();
     expect(report.totalTriggers).toBe(0);
   });
@@ -168,10 +185,10 @@ describe('devtools', () => {
   test('profileEffectRun records effect runs when enabled', () => {
     enableProfiler();
     const effect = {};
-    
+
     profileEffectRun(effect, () => {}, 'myEffect');
     profileEffectRun(effect, () => {}, 'myEffect');
-    
+
     const report = getProfileReport();
     expect(report.effects.length).toBe(1);
     expect(report.effects[0].label).toBe('myEffect');
@@ -182,7 +199,7 @@ describe('devtools', () => {
   test('profileEffectRun executes function and returns result', () => {
     enableProfiler();
     const effect = {};
-    
+
     const result = profileEffectRun(effect, () => 'hello', 'test');
     expect(result).toBe('hello');
   });
@@ -190,10 +207,10 @@ describe('devtools', () => {
   test('profileEffectRun works when disabled (just executes function)', () => {
     disableProfiler();
     const effect = {};
-    
+
     const result = profileEffectRun(effect, () => 'world', 'test');
     expect(result).toBe('world');
-    
+
     const report = getProfileReport();
     expect(report.effects.length).toBe(0);
   });
@@ -203,11 +220,11 @@ describe('devtools', () => {
   test('profileComputedRun records computed runs when enabled', () => {
     enableProfiler();
     const computed = {};
-    
+
     profileComputedRun(computed, () => {}, 'myComputed');
     profileComputedRun(computed, () => {}, 'myComputed');
     profileComputedRun(computed, () => {}, 'myComputed');
-    
+
     const report = getProfileReport();
     expect(report.computeds.length).toBe(1);
     expect(report.computeds[0].label).toBe('myComputed');
@@ -218,7 +235,7 @@ describe('devtools', () => {
   test('profileComputedRun executes function and returns result', () => {
     enableProfiler();
     const computed = {};
-    
+
     const result = profileComputedRun(computed, () => 42, 'test');
     expect(result).toBe(42);
   });
@@ -226,10 +243,10 @@ describe('devtools', () => {
   test('profileComputedRun works when disabled', () => {
     disableProfiler();
     const computed = {};
-    
+
     const result = profileComputedRun(computed, () => 100, 'test');
     expect(result).toBe(100);
-    
+
     const report = getProfileReport();
     expect(report.computeds.length).toBe(0);
   });
@@ -238,25 +255,25 @@ describe('devtools', () => {
 
   test('getProfileReport returns complete report structure', () => {
     enableProfiler();
-    
+
     const signal1 = {};
     const signal2 = {};
     const effect = {};
     const computed = {};
-    
+
     profileSignalWrite(signal1, 'signal1');
     profileSignalRead(signal1, 'signal1');
     profileTrigger(signal1, 1);
-    
+
     profileSignalWrite(signal2, 'signal2');
     profileSignalWrite(signal2, 'signal2');
-    
+
     profileEffectRun(effect, () => {}, 'effect1');
-    
+
     profileComputedRun(computed, () => {}, 'computed1');
-    
+
     const report = getProfileReport();
-    
+
     expect(typeof report.duration).toBe('number');
     expect(report.totalTriggers).toBe(1);
     expect(report.totalEffectRuns).toBe(1);
@@ -264,25 +281,25 @@ describe('devtools', () => {
     expect(report.signals.length).toBe(2);
     expect(report.effects.length).toBe(1);
     expect(report.computeds.length).toBe(1);
-    
+
     // Check signal stats
     const sig1 = report.signals.find(s => s.label === 'signal1');
     expect(sig1).toBeDefined();
     expect(sig1.reads).toBe(1);
     expect(sig1.writes).toBe(1);
     expect(sig1.triggers).toBe(1);
-    
+
     const sig2 = report.signals.find(s => s.label === 'signal2');
     expect(sig2).toBeDefined();
     expect(sig2.writes).toBe(2);
-    
+
     // Check effect stats
     expect(report.effects[0].label).toBe('effect1');
     expect(report.effects[0].runs).toBe(1);
     expect(typeof report.effects[0].totalTime).toBe('string');
     expect(typeof report.effects[0].maxTime).toBe('string');
     expect(typeof report.effects[0].avgTime).toBe('string');
-    
+
     // Check computed stats
     expect(report.computeds[0].label).toBe('computed1');
     expect(report.computeds[0].recomputes).toBe(1);
@@ -291,7 +308,7 @@ describe('devtools', () => {
   test('getProfileReport returns empty report when nothing profiled', () => {
     enableProfiler();
     const report = getProfileReport();
-    
+
     expect(report.signals.length).toBe(0);
     expect(report.effects.length).toBe(0);
     expect(report.computeds.length).toBe(0);
@@ -306,11 +323,11 @@ describe('devtools', () => {
     enableProfiler();
     const signal = {};
     profileSignalWrite(signal, 'test');
-    
+
     const consoleLog = jest.spyOn(console, 'log').mockImplementation();
-    
+
     printProfileReport();
-    
+
     expect(consoleLog).toHaveBeenCalled();
     consoleLog.mockRestore();
   });
@@ -320,35 +337,36 @@ describe('devtools', () => {
   test('onDevToolsMessage registers and calls handler', () => {
     const handler = jest.fn();
     const unsubscribe = onDevToolsMessage('test', handler);
-    
+
     // Simulate message handling
     const event = {
       source: window,
-      data: { type: 'test', payload: { value: 42 } }
+      data: { type: 'test', payload: { value: 42 } },
     };
-    
+
     // Trigger the internal handler (via window message event)
     window.dispatchEvent(new MessageEvent('message', {
       source: window,
-      data: { type: 'test', payload: { value: 42 } }
+      data: { type: 'test', payload: { value: 42 } },
     }));
-    
-    // Note: The message handler is added globally on window, 
+
+    // Note: The message handler is added globally on window,
     // so we test the unsubscribe function instead
     unsubscribe();
-    
+
     // After unsubscribe, handler should not be called
     window.dispatchEvent(new MessageEvent('message', {
       source: window,
-      data: { type: 'test', payload: { value: 100 } }
+      data: { type: 'test', payload: { value: 100 } },
     }));
   });
 
   test('onDevToolsMessage returns unsubscribe function', () => {
     const handler = jest.fn();
     const unsubscribe = onDevToolsMessage('test', handler);
-    
+
     expect(typeof unsubscribe).toBe('function');
+    unsubscribe();
   });
 
   // ─── sendDevToolsMessage ────────────────────────────────────────────────────
@@ -357,25 +375,32 @@ describe('devtools', () => {
     // Mock the devtools interface
     const postMessage = jest.fn();
     window.__KUPOLA_DEVTOOLS__ = { postMessage };
-    
+
     sendDevToolsMessage('test', { data: 'hello' });
-    
+
     expect(postMessage).toHaveBeenCalledWith({
       type: 'kupola:test',
-      payload: { data: 'hello' }
+      payload: { data: 'hello' },
     });
-    
+
     delete window.__KUPOLA_DEVTOOLS__;
+  });
+
+  test('sendDevToolsMessage rejects an invalid message type', () => {
+    expect(() => sendDevToolsMessage('')).toThrow(TypeError);
+    expect(() => sendDevToolsMessage(null)).toThrow(TypeError);
   });
 
   // ─── exposeDevToolsAPI ──────────────────────────────────────────────────────
 
   test('exposeDevToolsAPI exposes API on window.__KUPOLA__', () => {
     const consoleLog = jest.spyOn(console, 'log').mockImplementation();
-    
-    exposeDevToolsAPI();
-    
+
+    const cleanup = exposeDevToolsAPI();
+    const repeatedCleanup = exposeDevToolsAPI();
+
     expect(window.__KUPOLA__).toBeDefined();
+    expect(repeatedCleanup).toBe(cleanup);
     expect(typeof window.__KUPOLA__.enableProfiler).toBe('function');
     expect(typeof window.__KUPOLA__.disableProfiler).toBe('function');
     expect(typeof window.__KUPOLA__.resetProfiler).toBe('function');
@@ -384,12 +409,14 @@ describe('devtools', () => {
     expect(typeof window.__KUPOLA__.isProfilerEnabled).toBe('function');
     expect(typeof window.__KUPOLA__.sendMessage).toBe('function');
     expect(typeof window.__KUPOLA__.onMessage).toBe('function');
-    
+
     expect(consoleLog).toHaveBeenCalledWith(
-      '[Kupola] DevTools API exposed. Use window.__KUPOLA__ to access.'
+      '[Kupola] DevTools API exposed. Use window.__KUPOLA__ to access.',
     );
-    
+
     consoleLog.mockRestore();
-    delete window.__KUPOLA__;
+    cleanup();
+    cleanup();
+    expect(window.__KUPOLA__).toBeUndefined();
   });
 });

@@ -57,6 +57,11 @@ describe('permission-handler', () => {
       expect(handler.cache).toBe(false);
       expect(handler.onChange).toBe(onChange);
     });
+
+    it('should reject an invalid disabled class', () => {
+      expect(() => registerPermissionHandler({ check: () => true, disabledClass: 1 }))
+        .toThrow(/disabledClass/);
+    });
   });
 
   describe('getPermissionHandler', () => {

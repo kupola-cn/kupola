@@ -14,14 +14,33 @@
  */
 
 // ── Core Reactivity (re-exported from @kupola/core) ──────────────────────────
-export { signal, Signal, reactive, isReactive, computed, effect, watch, batch } from '@kupola/core';
+export {
+  batch,
+  computed,
+  createScheduler,
+  effect,
+  effectScope,
+  flushJobs,
+  getCurrentScheduler,
+  isReactive,
+  nextTick,
+  onScopeDispose,
+  reactive,
+  runWithScheduler,
+  signal,
+  Signal,
+  toRaw,
+  watch,
+  withoutTracking,
+} from '@kupola/core';
 
 // ── Template & Render ──────────────────────────────────────────────────────────
 export { html, TemplateResult, htmlString, HtmlString } from './template.js';
-export { render, setIconResolver } from './render.js';
+export { render, mount, createApp, setIconResolver } from './render.js';
 
 // ── Component System ──────────────────────────────────────────────────────────
 export { defineComponent, register, getComponent, hasComponent, clearRegistry, provide, inject } from './component.js';
+export { hasProvideContext } from './context.js';
 
 // ── Directives ────────────────────────────────────────────────────────────────
 export {
@@ -34,6 +53,7 @@ export {
   DEFAULT_BRAND_COLORS,
   registerBrandColors,
   themePreload,
+  stopThemePreload,
   getPreferredTheme,
   setTheme,
   toggleTheme,

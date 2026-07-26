@@ -237,9 +237,10 @@ const router = createRouter({
 
 ```js
 import { setupAuthGuard } from '@kupola/router/auth';
+import { getAuthContext } from '@kupola/auth';
 
 setupAuthGuard(router, {
-  authContext: getAuthContext(),
+  authContext: () => getAuthContext(),
   loginPath: '/login',
   forbiddenPath: '/403',
   notFoundPath: '/404',

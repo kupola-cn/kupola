@@ -5,9 +5,18 @@
  */
 
 import { resetScheduler } from '../../src/scheduler.js';
-import { ImagePreview } from '@kupola/components';
+import { ImagePreview as createImagePreview } from '@kupola/components';
+
+const previews = [];
+
+function ImagePreview(options) {
+  const preview = createImagePreview(options);
+  previews.push(preview);
+  return preview;
+}
 
 afterEach(() => {
+  while (previews.length > 0) {previews.pop().destroy();}
   document.body.innerHTML = '';
   resetScheduler();
 });
@@ -55,6 +64,16 @@ describe('ImagePreview rendering', () => {
     document.body.appendChild(view.element);
 
     expect(document.body.querySelector('.ds-image-preview__content img')).not.toBeNull();
+  });
+
+  test('renders an accessible dialog and SVG close icon', () => {
+    const view = ImagePreview({ images: sampleImages });
+    document.body.appendChild(view.element);
+    const overlay = document.querySelector('.ds-image-preview-overlay');
+    expect(overlay.getAttribute('role')).toBe('dialog');
+    expect(overlay.getAttribute('aria-modal')).toBe('true');
+    expect(document.querySelector('.ds-image-preview__close svg')).not.toBeNull();
+    view.destroy();
   });
 });
 
@@ -104,6 +123,48 @@ describe('ImagePreview open/close', () => {
     document.body.querySelector('.ds-image-preview__close').click();
     expect(document.body.querySelector('.ds-image-preview-overlay').classList.contains('is-visible')).toBe(false);
   });
+
+  test('supports string images, aliases, and clamps indexes', () => {
+    const view = ImagePreview({ images: [ 'one.jpg', 'two.jpg' ], index: 1 });
+    document.body.appendChild(view.element);
+    view.show(99);
+    expect(view.isOpen()).toBe(true);
+    expect(view.getIndex()).toBe(1);
+    expect(document.querySelector('img').src).toContain('two.jpg');
+    view.prev();
+    expect(view.getIndex()).toBe(0);
+    view.hide();
+    expect(view.isOpen()).toBe(false);
+    view.destroy();
+  });
+
+  test('does not open without valid images', () => {
+    const view = ImagePreview({ images: [ '', null, {} ] });
+    document.body.appendChild(view.element);
+    view.open();
+    expect(view.isOpen()).toBe(false);
+    expect(document.body.style.overflow).toBe('');
+    view.destroy();
+  });
+
+  test('locks scrolling, restores focus, and calls onClose once', () => {
+    const onClose = jest.fn();
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    button.focus();
+    const view = ImagePreview({ images: sampleImages, onClose });
+    document.body.appendChild(view.element);
+    view.open();
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.activeElement).toBe(document.querySelector('.ds-image-preview__close'));
+    view.close();
+    expect(document.body.style.overflow).toBe('');
+    expect(document.activeElement).toBe(button);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    view.close();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    view.destroy();
+  });
 });
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
@@ -152,6 +213,26 @@ describe('ImagePreview navigation', () => {
     view.open(0);
     expect(document.body.querySelector('.ds-image-preview__nav').style.display).toBe('none');
   });
+
+  test('uses arrow keys and only the topmost preview handles Escape', () => {
+    const first = ImagePreview({ images: sampleImages });
+    const second = ImagePreview({ images: sampleImages });
+    document.body.append(first.element, second.element);
+    first.open(0);
+    second.open(0);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    expect(first.getIndex()).toBe(0);
+    expect(second.getIndex()).toBe(1);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(first.isOpen()).toBe(true);
+    expect(second.isOpen()).toBe(false);
+    expect(document.body.style.overflow).toBe('hidden');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(first.isOpen()).toBe(false);
+    expect(document.body.style.overflow).toBe('');
+    first.destroy();
+    second.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -161,6 +242,12 @@ describe('ImagePreview destroy', () => {
     const view = ImagePreview({ images: sampleImages });
     document.body.appendChild(view.element);
 
+    view.open();
     expect(() => view.destroy()).not.toThrow();
+    expect(view.isOpen()).toBe(false);
+    expect(document.body.style.overflow).toBe('');
+    expect(() => view.destroy()).not.toThrow();
+    view.open();
+    expect(view.isOpen()).toBe(false);
   });
 });

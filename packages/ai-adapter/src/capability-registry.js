@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/ai-adapter — Capability Registry
+ * @kupola/ai-adapter — Capability Registry (v2.0)
  *
- * Centralizes AI-facing resource operations, parameter validation, permission
- * rules, result field filtering, and sensitive-field redaction.
+ * 重构改进：
+ * - 支持 fluent API (query/action/flow builder)
+ * - 更好的错误处理
+ * - 支持权限继承
  */
+
+import { CapabilityBuilder } from './capability-builder.js';
 
 const DEFAULT_SENSITIVE_FIELDS = [
   'password',
@@ -35,6 +39,18 @@ export class CapabilityRegistry {
     this.defaultSensitiveFields = options.sensitiveFields || DEFAULT_SENSITIVE_FIELDS;
   }
 
+  query(type) {
+    return new CapabilityBuilder(this, 'query', type);
+  }
+
+  action(type) {
+    return new CapabilityBuilder(this, 'action', type);
+  }
+
+  flow(type) {
+    return new CapabilityBuilder(this, 'flow', type);
+  }
+
   register(config = {}) {
     const capability = normalizeCapability(config);
     const key = getCapabilityKey(capability.engine, capability.type);
@@ -54,7 +70,14 @@ export class CapabilityRegistry {
   }
 
   unregister(engine, type) {
-    return this.items.delete(getCapabilityKey(engine, type));
+    const key = getCapabilityKey(engine, type);
+    if (engine === 'query' && this.adapter.query?.handlers) {
+      this.adapter.query.handlers.delete(type);
+    }
+    if (engine === 'action' && this.adapter.action?.handlers) {
+      this.adapter.action.handlers.delete(type);
+    }
+    return this.items.delete(key);
   }
 
   get(engine, type) {

@@ -83,7 +83,7 @@ describe('VoiceController', () => {
     voice.start();
     const mockEvent = {
       resultIndex: 0,
-      results: [{ isFinal: true, 0: { transcript: '小库' } }],
+      results: [ { isFinal: true, 0: { transcript: '小库' } } ],
     };
     voice._recognition.onresult(mockEvent);
 
@@ -108,14 +108,14 @@ describe('VoiceController', () => {
     // First: wake word
     voice._recognition.onresult({
       resultIndex: 0,
-      results: [{ isFinal: true, 0: { transcript: '小库' } }],
+      results: [ { isFinal: true, 0: { transcript: '小库' } } ],
     });
     expect(voice.isAwake).toBe(true);
 
     // Then: mapped command
     voice._recognition.onresult({
       resultIndex: 0,
-      results: [{ isFinal: true, 0: { transcript: '发工资' } }],
+      results: [ { isFinal: true, 0: { transcript: '发工资' } } ],
     });
 
     // Wait for async process

@@ -8,6 +8,7 @@ import {
   getPreferredBrandColor,
   resetBrandColor,
   setBrandColor,
+  stopThemePreload,
   themePreload,
 } from '../../platform/src/theme.js';
 
@@ -17,6 +18,10 @@ beforeEach(() => {
   document.documentElement.removeAttribute('data-brand');
   document.documentElement.removeAttribute('data-theme');
   document.documentElement.removeAttribute('style');
+});
+
+afterEach(() => {
+  stopThemePreload();
 });
 
 describe('brand color theme utilities', () => {
@@ -48,11 +53,41 @@ describe('brand color theme utilities', () => {
     expect(document.documentElement.style.getPropertyValue('--bg-brand')).toBe('#3B82F6');
   });
 
+  test('themePreload follows system changes without persisting or duplicating listeners', () => {
+    const originalMatchMedia = globalThis.matchMedia;
+    const listeners = new Set();
+    const mediaQuery = {
+      matches: false,
+      addEventListener: jest.fn((eventName, listener) => {
+        if (eventName === 'change') {listeners.add(listener);}
+      }),
+      removeEventListener: jest.fn((eventName, listener) => {
+        if (eventName === 'change') {listeners.delete(listener);}
+      }),
+    };
+    globalThis.matchMedia = jest.fn(() => mediaQuery);
+
+    themePreload();
+    themePreload();
+    expect(mediaQuery.addEventListener).toHaveBeenCalledTimes(1);
+
+    for (const listener of listeners) {listener({ matches: true });}
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(localStorage.getItem('kupola-theme')).toBeNull();
+
+    for (const listener of listeners) {listener({ matches: false });}
+    expect(document.documentElement.dataset.theme).toBe('dark');
+
+    stopThemePreload();
+    expect(mediaQuery.removeEventListener).toHaveBeenCalledTimes(1);
+    globalThis.matchMedia = originalMatchMedia;
+  });
+
   test('attachBrandColorPicker opens popover and applies swatch selection', () => {
     const trigger = document.createElement('button');
     document.body.appendChild(trigger);
     const picker = attachBrandColorPicker(trigger, {
-      colors: [{ id: 'test', label: 'Test', color: '#F97316' }],
+      colors: [ { id: 'test', label: 'Test', color: '#F97316' } ],
       custom: false,
     });
 
@@ -71,7 +106,7 @@ describe('brand color theme utilities', () => {
     const trigger = document.createElement('button');
     document.body.appendChild(trigger);
     const picker = attachBrandColorPicker(trigger, {
-      colors: [{ id: 'test', label: 'Test', color: '#F97316' }],
+      colors: [ { id: 'test', label: 'Test', color: '#F97316' } ],
     });
 
     trigger.click();

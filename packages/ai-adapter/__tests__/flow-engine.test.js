@@ -3,10 +3,19 @@ import { FlowEngine } from '../src/flow-engine.js';
 
 // Mock storage for testing
 function createMockStorage() {
-  let data = null;
+  let data = {};
   return {
-    get: () => data,
-    set: (d) => { data = d; },
+    get: (name) => {
+      if (name !== undefined) return data[name];
+      return data;
+    },
+    set: (name, value) => {
+      if (value === undefined) {
+        data = name;
+      } else {
+        data[name] = value;
+      }
+    },
   };
 }
 
@@ -22,7 +31,7 @@ describe('FlowEngine', () => {
   describe('define', () => {
     it('should define a flow', () => {
       const flow = engine.define('发工资条', {
-        steps: [{ label: '获取数据' }, { label: '发送' }],
+        steps: [ { label: '获取数据' }, { label: '发送' } ],
         description: '月度发工资',
       });
 
@@ -32,11 +41,12 @@ describe('FlowEngine', () => {
     });
 
     it('should persist flow to storage', () => {
-      engine.define('test', { steps: [{ label: 'step1' }] });
+      engine.define('test', { steps: [ { label: 'step1' } ] });
 
       const saved = storage.get();
       expect(saved).not.toBeNull();
-      expect(saved.test).toBeDefined();
+      expect(saved.flows).toBeDefined();
+      expect(saved.flows.test).toBeDefined();
     });
   });
 
@@ -54,7 +64,7 @@ describe('FlowEngine', () => {
 
       expect(result.success).toBe(true);
       expect(result.results.length).toBe(2);
-      expect(results).toEqual([1, 2]);
+      expect(results).toEqual([ 1, 2 ]);
     });
 
     it('should pass data and previous results to handler', async () => {
@@ -64,7 +74,7 @@ describe('FlowEngine', () => {
         return 'ok';
       });
       engine.define('flow', {
-        steps: [{ label: 's1', handler }],
+        steps: [ { label: 's1', handler } ],
       });
 
       await engine.execute('flow', { name: '张三' });
@@ -101,7 +111,7 @@ describe('FlowEngine', () => {
 
     it('should skip steps without handler', async () => {
       engine.define('skip-flow', {
-        steps: [{ label: 'no-handler' }],
+        steps: [ { label: 'no-handler' } ],
       });
 
       const result = await engine.execute('skip-flow');
@@ -112,7 +122,7 @@ describe('FlowEngine', () => {
 
     it('should increment executionCount', async () => {
       engine.define('counted', {
-        steps: [{ label: 's', handler: async () => 'ok' }],
+        steps: [ { label: 's', handler: async () => 'ok' } ],
       });
 
       await engine.execute('counted');
@@ -125,7 +135,7 @@ describe('FlowEngine', () => {
     it('should call onStep callback', async () => {
       const onStep = jest.fn();
       engine.define('cb-flow', {
-        steps: [{ label: 's1', handler: async () => 'ok' }],
+        steps: [ { label: 's1', handler: async () => 'ok' } ],
       });
 
       await engine.execute('cb-flow', {}, { onStep });
@@ -137,7 +147,7 @@ describe('FlowEngine', () => {
     it('should call onComplete callback', async () => {
       const onComplete = jest.fn();
       engine.define('cb-flow', {
-        steps: [{ label: 's', handler: async () => 'ok' }],
+        steps: [ { label: 's', handler: async () => 'ok' } ],
       });
 
       await engine.execute('cb-flow', {}, { onComplete });
@@ -148,7 +158,7 @@ describe('FlowEngine', () => {
     it('should call onError callback on step failure', async () => {
       const onError = jest.fn();
       engine.define('err-flow', {
-        steps: [{ label: 'bad', handler: async () => { throw new Error('x'); } }],
+        steps: [ { label: 'bad', handler: async () => { throw new Error('x'); } } ],
       });
 
       await engine.execute('err-flow', {}, { onError });
@@ -171,8 +181,8 @@ describe('FlowEngine', () => {
 
   describe('list', () => {
     it('should list all defined flows', () => {
-      engine.define('f1', { steps: [{ label: 'a' }], description: 'desc1' });
-      engine.define('f2', { steps: [{ label: 'x' }, { label: 'y' }] });
+      engine.define('f1', { steps: [ { label: 'a' } ], description: 'desc1' });
+      engine.define('f2', { steps: [ { label: 'x' }, { label: 'y' } ] });
 
       const list = engine.list();
       expect(list.length).toBe(2);
@@ -228,13 +238,13 @@ describe('FlowEngine', () => {
 
   describe('persistence', () => {
     it('should load flows from storage on init', () => {
-      storage.set({
+      storage.set('flows', {
         saved: {
           description: 'saved flow',
-          variables: ['x'],
+          variables: [ 'x' ],
           executionCount: 5,
           createdAt: 123456,
-          steps: [{ label: 's1', action: 'op', params: {} }],
+          steps: [ { label: 's1', action: 'op', params: {} } ],
         },
       });
 

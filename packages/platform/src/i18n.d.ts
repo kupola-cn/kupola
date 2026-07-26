@@ -52,4 +52,6 @@ export function isRTL(locale?: string): boolean;
 export function getDirection(locale?: string): 'ltr' | 'rtl';
 export function onLocaleChange(callback: (newLocale: string, oldLocale: string) => void): () => void;
 
-export const localeSignal: import('./signal.js').Signal<string>;
+import type { Signal } from '@kupola/core';
+
+export const localeSignal: Signal<string>;

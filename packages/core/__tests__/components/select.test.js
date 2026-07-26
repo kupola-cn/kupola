@@ -4,7 +4,6 @@
  * @jest-environment jsdom
  */
 
-import { html } from '../../../platform/src/template.js';
 import { resetScheduler } from '../../src/scheduler.js';
 import { Select } from '@kupola/components';
 
@@ -88,6 +87,21 @@ describe('Select rendering', () => {
     expect(clearBtn).not.toBeNull();
     view.destroy();
   });
+
+  test('uses unique aria relationships and non-submit buttons', () => {
+    const first = Select({ items: ITEMS, clearable: true });
+    const second = Select({ items: ITEMS });
+    document.body.append(first.element, second.element);
+    const triggers = document.querySelectorAll('.ds-select__trigger');
+    expect(triggers[0].getAttribute('aria-controls')).not.toBe(
+      triggers[1].getAttribute('aria-controls'),
+    );
+    document.querySelectorAll('.ds-select button').forEach(button => {
+      expect(button.type).toBe('button');
+    });
+    first.destroy();
+    second.destroy();
+  });
 });
 
 // ─── Open/Close ──────────────────────────────────────────────────────────────
@@ -149,6 +163,48 @@ describe('Select open/close', () => {
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(wrap.classList.contains('is-open')).toBe(false);
+    view.destroy();
+  });
+
+  test('only acquires document listeners while open', () => {
+    const addSpy = jest.spyOn(document, 'addEventListener');
+    const removeSpy = jest.spyOn(document, 'removeEventListener');
+    const view = Select({ items: ITEMS });
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'click' || event === 'keydown')).toBe(false);
+    view.open();
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'click')).toBe(true);
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'keydown')).toBe(true);
+    view.close();
+    expect(removeSpy.mock.calls.some(([ event ]) => event === 'click')).toBe(true);
+    expect(removeSpy.mock.calls.some(([ event ]) => event === 'keydown')).toBe(true);
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
+    view.destroy();
+  });
+
+  test('Escape affects only the most recently opened select', () => {
+    const first = Select({ items: ITEMS });
+    const second = Select({ items: ITEMS });
+    document.body.append(first.element, second.element);
+    first.open();
+    second.open();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(first.isOpen()).toBe(true);
+    expect(second.isOpen()).toBe(false);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(first.isOpen()).toBe(false);
+    first.destroy();
+    second.destroy();
+  });
+
+  test('Tab closes without preventing normal focus navigation', () => {
+    const view = Select({ items: ITEMS });
+    document.body.appendChild(view.element);
+    view.open();
+    const event = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(view.isOpen()).toBe(false);
     view.destroy();
   });
 });
@@ -221,6 +277,22 @@ describe('Select item selection', () => {
 
     expect(view.getValue()).toEqual([ 'b' ]);
     view.destroy();
+  });
+
+  test('does not select disabled options or open a disabled select', () => {
+    const enabled = Select({ items: [ { value: 'x', text: 'X', disabled: true } ] });
+    document.body.appendChild(enabled.element);
+    const option = document.querySelector('.ds-select__item');
+    expect(option.disabled).toBe(true);
+    option.click();
+    expect(enabled.getValue()).toBe('');
+    enabled.destroy();
+
+    const disabled = Select({ items: ITEMS, disabled: true });
+    document.body.appendChild(disabled.element);
+    disabled.open();
+    expect(disabled.isOpen()).toBe(false);
+    disabled.destroy();
   });
 });
 
@@ -336,6 +408,18 @@ describe('Select keyboard navigation', () => {
     );
     view.destroy();
   });
+
+  test('ArrowDown on the trigger opens and focuses the first enabled item', () => {
+    const view = Select({
+      items: [ { value: 'x', text: 'Disabled', disabled: true }, ...ITEMS ],
+    });
+    document.body.appendChild(view.element);
+    const trigger = document.querySelector('.ds-select__trigger');
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(view.isOpen()).toBe(true);
+    expect(document.querySelectorAll('.ds-select__item')[1].classList.contains('is-focused')).toBe(true);
+    view.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -348,6 +432,11 @@ describe('Select destroy', () => {
     document.body.appendChild(container);
 
     // Should not throw
+    view.open();
     view.destroy();
+    expect(view.isOpen()).toBe(false);
+    expect(() => view.destroy()).not.toThrow();
+    view.open();
+    expect(view.isOpen()).toBe(false);
   });
 });

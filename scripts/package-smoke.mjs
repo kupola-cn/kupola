@@ -1,9 +1,12 @@
 import { access, readFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { promisify } from 'node:util';
 
 const require = createRequire(import.meta.url);
+const execFileAsync = promisify(execFile);
 const rootDir = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 async function readJson(file) {
@@ -120,9 +123,31 @@ const components = await testPackage('packages/components', '@kupola/components'
 // ── @kupola/ai-adapter ──────────────────────────────────────────────────────
 const aiAdapter = await testPackage('packages/ai-adapter', '@kupola/ai-adapter');
 
-const totalExports = core.exportCount + platform.exportCount + components.exportCount + aiAdapter.exportCount;
+const auth = await testPackage('packages/auth', '@kupola/auth');
+const authRoot = await import(pathToFileURL(resolvePackagePath('packages/auth', auth.pkg.exports['.'].import)).href);
+
+if (typeof authRoot.createAuthContext !== 'function' && typeof authRoot.getAuthContext !== 'function') {
+  throw new Error('Expected @kupola/auth to export an auth context helper.');
+}
+
+const router = await testPackage('packages/router', '@kupola/router');
+const routerRoot = await import(pathToFileURL(resolvePackagePath('packages/router', router.pkg.exports['.'].import)).href);
+
+if (typeof routerRoot.createRouter !== 'function') {
+  throw new Error('Expected @kupola/router to export createRouter as a function.');
+}
+
+const cliPath = resolvePackagePath('packages/create-kupola', 'index.js');
+const { stdout: cliHelp } = await execFileAsync(process.execPath, [ cliPath, '--help' ]);
+if (!cliHelp.includes('Usage: create-kupola')) {
+  throw new Error('Expected @kupola/create-kupola --help to provide non-interactive usage output.');
+}
+
+const totalExports = core.exportCount + platform.exportCount + components.exportCount +
+  aiAdapter.exportCount + auth.exportCount + router.exportCount;
 console.log(
-  `Package smoke test passed for ${totalExports} export entries across 4 packages ` +
+  `Package smoke test passed for ${totalExports} export entries across 6 packages ` +
   `(core: ${core.exportCount}, platform: ${platform.exportCount}, ` +
-  `components: ${components.exportCount}, ai-adapter: ${aiAdapter.exportCount}).`,
+  `components: ${components.exportCount}, ai-adapter: ${aiAdapter.exportCount}, ` +
+  `auth: ${auth.exportCount}, router: ${router.exportCount}).`,
 );

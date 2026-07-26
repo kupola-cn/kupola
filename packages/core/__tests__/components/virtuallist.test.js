@@ -8,6 +8,8 @@ import { resetScheduler } from '../../src/scheduler.js';
 import { VirtualList } from '@kupola/components';
 
 afterEach(() => {
+  jest.useRealTimers();
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   resetScheduler();
 });
@@ -63,6 +65,19 @@ describe('VirtualList rendering', () => {
     expect(rendered[0].textContent).toBe('Alpha');
   });
 
+  test('does not duplicate non-virtual items on scroll', () => {
+    const items = [ 'Alpha', 'Beta', 'Gamma' ];
+    const view = VirtualList({ items, itemHeight: 40, height: 200, virtualThreshold: 200 });
+    document.body.appendChild(view.element);
+
+    const list = document.body.querySelector('.ds-virtual-list');
+    expect(document.body.querySelectorAll('.ds-virtual-list__item').length).toBe(3);
+
+    list.dispatchEvent(new Event('scroll'));
+
+    expect(document.body.querySelectorAll('.ds-virtual-list__item').length).toBe(3);
+  });
+
   test('renders object items with title', () => {
     const view = VirtualList({ items: bigList.slice(0, 5), itemHeight: 48, height: 300 });
     document.body.appendChild(view.element);
@@ -70,6 +85,15 @@ describe('VirtualList rendering', () => {
     const titles = document.body.querySelectorAll('.ds-virtual-list__item-title');
     expect(titles.length).toBe(5);
     expect(titles[0].textContent).toBe('Item 1');
+  });
+
+  test('normalizes invalid dimensions instead of rendering an unbounded range', () => {
+    const view = VirtualList({ items: bigList, itemHeight: 0, height: -1, overscan: -5 });
+    document.body.appendChild(view.element);
+
+    expect(document.querySelector('.ds-virtual-list').style.height).toBe('400px');
+    expect(document.querySelectorAll('.ds-virtual-list__item').length).toBeLessThan(100);
+    view.destroy();
   });
 });
 
@@ -86,6 +110,19 @@ describe('VirtualList custom render', () => {
     expect(rendered[0].textContent).toBe('[0] A');
     expect(rendered[1].textContent).toBe('[1] B');
   });
+
+  test('accepts HTMLElement results from renderItem', () => {
+    const items = [ 'A' ];
+    const renderItem = (item) => {
+      const strong = document.createElement('strong');
+      strong.textContent = item;
+      return strong;
+    };
+    const view = VirtualList({ items, renderItem, itemHeight: 40, height: 200 });
+    document.body.appendChild(view.element);
+
+    expect(document.body.querySelector('.ds-virtual-list__item strong').textContent).toBe('A');
+  });
 });
 
 // ─── Click handling ──────────────────────────────────────────────────────────
@@ -101,6 +138,32 @@ describe('VirtualList click', () => {
     rendered[1].click();
 
     expect(onClick).toHaveBeenCalledWith('Y', 1);
+  });
+
+  test('supports data and onItemClick aliases', () => {
+    const onItemClick = jest.fn();
+    const view = VirtualList({ data: [ 'A' ], onItemClick });
+    document.body.appendChild(view.element);
+
+    document.querySelector('.ds-virtual-list__item').click();
+    expect(onItemClick).toHaveBeenCalledWith('A', 0);
+    view.destroy();
+  });
+});
+
+describe('VirtualList data updates', () => {
+  test('setData resets scroll and replaces rendered items', () => {
+    const view = VirtualList({ items: bigList, itemHeight: 40, height: 200 });
+    document.body.appendChild(view.element);
+    view.scrollTo(100);
+
+    view.setData([ 'New A', 'New B' ]);
+
+    expect(document.querySelector('.ds-virtual-list').scrollTop).toBe(0);
+    const items = document.querySelectorAll('.ds-virtual-list__item');
+    expect(items).toHaveLength(2);
+    expect(items[0].textContent).toBe('New A');
+    view.destroy();
   });
 });
 
@@ -133,9 +196,14 @@ describe('VirtualList empty', () => {
 
 describe('VirtualList destroy', () => {
   test('destroy cleans up', () => {
+    jest.useFakeTimers();
     const view = VirtualList({ items: bigList });
     document.body.appendChild(view.element);
+    document.querySelector('.ds-virtual-list').dispatchEvent(new Event('scroll'));
 
     expect(() => view.destroy()).not.toThrow();
+    expect(() => view.destroy()).not.toThrow();
+    expect(jest.getTimerCount()).toBe(0);
+    view.setData([ 'ignored' ]);
   });
 });

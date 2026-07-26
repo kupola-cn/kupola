@@ -1,4 +1,4 @@
-// Type definitions for @kupola/ai-adapter
+// Type definitions for @kupola/ai-adapter (v2.0)
 
 export interface AIAdapterOptions {
   ai?: (prompt: string, context: AIContext) => Promise<ParsedCommand>;
@@ -10,6 +10,9 @@ export interface AIAdapterOptions {
   flow?: FlowEngineOptions;
   bus?: EventBus;
   capability?: CapabilityRegistryOptions;
+  storage?: { get(): any; set(data: any): void };
+  errorHandler?: (error: Error) => void;
+  infrastructure?: AIInfrastructure;
 }
 
 export interface AIContext {
@@ -64,6 +67,8 @@ export declare class AIAdapter {
   parser: IntentParser;
   bus: EventBus;
   capability: CapabilityRegistry;
+  commandBus: CommandBus;
+  infrastructure: AIInfrastructure;
 
   constructor(options?: AIAdapterOptions);
 
@@ -79,6 +84,59 @@ export declare class AIAdapter {
   off(event: string, callback: Function): void;
   once(event: string, callback: Function): () => void;
   wildcard(pattern: string, callback: (eventName: string, data: any) => void): () => void;
+
+  dispose(): void;
+}
+
+export declare class AIInfrastructure {
+  constructor(options?: AIAdapterOptions);
+  bus: EventBus;
+  query: QueryEngine;
+  action: ActionEngine;
+  flow: FlowEngine;
+  parser: IntentParser;
+  commandBus: CommandBus;
+  dispose(): void;
+}
+
+export declare class Container {
+  constructor();
+  register(name: string, Service: any, options?: { singleton?: boolean; factory?: (container: Container) => any; dependencies?: string[] }): void;
+  registerInstance(name: string, instance: any): void;
+  resolve(name: string, overrides?: Record<string, any>): any;
+  has(name: string): boolean;
+  clear(): void;
+}
+
+export declare class CommandBus {
+  constructor(bus: EventBus);
+  register(commandType: string, handler: (command: ParsedCommand, context: any) => Promise<any>, options?: { validate?: Function; authorize?: Function }): () => void;
+  unregister(commandType: string): void;
+  dispatch(command: ParsedCommand, context?: any): Promise<any>;
+  hasHandler(commandType: string): boolean;
+  listHandlers(): string[];
+}
+
+export declare class UnitOfWork {
+  constructor(engine: ActionEngine);
+  add(type: string, params: any): UnitOfWork;
+  commit(): Promise<{ success: boolean; results: any[]; successCount: number; total: number }>;
+  rollback(): Promise<{ success: boolean; undoResults: any[] }>;
+  readonly isCommitted: boolean;
+  readonly isRolledBack: boolean;
+  readonly size: number;
+}
+
+export declare class SimpleStateMachine {
+  constructor(config: { initial: string; states: Record<string, { on?: Record<string, string> }> });
+  transition(event: string, payload?: any): boolean;
+  on(event: string, handler: (data: any) => void): () => void;
+  off(event: string, handler: (data: any) => void): void;
+  can(event: string): boolean;
+  reset(): void;
+  getState(): string;
+  getHistory(): Array<{ previous: string; next: string; event: string; timestamp: number; payload: any }>;
+  getPossibleEvents(): string[];
 }
 
 // ── Capability Registry ──────────────────────────────────
@@ -142,8 +200,27 @@ export interface AICapabilityDescription {
   confirm: boolean;
 }
 
+export declare class CapabilityBuilder {
+  label(text: string): CapabilityBuilder;
+  description(text: string): CapabilityBuilder;
+  params(schema: Record<string, CapabilityParamRule>): CapabilityBuilder;
+  param(name: string, rule: CapabilityParamRule): CapabilityBuilder;
+  roles(list: string[]): CapabilityBuilder;
+  permissions(list: string[]): CapabilityBuilder;
+  handler(fn: (params: any, context?: AIContext) => Promise<any>): CapabilityBuilder;
+  confirm(value?: boolean): CapabilityBuilder;
+  undo(fn: (params: any) => Promise<void>): CapabilityBuilder;
+  retries(count: number): CapabilityBuilder;
+  exposeToAI(value?: boolean): CapabilityBuilder;
+  dependsOn(list: string[]): CapabilityBuilder;
+  build(): CapabilityConfig;
+}
+
 export declare class CapabilityRegistry {
   constructor(adapter: AIAdapter, options?: CapabilityRegistryOptions);
+  query(type: string): CapabilityBuilder;
+  action(type: string): CapabilityBuilder;
+  flow(type: string): CapabilityBuilder;
   register(config: CapabilityConfig): CapabilityConfig;
   registerMany(configs: CapabilityConfig[]): CapabilityRegistry;
   unregister(engine: string, type: string): boolean;
@@ -200,9 +277,9 @@ export interface QueryResult {
 }
 
 export declare class QueryEngine {
-  constructor(options?: QueryEngineOptions);
-  register(name: string, handler: (params: any, context?: AIContext) => Promise<any>): void;
-  execute(command: ParsedCommand): Promise<QueryResult>;
+  constructor(options?: QueryEngineOptions, bus?: EventBus);
+  register(name: string, handler: (params: any, context?: AIContext) => Promise<any>, options?: { cacheTTL?: number }): void;
+  execute(command: ParsedCommand, context?: AIContext): Promise<QueryResult>;
   followUp(overrides?: Record<string, any>): Promise<QueryResult>;
   aggregate(op: string, field: string): any;
   getLastResult(): any;
@@ -259,10 +336,11 @@ export interface FlowSuggestion {
 }
 
 export declare class ActionEngine {
-  constructor(options?: ActionEngineOptions);
+  constructor(options?: ActionEngineOptions, bus?: EventBus);
   register(name: string, config: ActionConfig): void;
   execute(command: ParsedCommand, callbacks?: Record<string, Function>): Promise<ActionResult>;
   executeBatch(commands: Array<{ type: string; params: any }>, callbacks?: Record<string, Function>): Promise<{ success: boolean; results: ActionResult[]; failed: number; total: number }>;
+  createUnitOfWork(): UnitOfWork;
   undo(): Promise<{ success: boolean; message?: string; error?: string }>;
   canUndo(): boolean;
   getActions(): Array<{ name: string; label: string; confirm: boolean; dependsOn: string[] }>;
@@ -305,7 +383,7 @@ export interface FlowResult {
 }
 
 export declare class FlowEngine {
-  constructor(options?: FlowEngineOptions);
+  constructor(options?: FlowEngineOptions, bus?: EventBus);
   define(name: string, config: FlowConfig): any;
   execute(name: string, data?: Record<string, any>, callbacks?: Record<string, Function>, options?: { resumeAt?: number; context?: AIContext }): Promise<FlowResult>;
   resume(name: string, data?: Record<string, any>, failedAt: number, callbacks?: Record<string, Function>): Promise<FlowResult>;
@@ -318,7 +396,7 @@ export declare class FlowEngine {
 // ── IntentParser ─────────────────────────────────────────
 
 export declare class IntentParser {
-  constructor(options?: { ai?: Function; fallback?: RuleBasedParser; maxContext?: number });
+  constructor(options?: { ai?: Function; fallback?: RuleBasedParser; maxContext?: number; storage?: { get(): any; set(data: any): void } });
   parse(input: string, extraContext?: Record<string, any>): Promise<ParsedCommand & { raw: string }>;
   defineSlots(engine: string, type: string, slots: { required?: string[]; optional?: string[] }): void;
   clearContext(): void;

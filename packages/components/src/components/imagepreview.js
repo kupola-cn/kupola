@@ -22,7 +22,10 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
-import { getIconHtml } from './icon-helper';
+import { getIconTemplate } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
+import { lockBodyScroll } from './body-scroll-lock';
+import { registerOverlayKeydown } from './overlay-stack';
 
 /**
  * Create an ImagePreview component instance.
@@ -32,42 +35,96 @@ import { getIconHtml } from './icon-helper';
  * @returns {{ element: DocumentFragment, open: Function, close: Function, destroy: Function }}
  */
 export function ImagePreview(options = {}) {
-  const { images = [] } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const images = (Array.isArray(config.images) ? config.images : [])
+    .map(image => typeof image === 'string' ? { src: image } : image)
+    .filter(image => image && typeof image.src === 'string' && image.src);
+  const onClose = typeof config.onClose === 'function' ? config.onClose : null;
 
-  let _current = 0;
+  let _current = _normalizeIndex(config.index ?? 0);
   let _visible = false;
+  let destroyed = false;
+  let releaseBodyScroll = null;
+  let releaseKeydown = null;
+  let previousFocus = null;
+  const listeners = createListenerRegistry();
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open(index = 0) {
-    _current = index;
+    if (destroyed || images.length === 0) {return;}
+    _current = _normalizeIndex(index);
+    if (_visible) {
+      _updateImage();
+      _updateNavButtons();
+      return;
+    }
     _visible = true;
+    previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     _updateImage();
     if (overlayEl) {overlayEl.classList.add('is-visible');}
     _updateNavButtons();
+    releaseBodyScroll = lockBodyScroll();
+    releaseKeydown = registerOverlayKeydown(_handleKeydown);
+    closeBtn?.focus();
   }
 
   function close() {
+    if (destroyed || !_visible) {return;}
     _visible = false;
     if (overlayEl) {overlayEl.classList.remove('is-visible');}
+    releaseKeydown?.();
+    releaseKeydown = null;
+    releaseBodyScroll?.();
+    releaseBodyScroll = null;
+    if (previousFocus?.isConnected) {previousFocus.focus();}
+    previousFocus = null;
+    if (onClose) {onClose();}
   }
 
   function destroy() {
-    close();
-    if (closeBtn) {closeBtn.removeEventListener('click', close);}
-    if (prevBtn) {prevBtn.removeEventListener('click', _prev);}
-    if (nextBtn) {nextBtn.removeEventListener('click', _next);}
+    if (destroyed) {return;}
+    let closeError = null;
+    try {close();} catch (error) {closeError = error;}
+    destroyed = true;
+    releaseKeydown?.();
+    releaseKeydown = null;
+    releaseBodyScroll?.();
+    releaseBodyScroll = null;
+    listeners.destroy();
     instance.destroy();
+    if (closeError) {throw closeError;}
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _prev() {
+    if (destroyed) {return;}
     if (_current > 0) { _current--; _updateImage(); _updateNavButtons(); }
   }
 
   function _next() {
+    if (destroyed) {return;}
     if (_current < images.length - 1) { _current++; _updateImage(); _updateNavButtons(); }
+  }
+
+  function _normalizeIndex(index) {
+    const numericIndex = Number(index);
+    if (!Number.isFinite(numericIndex) || images.length === 0) {return 0;}
+    return Math.min(images.length - 1, Math.max(0, Math.trunc(numericIndex)));
+  }
+
+  function _handleKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      _prev();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      _next();
+    }
   }
 
   function _updateImage() {
@@ -82,8 +139,8 @@ export function ImagePreview(options = {}) {
   }
 
   function _updateNavButtons() {
-    if (prevBtn) {prevBtn.disabled = _current === 0;}
-    if (nextBtn) {nextBtn.disabled = _current === images.length - 1;}
+    if (prevBtn) {prevBtn.disabled = images.length === 0 || _current === 0;}
+    if (nextBtn) {nextBtn.disabled = images.length === 0 || _current === images.length - 1;}
     // Hide nav if only one image
     const display = images.length <= 1 ? 'none' : 'flex';
     if (navEl) {navEl.style.display = display;}
@@ -92,8 +149,11 @@ export function ImagePreview(options = {}) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const tpl = html`
-    <div class="ds-image-preview-overlay">
-      <button class="ds-image-preview__close" type="button" aria-label="Close">×</button>
+    <div class="ds-image-preview-overlay" role="dialog" aria-modal="true"
+      aria-label="Image preview" tabindex="-1">
+      <button class="ds-image-preview__close" type="button" aria-label="Close">
+        ${getIconTemplate('x')}
+      </button>
       <div class="ds-image-preview__content">
         <img src="" alt="" />
       </div>
@@ -103,10 +163,10 @@ export function ImagePreview(options = {}) {
       </div>
       <div class="ds-image-preview__nav">
         <button class="ds-image-preview__nav-btn ds-image-preview__nav-prev" type="button" aria-label="Previous">
-          ${getIconHtml('chevron-left')}
+          ${getIconTemplate('chevron-left')}
         </button>
         <button class="ds-image-preview__nav-btn ds-image-preview__nav-next" type="button" aria-label="Next">
-          ${getIconHtml('chevron-right')}
+          ${getIconTemplate('chevron-right')}
         </button>
       </div>
     </div>
@@ -125,13 +185,13 @@ export function ImagePreview(options = {}) {
   const prevBtn = container.querySelector('.ds-image-preview__nav-prev');
   const nextBtn = container.querySelector('.ds-image-preview__nav-next');
 
-  if (closeBtn) {closeBtn.addEventListener('click', close);}
-  if (prevBtn) {prevBtn.addEventListener('click', _prev);}
-  if (nextBtn) {nextBtn.addEventListener('click', _next);}
+  if (closeBtn) {listeners.on(closeBtn, 'click', close);}
+  if (prevBtn) {listeners.on(prevBtn, 'click', _prev);}
+  if (nextBtn) {listeners.on(nextBtn, 'click', _next);}
 
   // Click overlay background to close
   if (overlayEl) {
-    overlayEl.addEventListener('click', (e) => {
+    listeners.on(overlayEl, 'click', (e) => {
       if (e.target === overlayEl) {close();}
     });
   }
@@ -142,6 +202,12 @@ export function ImagePreview(options = {}) {
     get element() { return container; },
     open,
     close,
+    show: open,
+    hide: close,
+    next: _next,
+    prev: _prev,
+    isOpen: () => _visible,
+    getIndex: () => _current,
     destroy,
   };
 }

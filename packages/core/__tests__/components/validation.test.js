@@ -44,6 +44,9 @@ describe('Validation', () => {
     test('pattern: rejects non-match', () => {
       expect(v.check('ABC!', 'pattern:^[a-z0-9]+$')).toBe(false);
     });
+    test('pattern: treats an invalid expression as failed validation', () => {
+      expect(v.check('abc', 'pattern:[')).toBe(false);
+    });
     test('min: rejects below', () => {
       expect(v.check('3', 'min:5')).toBe(false);
     });
@@ -67,6 +70,9 @@ describe('Validation', () => {
     });
     test('date: rejects invalid', () => {
       expect(v.check('not-a-date', 'date')).toBe(false);
+    });
+    test('date: rejects calendar overflow', () => {
+      expect(v.check('2024-02-31', 'date')).toBe(false);
     });
     test('number: accepts valid', () => {
       expect(v.check('3.14', 'number')).toBe(true);
@@ -202,6 +208,38 @@ describe('Validation', () => {
       v.validateForm(form);
       expect(form.classList.contains('ds-form--invalid')).toBe(true);
     });
+
+    test('stores state by form identity when forms have no id', () => {
+      document.body.innerHTML = `
+        <form><input name="first" data-validate="required" value=""></form>
+        <form><input name="second" data-validate="required" value="ok"></form>
+      `;
+      const [ first, second ] = document.querySelectorAll('form');
+      v.validateForm(first);
+      v.validateForm(second);
+      expect(v.getFormState(first).valid).toBe(false);
+      expect(v.getFormState(second).valid).toBe(true);
+      const state = v.getFormState(first);
+      state.errors.first = 'mutated';
+      expect(v.getFormState(first).errors.first).not.toBe('mutated');
+    });
+
+    test('keeps errors independent for inputs sharing a parent', () => {
+      document.body.innerHTML = `
+        <form><div>
+          <input name="first" data-validate="required" value="">
+          <input name="second" data-validate="required" value="">
+        </div></form>
+      `;
+      const form = document.querySelector('form');
+      expect(v.validateForm(form)).toBe(false);
+      expect(form.querySelectorAll('.ds-input__error')).toHaveLength(2);
+      const [ first, second ] = form.querySelectorAll('input');
+      first.value = 'ok';
+      expect(v.validateInput(first)).toBe(true);
+      expect(second.classList.contains('ds-input--error')).toBe(true);
+      expect(form.querySelectorAll('.ds-input__error')).toHaveLength(1);
+    });
   });
 
   // ── validateFormAsync ──
@@ -226,6 +264,45 @@ describe('Validation', () => {
       const form = document.querySelector('form');
       const result = await v.validateFormAsync(form);
       expect(result).toBe(false);
+    });
+
+    test('does not let a stale async result overwrite a newer result', async () => {
+      document.body.innerHTML = `
+        <form><input name="name" data-validate-async="unique" value="old"></form>
+      `;
+      const form = document.querySelector('form');
+      const input = form.querySelector('input');
+      const resolvers = [];
+      v.addAsyncValidator('unique', () => new Promise(resolve => resolvers.push(resolve)));
+      const oldRun = v.validateFormAsync(form);
+      input.value = 'new';
+      const newRun = v.validateFormAsync(form);
+      resolvers[1](true);
+      await newRun;
+      resolvers[0](false);
+      await oldRun;
+      expect(input.classList.contains('ds-input--error')).toBe(false);
+      expect(v.getFormState(form).valid).toBe(true);
+    });
+
+    test('supports group names containing selector syntax', async () => {
+      document.body.innerHTML = `
+        <form><input data-validate="required" data-validate-group="step[1]" value="ok"></form>
+      `;
+      await expect(v.validateGroup(document.querySelector('form'), 'step[1]')).resolves.toBe(true);
+    });
+
+    test('does not write pending validation results after destroy', async () => {
+      document.body.innerHTML = `
+        <form><input data-validate-async="remote" value="value"></form>
+      `;
+      let resolve;
+      v.addAsyncValidator('remote', () => new Promise(done => { resolve = done; }));
+      const pending = v.validateFormAsync(document.querySelector('form'));
+      v.destroy();
+      resolve(false);
+      await pending;
+      expect(document.querySelector('.ds-input__error')).toBeNull();
     });
   });
 

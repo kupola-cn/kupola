@@ -58,7 +58,9 @@ describe('Tree rendering', () => {
     document.body.appendChild(view.element);
 
     // Root 1 has 2 children
-    const firstChildren = document.body.querySelectorAll('.ds-tree > li:first-child > .ds-tree__children .ds-tree__item');
+    const firstChildren = document.body.querySelectorAll(
+      '.ds-tree > li:first-child > .ds-tree__children .ds-tree__item',
+    );
     expect(firstChildren.length).toBe(2);
   });
 
@@ -178,7 +180,28 @@ describe('Tree selection', () => {
     const item = document.body.querySelector('.ds-tree > li:first-child > .ds-tree__item');
     item.click();
 
-    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ label: 'Root 1' }));
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.any(Array),
+      [ expect.objectContaining({ label: 'Root 1' }) ],
+    );
+  });
+
+  test('selectKey and getSelectedKeys use explicit keys', () => {
+    const onSelect = jest.fn();
+    const view = Tree({
+      data: [ { key: 1, title: 'One' }, { key: 2, title: 'Two' } ],
+      onSelect,
+    });
+    document.body.appendChild(view.element);
+
+    view.selectKey(2);
+    expect(view.getSelectedKeys()).toEqual([ 2 ]);
+    expect(view.getSelected()).toEqual(expect.objectContaining({ title: 'Two' }));
+    expect(onSelect).toHaveBeenCalledWith(
+      [ 2 ],
+      [ expect.objectContaining({ title: 'Two' }) ],
+    );
+    view.destroy();
   });
 
   test('getSelected returns null when nothing selected', () => {
@@ -224,6 +247,113 @@ describe('Tree options', () => {
     expect(badge).not.toBeNull();
     expect(badge.textContent).toBe('12');
   });
+
+  test('defaultExpandKeys and expansion APIs keep state synchronized', () => {
+    const onExpand = jest.fn();
+    const data = [ {
+      key: 'root',
+      title: 'Root',
+      children: [ { key: 'child', title: 'Child', children: [ { key: 'leaf', title: 'Leaf' } ] } ],
+    } ];
+    const view = Tree({ data, defaultExpandKeys: [ 'root' ], onExpand });
+    document.body.appendChild(view.element);
+
+    expect(view.getExpandedKeys()).toEqual([ 'root' ]);
+    view.expand('child');
+    expect(view.getExpandedKeys()).toEqual([ 'root', 'child' ]);
+    view.collapse('root');
+    expect(view.getExpandedKeys()).toEqual([ 'child' ]);
+    view.expandAll();
+    expect(view.getExpandedKeys()).toEqual([ 'root', 'child' ]);
+    view.collapseAll();
+    expect(view.getExpandedKeys()).toEqual([]);
+    expect(onExpand).toHaveBeenLastCalledWith([]);
+    view.destroy();
+  });
+
+  test('checkable state cascades and reports checked keys and nodes', () => {
+    const onCheck = jest.fn();
+    const view = Tree({
+      checkable: true,
+      data: [ {
+        key: 'parent',
+        title: 'Parent',
+        children: [ { key: 'a', title: 'A' }, { key: 'b', title: 'B' } ],
+      } ],
+      onCheck,
+    });
+    document.body.appendChild(view.element);
+    const checkboxes = document.querySelectorAll('.ds-tree__checkbox');
+
+    checkboxes[0].click();
+    expect(view.getCheckedKeys()).toEqual([ 'parent', 'a', 'b' ]);
+    checkboxes[1].click();
+    expect(view.getCheckedKeys()).toEqual([ 'b' ]);
+    expect(checkboxes[0].indeterminate).toBe(true);
+    expect(onCheck).toHaveBeenLastCalledWith(
+      [ 'b' ],
+      [ expect.objectContaining({ title: 'B' }) ],
+    );
+    view.destroy();
+  });
+
+  test('disabled nodes reject selection, checking, and expansion', () => {
+    const view = Tree({
+      checkable: true,
+      data: [ {
+        key: 'disabled',
+        title: 'Disabled',
+        disabled: true,
+        children: [ { key: 'child', title: 'Child' } ],
+      } ],
+      defaultExpandKeys: [ 'disabled' ],
+      defaultCheckedKeys: [ 'disabled' ],
+      selectedKey: 'disabled',
+    });
+    document.body.appendChild(view.element);
+
+    view.selectKey('disabled');
+    view.checkKey('disabled');
+    view.expand('disabled');
+    expect(view.getSelectedKeys()).toEqual([]);
+    expect(view.getCheckedKeys()).toEqual([]);
+    expect(view.getExpandedKeys()).toEqual([]);
+    expect(document.querySelector('.ds-tree__checkbox').disabled).toBe(true);
+    view.destroy();
+  });
+
+  test('keyboard navigation follows visible tree items', () => {
+    const view = Tree({
+      data: [ {
+        key: 'root',
+        title: 'Root',
+        children: [ { key: 'child', title: 'Child' } ],
+      } ],
+      defaultExpandKeys: [ 'root' ],
+    });
+    document.body.appendChild(view.element);
+    const items = document.querySelectorAll('.ds-tree__item');
+
+    items[0].focus();
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement).toBe(items[1]);
+    items[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(view.getSelectedKeys()).toEqual([ 'child' ]);
+    items[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    expect(document.activeElement).toBe(items[0]);
+    view.destroy();
+  });
+
+  test('skips circular and duplicate node references safely', () => {
+    const circular = { key: 'root', title: 'Root', children: [] };
+    circular.children.push(circular);
+    const view = Tree({ data: [ circular, circular ] });
+    document.body.appendChild(view.element);
+
+    expect(document.querySelectorAll('.ds-tree__item')).toHaveLength(2);
+    expect(document.querySelectorAll('.ds-tree__children')).toHaveLength(0);
+    view.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -234,5 +364,9 @@ describe('Tree destroy', () => {
     document.body.appendChild(view.element);
 
     expect(() => view.destroy()).not.toThrow();
+    expect(() => view.destroy()).not.toThrow();
+    view.selectKey('missing');
+    view.expandAll();
+    view.collapseAll();
   });
 });

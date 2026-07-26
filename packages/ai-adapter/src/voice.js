@@ -58,6 +58,7 @@ export class VoiceController {
     this._resultCallbacks = [];
     this._errorCallbacks = [];
     this._silenceTimer = null;
+    this._restartTimer = null;
     this._unsubscribers = [];
 
     // Check Web Speech API support
@@ -128,6 +129,10 @@ export class VoiceController {
       clearTimeout(this._silenceTimer);
       this._silenceTimer = null;
     }
+    if (this._restartTimer) {
+      clearTimeout(this._restartTimer);
+      this._restartTimer = null;
+    }
     return this;
   }
 
@@ -186,6 +191,9 @@ export class VoiceController {
 
   /** Destroy and clean up all listeners. */
   destroy() {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     this.stop();
     this._unsubscribers.forEach(fn => fn());
     this._unsubscribers = [];
@@ -271,11 +279,11 @@ export class VoiceController {
 
   _handleEnd() {
     if (this._isListening && this.options.continuous) {
-      // Auto-restart after brief delay
-      setTimeout(() => {
+      this._restartTimer = setTimeout(() => {
         if (this._isListening && this._recognition) {
           try { this._recognition.start(); } catch { /* already started */ }
         }
+        this._restartTimer = null;
       }, 100);
     }
   }

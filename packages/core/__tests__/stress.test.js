@@ -126,7 +126,7 @@ describe('High Concurrency Stress Tests', () => {
   });
 
   test('reactive array mutation methods', async () => {
-    const state = reactive({ items: [1, 2, 3] });
+    const state = reactive({ items: [ 1, 2, 3 ] });
     let sum = 0;
 
     effect(() => {

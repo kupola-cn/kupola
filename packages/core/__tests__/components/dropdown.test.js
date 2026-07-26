@@ -14,6 +14,7 @@ const TEST_ITEMS = [
 ];
 
 afterEach(() => {
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   resetScheduler();
 });
@@ -64,6 +65,21 @@ describe('Dropdown rendering', () => {
 
     view.destroy();
   });
+
+  test('supports label items, dividers, and disabled items', () => {
+    const view = Dropdown({ items: [
+      { label: 'Enabled', value: 'enabled' },
+      { divider: true },
+      { label: 'Disabled', disabled: true },
+    ] });
+    const container = document.createElement('div');
+    container.appendChild(view.element);
+
+    expect(container.querySelectorAll('.ds-dropdown__item')).toHaveLength(2);
+    expect(container.querySelector('.ds-dropdown__divider')).not.toBeNull();
+    expect(container.querySelectorAll('.ds-dropdown__item')[1].disabled).toBe(true);
+    view.destroy();
+  });
 });
 
 // ─── Open / Close ────────────────────────────────────────────────────────────
@@ -110,10 +126,25 @@ describe('Dropdown open/close', () => {
 
     view.open();
     expect(menu.classList.contains('is-open')).toBe(true);
+    expect(view.isOpen()).toBe(true);
 
     view.close();
     expect(menu.classList.contains('is-open')).toBe(false);
+    expect(view.isOpen()).toBe(false);
 
+    view.destroy();
+  });
+
+  test('supports hover trigger', () => {
+    const view = Dropdown({ items: TEST_ITEMS, trigger: 'hover' });
+    const container = document.createElement('div');
+    container.appendChild(view.element);
+    const wrapper = container.querySelector('.ds-dropdown');
+
+    wrapper.dispatchEvent(new Event('mouseenter'));
+    expect(view.isOpen()).toBe(true);
+    wrapper.dispatchEvent(new Event('mouseleave'));
+    expect(view.isOpen()).toBe(false);
     view.destroy();
   });
 });
@@ -173,6 +204,17 @@ describe('Dropdown item selection', () => {
       item: TEST_ITEMS[1],
     });
 
+    view.destroy();
+  });
+
+  test('does not select disabled items', () => {
+    const onSelect = jest.fn();
+    const view = Dropdown({ items: [ { text: 'Disabled', disabled: true } ], onSelect });
+    const container = document.createElement('div');
+    container.appendChild(view.element);
+
+    container.querySelector('.ds-dropdown__item').click();
+    expect(onSelect).not.toHaveBeenCalled();
     view.destroy();
   });
 
@@ -304,6 +346,18 @@ describe('Dropdown keyboard navigation', () => {
 
     view.destroy();
   });
+
+  test('Tab closes without preventing the browser default', () => {
+    const view = Dropdown({ items: TEST_ITEMS });
+    view.open();
+    const event = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+
+    document.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(view.isOpen()).toBe(false);
+    view.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -316,6 +370,9 @@ describe('Dropdown destroy', () => {
     document.body.appendChild(container);
 
     view.destroy();
+    expect(() => view.destroy()).not.toThrow();
+    view.open();
+    expect(view.isOpen()).toBe(false);
 
     // After destroy, these should not throw or cause errors
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Breaking Changes
+
+- `@kupola/core` `Signal#toJSON()` now returns the underlying value instead of
+  a pre-serialized JSON string. `JSON.stringify(signal)` remains the normal
+  serialization path; use `JSON.stringify(signal.value)` when an explicit
+  string is required.
+
+## 3.2.4 (2026-07-26)
+
+### Fixed
+
+- Hardened core computed propagation, reactive array mutation batching, and
+  reflective array updates.
+- Isolated router and auth state between applications and synchronized release
+  metadata and package size checks with the workspace layout.
+
 ### [3.1.2](https://github.com/kupola-cn/kupola/compare/v3.0.0...v3.1.2) (2026-07-25)
 
 

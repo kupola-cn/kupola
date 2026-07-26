@@ -6,7 +6,7 @@
  */
 
 export interface User {
-  id?: string;
+  id?: string | number;
   name?: string;
   role?: string;
   permissions?: string[];
@@ -23,6 +23,18 @@ export interface AuthContext {
   hasAnyPermission: (permissions: string[]) => boolean;
   hasAllPermissions: (permissions: string[]) => boolean;
   isAuthenticated: boolean;
+}
+
+export interface AuthStore {
+  createAuthContext(user: User): AuthContext;
+  hydrateAuthContext(): AuthContext | null;
+  getAuthContext(): AuthContext | null;
+  setAuthContext(context: AuthContext | null): void;
+  onAuthContextChange(listener: (context: AuthContext | null) => void): () => void;
+  registerPermissionHandler(options: PermissionHandlerOptions): PermissionHandler;
+  getPermissionHandler(): PermissionHandler | null;
+  clearPermissionHandler(): void;
+  onPermissionHandlerChange(listener: (handler: PermissionHandler | null) => void): () => void;
 }
 
 export interface PermissionHandlerOptions {
@@ -43,10 +55,15 @@ export interface PermissionHandler {
   onChange: (callback: () => void) => () => void;
 }
 
+export function onPermissionHandlerChange(
+  listener: (handler: PermissionHandler | null) => void
+): () => void;
+
 export interface RequestConfig {
   method: string;
   url: string;
   data?: any;
+  body?: BodyInit | null;
   headers?: Record<string, string>;
   fetchOptions?: RequestInit;
   requiredPermission?: string;
@@ -54,13 +71,13 @@ export interface RequestConfig {
 }
 
 export interface HttpGuardOptions {
-  beforeRequest?: (config: RequestConfig) => RequestConfig | void;
-  afterResponse?: (response: Response) => Response | void;
+  beforeRequest?: (config: RequestConfig) => RequestConfig | void | Promise<RequestConfig | void>;
+  afterResponse?: (response: Response) => Response | void | Promise<Response | void>;
   onPermissionDenied?: (error: Error) => void;
   onUnauthorized?: (error: Error) => void;
   interceptors?: {
-    request?: Array<(config: RequestConfig) => RequestConfig>;
-    response?: Array<(response: Response) => Response>;
+    request?: Array<(config: RequestConfig) => RequestConfig | void | Promise<RequestConfig | void>>;
+    response?: Array<(response: Response) => Response | void | Promise<Response | void>>;
   };
 }
 
@@ -74,15 +91,49 @@ export interface HttpGuard {
 }
 
 export function createAuthContext(user: User): AuthContext;
+export function createAuthStore(): AuthStore;
 export function hydrateAuthContext(): AuthContext | null;
 export function getAuthContext(): AuthContext | null;
 export function setAuthContext(context: AuthContext | null): void;
+export function onAuthContextChange(listener: (context: AuthContext | null) => void): () => void;
 
 export const AUTH_KEY: unique symbol;
 
 export function registerPermissionHandler(options: PermissionHandlerOptions): PermissionHandler;
 export function getPermissionHandler(): PermissionHandler | null;
 export function clearPermissionHandler(): void;
+
+export class PermissionDirective {
+  constructor(element: HTMLElement, options?: { authStore?: AuthStore });
+  readonly element: HTMLElement;
+  permission: string | string[] | null;
+  mode: 'hide' | 'disabled' | 'fallback' | null;
+  disabledClass: string | null;
+  parse(): boolean;
+  check(): boolean;
+  apply(): void;
+  restore(): void;
+  listen(): void;
+  stopListening(): void;
+  destroy(): void;
+}
+
+export interface PermissionDirectiveDefinition {
+  mount(element: Element): { destroy(): void } | void;
+}
+
+export function createPermissionDirectiveDefinition(
+  options?: { authStore?: AuthStore }
+): PermissionDirectiveDefinition;
+export function registerPermissionDirective(
+  registerDirective: (name: string, definition: PermissionDirectiveDefinition) => void,
+  options?: { authStore?: AuthStore }
+): PermissionDirectiveDefinition;
+export function processPermissionDirectives(
+  root: Element,
+  options?: { authStore?: AuthStore }
+): PermissionDirective[];
+export function clearCache(): void;
 
 export function createHttpGuard(options?: HttpGuardOptions): HttpGuard;
 

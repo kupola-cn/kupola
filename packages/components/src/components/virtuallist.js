@@ -1,4 +1,4 @@
-﻿﻿// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — VirtualList component built on the 2.0 reactive core.
  *
@@ -26,6 +26,7 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a VirtualList component instance.
@@ -41,44 +42,91 @@ import { render } from '@kupola/platform/render';
  * @returns {{ element: DocumentFragment, scrollTo: Function, destroy: Function }}
  */
 export function VirtualList(options = {}) {
-  const {
-    items = [],
-    itemHeight = 48,
-    height = 400,
-    overscan = 5,
-    renderItem = null,
-    onClick = null,
-    virtualThreshold = 200,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  let items = Array.isArray(config.items)
+    ? [ ...config.items ]
+    : (Array.isArray(config.data) ? [ ...config.data ] : []);
+  const itemHeight = Number.isFinite(config.itemHeight) && config.itemHeight > 0
+    ? config.itemHeight
+    : 48;
+  const height = Number.isFinite(config.height) && config.height > 0 ? config.height : 400;
+  const overscan = Number.isFinite(config.overscan) && config.overscan >= 0
+    ? Math.floor(config.overscan)
+    : 5;
+  const renderItem = typeof config.renderItem === 'function' ? config.renderItem : null;
+  const onClick = typeof config.onClick === 'function'
+    ? config.onClick
+    : (typeof config.onItemClick === 'function' ? config.onItemClick : null);
+  const virtualThreshold = Number.isFinite(config.virtualThreshold) && config.virtualThreshold >= 0
+    ? Math.floor(config.virtualThreshold)
+    : 200;
 
   let _scrollTop = 0;
-  
+  let _frame = null;
+  let _destroyed = false;
+  const listeners = createListenerRegistry();
+
   // Determine if virtual scroll should be used
-  const useVirtual = items.length > virtualThreshold;
+  let useVirtual = items.length > virtualThreshold;
+  const raf = typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : (fn) => setTimeout(fn, 0);
+  const caf = typeof cancelAnimationFrame === 'function'
+    ? cancelAnimationFrame
+    : clearTimeout;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function scrollTo(index) {
-    if (!scrollEl) {return;}
-    scrollEl.scrollTop = index * itemHeight;
+    if (_destroyed || !scrollEl || items.length === 0) {return;}
+    const numericIndex = Number(index);
+    const nextIndex = Number.isFinite(numericIndex)
+      ? Math.max(0, Math.min(items.length - 1, Math.trunc(numericIndex)))
+      : 0;
+    scrollEl.scrollTop = nextIndex * itemHeight;
+    _scrollTop = scrollEl.scrollTop;
+    if (useVirtual) {_scheduleRender();}
   }
 
   function destroy() {
-    if (scrollEl) {scrollEl.removeEventListener('scroll', _onScroll);}
+    if (_destroyed) {return;}
+    _destroyed = true;
+    if (_frame != null) {
+      caf(_frame);
+      _frame = null;
+    }
+    listeners.destroy();
     instance.destroy();
+  }
+
+  function setData(data) {
+    if (_destroyed) {return;}
+    items = Array.isArray(data) ? [ ...data ] : [];
+    useVirtual = items.length > virtualThreshold;
+    _scrollTop = 0;
+    if (scrollEl) {scrollEl.scrollTop = 0;}
+    _renderVisible();
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _onScroll() {
     if (scrollEl) {_scrollTop = scrollEl.scrollTop;}
-    _renderVisible();
+    if (useVirtual) {_scheduleRender();}
+  }
+
+  function _scheduleRender() {
+    if (_destroyed || _frame != null) {return;}
+    _frame = raf(() => {
+      _frame = null;
+      _renderVisible();
+    });
   }
 
   function _createItemElement(item, index) {
     const el = document.createElement('div');
     el.className = 'ds-virtual-list__item';
-    
+
     if (useVirtual) {
       el.style.position = 'absolute';
       el.style.top = `${index * itemHeight}px`;
@@ -87,10 +135,15 @@ export function VirtualList(options = {}) {
     }
 
     if (renderItem) {
-      el.textContent = renderItem(item, index);
+      const rendered = renderItem(item, index);
+      if (rendered instanceof HTMLElement) {
+        el.appendChild(rendered);
+      } else {
+        el.textContent = rendered != null ? String(rendered) : '';
+      }
     } else {
-      if (typeof item === 'string') {
-        el.textContent = item;
+      if (typeof item === 'string' || typeof item === 'number') {
+        el.textContent = String(item);
       } else if (item && item.title) {
         const content = document.createElement('div');
         content.className = 'ds-virtual-list__item-content';
@@ -105,21 +158,23 @@ export function VirtualList(options = {}) {
           content.appendChild(sub);
         }
         el.appendChild(content);
-      }
+      } else if (item != null) {el.textContent = String(item);}
     }
 
-    if (onClick) {
-      el.addEventListener('click', () => onClick(item, index));
-    }
+    el.dataset.index = String(index);
 
     return el;
   }
 
   function _renderVisible() {
-    if (!containerEl) {return;}
+    if (_destroyed || !containerEl) {return;}
+
+    const existing = containerEl.querySelectorAll('.ds-virtual-list__item');
+    existing.forEach((el) => el.remove());
 
     // For small data sets, render all items directly without virtualization
     if (!useVirtual) {
+      if (spacerEl) {spacerEl.style.height = '';}
       items.forEach((item, i) => {
         containerEl.appendChild(_createItemElement(item, i));
       });
@@ -134,10 +189,6 @@ export function VirtualList(options = {}) {
     const startIdx = Math.max(0, Math.floor(_scrollTop / itemHeight) - overscan);
     const visibleCount = Math.ceil(height / itemHeight) + overscan * 2;
     const endIdx = Math.min(items.length, startIdx + visibleCount);
-
-    // Clear existing items
-    const existing = containerEl.querySelectorAll('.ds-virtual-list__item');
-    existing.forEach((el) => el.remove());
 
     // Render visible items
     for (let i = startIdx; i < endIdx; i++) {
@@ -162,16 +213,28 @@ export function VirtualList(options = {}) {
   const containerEl = container.querySelector('.ds-virtual-list__container');
   const spacerEl = container.querySelector('.ds-virtual-list__spacer');
 
+  const onItemClick = (e) => {
+    if (!onClick) {return;}
+    const itemEl = e.target.closest('.ds-virtual-list__item');
+    if (!itemEl || !containerEl?.contains(itemEl)) {return;}
+    const index = Number(itemEl.dataset.index);
+    if (Number.isInteger(index) && index >= 0 && index < items.length) {
+      onClick(items[index], index);
+    }
+  };
+
   if (scrollEl) {
     scrollEl.style.height = `${height}px`;
-    scrollEl.addEventListener('scroll', _onScroll);
+    listeners.on(scrollEl, 'scroll', _onScroll);
   }
+  if (onClick && containerEl) {listeners.on(containerEl, 'click', onItemClick);}
 
   // Initial render
   _renderVisible();
 
   return {
     get element() { return container; },
+    setData,
     scrollTo,
     destroy,
   };

@@ -1,51 +1,66 @@
 // SPDX-License-Identifier: MIT
+/* global __DEV__ */
 /**
- * @kupola/core — Signal: the fundamental reactive primitive.
+ * @kupola/core - Signal and reactive object primitives.
  *
- * A signal holds a value and notifies subscribers when it changes.
- * Reading `.value` inside an active effect/computed registers a dependency;
- * writing `.value` triggers all registered dependents.
+ * Signals provide dependency tracking. Reactive objects use one dependency
+ * signal per property plus an iteration signal, so unrelated properties do
+ * not invalidate the same effect.
  *
  * @module signal
  */
 
-import { queueJob } from './scheduler.js';
+import { queueJob, queuePostJob } from './scheduler.js';
 import {
   isProfilerEnabled,
   profileSignalWrite,
   profileSignalRead,
+  profileTrigger,
 } from './devtools.js';
+import { reportErrors } from './errors.js';
 
-// ─── Global dependency-tracking state ────────────────────────────────────────
-
-/** @type {import('./effect.js').EffectRecord|null} Currently executing effect. */
+/** @type {import('./effect.js').EffectRecord|null} */
 export let activeEffect = null;
 
-/** @type {import('./effect.js').EffectRecord[]} Stack for nested effect scopes. */
+const profilerInstrumentationEnabled = typeof __DEV__ === 'undefined' || __DEV__;
+const defaultTriggerMaxJobs = 10000;
+
+/** @type {import('./effect.js').EffectRecord[]} */
 export const effectStack = [];
 
-/**
- * Push an effect onto the stack and make it the active effect.
- * @param {import('./effect.js').EffectRecord} eff
- */
+/** @type {{ root: Signal, pendingComputeds: Set<Object>, pendingEffects: Set<Object> }|null} */
+let activeTriggerContext = null;
+
+/** @internal @returns {{ root: Signal, pendingComputeds: Set<Object>, pendingEffects: Set<Object> }|null} */
+export function getTriggerContext() {
+  return activeTriggerContext;
+}
+
+function createTriggerContext(root, mutation = false) {
+  return {
+    root,
+    mutation,
+    jobCount: 0,
+    pendingComputeds: new Set(),
+    pendingEffects: new Set(),
+  };
+}
+
+/** @param {import('./effect.js').EffectRecord} eff */
 export function pushEffect(eff) {
   effectStack.push(activeEffect);
   activeEffect = eff;
 }
 
-/**
- * Pop the effect stack, restoring the previous active effect.
- */
 export function popEffect() {
   activeEffect = effectStack.pop() ?? null;
 }
 
-/**
- * Run a function without collecting reactive dependencies.
- * @param {Function} fn
- * @returns {any}
- */
+/** @param {Function} fn */
 export function withoutTracking(fn) {
+  if (typeof fn !== 'function') {
+    throw new TypeError('[kupola] withoutTracking() expects a function.');
+  }
   const previous = activeEffect;
   activeEffect = null;
   try {
@@ -55,255 +70,621 @@ export function withoutTracking(fn) {
   }
 }
 
-// ─── Batch-awareness flag (set by batch.js) ─────────────────────────────────
-
-/** @type {number} Nesting depth of batch() calls. 0 = not batching. */
+/** @type {number} */
 export let batchDepth = 0;
 
-/** @type {Set<Function>} Effects deferred by an active batch. */
+/** @type {Set<Function>} */
 export const batchQueue = new Set();
 
-/** @internal Called by batch.js — not part of public API. */
-export function setBatchDepth(d) { batchDepth = d; }
-export function getBatchQueue() { return batchQueue; }
+/** @internal */
+export function setBatchDepth(depth) {
+  batchDepth = depth;
+}
 
-// ─── Track / Trigger ─────────────────────────────────────────────────────────
+export function getBatchQueue() {
+  return batchQueue;
+}
 
-/**
- * Register the active effect as a dependent of `signal`.
- * Called automatically when `signal.value` is read inside an effect.
- * @param {Signal} sig
- */
+/** @param {Signal} sig */
 export function track(sig) {
-  if (activeEffect) {
+  if (activeEffect && !sig._disposed) {
     sig._subscribers.add(activeEffect);
     activeEffect._deps.add(sig);
   }
 }
 
-/**
- * Notify all subscribers of `signal` that its value changed.
- *
- * Subscribers with `_sync = true` (computed trackers) are notified immediately
- * and synchronously. Regular effect subscribers are queued via the scheduler
- * (or batch queue if inside a batch).
- *
- * @param {Signal} sig
- */
-export function trigger(sig) {
-  for (const eff of sig._subscribers) {
-    if (eff._sync) {
-      // Synchronous subscriber (computed) — runs immediately.
-      eff._run();
-    } else if (batchDepth > 0) {
-      batchQueue.add(eff._run);
-    } else {
-      queueJob(eff._run);
-    }
+/** @param {Signal} sig @param {Object} eff */
+export function unsubscribe(sig, eff) {
+  sig._subscribers.delete(eff);
+  if (sig._subscribers.size === 0 && typeof sig._onEmpty === 'function') {
+    sig._onEmpty();
   }
 }
 
-// ─── Signal class ────────────────────────────────────────────────────────────
+function enqueueTriggerSubscribers(sig, context) {
+  const subscribers = [ ...sig._subscribers ].filter(eff => !eff._disposed);
+  // Keep profiler counts tied to the signal's actual subscriber snapshot,
+  // even though execution is deferred until the propagation transaction ends.
+  if (profilerInstrumentationEnabled && isProfilerEnabled()) {
+    profileTrigger(sig, subscribers.length);
+  }
+  for (const eff of subscribers) {
+    if (eff._isComputed) {context.pendingComputeds.add(eff);}
+    else {context.pendingEffects.add(eff);}
+  }
+}
+
+function dispatchEffect(eff) {
+  if (eff._sync) {
+    eff._run();
+  } else if (batchDepth > 0) {
+    batchQueue.add(eff._run);
+  } else if (eff._scheduler) {
+    if (eff._flush === 'post') {eff._scheduler.queuePostJob(eff._run);}
+    else {eff._scheduler.queueJob(eff._run);}
+  } else if (eff._flush === 'post') {
+    queuePostJob(eff._run);
+  } else {
+    queueJob(eff._run);
+  }
+}
+
+function flushTriggerContext(context) {
+  const errors = [];
+  let loopDetected = false;
+  // Drain the whole transaction. A synchronous effect can mutate another
+  // signal, which may enqueue more computeds or effects while the current
+  // wave is executing. Leaving those entries behind loses the update because
+  // the outer trigger has already restored its context by the time it
+  // returns.
+  while (context.pendingComputeds.size > 0 || context.pendingEffects.size > 0) {
+    // Each computed wave settles before effects read them. This prevents a
+    // converging computed graph from observing a mixed state when multiple
+    // upstream computeds change in one source mutation.
+    while (context.pendingComputeds.size > 0) {
+      const computeds = [ ...context.pendingComputeds ];
+      context.pendingComputeds.clear();
+      for (const computedTracker of computeds) {
+        if (computedTracker._disposed) {continue;}
+        if (context.jobCount >= defaultTriggerMaxJobs) {
+          loopDetected = true;
+          break;
+        }
+        context.jobCount++;
+        try {computedTracker._run();} catch (error) {errors.push(error);}
+      }
+      if (loopDetected) {break;}
+    }
+
+    if (loopDetected) {break;}
+
+    const effects = [ ...context.pendingEffects ];
+    context.pendingEffects.clear();
+    for (const eff of effects) {
+      if (eff._disposed) {continue;}
+      if (context.jobCount >= defaultTriggerMaxJobs) {
+        loopDetected = true;
+        break;
+      }
+      context.jobCount++;
+      try {dispatchEffect(eff);} catch (error) {errors.push(error);}
+    }
+    if (loopDetected) {break;}
+  }
+  if (loopDetected) {
+    context.pendingComputeds.clear();
+    context.pendingEffects.clear();
+    const error = new Error(
+      `[kupola] Reactive propagation exceeded the maximum of ${defaultTriggerMaxJobs} jobs in one transaction.`,
+    );
+    error.code = 'KUPOLA_REACTIVITY_LOOP';
+    errors.push(error);
+  }
+  reportErrors(errors, { source: 'reactivity', phase: 'trigger' });
+}
+
+function runTriggerTransaction(context, fn) {
+  const ownsContext = activeTriggerContext !== context;
+  const previousContext = activeTriggerContext;
+  if (ownsContext) {activeTriggerContext = context;}
+  let result;
+  let callbackError;
+  try {
+    result = fn();
+  } catch (error) {
+    callbackError = error;
+  }
+  let flushError;
+  if (ownsContext) {
+    try {flushTriggerContext(context);} catch (error) {flushError = error;}
+    activeTriggerContext = previousContext;
+  }
+  if (callbackError) {throw callbackError;}
+  if (flushError) {throw flushError;}
+  return result;
+}
+
+/**
+ * Notify subscribers from a snapshot. A subscriber may change its own
+ * dependencies while running, so iterating the live Set would be unsafe.
+ *
+ * @param {Signal} sig
+ */
+export function trigger(sig, context = null) {
+  const triggerContext = context || activeTriggerContext || createTriggerContext(sig);
+  const ownsContext = activeTriggerContext !== triggerContext;
+  const previousContext = activeTriggerContext;
+  if (ownsContext) {activeTriggerContext = triggerContext;}
+  try {
+    enqueueTriggerSubscribers(sig, triggerContext);
+    if (ownsContext) {flushTriggerContext(triggerContext);}
+  } finally {
+    if (ownsContext) {activeTriggerContext = previousContext;}
+  }
+}
 
 /**
  * @template T
  */
 export class Signal {
-  /**
-   * @param {T} initialValue
-   */
+  /** @param {T} initialValue */
   constructor(initialValue) {
     /** @internal */ this._value = initialValue;
     /** @internal */ this._subscribers = new Set();
+    /** @internal */ this._disposed = false;
   }
 
-  /**
-   * Read the current value. Registers a dependency if called inside an effect.
-   * @returns {T}
-   */
   get value() {
     track(this);
-    if (isProfilerEnabled()) {profileSignalRead(this);}
+    if (profilerInstrumentationEnabled && isProfilerEnabled()) {profileSignalRead(this);}
     return this._value;
   }
 
-  /**
-   * Update the value. Triggers subscribers only when the value actually changes.
-   * @param {T} newValue
-   */
   set value(newValue) {
-    if (!Object.is(this._value, newValue)) {
-      this._value = newValue;
-      if (isProfilerEnabled()) {profileSignalWrite(this);}
-      trigger(this);
-    }
+    if (this._disposed || Object.is(this._value, newValue)) {return;}
+    this._value = newValue;
+    if (profilerInstrumentationEnabled && isProfilerEnabled()) {profileSignalWrite(this);}
+    trigger(this);
   }
 
-  /**
-   * Peek at the value without registering a dependency.
-   * @returns {T}
-   */
   peek() {
     return this._value;
   }
 
-  /** @returns {string} */
   toString() {
     return String(this._value);
   }
 
-  /** @returns {string} */
   toJSON() {
-    return JSON.stringify(this._value);
+    return this._value;
   }
 }
 
-// ─── Public factory ──────────────────────────────────────────────────────────
-
-/**
- * Create a reactive signal.
- *
- * ```js
- * const count = signal(0);
- * count.value;      // read  → tracks dependency
- * count.value = 1;  // write → triggers subscribers
- * count.peek();     // read  → no tracking
- * ```
- *
- * @template T
- * @param {T} initialValue
- * @returns {Signal<T>}
- */
 export function signal(initialValue) {
   return new Signal(initialValue);
 }
 
 const REACTIVE_SYMBOL = Symbol('kupola-reactive');
+const ITERATE_KEY = Symbol('kupola-reactive-iterate');
 const ARRAY_MUTATION_METHODS = new Set([
-  'push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse',
+  'push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse', 'fill', 'copyWithin',
 ]);
+const rawToProxy = new WeakMap();
+const proxyToRaw = new WeakMap();
+const proxyToMeta = new WeakMap();
 
-export function isReactive(obj) {
-  return obj && obj[REACTIVE_SYMBOL] === true;
+function isObject(value) {
+  return value !== null && typeof value === 'object';
 }
 
-function shallowClone(obj) {
-  if (Array.isArray(obj)) {return [ ...obj ];}
-  const clone = Object.create(Object.getPrototypeOf(obj));
-  for (const key of Object.getOwnPropertyNames(obj)) {
-    const desc = Object.getOwnPropertyDescriptor(obj, key);
-    Object.defineProperty(clone, key, desc);
-  }
-  for (const key of Object.getOwnPropertySymbols(obj)) {
-    const desc = Object.getOwnPropertyDescriptor(obj, key);
-    Object.defineProperty(clone, key, desc);
-  }
-  return clone;
+function isPlainObject(value) {
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
-function wrapReactive(obj, parentSignal, visited = new WeakSet(), proxyCache = new Map()) {
-  if (!obj || typeof obj !== 'object') {return obj;}
-  if (isReactive(obj)) {return obj;}
-  if (obj instanceof Signal) {return obj;}
-  if (obj instanceof Date || obj instanceof RegExp || obj instanceof Error) {return obj;}
-  if (proxyCache.has(obj)) {return proxyCache.get(obj);}
-  if (visited.has(obj)) {return obj;}
-
-  visited.add(obj);
-  const reactiveObj = new Proxy(shallowClone(obj), createReactiveHandler(parentSignal, visited, proxyCache));
-  proxyCache.set(obj, reactiveObj);
-
-  reactiveObj[REACTIVE_SYMBOL] = true;
-
-  const keys = [ ...Object.keys(obj), ...Object.getOwnPropertySymbols(obj) ];
-  for (const key of keys) {
-    const desc = Object.getOwnPropertyDescriptor(obj, key);
-    if (desc && !desc.get && !desc.set) {
-      reactiveObj[key] = wrapReactive(obj[key], parentSignal, visited, proxyCache);
-    }
-  }
-
-  visited.delete(obj);
-
-  return reactiveObj;
+function isSupportedReactiveTarget(value) {
+  if (!isObject(value) || value instanceof Signal || isReactive(value)) {return false;}
+  if (Array.isArray(value)) {return true;}
+  if (ArrayBuffer.isView(value) || value instanceof ArrayBuffer) {return false;}
+  return isPlainObject(value);
 }
 
-function notifyParent(parentSignal, target) {
-  if (!parentSignal) {return;}
-  const newValue = shallowClone(target);
-  if (!Object.is(parentSignal._value, newValue)) {
-    parentSignal.value = newValue;
+export function isReactive(value) {
+  if (value === null || (typeof value !== 'object' && typeof value !== 'function')) {
+    return false;
+  }
+  try {
+    return Boolean(value[REACTIVE_SYMBOL] === true);
+  } catch {
+    return false;
   }
 }
 
-function createReactiveHandler(parentSignal, visited, proxyCache) {
-  return {
-    get(target, key, receiver) {
-      if (key === REACTIVE_SYMBOL) {return true;}
-      if (key === 'toJSON') {return () => target;}
-      if (key === '_signal') {return parentSignal;}
-      track(parentSignal);
-      if (typeof target[key] === 'function') {
-        if (ARRAY_MUTATION_METHODS.has(key)) {
-          return function(...args) {
-            const result = target[key](...args);
-            notifyParent(parentSignal, target);
-            return result;
-          };
+export function toRaw(value) {
+  return isObject(value) ? (proxyToRaw.get(value) || value) : value;
+}
+
+function isArrayIndex(key) {
+  if (typeof key !== 'string' || key === '') {return false;}
+  const index = Number(key);
+  return Number.isInteger(index) && index >= 0 && String(index) === key;
+}
+
+function createRoot(target) {
+  const root = {
+    signal: new Signal(target),
+    metas: new Set(),
+    proxies: new WeakMap(),
+    rootMeta: null,
+    disposed: false,
+    dispose() {
+      if (root.disposed) {return;}
+      root.disposed = true;
+      root.signal._disposed = true;
+      root.signal._subscribers.clear();
+      const ownedMetas = [ ...root.metas ];
+      root.metas.clear();
+      for (const meta of ownedMetas) {
+        meta.owners.delete(root);
+        meta.rootOwners.delete(root);
+        updatePrimaryRoot(meta);
+      }
+      for (const meta of ownedMetas) {
+        if (meta.owners.size === 0 && meta.rootOwners.size === 0) {
+          disposeReactiveMeta(meta);
         }
-        return target[key].bind(receiver);
       }
-      const value = Reflect.get(target, key, receiver);
-      if (value && typeof value === 'object' && !isReactive(value) && !(value instanceof Date) && !(value instanceof RegExp)) {
-        const wrapped = wrapReactive(value, parentSignal, visited, proxyCache);
-        target[key] = wrapped;
-        return wrapped;
-      }
-      return value;
     },
-    set(target, key, value, receiver) {
-      if (key === REACTIVE_SYMBOL) {return true;}
-      const oldValue = target[key];
-      value = wrapReactive(value, parentSignal, visited, proxyCache);
-      const result = Reflect.set(target, key, value, receiver);
-      if (!Object.is(oldValue, value)) {
-        notifyParent(parentSignal, target);
+  };
+  return root;
+}
+
+function getPropertySignal(meta, key) {
+  let sig = meta.signals.get(key);
+  if (!sig) {
+    sig = new Signal(undefined);
+    sig._disposed = meta.disposed;
+    sig._onEmpty = () => {
+      if (meta.signals.get(key) === sig) {meta.signals.delete(key);}
+    };
+    meta.signals.set(key, sig);
+  }
+  return sig;
+}
+
+function trackProperty(meta, key) {
+  if (activeEffect) {track(getPropertySignal(meta, key));}
+}
+
+function getIterationSignal(meta) {
+  return getPropertySignal(meta, ITERATE_KEY);
+}
+
+function notifyProperty(meta, key, context) {
+  const sig = meta.signals.get(key);
+  if (!sig) {return;}
+  if (profilerInstrumentationEnabled && isProfilerEnabled()) {profileSignalWrite(sig);}
+  trigger(sig, context);
+}
+
+function notifyIteration(meta, context) {
+  const sig = meta.signals.get(ITERATE_KEY);
+  if (sig) {trigger(sig, context);}
+}
+
+function notifyArrayLength(meta, oldLength, newLength, changedKey, context) {
+  if (oldLength === newLength) {return;}
+  if (changedKey !== 'length') {
+    const lengthSignal = meta.signals.get('length');
+    if (lengthSignal) {trigger(lengthSignal, context);}
+  }
+  if (newLength < oldLength) {
+    const removedChildren = [ ...meta.children.keys() ].filter(key => (
+      isArrayIndex(key) && Number(key) >= newLength
+    ));
+    for (const key of removedChildren) {linkReactiveChild(meta, key, undefined);}
+    const removedSignals = [ ...meta.signals.entries() ].filter(([ key ]) => (
+      isArrayIndex(key) && Number(key) >= newLength
+    ));
+    for (const [ , signal ] of removedSignals) {trigger(signal, context);}
+    // Truncating an array removes enumerable keys, so effects that observe
+    // Object.keys()/for...in must be invalidated as well.
+    notifyIteration(meta, context);
+  }
+}
+
+function getReactiveMutationContext(meta, key) {
+  if (activeTriggerContext && activeTriggerContext.mutation) {
+    return activeTriggerContext;
+  }
+  return createTriggerContext(
+    meta.signals.get(key) || meta.signals.get('length') || meta.localSignal,
+    true,
+  );
+}
+
+function createReactiveHandler(meta) {
+  const { target } = meta;
+  return {
+    get(currentTarget, key, receiver) {
+      const ownDescriptor = Reflect.getOwnPropertyDescriptor(currentTarget, key);
+      // Virtual compatibility properties must never shadow an own property;
+      // doing so violates Proxy invariants for frozen/sealed user objects.
+      if (!ownDescriptor && key === REACTIVE_SYMBOL) {return true;}
+      if (!ownDescriptor && key === '_signal') {
+        return meta.root ? meta.root.signal : meta.localSignal;
+      }
+      if (!ownDescriptor && key === 'dispose') {
+        return meta.root ? meta.root.dispose : () => disposeReactiveMeta(meta);
+      }
+      if (!ownDescriptor && key === 'toJSON') {return () => target;}
+
+      const value = Reflect.get(currentTarget, key, receiver);
+      if (meta.disposed) {return value;}
+      trackProperty(meta, key);
+      // A non-configurable, non-writable data property must return the exact
+      // stored value. Returning a nested proxy here would violate the Proxy
+      // get invariant for frozen/sealed objects.
+      if (ownDescriptor && 'value' in ownDescriptor
+        && ownDescriptor.configurable === false
+        && ownDescriptor.writable === false) {
+        return value;
+      }
+      if (Array.isArray(currentTarget)
+        && typeof value === 'function'
+        && ARRAY_MUTATION_METHODS.has(key)) {
+        return (...args) => {
+          const context = getReactiveMutationContext(meta, key);
+          return runTriggerTransaction(context, () => Reflect.apply(value, receiver, args));
+        };
+      }
+      if (!isSupportedReactiveTarget(value)) {return value;}
+      const proxy = wrapReactive(value, meta.root);
+      linkReactiveChild(meta, key, proxy);
+      return proxy;
+    },
+
+    set(currentTarget, key, value) {
+      const ownDescriptor = Reflect.getOwnPropertyDescriptor(currentTarget, key);
+      if (!ownDescriptor && (key === REACTIVE_SYMBOL || key === '_signal' || key === 'dispose')) {
+        return true;
+      }
+      const oldValue = currentTarget[key];
+      const oldLength = Array.isArray(currentTarget) ? currentTarget.length : 0;
+      const rawValue = toRaw(value);
+      const hadKey = Object.prototype.hasOwnProperty.call(currentTarget, key);
+      const result = Reflect.set(currentTarget, key, rawValue);
+      if (!result || (hadKey && Object.is(oldValue, rawValue))) {return result;}
+
+      if (meta.disposed) {return result;}
+
+      linkReactiveChild(meta, key, rawValue);
+
+      const context = getReactiveMutationContext(meta, key);
+      runTriggerTransaction(context, () => {
+        notifyProperty(meta, key, context);
+        if (Array.isArray(currentTarget)) {
+          const newLength = currentTarget.length;
+          notifyArrayLength(meta, oldLength, newLength, key, context);
+          if (key !== 'length' && !hadKey) {notifyIteration(meta, context);}
+        } else if (!hadKey) {
+          notifyIteration(meta, context);
+        }
+      });
+      return result;
+    },
+
+    deleteProperty(currentTarget, key) {
+      const hadKey = Object.prototype.hasOwnProperty.call(currentTarget, key);
+      const result = Reflect.deleteProperty(currentTarget, key);
+      if (result && hadKey) {
+        if (meta.disposed) {return result;}
+        linkReactiveChild(meta, key, undefined);
+        const context = getReactiveMutationContext(meta, key);
+        runTriggerTransaction(context, () => {
+          notifyProperty(meta, key, context);
+          notifyIteration(meta, context);
+        });
       }
       return result;
     },
-    deleteProperty(target, key) {
-      const hadKey = key in target;
-      const result = Reflect.deleteProperty(target, key);
-      if (hadKey) {
-        notifyParent(parentSignal, target);
-      }
+
+    has(currentTarget, key) {
+      trackProperty(meta, key);
+      return Reflect.has(currentTarget, key);
+    },
+
+    ownKeys(currentTarget) {
+      if (activeEffect) {track(getIterationSignal(meta));}
+      return Reflect.ownKeys(currentTarget);
+    },
+
+    getOwnPropertyDescriptor(currentTarget, key) {
+      return Reflect.getOwnPropertyDescriptor(currentTarget, key);
+    },
+
+    defineProperty(currentTarget, key, descriptor) {
+      const previous = Reflect.getOwnPropertyDescriptor(currentTarget, key);
+      const hadKey = Boolean(previous);
+      const oldLength = Array.isArray(currentTarget) ? currentTarget.length : 0;
+      const normalizedDescriptor = 'value' in descriptor
+        ? { ...descriptor, value: toRaw(descriptor.value) }
+        : descriptor;
+      const result = Reflect.defineProperty(currentTarget, key, normalizedDescriptor);
+      const next = result ? Reflect.getOwnPropertyDescriptor(currentTarget, key) : null;
+      if (!result || meta.disposed) {return result;}
+      const valueChanged = Boolean(next && 'value' in next)
+        && (!previous || !('value' in previous) || !Object.is(previous.value, next.value));
+      const enumerableChanged = Boolean(previous && next)
+        && previous.enumerable !== next.enumerable;
+      if (!result) {return result;}
+
+      linkReactiveChild(meta, key, next && 'value' in next ? next.value : undefined);
+      const context = getReactiveMutationContext(meta, key);
+      runTriggerTransaction(context, () => {
+        if (!hadKey || valueChanged) {
+          notifyProperty(meta, key, context);
+        }
+        if (Array.isArray(currentTarget)) {
+          notifyArrayLength(meta, oldLength, currentTarget.length, key, context);
+        }
+        if (!hadKey || enumerableChanged) {notifyIteration(meta, context);}
+      });
       return result;
-    },
-    has(target, key) {
-      track(parentSignal);
-      return Reflect.has(target, key);
-    },
-    ownKeys(target) {
-      track(parentSignal);
-      return Reflect.ownKeys(target);
-    },
-    getOwnPropertyDescriptor(target, key) {
-      track(parentSignal);
-      return Reflect.getOwnPropertyDescriptor(target, key);
     },
   };
 }
 
+function wrapReactive(value, root) {
+  if (!isSupportedReactiveTarget(value)) {return value;}
+  const existing = root && root.proxies.get(value);
+  if (existing) {return existing;}
+  const globallyCached = rawToProxy.get(value);
+  if (globallyCached) {
+    const meta = proxyToMeta.get(globallyCached);
+    if (meta && !meta.disposed) {
+      if (root) {root.proxies.set(value, globallyCached);}
+      return globallyCached;
+    }
+    rawToProxy.delete(value);
+  }
+
+  const meta = {
+    target: value,
+    root,
+    localSignal: new Signal(value),
+    owners: new Set(),
+    rootOwners: new Set(),
+    parents: new Set(),
+    children: new Map(),
+    disposed: false,
+    signals: new Map(),
+    proxy: null,
+  };
+  const proxy = new Proxy(value, createReactiveHandler(meta));
+  meta.proxy = proxy;
+  if (root) {root.proxies.set(value, proxy);}
+  rawToProxy.set(value, proxy);
+  proxyToRaw.set(proxy, value);
+  proxyToMeta.set(proxy, meta);
+  return proxy;
+}
+
+function updatePrimaryRoot(meta) {
+  const nextRoot = meta.owners.values().next().value || null;
+  if (meta.root !== nextRoot) {meta.root = nextRoot;}
+}
+
+function addRootOwner(meta, root, visited = new Set()) {
+  if (root.disposed || meta.disposed) {return;}
+  if (visited.has(meta)) {return;}
+  visited.add(meta);
+  if (!meta.owners.has(root)) {
+    meta.owners.add(root);
+    root.metas.add(meta);
+  }
+  for (const child of meta.children.values()) {
+    addRootOwner(child, root, visited);
+  }
+}
+
+function hasRootPath(meta, root) {
+  if (meta.rootOwners.has(root)) {return true;}
+  for (const parent of meta.parents) {
+    if (parent.owners.has(root)) {return true;}
+  }
+  return false;
+}
+
+function removeRootOwner(meta, root, visited = new Set()) {
+  if (meta.disposed || !meta.owners.has(root) || visited.has(meta)) {return;}
+  visited.add(meta);
+  if (hasRootPath(meta, root)) {return;}
+  meta.owners.delete(root);
+  root.metas.delete(meta);
+  updatePrimaryRoot(meta);
+  for (const child of meta.children.values()) {
+    removeRootOwner(child, root, visited);
+  }
+}
+
+function linkReactiveChild(parent, key, childValue) {
+  const childProxy = isReactive(childValue)
+    ? childValue
+    : isSupportedReactiveTarget(childValue)
+      ? rawToProxy.get(toRaw(childValue))
+      : null;
+  const nextMeta = childProxy ? proxyToMeta.get(childProxy) : null;
+  const previousMeta = parent.children.get(key) || null;
+  if (previousMeta === nextMeta) {return;}
+
+  if (previousMeta) {previousMeta.parents.delete(parent);}
+  if (nextMeta && !nextMeta.disposed) {
+    parent.children.set(key, nextMeta);
+    nextMeta.parents.add(parent);
+  } else {
+    parent.children.delete(key);
+  }
+
+  for (const root of [ ...parent.owners ]) {
+    if (previousMeta) {removeRootOwner(previousMeta, root);}
+    if (nextMeta) {addRootOwner(nextMeta, root);}
+  }
+}
+
+function disposeReactiveMeta(meta) {
+  if (meta.disposed) {return;}
+  meta.disposed = true;
+  for (const sig of meta.signals.values()) {
+    sig._disposed = true;
+    sig._subscribers.clear();
+  }
+  if (meta.proxy && rawToProxy.get(meta.target) === meta.proxy) {
+    rawToProxy.delete(meta.target);
+  }
+  for (const parent of [ ...meta.parents ]) {
+    for (const [ key, child ] of parent.children) {
+      if (child === meta) {parent.children.delete(key);}
+    }
+    meta.parents.delete(parent);
+  }
+  for (const child of [ ...meta.children.values() ]) {
+    child.parents.delete(meta);
+    if (child.owners.size === 0 && child.rootOwners.size === 0 && child.parents.size === 0) {
+      disposeReactiveMeta(child);
+    }
+  }
+  meta.children.clear();
+  meta.owners.clear();
+  meta.rootOwners.clear();
+  meta.root = null;
+  meta.localSignal._disposed = true;
+  meta.localSignal._subscribers.clear();
+  meta.signals.clear();
+}
+
+/**
+ * Create a deep reactive proxy over plain objects and arrays. Built-in
+ * objects with internal slots are intentionally returned unchanged.
+ */
 export function reactive(obj) {
-  if (!obj || typeof obj !== 'object') {return obj;}
-  const sig = new Signal(obj);
-  const reactiveObj = wrapReactive(obj, sig);
-  Object.defineProperty(reactiveObj, '_signal', { value: sig, enumerable: false });
-  Object.defineProperty(reactiveObj, 'dispose', {
-    value: () => {
-      sig._subscribers.clear();
-    },
-    enumerable: false,
-  });
+  if (!isObject(obj) || obj instanceof Signal) {return obj;}
+  if (isReactive(obj)) {return obj;}
+  if (!isSupportedReactiveTarget(obj)) {return obj;}
+
+  const existing = rawToProxy.get(obj);
+  const existingMeta = existing ? proxyToMeta.get(existing) : null;
+  if (existingMeta && !existingMeta.disposed && existingMeta.owners.size > 0) {
+    return existing;
+  }
+  const root = createRoot(obj);
+  const reactiveObj = existing || wrapReactive(obj, root);
+  const meta = proxyToMeta.get(reactiveObj);
+  root.proxies.set(obj, reactiveObj);
+  root.rootMeta = meta;
+  meta.rootOwners.add(root);
+  addRootOwner(meta, root);
+  // `_signal` and `dispose` are virtual properties handled by the proxy. The
+  // underlying signal always retains the root target as its stable value.
   return reactiveObj;
 }

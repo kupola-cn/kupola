@@ -187,20 +187,20 @@ function svg(name, size = 16, viewBox = '0 0 24 24') {
 
 async function resolveIcon(name, size = 16) {
   if (!name) {return '';}
-  
+
   const lowerName = name.toLowerCase();
-  
+
   if (PATHS[lowerName]) {
     return svg(lowerName, size);
   }
-  
+
   if (name.includes(':')) {
-    const [prefix, iconName] = name.split(':', 2);
+    const [ prefix, iconName ] = name.split(':', 2);
     if (PROVIDERS[prefix]) {
       return PROVIDERS[prefix](iconName, size);
     }
   }
-  
+
   return '';
 }
 
@@ -210,11 +210,23 @@ function setupIconResolver() {
   }
 }
 
+function iconPlugin(setIconResolverFn) {
+  return {
+    install() {
+      registerAllGroups();
+      setupIconResolver();
+      if (setIconResolverFn) {
+        setIconResolverFn(resolveIcon);
+      }
+    },
+  };
+}
+
 function createIconComponent(defineComponent) {
   defineComponent('icon', {
     props: {
       name: String,
-      size: { type: Number, default: 16 }
+      size: { type: Number, default: 16 },
     },
     async mount(element, props) {
       const svgContent = await resolveIcon(props.name, props.size);
@@ -227,7 +239,7 @@ function createIconComponent(defineComponent) {
         const svgContent = await resolveIcon(props.name, props.size);
         element.innerHTML = svgContent || '';
       }
-    }
+    },
   });
 }
 
@@ -254,6 +266,7 @@ const Icons = {
   registerIconProvider,
   createIconComponent,
   setupIconResolver,
+  plugin: iconPlugin,
 };
 
-export { Icons, svg, renderIcons as render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createIconComponent, setupIconResolver };
+export { Icons, svg, renderIcons as render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createIconComponent, setupIconResolver, iconPlugin };

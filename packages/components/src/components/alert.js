@@ -22,6 +22,7 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create an Alert component instance.
@@ -44,6 +45,7 @@ export function Alert(options = {}) {
   } = options;
 
   let _isDismissed = false;
+  const listeners = createListenerRegistry();
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -55,6 +57,7 @@ export function Alert(options = {}) {
   }
 
   function destroy() {
+    listeners.destroy();
     instance.destroy();
   }
 
@@ -78,7 +81,7 @@ export function Alert(options = {}) {
   // Bind close button after render
   const closeBtn = container.querySelector('.ds-alert__close');
   if (closeBtn) {
-    closeBtn.addEventListener('click', (e) => {
+    listeners.on(closeBtn, 'click', (e) => {
       e.stopPropagation();
       dismiss();
     });

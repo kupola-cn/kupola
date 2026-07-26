@@ -29,22 +29,25 @@ import { render } from '@kupola/platform/render';
  * @returns {{ element: DocumentFragment, start: Function, stop: Function, destroy: Function }}
  */
 export function Countdown(options = {}) {
-  const {
-    target = 0,
-    onComplete = null,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const onComplete = typeof config.onComplete === 'function'
+    ? config.onComplete
+    : (typeof config.onFinish === 'function' ? config.onFinish : null);
+  const onTick = typeof config.onTick === 'function' ? config.onTick : null;
 
   let _timer = null;
-  let _target = target;
+  let _target = _normalizeTarget(config.target);
   let _completed = false;
+  let _destroyed = false;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function start(newTarget) {
-    if (newTarget) {_target = newTarget;}
+    if (_destroyed) {return;}
+    if (arguments.length > 0) {_target = _normalizeTarget(newTarget);}
     stop();
     _completed = false;
-    _tick();
+    if (_tick()) {return;}
     _timer = setInterval(_tick, 1000);
   }
 
@@ -56,6 +59,8 @@ export function Countdown(options = {}) {
   }
 
   function destroy() {
+    if (_destroyed) {return;}
+    _destroyed = true;
     stop();
     instance.destroy();
   }
@@ -63,8 +68,10 @@ export function Countdown(options = {}) {
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _tick() {
+    if (_destroyed) {return true;}
     const now = Date.now();
-    let diff = Math.max(0, _target - now);
+    const remaining = Math.max(0, _target - now);
+    let diff = remaining;
 
     const days = Math.floor(diff / 86400000); diff %= 86400000;
     const hours = Math.floor(diff / 3600000); diff %= 3600000;
@@ -72,12 +79,15 @@ export function Countdown(options = {}) {
     const seconds = Math.floor(diff / 1000);
 
     _updateDisplay(days, hours, minutes, seconds);
+    if (onTick) {onTick(remaining);}
 
     if (_target - now <= 0 && !_completed) {
       _completed = true;
       stop();
       if (onComplete) {onComplete();}
+      return true;
     }
+    return false;
   }
 
   function _updateDisplay(days, hours, minutes, seconds) {
@@ -90,6 +100,18 @@ export function Countdown(options = {}) {
 
   function _pad(n) {
     return n < 10 ? '0' + n : String(n);
+  }
+
+  function _normalizeTarget(value) {
+    let timestamp;
+    if (value instanceof Date) {
+      timestamp = value.getTime();
+    } else if (typeof value === 'string') {
+      timestamp = Date.parse(value);
+    } else {
+      timestamp = value;
+    }
+    return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : 0;
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────

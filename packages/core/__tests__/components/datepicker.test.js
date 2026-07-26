@@ -4,11 +4,11 @@
  * @jest-environment jsdom
  */
 
-import { html } from '../../../platform/src/template.js';
 import { resetScheduler } from '../../src/scheduler.js';
 import { DatePicker as Datepicker } from '@kupola/components';
 
 afterEach(() => {
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   resetScheduler();
 });
@@ -289,6 +289,32 @@ describe('Datepicker setValue/getValue', () => {
     view.destroy();
   });
 
+  test('rejects impossible calendar dates instead of rolling into another month', () => {
+    const view = Datepicker({ value: '2025-02-31' });
+    expect(view.getValue()).toBe('');
+
+    view.setValue('2024-02-29');
+    expect(view.getValue()).toBe('2024-02-29');
+    view.setValue('2025-02-29');
+    expect(view.getValue()).toBe('');
+    view.destroy();
+  });
+
+  test('parses and formats DD/MM/YYYY consistently', () => {
+    const view = Datepicker({ value: '15/06/2025', format: 'DD/MM/YYYY' });
+    expect(view.getValue()).toBe('15/06/2025');
+    view.destroy();
+  });
+
+  test('accepts Date values and supports clear()', () => {
+    const view = Datepicker();
+    view.setValue(new Date(2025, 11, 25));
+    expect(view.getValue()).toBe('2025-12-25');
+    view.clear();
+    expect(view.getValue()).toBe('');
+    view.destroy();
+  });
+
   test('getValue returns empty string when no date selected', () => {
     const view = Datepicker();
     expect(view.getValue()).toBe('');
@@ -340,6 +366,23 @@ describe('Datepicker destroy', () => {
     document.body.appendChild(container);
 
     // Should not throw
+    view.open();
+    expect(view.isOpen()).toBe(true);
+    view.destroy();
+    expect(view.isOpen()).toBe(false);
+    expect(() => view.destroy()).not.toThrow();
+    view.open();
+    expect(view.isOpen()).toBe(false);
+  });
+
+  test('does not open when disabled', () => {
+    const view = Datepicker({ disabled: true });
+    const container = document.createElement('div');
+    container.appendChild(view.element);
+
+    view.open();
+    expect(view.isOpen()).toBe(false);
+    expect(container.querySelector('.ds-datepicker__input').disabled).toBe(true);
     view.destroy();
   });
 });

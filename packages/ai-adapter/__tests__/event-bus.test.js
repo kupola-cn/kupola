@@ -128,7 +128,7 @@ describe('EventBus', () => {
     it('should return all event names', () => {
       bus.on('a', () => {});
       bus.on('b', () => {});
-      expect(bus.eventNames().sort()).toEqual(['a', 'b']);
+      expect(bus.eventNames().sort()).toEqual([ 'a', 'b' ]);
     });
   });
 

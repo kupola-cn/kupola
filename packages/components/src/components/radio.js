@@ -25,6 +25,7 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a Radio component instance.
@@ -45,43 +46,8 @@ export function Radio(options = {}) {
   } = options;
 
   let _value = initialValue;
-
-  // ── Public API ─────────────────────────────────────────────────────────────
-
-  function getValue() {
-    return _value;
-  }
-
-  function setValue(val) {
-    _value = val;
-    // Update radio inputs
-    if (groupEl) {
-      const inputs = groupEl.querySelectorAll('input');
-      inputs.forEach((input) => {
-        input.checked = input.value === _value;
-      });
-    }
-    if (onChange) {onChange(_value);}
-  }
-
-  function destroy() {
-    if (groupEl) {
-      const inputs = groupEl.querySelectorAll('input');
-      inputs.forEach((input) => {
-        input.removeEventListener('change', _handleChange);
-      });
-    }
-    instance.destroy();
-  }
-
-  // ── Internal ───────────────────────────────────────────────────────────────
-
-  function _handleChange(e) {
-    _value = e.target.value;
-    if (onChange) {onChange(_value);}
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
+  const listeners = createListenerRegistry();
+  let destroyed = false;
 
   const tpl = html`<div class="ds-radio-group" role="radiogroup"></div>`;
 
@@ -90,7 +56,6 @@ export function Radio(options = {}) {
 
   const groupEl = container.querySelector('.ds-radio-group');
 
-  // Build radio items via DOM
   radioOptions.forEach((opt, index) => {
     const labelEl = document.createElement('label');
     labelEl.className = 'ds-radio';
@@ -108,7 +73,6 @@ export function Radio(options = {}) {
     if (opt.disabled) {input.disabled = true;}
     input.setAttribute('role', 'radio');
     input.setAttribute('aria-checked', opt.value === _value);
-    input.addEventListener('change', _handleChange);
 
     const dotEl = document.createElement('span');
     dotEl.className = 'ds-radio__dot';
@@ -124,12 +88,43 @@ export function Radio(options = {}) {
     }
 
     groupEl.appendChild(labelEl);
+
+    listeners.on(input, 'change', _handleChange);
   });
 
-  return {
+  function _handleChange(e) {
+    _value = e.target.value;
+    onChange?.(_value);
+  }
+
+  function getValue() {
+    return _value;
+  }
+
+  function setValue(val) {
+    if (destroyed) {return;}
+    _value = val;
+    if (groupEl) {
+      const inputs = groupEl.querySelectorAll('input');
+      inputs.forEach((input) => {
+        input.checked = input.value === _value;
+      });
+    }
+    onChange?.(_value);
+  }
+
+  const api = {
     get element() { return container; },
     getValue,
     setValue,
-    destroy,
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      listeners.destroy();
+      instance.destroy();
+      Object.freeze(api);
+    },
   };
+
+  return api;
 }

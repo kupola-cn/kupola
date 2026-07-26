@@ -24,6 +24,7 @@
  */
 
 import { signal, effect } from '@kupola/core';
+import { createListenerRegistry } from './listener-registry.js';
 
 export class AIPanel {
   /**
@@ -50,6 +51,9 @@ export class AIPanel {
       resultPageSize: 20,
       maxTableColumns: 12,
       context: {},
+      resizable: true,
+      minWidth: 320,
+      maxWidth: 900,
       ...options,
     };
 
@@ -58,14 +62,21 @@ export class AIPanel {
     this._inputEl = null;
     this._progressEl = null;
     this._timelineEl = null;
+    this._resizeHandle = null;
     this._unsubscribers = [];
     this._isOpen = signal(false);
     this._messages = signal([]);
     this._resultViewerEl = null;
     this._currentResultView = null;
+    this._listeners = createListenerRegistry();
     this._resultKeydownHandler = (e) => {
       if (e.key === 'Escape') this._closeResultViewer();
     };
+    this._timers = [];
+    this._destroyed = false;
+    this._isProcessing = false;
+    this._renderedCount = 0;
+    this._isResizing = false;
   }
 
   /**
@@ -93,16 +104,30 @@ export class AIPanel {
     this._timelineEl = this._container.querySelector('.ds-ai-timeline');
     this._headerCloseBtn = this._container.querySelector('.ds-ai-close-btn');
     this._headerMinBtn = this._container.querySelector('.ds-ai-min-btn');
+    this._tabsEl = this._container.querySelector('.ds-ai-tabs');
+    this._flowsPanelEl = this._container.querySelector('.ds-ai-flows-panel');
+    this._flowsListEl = this._container.querySelector('.ds-ai-flows-list');
+    this._flowsEmptyEl = this._container.querySelector('.ds-ai-flows-empty');
+    this._inputAreaEl = this._container.querySelector('.ds-ai-input-area');
+    this._currentTab = 'chat';
 
-    this._sendBtn.addEventListener('click', () => this._handleSend());
-    this._inputEl.addEventListener('keydown', (e) => {
+    this._listeners.on(this._sendBtn, 'click', () => this._handleSend());
+    this._listeners.on(this._inputEl, 'keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         this._handleSend();
       }
     });
-    this._headerCloseBtn.addEventListener('click', () => this.close());
-    this._headerMinBtn.addEventListener('click', () => this._toggleMinimize());
+    this._listeners.on(this._headerCloseBtn, 'click', () => this.close());
+    this._listeners.on(this._headerMinBtn, 'click', () => this._toggleMinimize());
+
+    this._tabsEl.querySelectorAll('[data-ds-ai-tab]').forEach(tab => {
+      this._listeners.on(tab, 'click', () => this._switchTab(tab.dataset.dsAiTab));
+    });
+
+    if (this.options.resizable && this.options.layout === 'drawer') {
+      this._setupResizeHandle();
+    }
 
     parent.appendChild(this._container);
 
@@ -114,11 +139,11 @@ export class AIPanel {
       actions: null,
     }));
 
-    effect(() => {
+    const stopMessagesEffect = effect(() => {
       this._renderMessages();
     });
 
-    effect(() => {
+    const stopOpenEffect = effect(() => {
       if (!this._container) return;
       const isOpen = this._isOpen.value;
       this._container.style.display = isOpen ? 'flex' : 'none';
@@ -130,6 +155,10 @@ export class AIPanel {
         this._container.classList.remove('is-visible');
       }
     });
+
+    this._unsubscribers.push(stopMessagesEffect, stopOpenEffect);
+
+    this._renderFlowsList();
 
     return this;
   }
@@ -163,8 +192,12 @@ export class AIPanel {
 
   /** Destroy the panel and clean up listeners. */
   destroy() {
+    this._destroyed = true;
+    this._timers.forEach(timer => clearTimeout(timer));
+    this._timers = [];
     this._unsubscribers.forEach(fn => fn());
     this._unsubscribers = [];
+    this._listeners.destroy();
     this._destroyResultViewer();
     if (this._container && this._container.parentNode) {
       this._container.parentNode.removeChild(this._container);
@@ -172,6 +205,9 @@ export class AIPanel {
     this._container = null;
     this._messagesEl = null;
     this._inputEl = null;
+    this._progressEl = null;
+    this._timelineEl = null;
+    this._resizeHandle = null;
     this._isOpen.value = false;
   }
 
@@ -183,6 +219,103 @@ export class AIPanel {
 
   // ── Private ────────────────────────────────────────────
 
+  _switchTab(tab) {
+    if (tab === this._currentTab) return;
+
+    this._currentTab = tab;
+
+    this._tabsEl.querySelectorAll('[data-ds-ai-tab]').forEach(t => {
+      t.classList.toggle('ds-ai-tab--active', t.dataset.dsAiTab === tab);
+    });
+
+    if (tab === 'chat') {
+      this._messagesEl.style.display = 'block';
+      this._flowsPanelEl.style.display = 'none';
+      this._inputAreaEl.style.display = 'flex';
+      this._scrollToBottom();
+    } else {
+      this._messagesEl.style.display = 'none';
+      this._flowsPanelEl.style.display = 'block';
+      this._inputAreaEl.style.display = 'none';
+      this._renderFlowsList();
+    }
+  }
+
+  _renderFlowsList() {
+    if (!this._flowsListEl) return;
+
+    const flows = this.adapter.flow.list();
+
+    if (flows.length === 0) {
+      this._flowsListEl.innerHTML = '';
+      this._flowsEmptyEl.style.display = 'block';
+      return;
+    }
+
+    this._flowsEmptyEl.style.display = 'none';
+    this._flowsListEl.innerHTML = flows.map(flow => {
+      const lastRun = flow.lastRunAt ? this._formatTime(flow.lastRunAt) : '从未执行';
+      const created = flow.createdAt ? this._formatTime(flow.createdAt) : '未知';
+      return `
+        <div class="ds-ai-flow-card">
+          <div class="ds-ai-flow-header">
+            <span class="ds-ai-flow-name">${_esc(flow.name)}</span>
+            <div class="ds-ai-flow-actions">
+              <button class="ds-ai-flow-btn ds-ai-flow-btn--execute" data-ds-ai-flow-action="execute" data-ds-ai-flow-name="${_esc(flow.name)}">执行</button>
+              <button class="ds-ai-flow-btn ds-ai-flow-btn--edit" data-ds-ai-flow-action="edit" data-ds-ai-flow-name="${_esc(flow.name)}">编辑</button>
+              <button class="ds-ai-flow-btn ds-ai-flow-btn--delete" data-ds-ai-flow-action="delete" data-ds-ai-flow-name="${_esc(flow.name)}">删除</button>
+            </div>
+          </div>
+          <div class="ds-ai-flow-info">
+            <span>${flow.steps} 个步骤</span>
+            <span>执行 ${flow.executionCount} 次</span>
+            <span>${flow.lastRunAt ? `上次 ${lastRun}` : `创建于 ${created}`}</span>
+          </div>
+          ${flow.description ? `<div class="ds-ai-flow-desc">${_esc(flow.description)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    this._flowsListEl.querySelectorAll('[data-ds-ai-flow-action]').forEach(el => {
+      this._listeners.on(el, 'click', (e) => {
+        const action = e.currentTarget.dataset.dsAiFlowAction;
+        const name = e.currentTarget.dataset.dsAiFlowName;
+        this._handleFlowAction(action, name);
+      });
+    });
+  }
+
+  async _handleFlowAction(action, name) {
+    switch (action) {
+      case 'execute':
+        this._switchTab('chat');
+        await this._handleSend(`执行 ${name}`);
+        break;
+      case 'edit':
+        alert(`编辑流程 "${name}"（功能开发中）`);
+        break;
+      case 'delete':
+        if (confirm(`确定要删除流程 "${name}" 吗？`)) {
+          this.adapter.flow.remove(name);
+          this._renderFlowsList();
+        }
+        break;
+    }
+  }
+
+  _formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+
+    if (diff < 60000) return '刚刚';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
+    if (diff < 604800000) return `${Math.floor(diff / 86400000)} 天前`;
+
+    return date.toLocaleDateString();
+  }
+
   _buildHTML() {
     const { title, height, placeholder } = this.options;
     return `
@@ -193,7 +326,20 @@ export class AIPanel {
           <button class="ds-ai-close-btn" title="关闭">✕</button>
         </div>
       </div>
-      <div class="ds-ai-messages" style="max-height:${height};">
+      <div class="ds-ai-tabs">
+        <button class="ds-ai-tab ds-ai-tab--active" data-ds-ai-tab="chat">对话</button>
+        <button class="ds-ai-tab" data-ds-ai-tab="flows">我的流程</button>
+      </div>
+      <div class="ds-ai-content">
+        <div class="ds-ai-messages" style="max-height:${height};">
+        </div>
+        <div class="ds-ai-flows-panel">
+          <div class="ds-ai-flows-list">
+          </div>
+          <div class="ds-ai-flows-empty" style="display:none;">
+            暂无流程，尝试执行一些操作后系统会自动建议创建流程
+          </div>
+        </div>
       </div>
       <div class="ds-ai-progress">
         <div class="ds-ai-progress-bar"><div class="ds-ai-progress-fill"></div></div>
@@ -240,7 +386,11 @@ export class AIPanel {
     });
 
     const unsubFlowComplete = bus.on('flow:complete', () => {
-      setTimeout(() => { this._timelineEl.classList.remove('is-visible'); }, 3000);
+      const timer = setTimeout(() => {
+        if (this._destroyed) return;
+        if (this._timelineEl) this._timelineEl.classList.remove('is-visible');
+      }, 3000);
+      this._timers.push(timer);
     });
 
     this._unsubscribers.push(unsubResult, unsubFlowStep, unsubFlowComplete);
@@ -249,8 +399,22 @@ export class AIPanel {
   _renderMessages() {
     if (!this._messagesEl) return;
 
-    this._messagesEl.innerHTML = '';
-    for (const msg of this._messages.value) {
+    const messages = this._messages.value;
+    const total = messages.length;
+
+    if (total === 0) {
+      this._messagesEl.innerHTML = '';
+      this._renderedCount = 0;
+      return;
+    }
+
+    if (total < this._renderedCount) {
+      this._messagesEl.innerHTML = '';
+      this._renderedCount = 0;
+    }
+
+    for (let i = this._renderedCount; i < total; i++) {
+      const msg = messages[i];
       const div = document.createElement('div');
       div.className = `ds-ai-msg ds-ai-msg-${msg.role}`;
       div.innerHTML = _renderText(msg.text);
@@ -269,7 +433,7 @@ export class AIPanel {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.textContent = act.label;
-          btn.addEventListener('click', () => act.action());
+          this._listeners.on(btn, 'click', () => act.action());
           btnGroup.appendChild(btn);
         }
         div.appendChild(btnGroup);
@@ -277,12 +441,18 @@ export class AIPanel {
 
       this._messagesEl.appendChild(div);
     }
+
+    this._renderedCount = total;
     this._scrollToBottom();
   }
 
   async _handleSend(overrideInput) {
+    if (this._isProcessing) return;
+
     const input = overrideInput || this._inputEl.value.trim();
     if (!input) return;
+
+    this._isProcessing = true;
 
     this._inputEl.value = '';
     this._messages.value = [...this._messages.value, { role: 'user', text: input, actions: null }];
@@ -300,6 +470,8 @@ export class AIPanel {
         text: `❌ Error: ${err.message}`,
         actions: null,
       }];
+    } finally {
+      this._isProcessing = false;
     }
   }
 
@@ -345,7 +517,7 @@ export class AIPanel {
     this._resultViewerEl = document.createElement('div');
     this._resultViewerEl.className = 'ds-ai-result-viewer';
     document.body.appendChild(this._resultViewerEl);
-    document.addEventListener('keydown', this._resultKeydownHandler);
+    this._listeners.on(document, 'keydown', this._resultKeydownHandler);
   }
 
   _renderResultViewer() {
@@ -449,7 +621,7 @@ export class AIPanel {
 
   _bindResultViewerEvents() {
     this._resultViewerEl.querySelectorAll('[data-ds-ai-result-action]').forEach(el => {
-      el.addEventListener('click', (e) => {
+      this._listeners.on(el, 'click', (e) => {
         const action = e.currentTarget.dataset.dsAiResultAction;
         if (action === 'close') this._closeResultViewer();
         if (action === 'copy') this._copyResultJSON(this._currentResultView.result);
@@ -460,7 +632,7 @@ export class AIPanel {
     });
 
     this._resultViewerEl.querySelectorAll('[data-ds-ai-result-tab]').forEach(el => {
-      el.addEventListener('click', (e) => {
+      this._listeners.on(el, 'click', (e) => {
         this._currentResultView.tab = e.currentTarget.dataset.dsAiResultTab;
         this._renderResultViewer();
       });
@@ -483,7 +655,6 @@ export class AIPanel {
     if (this._resultViewerEl && this._resultViewerEl.parentNode) {
       this._resultViewerEl.parentNode.removeChild(this._resultViewerEl);
     }
-    document.removeEventListener('keydown', this._resultKeydownHandler);
     this._resultViewerEl = null;
     this._currentResultView = null;
   }
@@ -596,7 +767,11 @@ export class AIPanel {
     text.textContent = `${done}/${batchResult.total}`;
 
     if (done === batchResult.total) {
-      setTimeout(() => { this._progressEl.classList.remove('is-visible'); }, 2000);
+      const timer = setTimeout(() => {
+        if (this._destroyed) return;
+        if (this._progressEl) this._progressEl.classList.remove('is-visible');
+      }, 2000);
+      this._timers.push(timer);
     }
   }
 
@@ -619,6 +794,60 @@ export class AIPanel {
 
   _toggleMinimize() {
     this._container.classList.toggle('is-minimized');
+  }
+
+  _setupResizeHandle() {
+    if (!this._container) return;
+
+    this._resizeHandle = document.createElement('div');
+    this._resizeHandle.className = 'ds-ai-resize-handle';
+    this._resizeHandle.addEventListener('mousedown', (e) => this._startResize(e));
+    this._resizeHandle.addEventListener('touchstart', (e) => this._startResize(e), { passive: false });
+
+    this._container.appendChild(this._resizeHandle);
+  }
+
+  _startResize(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    this._isResizing = true;
+    this._container.classList.add('is-resizing');
+
+    const startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const startWidth = this._container.offsetWidth;
+
+    const handleMove = (ev) => {
+      if (this._destroyed || !this._isResizing || !this._container) return;
+
+      const currentX = ev.type === 'touchmove' ? ev.touches[0].clientX : ev.clientX;
+      const delta = startX - currentX;
+      const newWidth = Math.max(
+        this.options.minWidth,
+        Math.min(this.options.maxWidth, startWidth + delta)
+      );
+
+      this._container.style.width = `${newWidth}px`;
+    };
+
+    const handleEnd = () => {
+      if (!this._isResizing) return;
+
+      this._isResizing = false;
+      if (this._container) {
+        this._container.classList.remove('is-resizing');
+      }
+
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('touchend', handleEnd);
+    };
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
   }
 
   _scrollToBottom() {

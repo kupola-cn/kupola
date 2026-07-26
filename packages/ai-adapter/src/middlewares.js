@@ -65,10 +65,12 @@ export function createDevToolsLogger(options = {}) {
   } = options;
   const entries = [];
 
+  const DEVTOOLS_SYMBOL = Symbol.for('kupola-ai-devtools');
+
   const getStore = () => {
     if (typeof window !== 'undefined') {
-      if (!window.__KUPOLA_AI_DEVTOOLS__) window.__KUPOLA_AI_DEVTOOLS__ = [];
-      return window.__KUPOLA_AI_DEVTOOLS__;
+      if (!window[DEVTOOLS_SYMBOL]) window[DEVTOOLS_SYMBOL] = [];
+      return window[DEVTOOLS_SYMBOL];
     }
     return entries;
   };
@@ -225,7 +227,10 @@ function _normalizeAuthRules(options) {
   }
 
   for (const [key, value] of Object.entries(options.permissions || {})) {
-    const [engine, type, name] = key.split(':');
+    const parts = key.split(':');
+    const engine = parts[0];
+    const type = parts[1];
+    const name = parts[2];
     const rule = Array.isArray(value) ? { roles: value } : { ...value };
     normalized.push({ engine, type, name, ...rule });
   }

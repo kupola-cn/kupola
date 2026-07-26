@@ -76,40 +76,59 @@ const routerInclude = ['packages/router/src/**/*.js', 'packages/platform/src/**/
 
 // ── @kupola/core entries ─────────────────────────────────────────────────────
 const coreEntries = [
-  ['packages/core/src/index.js', 'dist/kupola-core'],
-  ['packages/core/src/devtools.js', 'dist/kupola-core-devtools'],
+  ['packages/core/src/index.js', 'packages/core/dist/kupola-core'],
+  ['packages/core/src/devtools.js', 'packages/core/dist/kupola-core-devtools'],
 ];
 
 // ── @kupola/platform entries ─────────────────────────────────────────────────
 const platformEntries = [
-  ['packages/platform/src/platform.js', 'dist/kupola-platform'],
-  ['packages/platform/src/template.js', 'dist/kupola-platform-template'],
-  ['packages/platform/src/render.js', 'dist/kupola-platform-render'],
-  ['packages/platform/src/component.js', 'dist/kupola-platform-component'],
-  ['packages/platform/src/directives.js', 'dist/kupola-platform-directives'],
-  ['packages/platform/src/theme.js', 'dist/kupola-platform-theme'],
-  ['packages/platform/src/lazy.js', 'dist/kupola-platform-lazy'],
-  ['packages/platform/src/server.js', 'dist/kupola-platform-server'],
-  ['packages/platform/src/i18n.js', 'dist/kupola-platform-i18n'],
-  ['packages/platform/src/errors.js', 'dist/kupola-platform-errors'],
+  ['packages/platform/src/platform.js', 'packages/platform/dist/kupola-platform'],
+  ['packages/platform/src/template.js', 'packages/platform/dist/kupola-platform-template'],
+  ['packages/platform/src/render.js', 'packages/platform/dist/kupola-platform-render'],
+  ['packages/platform/src/component.js', 'packages/platform/dist/kupola-platform-component'],
+  ['packages/platform/src/directives.js', 'packages/platform/dist/kupola-platform-directives'],
+  ['packages/platform/src/theme.js', 'packages/platform/dist/kupola-platform-theme'],
+  ['packages/platform/src/lazy.js', 'packages/platform/dist/kupola-platform-lazy'],
+  ['packages/platform/src/server.js', 'packages/platform/dist/kupola-platform-server'],
+  ['packages/platform/src/i18n.js', 'packages/platform/dist/kupola-platform-i18n'],
+  ['packages/platform/src/errors.js', 'packages/platform/dist/kupola-platform-errors'],
 ];
 
 // ── @kupola/components entries ───────────────────────────────────────────────
 const componentsDir = path.join(__dirname, 'packages/components/src/components');
-const componentEntries = fs
-  .readdirSync(componentsDir)
-  .filter(file => file.endsWith('.js'))
-  .sort()
-  .map(file => {
-    const name = path.basename(file, '.js');
+const componentsPackage = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'packages/components/package.json'), 'utf8'),
+);
+const componentEntries = Object.entries(componentsPackage.exports)
+  .filter(([subpath]) => subpath !== '.')
+  .sort(([left], [right]) => left.localeCompare(right))
+  .map(([subpath, entry]) => {
+    const name = subpath.replace(/^\.\//, '');
+    const input = path.join(componentsDir, `${name}.js`);
+    const expectedImport = `./dist/kupola-components-${name}.esm.js`;
+    const expectedRequire = `./dist/kupola-components-${name}.cjs`;
+
+    if (!/^\.\/[a-z0-9-]+$/.test(subpath)) {
+      throw new Error(`Unsupported @kupola/components export subpath: ${subpath}`);
+    }
+    if (!entry || entry.import !== expectedImport || entry.require !== expectedRequire) {
+      throw new Error(
+        `Invalid @kupola/components export targets for ${subpath}; expected ` +
+        `${expectedImport} and ${expectedRequire}.`,
+      );
+    }
+    if (!fs.existsSync(input)) {
+      throw new Error(`Missing source for @kupola/components export ${subpath}: ${input}`);
+    }
+
     return [
-      `packages/components/src/components/${file}`,
-      `dist/kupola-components-${name}`,
+      path.relative(__dirname, input).replace(/\\/g, '/'),
+      `packages/components/dist/kupola-components-${name}`,
     ];
   });
 
 const componentsMainEntry = [
-  ['packages/components/src/index.js', 'dist/kupola-components'],
+  ['packages/components/src/index.js', 'packages/components/dist/kupola-components'],
 ];
 
 // ── Resolve options ──────────────────────────────────────────────────────────

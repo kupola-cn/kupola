@@ -115,6 +115,38 @@ describe('Textarea state', () => {
     const ta = document.body.querySelector('.ds-textarea');
     expect(ta.name).toBe('description');
   });
+
+  test('implements readonly, maxlength, autosize, and count options', () => {
+    const view = Textarea({
+      value: 'abcdef',
+      readonly: true,
+      maxlength: 4,
+      autosize: true,
+      showCount: true,
+    });
+    document.body.appendChild(view.element);
+    const ta = document.querySelector('.ds-textarea');
+
+    expect(view.getValue()).toBe('abcd');
+    expect(ta.readOnly).toBe(true);
+    expect(ta.maxLength).toBe(4);
+    expect(ta.style.resize).toBe('none');
+    expect(ta.style.overflowY).toBe('hidden');
+    expect(document.querySelector('.ds-textarea__count').textContent).toBe('4/4');
+    view.destroy();
+  });
+
+  test('focus and blur APIs control the textarea', () => {
+    const view = Textarea();
+    document.body.appendChild(view.element);
+    const ta = document.querySelector('.ds-textarea');
+
+    view.focus();
+    expect(document.activeElement).toBe(ta);
+    view.blur();
+    expect(document.activeElement).not.toBe(ta);
+    view.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -126,6 +158,10 @@ describe('Textarea destroy', () => {
     document.body.appendChild(view.element);
 
     view.destroy();
+    view.destroy();
+    view.setValue('ignored');
+    view.focus();
+    expect(view.getValue()).toBe('');
 
     const ta = document.body.querySelector('.ds-textarea');
     if (ta) {

@@ -10,14 +10,14 @@ describe('QueryEngine', () => {
 
   describe('register + execute', () => {
     it('should register a handler and execute it', async () => {
-      const handler = jest.fn().mockResolvedValue([{ name: '张三' }]);
+      const handler = jest.fn().mockResolvedValue([ { name: '张三' } ]);
       engine.register('employee', handler);
 
       const result = await engine.execute({ type: 'employee', params: { id: 1 } });
 
       expect(handler).toHaveBeenCalledWith({ id: 1 }, undefined);
       expect(result.success).toBe(true);
-      expect(result.data).toEqual([{ name: '张三' }]);
+      expect(result.data).toEqual([ { name: '张三' } ]);
     });
 
     it('should return error for unknown query type', async () => {
@@ -35,7 +35,7 @@ describe('QueryEngine', () => {
       const result = await engine.execute({ type: 'missing', params: {} });
 
       expect(result.success).toBe(false);
-      expect(result.available).toEqual(['employee', 'salary']);
+      expect(result.available).toEqual([ 'employee', 'salary' ]);
     });
   });
 
@@ -49,8 +49,8 @@ describe('QueryEngine', () => {
       const result = await engine.execute({ type: 'employee', params: {} });
 
       expect(result.table).toEqual({
-        columns: [{ field: 'name', title: 'name' }, { field: 'age', title: 'age' }],
-        rows: [{ name: '张三', age: 25 }, { name: '李四', age: 30 }],
+        columns: [ { field: 'name', title: 'name' }, { field: 'age', title: 'age' } ],
+        rows: [ { name: '张三', age: 25 }, { name: '李四', age: 30 } ],
       });
     });
 
@@ -63,7 +63,7 @@ describe('QueryEngine', () => {
     });
 
     it('should format array summary with count', async () => {
-      engine.register('employee', async () => [{ name: '张三' }, { name: '李四' }]);
+      engine.register('employee', async () => [ { name: '张三' }, { name: '李四' } ]);
 
       const result = await engine.execute({ type: 'employee', params: {} });
 
@@ -100,14 +100,14 @@ describe('QueryEngine', () => {
 
   describe('history', () => {
     it('should store query results in history', async () => {
-      engine.register('employee', async () => [{ name: '张三' }]);
+      engine.register('employee', async () => [ { name: '张三' } ]);
 
       await engine.execute({ type: 'employee', params: { id: 1 } });
 
       const last = engine.getLastResult();
       expect(last).not.toBeNull();
       expect(last.type).toBe('employee');
-      expect(last.result).toEqual([{ name: '张三' }]);
+      expect(last.result).toEqual([ { name: '张三' } ]);
     });
 
     it('should evict oldest history when maxHistory exceeded', async () => {
@@ -139,14 +139,14 @@ describe('QueryEngine', () => {
 
   describe('cache security', () => {
     it('should isolate cached query results by execution context', async () => {
-      const handler = jest.fn(async (_params, context) => [{ role: context.role }]);
+      const handler = jest.fn(async (_params, context) => [ { role: context.role } ]);
       engine.register('roles', handler);
 
       const admin = await engine.execute({ type: 'roles', params: {}, context: { role: 'admin' } });
       const user = await engine.execute({ type: 'roles', params: {}, context: { role: 'user' } });
 
-      expect(admin.data).toEqual([{ role: 'admin' }]);
-      expect(user.data).toEqual([{ role: 'user' }]);
+      expect(admin.data).toEqual([ { role: 'admin' } ]);
+      expect(user.data).toEqual([ { role: 'user' } ]);
       expect(user.cached).toBeUndefined();
       expect(handler).toHaveBeenCalledTimes(2);
     });

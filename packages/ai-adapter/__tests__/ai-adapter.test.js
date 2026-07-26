@@ -44,7 +44,7 @@ describe('AIAdapter', () => {
 
     it('should route flow commands to flow engine', async () => {
       adapter.flow.define('发工资条', {
-        steps: [{ label: '发送', handler: async () => 'sent' }],
+        steps: [ { label: '发送', handler: async () => 'sent' } ],
       });
 
       const result = await adapter.process('执行发工资条');
@@ -97,7 +97,7 @@ describe('AIAdapter', () => {
       const handler = jest.fn();
       adapter.on('result', handler);
 
-      adapter.query.register('search', async () => [{ id: 1 }]);
+      adapter.query.register('search', async () => [ { id: 1 } ]);
       await adapter.process('查询 test');
 
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
@@ -235,7 +235,7 @@ describe('AIAdapter', () => {
 
   describe('response formatting', () => {
     it('should format query success message', async () => {
-      adapter.query.register('search', async () => [{ id: 1 }, { id: 2 }]);
+      adapter.query.register('search', async () => [ { id: 1 }, { id: 2 } ]);
 
       const result = await adapter.process('查询 data');
 
@@ -286,7 +286,7 @@ describe('AIAdapter', () => {
       adapter.wildcard('flow:*', fn);
 
       adapter.flow.define('test-flow', {
-        steps: [{ label: 'step1', handler: async () => ({}) }],
+        steps: [ { label: 'step1', handler: async () => ({}) } ],
       });
       await adapter.process('执行 test-flow');
 
@@ -301,7 +301,7 @@ describe('AIAdapter', () => {
       adapter.on('action:before', before);
       adapter.on('action:after', after);
 
-      adapter.action.register('test', { handler: async () => ({}), confirm: false });
+      adapter.action.register('create', { handler: async () => ({}), confirm: false });
       await adapter.process('添加 test');
 
       expect(before).toHaveBeenCalled();
@@ -327,7 +327,7 @@ describe('AIAdapter', () => {
     });
 
     it('should reflect message history after process', async () => {
-      adapter.query.register('search', async () => [{ id: 1 }]);
+      adapter.query.register('search', async () => [ { id: 1 } ]);
       await adapter.process('查询 q');
 
       const snap = adapter.getDevToolsSnapshot();
@@ -350,7 +350,7 @@ describe('AIAdapter', () => {
     it('should block restricted actions after parsing and before execution', async () => {
       const handler = jest.fn().mockResolvedValue({ deleted: true });
       adapter.action.register('delete', { handler, confirm: false });
-      adapter.use(createAuthGuard({ restrictedTypes: ['delete'], allowedRoles: ['admin'] }));
+      adapter.use(createAuthGuard({ restrictedTypes: [ 'delete' ], allowedRoles: [ 'admin' ] }));
 
       const result = await adapter.process('删除员工张三', { role: 'user' });
 
@@ -363,7 +363,7 @@ describe('AIAdapter', () => {
     it('should allow restricted actions for allowed roles', async () => {
       const handler = jest.fn().mockResolvedValue({ deleted: true });
       adapter.action.register('delete', { handler, confirm: false });
-      adapter.use(createAuthGuard({ restrictedTypes: ['delete'], allowedRoles: ['admin'] }));
+      adapter.use(createAuthGuard({ restrictedTypes: [ 'delete' ], allowedRoles: [ 'admin' ] }));
 
       const result = await adapter.process('删除员工张三', { role: 'admin' });
 
@@ -373,10 +373,10 @@ describe('AIAdapter', () => {
     });
 
     it('should block restricted queries with centralized rules', async () => {
-      const handler = jest.fn().mockResolvedValue([{ id: 1, name: 'admin' }]);
+      const handler = jest.fn().mockResolvedValue([ { id: 1, name: 'admin' } ]);
       adapter.query.register('search', handler);
       adapter.use(createAuthGuard({
-        rules: [{ engine: 'query', type: 'search', roles: ['admin'] }],
+        rules: [ { engine: 'query', type: 'search', roles: [ 'admin' ] } ],
       }));
 
       const result = await adapter.process('查询所有角色', { role: 'user' });
@@ -389,9 +389,9 @@ describe('AIAdapter', () => {
     it('should block restricted flow names', async () => {
       const step = jest.fn().mockResolvedValue('ok');
       adapter.flow.define('发工资条', {
-        steps: [{ label: '发送', handler: step }],
+        steps: [ { label: '发送', handler: step } ],
       });
-      adapter.use(createAuthGuard({ restrictedFlows: ['发工资条'], allowedRoles: ['admin'] }));
+      adapter.use(createAuthGuard({ restrictedFlows: [ '发工资条' ], allowedRoles: [ 'admin' ] }));
 
       const result = await adapter.process('执行发工资条', { role: 'user' });
 
@@ -442,9 +442,9 @@ describe('AIAdapter', () => {
       secured.capability.register({
         engine: 'query',
         type: 'roles',
-        roles: ['admin'],
+        roles: [ 'admin' ],
         paramsSchema: { keyword: 'string' },
-        resultFields: ['id', 'name', 'code', 'password'],
+        resultFields: [ 'id', 'name', 'code', 'password' ],
         handler,
       });
 
@@ -472,7 +472,7 @@ describe('AIAdapter', () => {
       secured.capability.register({
         engine: 'action',
         type: 'delete_user',
-        roles: ['admin'],
+        roles: [ 'admin' ],
         paramsSchema: { id: 'number' },
         handler,
       });
@@ -499,7 +499,7 @@ describe('AIAdapter', () => {
       secured.capability.register({
         engine: 'action',
         type: 'update_status',
-        paramsSchema: { status: { type: 'string', enum: ['enabled', 'disabled'] } },
+        paramsSchema: { status: { type: 'string', enum: [ 'enabled', 'disabled' ] } },
         handler,
       });
       secured.use(secured.capability.middleware());
@@ -514,17 +514,17 @@ describe('AIAdapter', () => {
     it('should expose only accessible AI capabilities for context', () => {
       const secured = new AIAdapter();
       secured.capability.registerMany([
-        { engine: 'query', type: 'roles', roles: ['admin'], handler: async () => [] },
-        { engine: 'query', type: 'materials', roles: ['user'], handler: async () => [] },
+        { engine: 'query', type: 'roles', roles: [ 'admin' ], handler: async () => [] },
+        { engine: 'query', type: 'materials', roles: [ 'user' ], handler: async () => [] },
       ]);
 
       const caps = secured.capability.getAICapabilities({ role: 'user' });
 
-      expect(caps.map(item => item.type)).toEqual(['materials']);
+      expect(caps.map(item => item.type)).toEqual([ 'materials' ]);
       expect(caps[0]).not.toHaveProperty('handler');
 
       const allCaps = secured.capability.getAICapabilities({ history: [] });
-      expect(allCaps.map(item => item.type)).toEqual(['roles', 'materials']);
+      expect(allCaps.map(item => item.type)).toEqual([ 'roles', 'materials' ]);
     });
 
     it('should keep handler-level failure as failure', async () => {

@@ -20,6 +20,8 @@
  */
 
 import { getIconHtml } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
+import { getMotionDuration } from './motion';
 
 const ICON_NAMES = {
   normal: 'info-circle',
@@ -31,18 +33,28 @@ const ICON_NAMES = {
 
 const VALID_TYPES = [ 'normal', 'success', 'error', 'warning', 'info' ];
 const VALID_POSITIONS = [ 'top', 'top-right', 'top-left', 'bottom', 'bottom-right', 'bottom-left' ];
+const EXIT_TIMEOUT_BUFFER = 50;
+
+function _duration(value, fallback) {
+  return Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
+function _maxCount(value) {
+  return Number.isFinite(value) && value >= 1 ? Math.floor(value) : 5;
+}
 
 export function Message(options = {}) {
-  const defaultDuration = options.duration ?? 3000;
-  const defaultPosition = options.position ?? 'top';
-  const maxCount = options.maxCount ?? 5;
+  const defaultDuration = _duration(options?.duration, 3000);
+  const defaultPosition = VALID_POSITIONS.includes(options?.position) ? options.position : 'top';
+  const maxCount = _maxCount(options?.maxCount);
 
   let container = null;
   let destroyed = false;
+  const activeItems = new Set();
 
   function _getContainer() {
     if (destroyed) {return null;}
-    if (!container) {
+    if (!container || !container.parentNode) {
       container = document.createElement('div');
       container.className = `ds-message ds-message--${defaultPosition}`;
       document.body.appendChild(container);
@@ -54,8 +66,12 @@ export function Message(options = {}) {
     const ctr = _getContainer();
     if (!ctr) {return null;}
 
-    const duration = opts.duration ?? defaultDuration;
+    const duration = _duration(opts?.duration, defaultDuration);
     const msgType = VALID_TYPES.includes(type) ? type : 'normal';
+
+    while (activeItems.size >= maxCount) {
+      activeItems.values().next().value.removeNow();
+    }
 
     const msg = document.createElement('div');
     msg.className = `ds-message__item ds-message__item--${msgType}`;
@@ -63,55 +79,82 @@ export function Message(options = {}) {
       <div class="ds-message__icon ds-message__icon--${msgType}">${getIconHtml(ICON_NAMES[msgType])}</div>
       <div class="ds-message__content"></div>
     `;
-    msg.querySelector('.ds-message__content').textContent = message;
-
-    // Remove excess messages
-    const existing = ctr.querySelectorAll('.ds-message__item');
-    if (existing.length >= maxCount) {
-      const oldest = existing[0];
-      oldest.classList.remove('is-visible');
-      oldest.classList.add('is-exiting');
-      setTimeout(() => { if (oldest.parentNode) {oldest.remove();} }, 300);
-    }
+    msg.querySelector('.ds-message__content').textContent = String(message ?? '');
 
     ctr.appendChild(msg);
+    msg.classList.add('is-visible');
 
-    // Trigger enter animation
-    setTimeout(() => { msg.classList.add('is-visible'); }, 10);
-
-    // Auto-remove
     let timer = null;
-    if (duration > 0) {
-      timer = setTimeout(() => {
-        msg.classList.remove('is-visible');
-        msg.classList.add('is-exiting');
-        setTimeout(() => { if (msg.parentNode) {msg.remove();} }, 300);
-      }, duration);
+    let removalTimer = null;
+    let closed = false;
+    let removed = false;
+    const listeners = createListenerRegistry();
+    let itemState = null;
+
+    function removeNow() {
+      if (removed) {return;}
+      removed = true;
+      if (timer !== null) {clearTimeout(timer);}
+      if (removalTimer !== null) {clearTimeout(removalTimer);}
+      timer = null;
+      removalTimer = null;
+      listeners.destroy();
+      msg.remove();
+      activeItems.delete(itemState);
+      if (ctr.childElementCount === 0) {
+        ctr.remove();
+        if (container === ctr) {container = null;}
+      }
     }
 
-    return { element: msg, close: () => {
-      if (timer) {clearTimeout(timer);}
+    function close() {
+      if (closed || removed) {return;}
+      closed = true;
+      if (timer !== null) {clearTimeout(timer);}
+      timer = null;
       msg.classList.remove('is-visible');
       msg.classList.add('is-exiting');
-      setTimeout(() => { if (msg.parentNode) {msg.remove();} }, 300);
-    } };
-  }
-
-  function destroy() {
-    destroyed = true;
-    if (container && container.parentNode) {
-      container.remove();
+      const exitTimeout = getMotionDuration(msg);
+      if (exitTimeout <= 0) {
+        removeNow();
+        return;
+      }
+      const onExitEnd = event => {
+        if (event.target === msg) {removeNow();}
+      };
+      listeners.on(msg, 'animationend', onExitEnd);
+      listeners.on(msg, 'transitionend', onExitEnd);
+      removalTimer = setTimeout(removeNow, exitTimeout + EXIT_TIMEOUT_BUFFER);
     }
-    container = null;
+
+    itemState = { close, removeNow };
+    activeItems.add(itemState);
+
+    if (duration > 0) {
+      timer = setTimeout(close, duration);
+    }
+
+    return { element: msg, close };
   }
 
-  return {
+  const api = {
     normal: (message, opts) => _show(message, 'normal', opts),
     success: (message, opts) => _show(message, 'success', opts),
     error: (message, opts) => _show(message, 'error', opts),
     warning: (message, opts) => _show(message, 'warning', opts),
     info: (message, opts) => _show(message, 'info', opts),
     show: _show,
-    destroy,
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      for (const item of [ ...activeItems ]) {
+        item.removeNow();
+      }
+      container?.remove();
+      container = null;
+      Object.freeze(api);
+    },
   };
+
+  return api;
 }

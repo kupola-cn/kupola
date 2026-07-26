@@ -76,7 +76,8 @@ describe('createDevToolsLogger', () => {
       ctx.result = { data: { password: 'secret', name: 'safe' } };
     });
 
-    const entry = window.__KUPOLA_AI_DEVTOOLS__.at(-1);
+    const DEVTOOLS_SYMBOL = Symbol.for('kupola-ai-devtools');
+    const entry = window[DEVTOOLS_SYMBOL].at(-1);
     expect(entry.command.params.token).toBe('[REDACTED]');
     expect(entry.result.data.password).toBe('[REDACTED]');
     expect(entry.result.data.name).toBe('safe');
@@ -94,14 +95,14 @@ describe('createAuthGuard', () => {
   const passNext = async () => {};
 
   it('should allow action when user has required role', async () => {
-    const guard = createAuthGuard({ restrictedTypes: ['delete'], allowedRoles: ['admin'] });
+    const guard = createAuthGuard({ restrictedTypes: [ 'delete' ], allowedRoles: [ 'admin' ] });
     const ctx = makeCtx('delete', 'admin');
     await guard(ctx, passNext);
     expect(ctx.result).toBeNull(); // not blocked
   });
 
   it('should block action when user lacks required role', async () => {
-    const guard = createAuthGuard({ restrictedTypes: ['delete'], allowedRoles: ['admin'] });
+    const guard = createAuthGuard({ restrictedTypes: [ 'delete' ], allowedRoles: [ 'admin' ] });
     const ctx = makeCtx('delete', 'user');
     await guard(ctx, passNext);
     expect(ctx.result).not.toBeNull();
@@ -110,21 +111,21 @@ describe('createAuthGuard', () => {
   });
 
   it('should block when no role in context', async () => {
-    const guard = createAuthGuard({ restrictedTypes: ['delete'] });
+    const guard = createAuthGuard({ restrictedTypes: [ 'delete' ] });
     const ctx = makeCtx('delete');
     await guard(ctx, passNext);
     expect(ctx.result).not.toBeNull();
   });
 
   it('should allow non-restricted action types', async () => {
-    const guard = createAuthGuard({ restrictedTypes: ['delete'] });
+    const guard = createAuthGuard({ restrictedTypes: [ 'delete' ] });
     const ctx = makeCtx('add', 'user');
     await guard(ctx, passNext);
     expect(ctx.result).toBeNull();
   });
 
   it('should pass through when no command is set', async () => {
-    const guard = createAuthGuard({ restrictedTypes: ['delete'] });
+    const guard = createAuthGuard({ restrictedTypes: [ 'delete' ] });
     const ctx = makeCtx(null);
     await guard(ctx, passNext);
     expect(ctx.result).toBeNull();
@@ -132,7 +133,7 @@ describe('createAuthGuard', () => {
 
   it('should guard query commands with centralized rules', async () => {
     const guard = createAuthGuard({
-      rules: [{ engine: 'query', type: 'roles', roles: ['admin'] }],
+      rules: [ { engine: 'query', type: 'roles', roles: [ 'admin' ] } ],
     });
     const ctx = {
       input: '',
@@ -150,11 +151,11 @@ describe('createAuthGuard', () => {
 
   it('should allow access by explicit permission', async () => {
     const guard = createAuthGuard({
-      rules: [{ engine: 'query', type: 'roles', roles: ['admin'], permissions: ['roles:read'] }],
+      rules: [ { engine: 'query', type: 'roles', roles: [ 'admin' ], permissions: [ 'roles:read' ] } ],
     });
     const ctx = {
       input: '',
-      context: { role: 'user', permissions: ['roles:read'] },
+      context: { role: 'user', permissions: [ 'roles:read' ] },
       command: { engine: 'query', type: 'roles', params: {} },
       result: null,
       adapter: {},

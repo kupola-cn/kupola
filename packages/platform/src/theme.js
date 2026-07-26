@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+/* global __DEV__ */
 /**
  * @kupola/core — Theme utilities (anti-FOUC + persistence).
  *
@@ -45,7 +46,7 @@
 
 const STORAGE_KEY = 'kupola-theme';
 const BRAND_STORAGE_KEY = 'kupola-brand-color';
-const VALID_THEMES = ['light', 'dark'];
+const VALID_THEMES = [ 'light', 'dark' ];
 const FALLBACK_BRAND = { id: 'violet', label: 'Violet', color: '#8B5CF6' };
 
 export const DEFAULT_BRAND_COLORS = [];
@@ -77,6 +78,43 @@ function _getDefaultBrand() {
 const _listeners = new Set();
 /** @type {Set<(brand: { id: string, color: string, label: string }) => void>} */
 const _brandListeners = new Set();
+let stopSystemThemeListener = null;
+
+function applyTheme(theme, persist) {
+  if (!VALID_THEMES.includes(theme)) {
+    throw new Error(`Invalid theme "${theme}". Must be one of: ${VALID_THEMES.join(', ')}`);
+  }
+
+  document.documentElement.dataset.theme = theme;
+
+  if (persist && typeof localStorage !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, theme);
+  }
+
+  for (const fn of _listeners) {
+    try { fn(theme); } catch { /* swallow */ }
+  }
+}
+
+function installSystemThemeListener() {
+  if (stopSystemThemeListener || typeof matchMedia === 'undefined') {return;}
+
+  const query = matchMedia('(prefers-color-scheme: light)');
+  const onChange = event => {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY)) {
+      return;
+    }
+    applyTheme(event.matches ? 'light' : 'dark', false);
+  };
+
+  if (typeof query.addEventListener === 'function') {
+    query.addEventListener('change', onChange);
+    stopSystemThemeListener = () => query.removeEventListener('change', onChange);
+  } else if (typeof query.addListener === 'function') {
+    query.addListener(onChange);
+    stopSystemThemeListener = () => query.removeListener(onChange);
+  }
+}
 
 // ── Core API ──────────────────────────────────────────────────────────────
 
@@ -111,20 +149,7 @@ export function getPreferredTheme() {
  * @param {'light' | 'dark'} theme
  */
 export function setTheme(theme) {
-  if (!VALID_THEMES.includes(theme)) {
-    throw new Error(`Invalid theme "${theme}". Must be one of: ${VALID_THEMES.join(', ')}`);
-  }
-
-  document.documentElement.dataset.theme = theme;
-
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, theme);
-  }
-
-  // Notify listeners
-  for (const fn of _listeners) {
-    try { fn(theme); } catch { /* swallow */ }
-  }
+  applyTheme(theme, true);
 }
 
 /**
@@ -254,7 +279,7 @@ export function attachBrandColorPicker(trigger, options = {}) {
   }
 
   const {
-    colors = DEFAULT_BRAND_COLORS.length > 0 ? DEFAULT_BRAND_COLORS : [_getDefaultBrand()],
+    colors = DEFAULT_BRAND_COLORS.length > 0 ? DEFAULT_BRAND_COLORS : [ _getDefaultBrand() ],
     title = 'Brand color',
     custom = true,
     customLabel = '自定义颜色',
@@ -411,15 +436,17 @@ export function themePreload() {
     }
   });
 
-  // Listen for system theme changes (auto-follow OS preference)
-  if (typeof matchMedia !== 'undefined') {
-    matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
-      // Only auto-follow if user hasn't manually set a preference
-      if (typeof localStorage !== 'undefined' && !localStorage.getItem(STORAGE_KEY)) {
-        setTheme(e.matches ? 'light' : 'dark');
-      }
-    });
-  }
+  // Keep one global listener for system theme changes. System-driven changes
+  // must not become a persisted user preference.
+  installSystemThemeListener();
+}
+
+/** Stop automatic system-theme synchronization installed by themePreload(). */
+export function stopThemePreload() {
+  if (!stopSystemThemeListener) {return;}
+  const stop = stopSystemThemeListener;
+  stopSystemThemeListener = null;
+  stop();
 }
 
 /**
@@ -432,7 +459,7 @@ export function themePreload() {
  * @returns {string} HTML `<script>` tag content.
  */
 export function getThemeInlineScript() {
-  return `<script>(function(){var d=document.documentElement,t=localStorage.getItem('kupola-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';}d.dataset.theme=t;try{var b=localStorage.getItem('kupola-brand-color');if(b){b=JSON.parse(b);var c=b.color||b;if(c){d.dataset.brand=b.id||'custom';d.style.setProperty('--bg-brand',c);d.style.setProperty('--text-brand',c);d.style.setProperty('--icon-brand',c);d.style.setProperty('--border-brand',c);}}}catch(e){}})()<\/script>`;
+  return '<script>(function(){var d=document.documentElement,t=localStorage.getItem(\'kupola-theme\');if(!t){t=window.matchMedia&&window.matchMedia(\'(prefers-color-scheme:light)\').matches?\'light\':\'dark\';}d.dataset.theme=t;try{var b=localStorage.getItem(\'kupola-brand-color\');if(b){b=JSON.parse(b);var c=b.color||b;if(c){d.dataset.brand=b.id||\'custom\';d.style.setProperty(\'--bg-brand\',c);d.style.setProperty(\'--text-brand\',c);d.style.setProperty(\'--icon-brand\',c);d.style.setProperty(\'--border-brand\',c);}}}catch(e){}})()</script>';
 }
 
 function _applyBrandColor(brand, target) {
@@ -501,7 +528,7 @@ function _mix(hex, target, amount) {
   const a = _hexToRgb(hex);
   const b = _hexToRgb(target);
   const mix = (from, to) => Math.round(from + (to - from) * amount);
-  return `#${[mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b)].map(v => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+  return `#${[ mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b) ].map(v => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
 }
 
 function _isDark(hex) {

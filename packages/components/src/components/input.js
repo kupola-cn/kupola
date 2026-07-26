@@ -1,117 +1,141 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/core — Input component built on the 2.0 reactive core.
- *
- * Reuses the existing `ds-input*` CSS classes for styling.
- *
- * ```js
- * import { Input } from '@kupola/components/input';
- *
- * const view = Input({
- *   placeholder: 'Enter text...',
- *   value: '',
- *   status: 'error',
- *   onInput: (val) => console.log(val),
- * });
- * container.appendChild(view.element);
- * ```
+ * Text input with normalized state and complete public controls.
  *
  * @module components/input
  */
 
 import { html } from '@kupola/platform/template';
-import { render } from '@kupola/platform/render';
+import { render, isTemplateResultLike } from '@kupola/platform/render';
+import { getIconTemplate } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
 
-/**
- * Create an Input component instance.
- *
- * @param {Object}   [options]
- * @param {string}   [options.placeholder]  Placeholder text
- * @param {string}   [options.value]        Initial value
- * @param {string}   [options.type]         Input type (text|password|number|email|tel|url)
- * @param {string}   [options.status]       Validation status (error|success|warning)
- * @param {boolean}  [options.disabled]     Disabled state
- * @param {string}   [options.name]         Input name attribute
- * @param {Function} [options.onInput]      Callback on input change
- * @param {Function} [options.onChange]     Callback on blur/change
- * @returns {{ element: DocumentFragment, getValue: Function, setValue: Function, focus: Function, destroy: Function }}
- */
+const INPUT_TYPES = new Set([ 'text', 'password', 'email', 'number', 'tel', 'url', 'search' ]);
+const INPUT_STATUSES = new Set([ 'error', 'success', 'warning' ]);
+
 export function Input(options = {}) {
-  const {
-    placeholder = '',
-    value: initialValue = '',
-    type = 'text',
-    status = '',
-    disabled = false,
-    name = '',
-    onInput = null,
-    onChange = null,
-  } = options;
+  const type = INPUT_TYPES.has(options.type) ? options.type : 'text';
+  const status = INPUT_STATUSES.has(options.status) ? options.status : '';
+  const disabled = options.disabled === true;
+  const readonly = options.readonly === true;
+  const clearable = options.clearable === true;
+  const maxLength = Number.isFinite(Number(options.maxlength))
+    ? Math.max(0, Math.floor(Number(options.maxlength)))
+    : null;
+  const prefix = isTemplateResultLike(options.prefix)
+    ? options.prefix
+    : (options.prefix ? String(options.prefix) : null);
+  const suffix = isTemplateResultLike(options.suffix)
+    ? options.suffix
+    : (options.suffix ? String(options.suffix) : null);
+  const onInput = typeof options.onInput === 'function' ? options.onInput : null;
+  const onChange = typeof options.onChange === 'function' ? options.onChange : null;
+  const onFocus = typeof options.onFocus === 'function' ? options.onFocus : null;
+  const onBlur = typeof options.onBlur === 'function' ? options.onBlur : null;
+  const listeners = createListenerRegistry();
+  let destroyed = false;
 
-  let _value = initialValue;
-
-  // ── Public API ─────────────────────────────────────────────────────────────
-
-  function getValue() {
-    return _value;
+  function normalizeValue(value) {
+    const text = value == null ? '' : String(value);
+    return maxLength === null ? text : text.slice(0, maxLength);
   }
 
-  function setValue(val) {
-    _value = val;
-    if (inputEl) {inputEl.value = _value;}
+  let value = normalizeValue(options.value);
+  const statusClass = status ? ` ds-input--${status}` : '';
+  const container = document.createDocumentFragment();
+  const instance = render(html`
+    <div class="ds-input${statusClass}">
+      ${prefix ? html`<span class="ds-input__prefix">${prefix}</span>` : ''}
+      <input type="${type}" />
+      ${suffix ? html`<span class="ds-input__suffix">${suffix}</span>` : ''}
+      ${clearable ? html`
+        <button class="ds-input__clear" type="button" aria-label="Clear input">
+          ${getIconTemplate('x')}
+        </button>
+      ` : ''}
+    </div>
+  `, container);
+  const root = container.querySelector('.ds-input');
+  const input = root.querySelector('input');
+  const clearButton = root.querySelector('.ds-input__clear');
+
+  input.value = value;
+  input.placeholder = String(options.placeholder ?? '');
+  input.disabled = disabled;
+  input.readOnly = readonly;
+  if (maxLength !== null) {input.maxLength = maxLength;}
+  if (options.name) {input.name = String(options.name);}
+
+  function syncClearButton() {
+    if (!clearButton) {return;}
+    clearButton.hidden = value.length === 0;
+    clearButton.disabled = disabled || readonly || destroyed;
+  }
+
+  function getValue() {
+    return value;
+  }
+
+  function setValue(nextValue) {
+    if (destroyed) {return;}
+    value = normalizeValue(nextValue);
+    input.value = value;
+    syncClearButton();
+  }
+
+  function clear() {
+    if (destroyed || disabled || readonly || value === '') {return false;}
+    value = '';
+    input.value = '';
+    syncClearButton();
+    onInput?.('');
+    onChange?.('');
+    return true;
   }
 
   function focus() {
-    if (inputEl) {inputEl.focus();}
+    if (!destroyed) {input.focus();}
   }
 
-  function destroy() {
-    if (inputEl) {
-      inputEl.removeEventListener('input', _handleInput);
-      inputEl.removeEventListener('change', _handleChange);
-    }
-    instance.destroy();
+  function blur() {
+    if (!destroyed) {input.blur();}
   }
 
-  // ── Internal ───────────────────────────────────────────────────────────────
+  listeners.on(input, 'input', event => {
+    value = normalizeValue(event.target.value);
+    if (event.target.value !== value) {event.target.value = value;}
+    syncClearButton();
+    onInput?.(value);
+  });
+  listeners.on(input, 'change', event => {
+    value = normalizeValue(event.target.value);
+    if (event.target.value !== value) {event.target.value = value;}
+    syncClearButton();
+    onChange?.(value);
+  });
+  listeners.on(input, 'focus', () => onFocus?.());
+  listeners.on(input, 'blur', () => onBlur?.());
+  listeners.on(clearButton, 'click', () => {
+    if (clear()) {input.focus();}
+  });
+  syncClearButton();
 
-  function _handleInput(e) {
-    _value = e.target.value;
-    if (onInput) {onInput(_value);}
-  }
-
-  function _handleChange(e) {
-    _value = e.target.value;
-    if (onChange) {onChange(_value);}
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  const statusClass = status ? ` ds-input--${status}` : '';
-
-  const tpl = html`
-    <div class="ds-input${statusClass}">
-      <input type="${type}" placeholder="${placeholder}" />
-    </div>
-  `;
-
-  const container = document.createDocumentFragment();
-  const instance = render(tpl, container);
-
-  const inputEl = container.querySelector('input');
-  if (inputEl) {
-    inputEl.value = _value;
-    inputEl.disabled = disabled;
-    if (name) {inputEl.name = name;}
-    inputEl.addEventListener('input', _handleInput);
-    inputEl.addEventListener('change', _handleChange);
-  }
-
-  return {
+  const api = {
     get element() { return container; },
     getValue,
     setValue,
     focus,
-    destroy,
+    blur,
+    clear,
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      listeners.destroy();
+      syncClearButton();
+      instance.destroy();
+      Object.freeze(api);
+    },
   };
+
+  return api;
 }

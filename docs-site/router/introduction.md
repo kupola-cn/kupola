@@ -105,7 +105,7 @@ Router 与 Auth 深度集成，可通过 `setupAuthGuard` 快速实现权限路�
 ```js
 import { createRouter } from '@kupola/router';
 import { setupAuthGuard } from '@kupola/router/auth';
-import { getAuthContext } from '@kupola/auth';
+import { getAuthContext, onAuthContextChange } from '@kupola/auth';
 
 const router = createRouter({
   mode: 'history',
@@ -115,7 +115,8 @@ const router = createRouter({
 });
 
 setupAuthGuard(router, {
-  authContext: getAuthContext(),
+  authContext: () => getAuthContext(),
+  onAuthChange: onAuthContextChange,
   loginPath: '/login',
   forbiddenPath: '/403',
 });

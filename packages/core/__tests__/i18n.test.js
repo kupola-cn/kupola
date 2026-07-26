@@ -42,6 +42,16 @@ describe('i18n', () => {
     test('should return key if translation not found', () => {
       expect(t('non.existent.key')).toBe('non.existent.key');
     });
+
+    test('should replace every occurrence of an interpolation parameter', () => {
+      addMessages('en-US', { 'test.repeat': '{value} + {value}' });
+      expect(t('test.repeat', { value: 'same' })).toBe('same + same');
+    });
+
+    test('should fall back to English for an untranslated locale', () => {
+      setLocale('fr-FR');
+      expect(t('modal.close')).toBe('Close');
+    });
   });
 
   describe('addMessages / getMessages', () => {
@@ -55,6 +65,12 @@ describe('i18n', () => {
       addMessages('en-US', { 'custom.key': 'Custom Value' });
       expect(t('custom.key')).toBe('Custom Value');
       expect(t('modal.close')).toBe('Close');
+    });
+
+    test('should reject invalid locales and message values', () => {
+      expect(() => addMessages('', {})).toThrow(TypeError);
+      expect(() => addMessages('en-US', null)).toThrow(TypeError);
+      expect(() => addMessages('en-US', { invalid: 1 })).toThrow(TypeError);
     });
   });
 
@@ -153,6 +169,26 @@ describe('i18n', () => {
 
       setLocale('en-US');
       expect(callback).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('listener isolation', () => {
+    test('should not let one listener prevent another listener from running', () => {
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const stopFailingListener = onLocaleChange(() => {
+        throw new Error('listener failure');
+      });
+      const succeedingListener = jest.fn();
+      const stopSucceedingListener = onLocaleChange(succeedingListener);
+
+      setLocale('zh-CN');
+
+      expect(succeedingListener).toHaveBeenCalledWith('zh-CN', 'en-US');
+      expect(consoleError).toHaveBeenCalled();
+
+      stopFailingListener();
+      stopSucceedingListener();
+      consoleError.mockRestore();
     });
   });
 

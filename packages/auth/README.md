@@ -13,7 +13,7 @@ npm install @kupola/auth
 ### 1. Create Auth Context
 
 ```js
-import { createAuthContext, provide } from '@kupola/auth';
+import { createAuthContext } from '@kupola/auth';
 
 const auth = createAuthContext({
   id: '1',
@@ -23,7 +23,6 @@ const auth = createAuthContext({
   attributes: { department: 'sales' },
 });
 
-provide('auth', auth);
 ```
 
 ### 2. Register Permission Handler
@@ -44,10 +43,21 @@ registerPermissionHandler({
 
 ### 3. Use k-permission Directive
 
+When using `walk()` from `@kupola/platform`, register the auth directive once
+before walking the DOM:
+
+```js
+import { registerDirective, walk } from '@kupola/platform/directives';
+import { registerPermissionDirective } from '@kupola/auth';
+
+registerPermissionDirective(registerDirective);
+walk(document.body);
+```
+
 ```html
 <button k-permission="user:delete">删除用户</button>
 <button k-permission="role:admin">管理面板</button>
-<button k-permission="['user:edit', 'role:admin']" k-permission-mode="disabled">编辑</button>
+<button k-permission='["user:edit", "role:admin"]' k-permission-mode="disabled">编辑</button>
 ```
 
 ### 4. HTTP Guard
@@ -89,6 +99,28 @@ api.get('/api/users', { requiredPermission: 'user:read' });
 - `registerPermissionHandler(options)` - Register global handler
 - `getPermissionHandler()` - Get current handler
 - `clearPermissionHandler()` - Clear handler
+
+`k-permission` refreshes after `setAuthContext()` or a permission handler
+change. Frontend checks only control the UI; every API endpoint must enforce
+authorization on the server.
+
+For pages that host more than one Kupola app, create an isolated store per app
+and pass it to the directive definition or directive processor. The existing
+top-level APIs continue to use a shared default store for compatibility.
+
+```js
+import { createAuthStore, createPermissionDirectiveDefinition } from '@kupola/auth';
+import { walk } from '@kupola/platform/directives';
+
+const authStore = createAuthStore();
+authStore.createAuthContext({ id: '1', permissions: ['user:read'] });
+
+walk(document.querySelector('#app'), {
+  customDirectives: {
+    'k-permission': createPermissionDirectiveDefinition({ authStore }),
+  },
+});
+```
 
 ### HTTP Guard
 - `createHttpGuard(options)` - Create HTTP guard

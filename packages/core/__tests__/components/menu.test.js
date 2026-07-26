@@ -77,13 +77,41 @@ describe('Menu item variants', () => {
     expect(icon.textContent).toBe('✏');
   });
 
-  test('disabled items have reduced opacity', () => {
+  test('disabled items use native and ARIA disabled state', () => {
     const view = Menu({ items: [ { label: 'Disabled', disabled: true } ] });
     document.body.appendChild(view.element);
 
     const item = document.body.querySelector('.ds-menu__item');
-    expect(item.style.opacity).toBe('0.5');
-    expect(item.style.pointerEvents).toBe('none');
+    expect(item.tagName).toBe('BUTTON');
+    expect(item.disabled).toBe(true);
+    expect(item.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  test('adds menu semantics for items and dividers', () => {
+    const view = Menu({ items: [ { label: 'A' }, { divider: true } ] });
+    document.body.appendChild(view.element);
+
+    expect(document.querySelector('.ds-menu').getAttribute('role')).toBe('menu');
+    expect(document.querySelector('.ds-menu__item').getAttribute('role')).toBe('menuitem');
+    expect(document.querySelector('.ds-menu__divider').getAttribute('role')).toBe('separator');
+    view.destroy();
+  });
+
+  test('renders and toggles nested submenus', () => {
+    const view = Menu({
+      items: [ { label: 'File', children: [ { label: 'Open' } ] } ],
+    });
+    document.body.appendChild(view.element);
+    const parent = document.querySelector('.ds-menu__item');
+    const submenu = document.querySelector('.ds-menu__submenu');
+
+    expect(submenu.hidden).toBe(true);
+    parent.click();
+    expect(submenu.hidden).toBe(false);
+    expect(parent.getAttribute('aria-expanded')).toBe('true');
+    parent.click();
+    expect(submenu.hidden).toBe(true);
+    view.destroy();
   });
 });
 
@@ -117,6 +145,42 @@ describe('Menu click handling', () => {
     document.body.querySelector('.ds-menu__item').click();
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  test('keyboard navigation skips disabled items and activates commands', () => {
+    const onClick = jest.fn();
+    const view = Menu({
+      items: [
+        { label: 'First' },
+        { label: 'Disabled', disabled: true },
+        { label: 'Last', onClick },
+      ],
+    });
+    document.body.appendChild(view.element);
+    const items = document.querySelectorAll('.ds-menu__item');
+
+    items[0].focus();
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement).toBe(items[2]);
+    items[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    view.destroy();
+  });
+
+  test('ArrowRight opens a submenu and focuses its first item', () => {
+    const view = Menu({
+      items: [ { label: 'File', children: [ { label: 'Open' }, { label: 'Save' } ] } ],
+    });
+    document.body.appendChild(view.element);
+    const items = document.querySelectorAll('.ds-menu__item');
+
+    items[0].focus();
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(document.activeElement).toBe(items[1]);
+    expect(document.querySelector('.ds-menu__submenu').hidden).toBe(false);
+    items[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    expect(document.activeElement).toBe(items[0]);
+    view.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -126,6 +190,9 @@ describe('Menu destroy', () => {
     const view = Menu({ items: [ { label: 'A' } ] });
     document.body.appendChild(view.element);
 
+    const item = document.querySelector('.ds-menu__item');
     expect(() => view.destroy()).not.toThrow();
+    expect(() => view.destroy()).not.toThrow();
+    item.click();
   });
 });

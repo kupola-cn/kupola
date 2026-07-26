@@ -25,8 +25,11 @@
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
 import { t } from '@kupola/platform/i18n';
-import { reactive, watch } from '@kupola/core';
-import { getIconHtml } from './icon-helper';
+import { getIconTemplate } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
+import { registerOverlayKeydown } from './overlay-stack';
+
+let selectId = 0;
 
 /**
  * Create a Select component instance.
@@ -41,35 +44,43 @@ import { getIconHtml } from './icon-helper';
  * @param {string}  [options.value]          Initial selected value (single mode)
  * @param {string[]} [options.values]        Initial selected values (multiple mode)
  * @param {Function} [options.onChange]       Callback: ({ value, text }) => void
- * @returns {{ element: DocumentFragment, open: Function, close: Function, getValue: Function, setValue: Function, destroy: Function }}
+ * @returns {{ element: DocumentFragment, open: Function, close: Function,
+ *   getValue: Function, setValue: Function, destroy: Function }}
  */
 export function Select(options = {}) {
-  const {
-    label = '',
-    items = [],
-    placeholder = null,
-    searchable = false,
-    clearable = false,
-    multiple = false,
-    value: initialValue = '',
-    values: initialValues = null,
-    onChange = null,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const label = config.label ?? '';
+  const items = Array.isArray(config.items)
+    ? config.items
+    : (Array.isArray(config.options) ? config.options : []);
+  const placeholder = config.placeholder ?? null;
+  const searchable = config.searchable === true;
+  const clearable = config.clearable === true;
+  const multiple = config.multiple === true;
+  const disabled = config.disabled === true;
+  const onChange = typeof config.onChange === 'function' ? config.onChange : null;
 
   const _placeholder = placeholder || t('select.placeholder');
-  const _id = label ? `ds-select-${Math.random().toString(36).slice(2, 8)}` : '';
+  const instanceId = ++selectId;
+  const _id = `ds-select-${instanceId}`;
+  const menuId = `ds-select-menu-${instanceId}`;
   const _hasLabel = !!label;
 
-  const state = reactive({
+  const state = {
     isOpen: false,
     focusIndex: -1,
     searchQuery: '',
     selectedValues: [],
-  });
+  };
 
-  if (multiple && initialValues) {
-    state.selectedValues = [ ...initialValues ];
-  } else if (!multiple && initialValue) {
+  const initialValue = config.values ?? config.value;
+  if (multiple && Array.isArray(initialValue)) {
+    state.selectedValues = [ ...initialValue ];
+  } else if (multiple && initialValue !== undefined && initialValue !== null && initialValue !== '') {
+    state.selectedValues = [ initialValue ];
+  } else if (!multiple && Array.isArray(initialValue)) {
+    state.selectedValues = initialValue.length > 0 ? [ initialValue[0] ] : [];
+  } else if (!multiple && initialValue !== undefined && initialValue !== null && initialValue !== '') {
     state.selectedValues = [ initialValue ];
   }
 
@@ -77,25 +88,37 @@ export function Select(options = {}) {
   let valueEl = null;
   let menuEl = null;
   let searchEl = null;
+  let releaseKeydown = null;
+  let destroyed = false;
+  const listeners = createListenerRegistry();
+  const openListeners = createListenerRegistry();
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   function _filteredItems() {
-    if (!state.searchQuery) {return items;}
+    const indexedItems = items
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item && typeof item === 'object');
+    if (!state.searchQuery) {return indexedItems;}
     const q = state.searchQuery.toLowerCase();
-    return items.filter((item) => item.text.toLowerCase().includes(q));
+    return indexedItems.filter(({ item }) => _itemText(item).toLowerCase().includes(q));
+  }
+
+  function _itemText(item) {
+    return String(item?.text ?? item?.label ?? '');
   }
 
   function _getDisplayText() {
     if (state.selectedValues.length === 0) {return '';}
     if (multiple) {return '';}
-    const sel = items.find((i) => state.selectedValues.includes(i.value));
-    return sel ? sel.text : '';
+    const selected = items.find(item => state.selectedValues.includes(item?.value));
+    return selected ? _itemText(selected) : '';
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
+    if (destroyed || disabled || state.isOpen) {return;}
     state.isOpen = true;
     state.searchQuery = '';
     state.focusIndex = -1;
@@ -106,22 +129,30 @@ export function Select(options = {}) {
     _renderOptions();
     if (wrapEl) {
       wrapEl.classList.add('is-open');
-      wrapEl.setAttribute('aria-expanded', 'true');
     }
+    triggerEl?.setAttribute('aria-expanded', 'true');
+    openListeners.on(document, 'click', onDocumentClick);
+    releaseKeydown = registerOverlayKeydown(onKeydown);
   }
 
-  function close() {
+  function close(restoreFocus = false) {
+    if (destroyed || !state.isOpen) {return;}
     state.isOpen = false;
     state.searchQuery = '';
     state.focusIndex = -1;
     _clearFocus();
     if (wrapEl) {
       wrapEl.classList.remove('is-open');
-      wrapEl.setAttribute('aria-expanded', 'false');
     }
+    triggerEl?.setAttribute('aria-expanded', 'false');
+    openListeners.clear();
+    releaseKeydown?.();
+    releaseKeydown = null;
+    if (restoreFocus) {triggerEl?.focus();}
   }
 
   function toggle() {
+    if (destroyed || disabled) {return;}
     if (state.isOpen) {
       close();
     } else {
@@ -135,10 +166,11 @@ export function Select(options = {}) {
   }
 
   function setValue(val) {
+    if (destroyed) {return;}
     state.selectedValues = [];
     if (multiple && Array.isArray(val)) {
       state.selectedValues = [ ...val ];
-    } else if (val) {
+    } else if (val !== undefined && val !== null && val !== '') {
       state.selectedValues = [ val ];
     }
     _updateDisplay();
@@ -148,6 +180,7 @@ export function Select(options = {}) {
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _selectItem(item) {
+    if (destroyed || disabled || !item || item.disabled) {return;}
     if (multiple) {
       const idx = state.selectedValues.indexOf(item.value);
       if (idx >= 0) {
@@ -160,11 +193,11 @@ export function Select(options = {}) {
     }
 
     if (onChange) {
-      onChange({ value: item.value, text: item.text, values: [ ...state.selectedValues ] });
+      onChange({ value: item.value, text: _itemText(item), values: [ ...state.selectedValues ] });
     }
 
     _updateDisplay();
-    _renderOptions();
+    _syncOptionStates();
 
     if (!multiple) {
       close();
@@ -187,27 +220,36 @@ export function Select(options = {}) {
   }
 
   function _renderOptions() {
-    if (!menuEl) {return;}
+    if (!menuEl || destroyed) {return;}
     const filtered = _filteredItems();
     const existingItems = menuEl.querySelectorAll('.ds-select__item');
     existingItems.forEach((el) => el.remove());
 
-    filtered.forEach((item, idx) => {
+    filtered.forEach(({ item, index }, idx) => {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'ds-select__item';
       if (state.selectedValues.includes(item.value)) {btn.classList.add('is-active');}
       if (idx === state.focusIndex) {btn.classList.add('is-focused');}
-      btn.setAttribute('data-value', item.value);
+      btn.dataset.index = String(index);
+      btn.dataset.value = String(item.value ?? '');
       btn.setAttribute('role', 'option');
+      btn.disabled = item?.disabled === true;
       btn.setAttribute('aria-selected', state.selectedValues.includes(item.value));
       btn.setAttribute('aria-posinset', idx + 1);
       btn.setAttribute('aria-setsize', filtered.length);
-      btn.textContent = item.text;
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        _selectItem(item);
-      });
+      btn.textContent = _itemText(item);
       menuEl.appendChild(btn);
+    });
+  }
+
+  function _syncOptionStates() {
+    if (!menuEl) {return;}
+    menuEl.querySelectorAll('.ds-select__item').forEach((optionEl) => {
+      const item = items[Number(optionEl.dataset.index)];
+      const selected = Boolean(item && state.selectedValues.includes(item.value));
+      optionEl.classList.toggle('is-active', selected);
+      optionEl.setAttribute('aria-selected', String(selected));
     });
   }
 
@@ -220,13 +262,12 @@ export function Select(options = {}) {
   }
 
   function _setFocus(idx) {
-    const filtered = _filteredItems();
-    if (filtered.length === 0) {return;}
+    const options_ = menuEl?.querySelectorAll('.ds-select__item:not(:disabled)') || [];
+    if (options_.length === 0) {return;}
     _clearFocus();
-    state.focusIndex = ((idx % filtered.length) + filtered.length) % filtered.length;
-    if (!menuEl) {return;}
-    const opts = menuEl.querySelectorAll('.ds-select__item');
-    if (opts[state.focusIndex]) {opts[state.focusIndex].classList.add('is-focused');}
+    state.focusIndex = ((idx % options_.length) + options_.length) % options_.length;
+    options_[state.focusIndex].classList.add('is-focused');
+    options_[state.focusIndex].focus();
   }
 
   // ── Event handlers ─────────────────────────────────────────────────────────
@@ -236,14 +277,21 @@ export function Select(options = {}) {
     toggle();
   };
 
+  const onTriggerKeydown = (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      event.stopPropagation();
+      open();
+      _setFocus(event.key === 'ArrowDown' ? 0 : -1);
+    }
+  };
+
   const onDocumentClick = (e) => {
     if (!state.isOpen) {return;}
     if (wrapEl && !wrapEl.contains(e.target)) {
       close();
     }
   };
-  document.addEventListener('click', onDocumentClick);
-
   const onKeydown = (e) => {
     if (!state.isOpen) {return;}
     switch (e.key) {
@@ -261,26 +309,26 @@ export function Select(options = {}) {
       break;
     case 'End':
       e.preventDefault();
-      _setFocus(_filteredItems().length - 1);
+      _setFocus(-1);
       break;
     case 'Enter':
       e.preventDefault();
       {
-        const filtered = _filteredItems();
-        if (state.focusIndex >= 0 && state.focusIndex < filtered.length) {
-          _selectItem(filtered[state.focusIndex]);
+        const focused = menuEl?.querySelectorAll('.ds-select__item:not(:disabled)')[state.focusIndex];
+        if (focused) {
+          _selectItem(items[Number(focused.dataset.index)]);
         }
       }
       break;
     case 'Escape':
-    case 'Tab':
       e.preventDefault();
+      close(true);
+      break;
+    case 'Tab':
       close();
       break;
     }
   };
-  document.addEventListener('keydown', onKeydown);
-
   const onSearchInput = (e) => {
     state.searchQuery = e.target.value;
     state.focusIndex = -1;
@@ -289,6 +337,7 @@ export function Select(options = {}) {
 
   const onClearClick = (e) => {
     e.stopPropagation();
+    if (destroyed || disabled) {return;}
     state.selectedValues = [];
     _updateDisplay();
     _renderOptions();
@@ -297,24 +346,41 @@ export function Select(options = {}) {
     }
   };
 
+  const onOptionClick = (e) => {
+    const optionEl = e.target.closest('.ds-select__item');
+    if (!optionEl || !menuEl?.contains(optionEl)) {return;}
+    const item = items[Number(optionEl.dataset.index)];
+    if (!item) {return;}
+    e.stopPropagation();
+    _selectItem(item);
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const displayText = _getDisplayText();
 
   const tpl = html`
     ${_hasLabel ? html`<label class="ds-form-label" for="${_id}">${label}</label>` : ''}
-    <div class="ds-select" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-label="${_hasLabel ? label : 'Select'}" aria-controls="ds-select-menu-${_id}">
-      <div class="ds-select__trigger" id="${_id}">
-        <span class="ds-select__value${!displayText ? ' ds-select__value--placeholder' : ''}" aria-live="polite">${displayText || _placeholder}</span>
-        ${clearable ? html`<button class="ds-select__clear" aria-label="Clear selection">&times;</button>` : ''}
-        ${getIconHtml('chevron-down')}
+    <div class="ds-select${disabled ? ' is-disabled' : ''}">
+      <div class="ds-select__trigger" id="${_id}" role="combobox"
+        tabindex="${disabled ? '-1' : '0'}" aria-haspopup="listbox" aria-expanded="false"
+        aria-label="${_hasLabel ? label : 'Select'}"
+        aria-controls="${menuId}" aria-disabled="${disabled}">
+        <span class="ds-select__value${!displayText ? ' ds-select__value--placeholder' : ''}"
+          aria-live="polite">${displayText || _placeholder}</span>
+        ${clearable
+    ? html`<button class="ds-select__clear" type="button" aria-label="Clear selection"
+          ${disabled ? 'disabled' : ''}>&times;</button>`
+    : ''}
+        ${getIconTemplate('chevron-down')}
       </div>
-      <div class="ds-select__menu" role="listbox" id="ds-select-menu-${_id}" aria-multiselectable="${multiple}">
-        ${searchable ? html`<div class="ds-select__search"><input class="ds-select__search-input" placeholder="Search..." /></div>` : ''}
-        ${items.map((item, index) => {
-    const isActive = state.selectedValues.includes(item.value);
-    return html`<button class="ds-select__item${isActive ? ' is-active' : ''}" data-value="${item.value}" role="option" aria-selected="${isActive}" aria-posinset="${index + 1}" aria-setsize="${items.length}">${item.text}</button>`;
-  })}
+      <div class="ds-select__menu" role="listbox" id="${menuId}"
+        aria-multiselectable="${multiple}">
+        ${searchable
+    ? html`<div class="ds-select__search">
+          <input class="ds-select__search-input" placeholder="Search..." />
+        </div>`
+    : ''}
       </div>
     </div>
   `;
@@ -328,35 +394,16 @@ export function Select(options = {}) {
   searchEl = container.querySelector('.ds-select__search-input');
 
   const triggerEl = container.querySelector('.ds-select__trigger');
-  if (triggerEl) {triggerEl.addEventListener('click', onTriggerClick);}
+  if (triggerEl) {listeners.on(triggerEl, 'click', onTriggerClick);}
+  if (triggerEl) {listeners.on(triggerEl, 'keydown', onTriggerKeydown);}
 
-  if (searchEl) {searchEl.addEventListener('input', onSearchInput);}
+  if (searchEl) {listeners.on(searchEl, 'input', onSearchInput);}
 
   const clearBtnEl = container.querySelector('.ds-select__clear');
-  if (clearBtnEl) {clearBtnEl.addEventListener('click', onClearClick);}
+  if (clearBtnEl) {listeners.on(clearBtnEl, 'click', onClearClick);}
+  if (menuEl) {listeners.on(menuEl, 'click', onOptionClick);}
 
-  function _bindInitialOptionClicks() {
-    if (!menuEl) {return;}
-    const optionEls = menuEl.querySelectorAll('.ds-select__item');
-    optionEls.forEach((el, i) => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        _selectItem(items[i]);
-      });
-    });
-  }
-  _bindInitialOptionClicks();
-
-  watch(() => state.isOpen, (isOpen) => {
-    if (wrapEl) {
-      if (isOpen) {
-        wrapEl.classList.add('is-open');
-      } else {
-        wrapEl.classList.remove('is-open');
-      }
-      wrapEl.setAttribute('aria-expanded', String(isOpen));
-    }
-  });
+  _renderOptions();
 
   return {
     get element() { return container; },
@@ -365,9 +412,15 @@ export function Select(options = {}) {
     toggle,
     getValue,
     setValue,
+    isOpen: () => state.isOpen,
     destroy() {
-      document.removeEventListener('click', onDocumentClick);
-      document.removeEventListener('keydown', onKeydown);
+      if (destroyed) {return;}
+      close();
+      destroyed = true;
+      releaseKeydown?.();
+      releaseKeydown = null;
+      openListeners.destroy();
+      listeners.destroy();
       instance.destroy();
     },
   };

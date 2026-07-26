@@ -1,4 +1,4 @@
-import { html } from '@kupola/platform/template';
+import { html, htmlString } from '@kupola/platform/template';
 import { getIcon } from './icon-config';
 
 const DEFAULT_ICONS = {
@@ -31,14 +31,19 @@ function getIconHtml(name) {
   return DEFAULT_ICONS[name] || '';
 }
 
+function getIconTemplate(name) {
+  return htmlString(getIconHtml(name));
+}
+
 function icon(name, attrs = {}) {
-  const htmlStr = getIconHtml(name);
-  if (!htmlStr) return '';
-  return html`<span class="ds-icon" ${attrs}>${htmlStr}</span>`;
+  const iconTemplate = getIconTemplate(name);
+  if (!iconTemplate.content) {return '';}
+  return html`<span class="ds-icon" ${attrs}>${iconTemplate}</span>`;
 }
 
 export {
   getIconHtml,
+  getIconTemplate,
   icon,
-  DEFAULT_ICONS
+  DEFAULT_ICONS,
 };

@@ -20,7 +20,8 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
-import { getIconHtml } from './icon-helper';
+import { getIconTemplate } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a Carousel component instance.
@@ -35,23 +36,27 @@ import { getIconHtml } from './icon-helper';
  * @returns {{ element: DocumentFragment, goTo: Function, next: Function, prev: Function, destroy: Function }}
  */
 export function Carousel(options = {}) {
-  const {
-    items = [],
-    autoPlay = false,
-    interval = 3000,
-    showIndicators = true,
-    showArrows = true,
-    onChange = null,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const items = Array.isArray(config.items) ? config.items : [];
+  const autoPlay = config.autoPlay ?? config.autoplay ?? false;
+  const interval = Number.isFinite(config.interval) && config.interval > 0
+    ? config.interval
+    : 3000;
+  const showIndicators = config.showIndicators ?? config.showDots ?? true;
+  const showArrows = config.showArrows ?? true;
+  const onChange = typeof config.onChange === 'function' ? config.onChange : null;
 
   let _current = 0;
   let _timer = null;
+  let _destroyed = false;
+  const listeners = createListenerRegistry();
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function goTo(index) {
-    if (items.length === 0) {return;}
-    _current = ((index % items.length) + items.length) % items.length;
+    if (_destroyed || items.length === 0 || !Number.isFinite(index)) {return;}
+    const normalizedIndex = Math.trunc(index);
+    _current = ((normalizedIndex % items.length) + items.length) % items.length;
     _updatePosition();
     _updateIndicators();
     if (onChange) {onChange(_current);}
@@ -66,9 +71,10 @@ export function Carousel(options = {}) {
   }
 
   function destroy() {
+    if (_destroyed) {return;}
+    _destroyed = true;
     _stopAutoPlay();
-    if (prevBtn) {prevBtn.removeEventListener('click', _onPrev);}
-    if (nextBtn) {nextBtn.removeEventListener('click', _onNext);}
+    listeners.destroy();
     instance.destroy();
   }
 
@@ -92,12 +98,12 @@ export function Carousel(options = {}) {
   }
 
   function _startAutoPlay() {
-    if (_timer || !autoPlay || items.length <= 1) {return;}
+    if (_destroyed || _timer !== null || !autoPlay || items.length <= 1) {return;}
     _timer = setInterval(() => next(), interval);
   }
 
   function _stopAutoPlay() {
-    if (_timer) { clearInterval(_timer); _timer = null; }
+    if (_timer !== null) { clearInterval(_timer); _timer = null; }
   }
 
   function _restartAutoPlay() {
@@ -111,10 +117,10 @@ export function Carousel(options = {}) {
     <div class="ds-carousel">
       <div class="ds-carousel__track"></div>
       <button class="ds-carousel__prev" type="button" aria-label="Previous">
-        ${getIconHtml('chevron-left')}
+        ${getIconTemplate('chevron-left')}
       </button>
       <button class="ds-carousel__next" type="button" aria-label="Next">
-        ${getIconHtml('chevron-right')}
+        ${getIconTemplate('chevron-right')}
       </button>
       <div class="ds-carousel__indicators"></div>
     </div>
@@ -129,10 +135,10 @@ export function Carousel(options = {}) {
   const indicatorsEl = container.querySelector('.ds-carousel__indicators');
 
   // Build slides
-  items.forEach((content, i) => {
+  items.forEach((content) => {
     const slide = document.createElement('div');
     slide.className = 'ds-carousel__item';
-    slide.textContent = content;
+    slide.textContent = String(content ?? '');
     trackEl.appendChild(slide);
   });
 
@@ -141,7 +147,7 @@ export function Carousel(options = {}) {
     items.forEach((_, i) => {
       const dot = document.createElement('span');
       dot.className = 'ds-carousel__indicator' + (i === 0 ? ' is-active' : '');
-      dot.addEventListener('click', () => { goTo(i); _restartAutoPlay(); });
+      listeners.on(dot, 'click', () => { goTo(i); _restartAutoPlay(); });
       indicatorsEl.appendChild(dot);
     });
   } else {
@@ -155,8 +161,8 @@ export function Carousel(options = {}) {
   }
 
   // Bind events
-  if (prevBtn) {prevBtn.addEventListener('click', _onPrev);}
-  if (nextBtn) {nextBtn.addEventListener('click', _onNext);}
+  if (prevBtn) {listeners.on(prevBtn, 'click', _onPrev);}
+  if (nextBtn) {listeners.on(nextBtn, 'click', _onNext);}
 
   // Initial position
   _updatePosition();
@@ -169,6 +175,7 @@ export function Carousel(options = {}) {
     goTo,
     next,
     prev,
+    getCurrent: () => _current,
     destroy,
   };
 }

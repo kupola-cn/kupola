@@ -4,7 +4,7 @@
  * @jest-environment jsdom
  */
 
-import { signal } from '../src/index.js';
+import { setErrorHandler, signal } from '../src/index.js';
 import { html } from '../../platform/src/template.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
 import { defineComponent, register, getComponent, hasComponent, clearRegistry } from '../../platform/src/component.js';
@@ -40,6 +40,21 @@ describe('defineComponent', () => {
     expect(view.element).toBeDefined();
     expect(typeof view.destroy).toBe('function');
     expect(typeof view.update).toBe('function');
+  });
+
+  test('supports setup functions that return a TemplateResult directly', () => {
+    const Comp = defineComponent({
+      setup() {
+        return html`<div>Direct template</div>`;
+      },
+    });
+
+    const view = Comp();
+    const container = document.createElement('div');
+    container.appendChild(view.element);
+
+    expect(container.textContent).toBe('Direct template');
+    view.destroy();
   });
 
   test('renders component with props', () => {
@@ -147,6 +162,205 @@ describe('defineComponent', () => {
     const span = container.querySelector('span');
     if (span) {
       expect(span.textContent).not.toBe('after-destroy');
+    }
+  });
+
+  test('destroy is idempotent and calls destroyed only once', () => {
+    const destroyed = jest.fn();
+    const Comp = defineComponent({
+      setup() {
+        return () => html`<div>Hello</div>`;
+      },
+      destroyed,
+    });
+
+    const view = Comp();
+    view.destroy();
+    view.destroy();
+
+    expect(destroyed).toHaveBeenCalledTimes(1);
+  });
+
+  test('rolls back the render instance when created throws', () => {
+    const source = signal('value');
+    const failure = new Error('created failed');
+    const Comp = defineComponent({
+      setup() {
+        return () => html`<span>${source}</span>`;
+      },
+      created() {
+        throw failure;
+      },
+    });
+
+    expect(() => Comp()).toThrow(failure);
+    expect(source._subscribers.size).toBe(0);
+  });
+
+  test('runs destroyed when render cleanup throws and preserves the cleanup error', () => {
+    const source = signal('value');
+    const failure = new Error('cleanup failed');
+    const destroyed = jest.fn();
+    const Comp = defineComponent({
+      setup() {
+        return () => html`<span>${source}</span>`;
+      },
+      destroyed,
+    });
+
+    const view = Comp();
+    const originalDestroy = view._instance.destroy.bind(view._instance);
+    view._instance.destroy = () => {
+      originalDestroy();
+      throw failure;
+    };
+
+    expect(() => view.destroy()).toThrow(failure);
+    expect(destroyed).toHaveBeenCalledTimes(1);
+    expect(source._subscribers.size).toBe(0);
+
+    view.destroy();
+    expect(destroyed).toHaveBeenCalledTimes(1);
+  });
+
+  test('cleans up and reports mounted hook failures', async () => {
+    const errors = [];
+    const restore = setErrorHandler((error, context) => errors.push({ error, context }));
+    const source = signal('value');
+    const failure = new Error('mounted failed');
+    const destroyed = jest.fn();
+    const Comp = defineComponent({
+      setup() {
+        return () => html`<span>${source}</span>`;
+      },
+      mounted() {
+        throw failure;
+      },
+      destroyed,
+    });
+
+    try {
+      const view = Comp();
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      container.appendChild(view.element);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].error).toBe(failure);
+      expect(errors[0].context.phase).toBe('component-mounted');
+      expect(destroyed).toHaveBeenCalledTimes(1);
+      expect(source._subscribers.size).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  test('automatically destroys a mounted component when all root nodes are removed', async () => {
+    const source = signal('value');
+    const destroyed = jest.fn();
+    const Comp = defineComponent({
+      setup() {
+        return () => html`<span>${source}</span><span>second root</span>`;
+      },
+      destroyed,
+    });
+    const view = Comp();
+
+    document.body.appendChild(view.element);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(source._subscribers.size).toBe(1);
+
+    const [ firstRoot, secondRoot ] = [ ...document.body.children ];
+    firstRoot.remove();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(destroyed).not.toHaveBeenCalled();
+    expect(source._subscribers.size).toBe(1);
+
+    secondRoot.remove();
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(destroyed).toHaveBeenCalledTimes(1);
+    expect(source._subscribers.size).toBe(0);
+    view.destroy();
+    expect(destroyed).toHaveBeenCalledTimes(1);
+  });
+
+  test('cleans up when a component is inserted and removed before mount observation runs', async () => {
+    const source = signal('value');
+    const destroyed = jest.fn();
+    const Comp = defineComponent({
+      setup() {
+        return () => html`<span>${source}</span>`;
+      },
+      destroyed,
+    });
+    const view = Comp();
+
+    document.body.appendChild(view.element);
+    document.body.firstElementChild.remove();
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(destroyed).toHaveBeenCalledTimes(1);
+    expect(source._subscribers.size).toBe(0);
+    view.destroy();
+  });
+
+  test('does not auto-destroy a component while moving connected root nodes', async () => {
+    const destroyed = jest.fn();
+    const Comp = defineComponent({
+      setup() {
+        return () => html`<span>value</span>`;
+      },
+      destroyed,
+    });
+    const view = Comp();
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    document.body.appendChild(view.element);
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    target.appendChild(document.body.lastElementChild);
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(destroyed).not.toHaveBeenCalled();
+    view.destroy();
+    expect(destroyed).toHaveBeenCalledTimes(1);
+  });
+
+  test('reports auto-destroy cleanup failures after completing lifecycle cleanup', async () => {
+    const errors = [];
+    const restore = setErrorHandler((error, context) => errors.push({ error, context }));
+    const source = signal('value');
+    const failure = new Error('auto destroy cleanup failed');
+    const destroyed = jest.fn();
+    const Comp = defineComponent({
+      setup() {
+        return () => html`<span>${source}</span>`;
+      },
+      destroyed,
+    });
+
+    try {
+      const view = Comp();
+      document.body.appendChild(view.element);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const originalDestroy = view._instance.destroy.bind(view._instance);
+      view._instance.destroy = () => {
+        originalDestroy();
+        throw failure;
+      };
+
+      document.body.firstElementChild.remove();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(source._subscribers.size).toBe(0);
+      expect(destroyed).toHaveBeenCalledTimes(1);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].error).toBe(failure);
+      expect(errors[0].context.phase).toBe('component-destroyed');
+    } finally {
+      restore();
     }
   });
 

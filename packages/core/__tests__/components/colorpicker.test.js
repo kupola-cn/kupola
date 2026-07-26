@@ -65,6 +65,22 @@ describe('ColorPicker rendering', () => {
 
     expect(document.body.querySelector('.ds-color-picker__input')).not.toBeNull();
   });
+
+  test('uses buttons for keyboard-accessible controls and unique aria ids', () => {
+    const first = ColorPicker({ colors: [ '#ff0000' ] });
+    const second = ColorPicker({ colors: [ '#00ff00' ] });
+    document.body.append(first.element, second.element);
+    const triggers = document.querySelectorAll('.ds-color-picker__trigger');
+    expect(triggers[0].type).toBe('button');
+    expect(triggers[0].getAttribute('aria-controls')).not.toBe(
+      triggers[1].getAttribute('aria-controls'),
+    );
+    const swatch = document.querySelector('.ds-color-picker__color');
+    expect(swatch.type).toBe('button');
+    expect(swatch.getAttribute('role')).toBe('option');
+    first.destroy();
+    second.destroy();
+  });
 });
 
 // ─── Toggle panel ────────────────────────────────────────────────────────────
@@ -86,6 +102,48 @@ describe('ColorPicker panel toggle', () => {
     trigger.click();
     trigger.click();
     expect(document.body.querySelector('.ds-color-picker__panel').classList.contains('is-visible')).toBe(false);
+  });
+
+  test('closes on outside click and Escape only affects the topmost picker', () => {
+    const first = ColorPicker();
+    const second = ColorPicker();
+    document.body.append(first.element, second.element);
+    first.open();
+    second.open();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(first.isOpen()).toBe(true);
+    expect(second.isOpen()).toBe(false);
+    document.body.click();
+    expect(first.isOpen()).toBe(false);
+    first.destroy();
+    second.destroy();
+  });
+
+  test('Tab closes without preventing focus navigation', () => {
+    const view = ColorPicker();
+    document.body.appendChild(view.element);
+    view.open();
+    const event = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(view.isOpen()).toBe(false);
+    view.destroy();
+  });
+
+  test('only acquires document listeners while open', () => {
+    const addSpy = jest.spyOn(document, 'addEventListener');
+    const removeSpy = jest.spyOn(document, 'removeEventListener');
+    const view = ColorPicker();
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'click' || event === 'keydown')).toBe(false);
+    view.open();
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'click')).toBe(true);
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'keydown')).toBe(true);
+    view.close();
+    expect(removeSpy.mock.calls.some(([ event ]) => event === 'click')).toBe(true);
+    expect(removeSpy.mock.calls.some(([ event ]) => event === 'keydown')).toBe(true);
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
+    view.destroy();
   });
 });
 
@@ -148,6 +206,16 @@ describe('ColorPicker value', () => {
     const valueEl = document.body.querySelector('.ds-color-picker__value');
     expect(valueEl.textContent).toBe('#3b82f6');
   });
+
+  test('supports color/presets and getColor/setColor aliases', () => {
+    const view = ColorPicker({ color: '#112233', presets: [ '#112233' ] });
+    document.body.appendChild(view.element);
+    expect(view.getColor()).toBe('#112233');
+    view.setColor('#445566');
+    expect(view.getValue()).toBe('#445566');
+    expect(document.querySelector('.ds-color-picker__input').value).toBe('#445566');
+    view.destroy();
+  });
 });
 
 // ─── Disabled ────────────────────────────────────────────────────────────────
@@ -158,6 +226,9 @@ describe('ColorPicker disabled', () => {
     document.body.appendChild(view.element);
 
     expect(document.body.querySelector('.ds-color-picker__trigger').style.pointerEvents).toBe('none');
+    view.open();
+    expect(view.isOpen()).toBe(false);
+    view.destroy();
   });
 });
 
@@ -168,6 +239,11 @@ describe('ColorPicker destroy', () => {
     const view = ColorPicker();
     document.body.appendChild(view.element);
 
+    view.open();
     expect(() => view.destroy()).not.toThrow();
+    expect(view.isOpen()).toBe(false);
+    expect(() => view.destroy()).not.toThrow();
+    view.open();
+    expect(view.isOpen()).toBe(false);
   });
 });

@@ -9,6 +9,7 @@ import { resetScheduler } from '../../src/scheduler.js';
 import { Drawer } from '@kupola/components';
 
 afterEach(() => {
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   document.body.style.overflow = '';
   resetScheduler();
@@ -119,6 +120,16 @@ describe('Drawer open/close', () => {
 
     view.destroy();
   });
+
+  test('reports its current open state', () => {
+    const view = Drawer({ title: 'Test' });
+    expect(view.isOpen()).toBe(false);
+    view.open();
+    expect(view.isOpen()).toBe(true);
+    view.close();
+    expect(view.isOpen()).toBe(false);
+    view.destroy();
+  });
 });
 
 // ─── ESC close ───────────────────────────────────────────────────────────────
@@ -212,6 +223,9 @@ describe('Drawer destroy', () => {
 
     view.destroy();
     expect(document.body.style.overflow).toBe('');
+    expect(() => view.destroy()).not.toThrow();
+    view.open();
+    expect(view.isOpen()).toBe(false);
   });
 });
 

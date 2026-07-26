@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+import type { Signal } from '@kupola/core';
+import type { DirectiveDefinition } from './directives.d.ts';
 /**
  * @kupola/platform — Full-featured platform with reactivity + rendering +
  * components + directives.
@@ -16,17 +18,32 @@
 
 // ── Core Reactivity (re-exported from @kupola/core) ──────────────────────────
 export {
+  batch,
+  computed,
+  createScheduler,
+  effect,
+  effectScope,
+  flushJobs,
+  getCurrentScheduler,
+  isReactive,
+  nextTick,
+  onScopeDispose,
+  reactive,
+  runWithScheduler,
   signal,
   Signal,
-  reactive,
-  isReactive,
-  computed,
-  effect,
+  toRaw,
   watch,
-  batch,
   withoutTracking,
 } from '@kupola/core';
-export type { ReadonlySignal, Dispose, WatchOptions } from '@kupola/core';
+export type {
+  Dispose,
+  EffectScope,
+  ReadonlySignal,
+  Scheduler,
+  SchedulerOptions,
+  WatchOptions,
+} from '@kupola/core';
 
 // ── Template & Render ──────────────────────────────────────────────────────────
 
@@ -64,16 +81,70 @@ export declare class TemplateInstance {
 /** Render a template into a DOM container with reactive bindings. */
 export declare function render(
   tpl: TemplateResult,
-  container: Element
+  container: Element,
+  options?: RenderOptions
 ): TemplateInstance;
+
+export interface RenderOptions {
+  scheduler?: Scheduler | null;
+}
+
+export interface MountOptions extends RenderOptions {
+  sanitizer?: ((html: string, element: Element) => string) | null;
+  customDirectives?: Map<string, DirectiveDefinition> | Record<string, DirectiveDefinition>;
+}
+
+/** Render a template and activate directives in one app-local scheduler context. */
+export declare function mount(
+  tpl: TemplateResult,
+  container: Element | string,
+  options?: MountOptions
+): TemplateInstance;
+
+export interface AppPlugin {
+  install: () => void | Promise<void>;
+  init?: () => void | Promise<void>;
+  destroy?: () => void | Promise<void>;
+}
+
+export type AppPluginFactory = () => void | Promise<void>;
+
+export interface AppInstance {
+  /** Register a plugin before mount. Plugins cannot be added after mounting. */
+  use(plugin: AppPlugin | AppPluginFactory): this;
+  /** Provide a value to all components created by this app. */
+  provide(key: InjectionKey, value: any): this;
+  /** Mount the app once with synchronous plugin hooks only. */
+  mount(container: Element | string): TemplateInstance;
+  /** Mount the app and await asynchronous plugin install/init hooks. */
+  mountAsync(container: Element | string): Promise<TemplateInstance>;
+  /** Dispose the mounted view and await asynchronous plugin destroy hooks. */
+  destroyAsync(): Promise<void>;
+  /** Dispose the mounted view with synchronous plugin destroy hooks only. */
+  destroy(): void;
+}
+
+export declare function createApp(
+  tpl: TemplateResult,
+  options?: MountOptions
+): AppInstance;
+
+export type IconResolver = (
+  name: string,
+  size?: unknown
+) => string | null | undefined | Promise<string | null | undefined>;
+
+/** Configure the resolver used by <icon> template parts. */
+export declare function setIconResolver(resolver: IconResolver | null): void;
 
 // ── Component System ──────────────────────────────────────────────────────────
 
 export interface ComponentDefinition {
-  props?: string[];
+  props?: readonly string[];
   setup: (
-    props: Record<string, any>,
-    children?: TemplateResult | string
+    props: Record<string, Signal>,
+    children?: TemplateResult | string | null,
+    emit?: (event: string, ...args: any[]) => void
   ) => (() => TemplateResult) | TemplateResult;
   created?: () => void;
   mounted?: () => void;
@@ -81,10 +152,11 @@ export interface ComponentDefinition {
 }
 
 export interface ComponentInstance {
-  template: TemplateResult;
+  readonly element: DocumentFragment;
+  readonly _instance: TemplateInstance;
   destroy: () => void;
   update: (props: Record<string, any>) => void;
-  on: (event: string, handler: (...args: any[]) => void) => void;
+  on: (event: string, handler: (...args: any[]) => void) => () => void;
 }
 
 /** Define a reusable component. Returns a factory: (initialProps?, children?) => ComponentInstance. */
@@ -108,10 +180,15 @@ export declare function hasComponent(name: string): boolean;
 export declare function clearRegistry(): void;
 
 /** Provide a value to descendant components via inject(). */
-export declare function provide(key: string, value: any): void;
+export type InjectionKey = string | symbol;
+
+export declare function provide(key: InjectionKey, value: any): void;
 
 /** Inject a value provided by an ancestor component. */
-export declare function inject(key: string, defaultValue?: any): any;
+export declare function inject(key: InjectionKey, defaultValue?: any): any;
+
+/** Return whether code is currently running inside an active app/component context. */
+export declare function hasProvideContext(): boolean;
 
 // ── Directives ────────────────────────────────────────────────────────────────
 export {
@@ -125,14 +202,18 @@ export {
   destroyWalk,
   defineScope,
   setHtmlSanitizer,
-} from './directives';
+  registerDirective,
+} from './directives.d.ts';
 export type {
+  DirectiveBinding,
+  DirectiveDefinition,
+  DirectiveInstance,
   KupolaRefValue,
   ScopeContext,
   ScopeDefinition,
   WalkOptions,
   WalkResult,
-} from './directives';
+} from './directives.d.ts';
 
 // ── Theme (anti-FOUC) ────────────────────────────────────────────────────────
 
@@ -157,6 +238,9 @@ export declare function registerBrandColors(colors: BrandColor[]): void;
 
 /** Blocking call, reads localStorage + system preference, sets data-theme and brand color before first paint. */
 export declare function themePreload(): void;
+
+/** Stop automatic system-theme synchronization installed by themePreload(). */
+export declare function stopThemePreload(): void;
 
 export declare function getPreferredTheme(): KupolaTheme;
 
@@ -205,9 +289,28 @@ export declare function getThemeInlineScript(): string;
  * @returns An async factory: `async (...args) => ComponentResult`.
  */
 export declare function lazyComponent(
-  loader: () => Promise<{ default?: Function } & Record<string, any>>,
-  exportName?: string
-): any;
+  loader: (signal?: AbortSignal) =>
+    Promise<{ default?: Function } & Record<string, any>> | { default?: Function } & Record<string, any>,
+  exportName?: string,
+  options?: LazyComponentOptions
+): LazyComponentFactory;
+
+export interface LazyComponentOptions {
+  /** Reject the load when this many milliseconds elapse. */
+  timeout?: number;
+  /** Abort the current and future load attempts when aborted. */
+  signal?: AbortSignal;
+}
+
+export interface LazyComponentFactory {
+  (...args: any[]): Promise<any>;
+  /** True after the component factory has been resolved successfully. */
+  _isResolved(): boolean;
+  /** Start loading the component module, sharing the current request. */
+  _preload(): Promise<Function> | Function;
+  /** Cancel the current load. Safe to call when no load is pending. */
+  cancel(reason?: unknown): void;
+}
 
 /** Preload a lazy component in the background. Resolves when the module is loaded. */
 export declare function preloadComponent(lazyFactory: any): Promise<void>;

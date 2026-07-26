@@ -1,6 +1,7 @@
 # @kupola/core
 
-> Core reactivity engine for [Kupola](https://github.com/kupola-cn/kupola) — Signal, computed, effect, batch, template, SSR, i18n.
+Core reactivity primitives for Kupola: signals, computed values, effects,
+watchers, batching, scopes, and scheduling.
 
 ## Install
 
@@ -11,19 +12,20 @@ npm install @kupola/core
 ## Quick Start
 
 ```js
-import { signal, computed, effect, html, render } from '@kupola/core';
+import { signal, computed, effect } from '@kupola/core';
 
 const count = signal(0);
 const double = computed(() => count.value * 2);
 
-effect(() => {
-  console.log(`Count: ${count.value}, Double: ${double.value}`);
+const stop = effect(() => {
+  console.log(count.value, double.value);
 });
 
-render(html`<button @click=${() => count.value++}>Count: ${count}</button>`, document.body);
+count.value++;
+stop();
 ```
 
-## Signal API
+## Signals
 
 ```js
 import { signal } from '@kupola/core';
@@ -31,170 +33,159 @@ import { signal } from '@kupola/core';
 const name = signal('Kupola');
 name.value = 'New Name';
 console.log(name.value);
+console.log(name.peek());
 ```
 
-## Computed API
+Signals use `Object.is` equality. Reading `value` in an effect registers a
+dependency; `peek()` does not.
+
+`Signal#toJSON()` returns the underlying value. This keeps native JSON
+serialization correct: `JSON.stringify(signal)` serializes the signal value
+once. Code that needs a JSON string should call `JSON.stringify(signal.value)`
+explicitly; do not parse or stringify the result of `toJSON()` a second time.
+
+## Computed
 
 ```js
 import { signal, computed } from '@kupola/core';
 
-const firstName = signal('John');
-const lastName = signal('Doe');
-const fullName = computed(() => `${firstName.value} ${lastName.value}`);
+const first = signal('Jane');
+const last = signal('Doe');
+const fullName = computed(() => `${first.value} ${last.value}`);
+console.log(fullName.value);
 ```
 
-## Effect API
+Computed values are lazy, cached, read-only, and expose `dispose()`.
+
+## Effects and Scopes
 
 ```js
-import { signal, effect } from '@kupola/core';
+import { effect, effectScope, onScopeDispose } from '@kupola/core';
 
-const count = signal(0);
-const cleanup = effect(() => {
-  console.log(`Count changed: ${count.value}`);
-  return () => console.log('Cleanup');
+const scope = effectScope();
+scope.run(() => {
+  effect(() => syncExternalSystem());
+  onScopeDispose(() => releaseExternalSystem());
 });
 
-// Later: cleanup();
+scope.stop();
 ```
 
-## Watch API
+An effect may return a cleanup function. Scope cleanup is synchronous.
 
-```js
-import { signal, watch } from '@kupola/core';
-
-const state = signal({ count: 0 });
-
-watch(() => state.value.count, (newVal, oldVal) => {
-  console.log(`Count changed from ${oldVal} to ${newVal}`);
-});
-
-watch(() => state.value.count, (val) => {
-  console.log('Immediate callback');
-}, { immediate: true });
-
-watch(() => state.value, (val) => {
-  console.log('Deep watch');
-}, { deep: true });
-```
-
-## Reactive API
+## Watch
 
 ```js
 import { reactive, watch } from '@kupola/core';
 
-const state = reactive({
-  count: 0,
-  name: 'Kupola'
-});
+const state = reactive({ count: 0 });
+const stop = watch(
+  () => state.count,
+  (value, previous, onCleanup) => {
+    const request = startRequest(value);
+    onCleanup(() => request.cancel());
+    console.log(value, previous);
+  },
+  { immediate: true },
+);
 
-state.count++; // triggers reactivity
-
-watch(() => state.count, (val) => {
-  console.log('Count:', val);
-});
+state.count++;
+stop();
 ```
 
-## Template API
+Use `{ deep: true }` only when nested change detection is required. Deep watch
+tracks nested reactive objects and performs a structural comparison.
+Register cancellation with the third `onCleanup` argument before starting an
+async task. Reads after an `await` are not tracked by effects.
+
+## Reactive Objects
 
 ```js
-import { html, render } from '@kupola/core';
+import { reactive, effect } from '@kupola/core';
 
-const name = signal('World');
-
-render(html`<div>Hello ${name}</div>`, document.body);
+const state = reactive({ count: 0, name: 'Kupola' });
+const stop = effect(() => console.log(state.count));
+state.count++;
+stop();
+state.dispose();
 ```
 
-## Batch Updates
+Plain objects and arrays are supported. Date, Map, Set, Promise, typed arrays,
+and other built-in objects are returned unchanged. Map and Set can still be
+compared by `watch(..., { deep: true })` when a signal value is replaced, but
+their in-place mutations are not reactive; wrap mutation state in signals when
+needed.
+
+Reactive proxies expose `toRaw()` for integrations that require the original
+object identity. The proxy also provides a JSON-compatible `toJSON()` view of
+that original object without adding virtual reactivity properties to output.
+
+## Batch and Scheduling
 
 ```js
-import { signal, batch, effect } from '@kupola/core';
+import { signal, effect, batch, createScheduler, nextTick, runWithScheduler } from '@kupola/core';
 
 const a = signal(0);
 const b = signal(0);
-
-effect(() => console.log(`a: ${a.value}, b: ${b.value}`));
+effect(() => console.log(a.value, b.value));
 
 batch(() => {
   a.value = 1;
   b.value = 2;
 });
-// Effect runs only once
-```
-
-## NextTick
-
-```js
-import { nextTick } from '@kupola/core';
 
 await nextTick();
-// DOM updates are flushed
 ```
 
-## Provide / Inject
+For multiple independent apps or SSR requests, create one scheduler per owner.
+Effects created in `runWithScheduler()` inherit that scheduler, including
+effects created later by a parent effect:
 
 ```js
-import { provide, inject } from '@kupola/core';
-
-// Parent
-provide('theme', signal('dark'));
-
-// Child
-const theme = inject('theme');
-console.log(theme.value);
-```
-
-## Server-Side Rendering
-
-```js
-import { renderToString } from '@kupola/platform/server';
-
-const html = await renderToString(() => html`<div>SSR Content</div>`);
-```
-
-## i18n
-
-```js
-import { t, setLocale, addMessages } from '@kupola/platform/i18n';
-
-setLocale('zh-CN');
-console.log(t('hello'));
-
-addMessages('zh-CN', {
-  custom: '自定义消息'
+const scheduler = createScheduler({ name: 'request-42' });
+runWithScheduler(scheduler, () => {
+  effect(() => renderRequestState());
 });
+
+scheduler.flushJobs();
 ```
 
-## DevTools
+`@kupola/platform` accepts the same scheduler through `render`, `mount`,
+`createApp`, or `walk` options. Existing calls without a scheduler continue to
+use the shared default queue.
 
-```js
-import { connectDevTools } from '@kupola/core';
+Use `setErrorHandler()` to receive errors from scheduled jobs and synchronous
+reactive triggers.
 
-connectDevTools();
-```
+## Platform APIs
 
-## TypeScript
+DOM templates, rendering, components, context, SSR, and i18n are provided by
+`@kupola/platform`, not this package.
 
-```ts
-import type { Signal, ComputedSignal, ReactiveObject } from '@kupola/core';
-```
+The optional profiler is available from `@kupola/core/devtools`.
 
 ## API Reference
 
-| Method | Description |
-|--------|-------------|
-| `signal(initial)` | Create a reactive signal |
-| `computed(fn)` | Create a computed value |
-| `effect(fn)` | Run side effects |
-| `watch(getter, cb, options?)` | Watch for changes |
-| `reactive(obj)` | Create reactive object |
-| `isReactive(obj)` | Check if object is reactive |
-| `batch(fn)` | Batch updates |
-| `nextTick()` | Wait for next tick |
-| `provide(key, value)` | Provide value to children |
-| `inject(key)` | Inject provided value |
-| `html` | Tagged template literal |
-| `render(template, container)` | Render to DOM |
-| `renderToString(template)` | SSR rendering |
+| API | Description |
+| --- | --- |
+| `signal(initial)` | Create a signal |
+| `computed(fn)` | Create a lazy derived value |
+| `effect(fn, options?)` | Run a reactive side effect |
+| `effectScope()` | Group effects and cleanups |
+| `onScopeDispose(fn)` | Register scoped cleanup |
+| `watch(getter, callback, options?)` | Observe a derived value |
+| `reactive(object)` | Create a reactive plain object or array |
+| `isReactive(value)` | Check for a reactive proxy |
+| `toRaw(value)` | Return the original value behind a proxy |
+| `withoutTracking(fn)` | Run without collecting dependencies |
+| `batch(fn)` | Coalesce synchronous mutations |
+| `queueJob(job)` | Schedule a deduplicated job |
+| `queuePostJob(job)` | Schedule a post-phase job |
+| `flushJobs()` | Flush pending jobs synchronously |
+| `nextTick(callback?)` | Run after pending jobs flush |
+| `createScheduler(options?)` | Create an isolated scheduler |
+| `runWithScheduler(scheduler, fn)` | Bind a scheduler to setup-created effects |
+| `setErrorHandler(handler)` | Configure reactive error handling |
 
 ## License
 

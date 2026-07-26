@@ -1,1 +1,1 @@
-"use strict";class t{constructor(t,s){this.strings=t,this.values=s}}exports.TemplateResult=t,exports.html=function(s,...r){return new t(s,r)};
+"use strict";class t{constructor(t,r){this.strings=t,this.values=r}}class r{#t;constructor(t){this.#t=String(t??"")}toString(){return this.#t}get content(){return this.#t}}exports.HtmlString=r,exports.TemplateResult=t,exports.html=function(r,...n){return new t(r,n)},exports.htmlString=function(t){return new r(t)};

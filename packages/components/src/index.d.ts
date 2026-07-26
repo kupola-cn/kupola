@@ -10,12 +10,12 @@
  */
 
 // Re-export all component types, options interfaces, and factory functions.
-export * from './components/types';
+export * from './components/types.d.ts';
 
 // The runtime index.js renames a few component factories to follow common
 // casing conventions (e.g. `Datepicker` → `DatePicker`). Mirror those renames
 // here so consumers importing from the package entry get matching types.
-export { Datepicker as DatePicker } from './components/types';
-export { Statcard as StatCard } from './components/types';
-export { Textarea as TextArea } from './components/types';
-export { Timepicker as TimePicker } from './components/types';
+export { Datepicker as DatePicker } from './components/types.d.ts';
+export { Statcard as StatCard } from './components/types.d.ts';
+export { Textarea as TextArea } from './components/types.d.ts';
+export { Timepicker as TimePicker } from './components/types.d.ts';

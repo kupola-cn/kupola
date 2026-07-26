@@ -8,6 +8,8 @@ import { resetScheduler } from '../../src/scheduler.js';
 import { Dialog } from '@kupola/components';
 
 afterEach(() => {
+  jest.useRealTimers();
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   document.body.style.overflow = '';
   resetScheduler();
@@ -162,17 +164,16 @@ describe('Dialog.alert', () => {
 
 describe('Dialog cleanup', () => {
   test('removes dialog DOM after confirm', async () => {
+    jest.useFakeTimers();
     const promise = Dialog.confirm({ title: 'Test' });
 
     const confirmBtn = document.body.querySelector('[data-action="confirm"]');
     confirmBtn.click();
     await promise;
 
-    // Wait for cleanup timeout
-    await new Promise((r) => setTimeout(r, 100));
-
     const mask = document.body.querySelector('.ds-modal-mask');
     expect(mask).toBeNull();
+    expect(jest.getTimerCount()).toBe(0);
   });
 
   test('restores body overflow after close', async () => {
@@ -184,5 +185,42 @@ describe('Dialog cleanup', () => {
     await promise;
 
     expect(document.body.style.overflow).toBe('');
+  });
+
+  test('only the topmost dialog handles Escape', async () => {
+    let firstSettled = false;
+    const first = Dialog.confirm({ title: 'First' }).then(value => {
+      firstSettled = true;
+      return value;
+    });
+    const second = Dialog.confirm({ title: 'Second' });
+
+    expect(document.querySelectorAll('.ds-dialog')).toHaveLength(2);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    await expect(second).resolves.toBe(false);
+    expect(firstSettled).toBe(false);
+    expect(document.querySelectorAll('.ds-dialog')).toHaveLength(1);
+    expect(document.body.style.overflow).toBe('hidden');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await expect(first).resolves.toBe(false);
+    expect(document.body.style.overflow).toBe('');
+  });
+
+  test('assigns unique accessible title and content ids', async () => {
+    const first = Dialog.confirm({ title: 'First' });
+    const second = Dialog.confirm({ title: 'Second' });
+    const dialogs = [ ...document.querySelectorAll('.ds-dialog') ];
+
+    expect(dialogs[0].getAttribute('aria-labelledby'))
+      .not.toBe(dialogs[1].getAttribute('aria-labelledby'));
+    expect(dialogs[0].getAttribute('aria-describedby'))
+      .not.toBe(dialogs[1].getAttribute('aria-describedby'));
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await second;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await first;
   });
 });

@@ -8,13 +8,15 @@ describe('matcher', () => {
       expect(record.path).toBe('/users/:id');
       expect(record.name).toBe('user-detail');
       expect(record.regex).toBeDefined();
-      expect(record.paramNames).toEqual(['id']);
+      expect(record.paramNames).toEqual([ 'id' ]);
     });
 
     it('should handle optional params', () => {
       const route = { path: '/search/:keyword?' };
       const record = createRouteRecord(route);
-      expect(record.paramNames).toEqual(['keyword']);
+      expect(record.paramNames).toEqual([ 'keyword' ]);
+      expect(record.regex.test('/search')).toBe(true);
+      expect(record.regex.test('/search/kupola')).toBe(true);
     });
 
     it('should handle wildcard routes', () => {
@@ -25,6 +27,12 @@ describe('matcher', () => {
   });
 
   describe('flattenRoutes', () => {
+    it('should reject malformed route configuration early', () => {
+      expect(() => flattenRoutes([ null ])).toThrow(/string path/);
+      expect(() => flattenRoutes([ { path: '/', children: {} } ])).toThrow(/children/);
+      expect(() => flattenRoutes([ { path: '/', beforeEnter: true } ])).toThrow(/beforeEnter/);
+    });
+
     it('should flatten nested routes', () => {
       const routes = [
         { path: '/', name: 'home' },
@@ -48,15 +56,22 @@ describe('matcher', () => {
 
   describe('matchRoute', () => {
     it('should match exact path', () => {
-      const routes = [{ path: '/users', name: 'users' }];
+      const routes = [ { path: '/users', name: 'users' } ];
       const records = flattenRoutes(routes);
       const match = matchRoute(records, '/users');
       expect(match).not.toBeNull();
       expect(match.name).toBe('users');
     });
 
+    it('should escape regex characters in static paths', () => {
+      const records = flattenRoutes([ { path: '/file.v1', name: 'file' } ]);
+
+      expect(matchRoute(records, '/file.v1')).not.toBeNull();
+      expect(matchRoute(records, '/fileXv1')).toBeNull();
+    });
+
     it('should match dynamic params', () => {
-      const routes = [{ path: '/users/:id', name: 'user-detail' }];
+      const routes = [ { path: '/users/:id', name: 'user-detail' } ];
       const records = flattenRoutes(routes);
       const match = matchRoute(records, '/users/123');
       expect(match).not.toBeNull();
@@ -68,7 +83,7 @@ describe('matcher', () => {
         {
           path: '/dashboard',
           name: 'dashboard',
-          children: [{ path: 'settings', name: 'dashboard-settings' }],
+          children: [ { path: 'settings', name: 'dashboard-settings' } ],
         },
       ];
       const records = flattenRoutes(routes);
@@ -78,8 +93,37 @@ describe('matcher', () => {
       expect(match.matched.length).toBe(2);
     });
 
+    it('should merge nested route metadata with child precedence', () => {
+      const records = flattenRoutes([
+        {
+          path: '/admin',
+          meta: { requiresAuth: true, layout: 'admin' },
+          children: [ {
+            path: 'settings',
+            meta: { layout: 'settings' },
+          } ],
+        },
+      ]);
+      const match = matchRoute(records, '/admin/settings');
+
+      expect(match.meta).toEqual({ requiresAuth: true, layout: 'settings' });
+    });
+
+    it('should prefer an index child over its parent at the same path', () => {
+      const records = flattenRoutes([ {
+        path: '/dashboard',
+        name: 'dashboard',
+        children: [ { path: '', name: 'dashboard-index' } ],
+      } ]);
+
+      const match = matchRoute(records, '/dashboard');
+
+      expect(match.name).toBe('dashboard-index');
+      expect(match.matched).toHaveLength(2);
+    });
+
     it('should match wildcard', () => {
-      const routes = [{ path: '*', name: 'not-found' }];
+      const routes = [ { path: '*', name: 'not-found' } ];
       const records = flattenRoutes(routes);
       const match = matchRoute(records, '/unknown/path');
       expect(match).not.toBeNull();
@@ -87,7 +131,7 @@ describe('matcher', () => {
     });
 
     it('should return null for no match', () => {
-      const routes = [{ path: '/users', name: 'users' }];
+      const routes = [ { path: '/users', name: 'users' } ];
       const records = flattenRoutes(routes);
       const match = matchRoute(records, '/posts');
       expect(match).toBeNull();
@@ -96,14 +140,14 @@ describe('matcher', () => {
 
   describe('resolvePath', () => {
     it('should resolve path with params', () => {
-      const routes = [{ path: '/users/:id', name: 'user-detail' }];
+      const routes = [ { path: '/users/:id', name: 'user-detail' } ];
       const records = flattenRoutes(routes);
       const path = resolvePath(records, { path: '/users/:id', params: { id: '123' } });
       expect(path).toBe('/users/123');
     });
 
     it('should resolve by name', () => {
-      const routes = [{ path: '/users/:id', name: 'user-detail' }];
+      const routes = [ { path: '/users/:id', name: 'user-detail' } ];
       const records = flattenRoutes(routes);
       const path = resolvePath(records, { name: 'user-detail', params: { id: '456' } });
       expect(path).toBe('/users/456');

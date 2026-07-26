@@ -38,7 +38,7 @@ export interface RouteLocation {
 export type NavigationGuard = (
   to: RouteLocation,
   from: RouteLocation | null
-) => boolean | void | { path: string; query?: Record<string, string> };
+) => boolean | void | { path: string; query?: Record<string, string> } | Promise<boolean | void | { path: string; query?: Record<string, string> }>;
 
 export interface TransitionConfig {
   enterClass?: string;
@@ -47,8 +47,8 @@ export interface TransitionConfig {
   leaveActiveClass?: string;
   enterToClass?: string;
   leaveToClass?: string;
-  onEnter?: (el: HTMLElement, done: () => void) => void;
-  onLeave?: (el: HTMLElement, done: () => void) => void;
+  onEnter?: (el: HTMLElement, done: () => void) => void | Promise<void>;
+  onLeave?: (el: HTMLElement, done: () => void) => void | Promise<void>;
   duration?: number;
 }
 
@@ -60,15 +60,45 @@ export interface RouterOptions {
   transition?: TransitionConfig;
 }
 
+export interface AuthGuardOptions {
+  authContext: object | null | (() => object | null);
+  loginPath?: string;
+  forbiddenPath?: string;
+  notFoundPath?: string;
+  onAuthChange?: (listener: (context: object | null) => void) => () => void;
+}
+
+export function setupAuthGuard(router: Router, options: AuthGuardOptions): () => void;
+export function installRouter(
+  router: Router,
+  options?: {
+    auth?: boolean | AuthGuardOptions;
+    authContext?: AuthGuardOptions['authContext'];
+    onAuthChange?: AuthGuardOptions['onAuthChange'];
+  }
+): void;
+
+export function initRouter(
+  options: RouterOptions & {
+    auth?: boolean | AuthGuardOptions;
+    authContext?: AuthGuardOptions['authContext'];
+    onAuthChange?: AuthGuardOptions['onAuthChange'];
+  }
+): {
+  install(): void;
+  init(): Promise<boolean | RouteLocation | null>;
+  destroy(): void;
+};
+
 export type ScrollBehaviorFunction = (
   to: RouteLocation,
   from: RouteLocation | null,
   savedPosition: { x: number; y: number } | null
-) => { x: number; y: number } | { selector: string } | null;
+) => { x: number; y: number } | { selector: string; behavior?: ScrollBehavior } | null;
 
 export interface Router {
-  push(location: string | { path?: string; name?: string; params?: Record<string, string> }, options?: { query?: Record<string, string> }): void;
-  replace(location: string | { path?: string; name?: string; params?: Record<string, string> }, options?: { query?: Record<string, string> }): void;
+  push(location: string | { path?: string; name?: string; params?: Record<string, string>; query?: Record<string, string> }, options?: { query?: Record<string, string> }): Promise<boolean>;
+  replace(location: string | { path?: string; name?: string; params?: Record<string, string>; query?: Record<string, string> }, options?: { query?: Record<string, string> }): Promise<boolean>;
   back(): void;
   forward(): void;
   go(delta: number): void;
@@ -78,7 +108,7 @@ export interface Router {
   beforeResolve(guard: NavigationGuard): () => void;
   afterEach(callback: (to: RouteLocation, from: RouteLocation | null) => void): () => void;
   onError(callback: (error: Error) => void): () => void;
-  currentRoute: RouteLocation;
-  init(): void;
+  currentRoute: RouteLocation | null;
+  init(): Promise<boolean | RouteLocation | null>;
   destroy(): void;
 }

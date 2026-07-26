@@ -50,7 +50,19 @@ let _totalComputedRecomputes = 0;
 // ── Signal ID registry ──────────────────────────────────────────────────────
 
 /** @type {WeakMap<Object, number>} Maps signal/computed/effect instances to IDs. */
-const _idMap = new WeakMap();
+let _idMap = new WeakMap();
+
+function clearProfilerData() {
+  _signalStats.clear();
+  _effectStats.clear();
+  _computedStats.clear();
+  _nextSignalId = 0;
+  _nextEffectId = 0;
+  _nextComputedId = 0;
+  // IDs belong to one profiling session. Reusing the old WeakMap would let
+  // objects from an earlier session collide with new objects after reset.
+  _idMap = new WeakMap();
+}
 
 function getOrCreateId(obj, counter) {
   if (!_idMap.has(obj)) {
@@ -72,12 +84,7 @@ function getOrCreateId(obj, counter) {
 export function enableProfiler(options = {}) {
   _enabled = true;
   _startTime = performance.now();
-  _signalStats.clear();
-  _effectStats.clear();
-  _computedStats.clear();
-  _nextSignalId = 0;
-  _nextEffectId = 0;
-  _nextComputedId = 0;
+  clearProfilerData();
   _totalTriggers = 0;
   _totalEffectRuns = 0;
   _totalComputedRecomputes = 0;
@@ -99,9 +106,7 @@ export function disableProfiler() {
 export function resetProfiler() {
   _enabled = false;
   _startTime = 0;
-  _signalStats.clear();
-  _effectStats.clear();
-  _computedStats.clear();
+  clearProfilerData();
   _totalTriggers = 0;
   _totalEffectRuns = 0;
   _totalComputedRecomputes = 0;
@@ -235,12 +240,12 @@ export function getProfileReport() {
   const duration = _startTime > 0 ? performance.now() - _startTime : 0;
 
   const signals = [];
-  for (const [, s] of _signalStats) {
+  for (const [ , s ] of _signalStats) {
     signals.push({ label: s.label, reads: s.reads, writes: s.writes, triggers: s.triggers });
   }
 
   const effects = [];
-  for (const [, s] of _effectStats) {
+  for (const [ , s ] of _effectStats) {
     const avg = s.runs > 0 ? s.totalTime / s.runs : 0;
     effects.push({
       label: s.label,
@@ -252,7 +257,7 @@ export function getProfileReport() {
   }
 
   const computeds = [];
-  for (const [, s] of _computedStats) {
+  for (const [ , s ] of _computedStats) {
     const avg = s.recomputes > 0 ? s.totalTime / s.recomputes : 0;
     computeds.push({
       label: s.label,
@@ -305,6 +310,24 @@ export function printProfileReport() {
 // ── DevTools Extension Protocol ──────────────────────────────────────────────
 
 const _devtoolsListeners = new Map();
+let _messageListenerInstalled = false;
+let _exposedAPI = null;
+let _exposedCleanup = null;
+
+function installMessageListener() {
+  if (typeof window === 'undefined' || _messageListenerInstalled) {return;}
+  window.addEventListener('message', _handleDevToolsMessage);
+  _messageListenerInstalled = true;
+}
+
+function removeMessageListenerIfUnused() {
+  if (typeof window === 'undefined'
+    || !_messageListenerInstalled
+    || _exposedAPI
+    || _devtoolsListeners.size > 0) {return;}
+  window.removeEventListener('message', _handleDevToolsMessage);
+  _messageListenerInstalled = false;
+}
 
 function _sendToDevTools(message) {
   if (typeof window !== 'undefined' && window.__KUPOLA_DEVTOOLS__) {
@@ -314,31 +337,53 @@ function _sendToDevTools(message) {
 
 function _handleDevToolsMessage(event) {
   if (event.source !== window) {return;}
-  const { type, payload } = event.data || {};
+  const { type: rawType, payload } = event.data || {};
+  if (typeof rawType !== 'string') {return;}
+  const type = rawType.startsWith('kupola:') ? rawType.slice(7) : rawType;
   const handlers = _devtoolsListeners.get(type) || [];
-  handlers.forEach(handler => handler(payload));
+  for (const handler of [ ...handlers ]) {
+    try {handler(payload);} catch (error) {
+      // A DevTools observer must not break the application's message event.
+      queueMicrotask(() => {throw error;});
+    }
+  }
 }
 
 export function onDevToolsMessage(type, handler) {
+  if (typeof type !== 'string' || type.length === 0 || typeof handler !== 'function') {
+    throw new TypeError('[kupola] onDevToolsMessage() expects a type and handler.');
+  }
   const handlers = _devtoolsListeners.get(type) || [];
   handlers.push(handler);
   _devtoolsListeners.set(type, handlers);
+  installMessageListener();
   return () => {
     const currentHandlers = _devtoolsListeners.get(type) || [];
-    _devtoolsListeners.set(type, currentHandlers.filter(h => h !== handler));
+    const remaining = currentHandlers.filter(h => h !== handler);
+    if (remaining.length > 0) {_devtoolsListeners.set(type, remaining);}
+    else {_devtoolsListeners.delete(type);}
+    removeMessageListenerIfUnused();
   };
 }
 
 export function sendDevToolsMessage(type, payload = {}) {
+  if (typeof type !== 'string' || type.length === 0) {
+    throw new TypeError('[kupola] sendDevToolsMessage() expects a non-empty type.');
+  }
   _sendToDevTools({ type: `kupola:${type}`, payload });
 }
 
 export function exposeDevToolsAPI() {
   if (typeof window === 'undefined') {return;}
 
-  window.addEventListener('message', _handleDevToolsMessage);
+  if (_exposedAPI && window.__KUPOLA__ === _exposedAPI && _exposedCleanup) {
+    return _exposedCleanup;
+  }
+  if (_exposedCleanup) {_exposedCleanup();}
 
-  window.__KUPOLA__ = {
+  installMessageListener();
+
+  const api = {
     enableProfiler,
     disableProfiler,
     resetProfiler,
@@ -348,6 +393,19 @@ export function exposeDevToolsAPI() {
     sendMessage: sendDevToolsMessage,
     onMessage: onDevToolsMessage,
   };
+  _exposedAPI = api;
+  window.__KUPOLA__ = api;
 
   console.log('[Kupola] DevTools API exposed. Use window.__KUPOLA__ to access.');
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) {return;}
+    cleaned = true;
+    if (window.__KUPOLA__ === api) {delete window.__KUPOLA__;}
+    if (_exposedAPI === api) {_exposedAPI = null;}
+    if (_exposedCleanup === cleanup) {_exposedCleanup = null;}
+    removeMessageListenerIfUnused();
+  };
+  _exposedCleanup = cleanup;
+  return cleanup;
 }

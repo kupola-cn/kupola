@@ -23,6 +23,15 @@ describe('Form', () => {
       expect(f.element).toBe(form);
       f.destroy();
     });
+
+    test('resolves a selector and rejects selectors without a form', () => {
+      const form = makeForm('<input name="x">');
+      form.id = 'profile-form';
+      const f = Form({ element: '#profile-form' });
+      expect(f.element).toBe(form);
+      f.destroy();
+      expect(() => Form({ element: '#missing' })).toThrow(/form element/i);
+    });
   });
 
   // ── getData ──
@@ -114,6 +123,14 @@ describe('Form', () => {
       expect(form.querySelector('input:checked').value).toBe('l');
       f.destroy();
     });
+
+    test('supports field names containing selector syntax', () => {
+      const form = makeForm('<input name="profile[display-name]" value="old">');
+      const f = Form({ element: form });
+      expect(() => f.setData({ 'profile[display-name]': 'new' })).not.toThrow();
+      expect(form.elements.namedItem('profile[display-name]').value).toBe('new');
+      f.destroy();
+    });
   });
 
   // ── Validation ──
@@ -198,6 +215,22 @@ describe('Form', () => {
       expect(form.querySelectorAll('.ds-form-error').length).toBe(0);
       f.destroy();
     });
+
+    test('tracks each generated error when fields share a wrapper', () => {
+      const form = makeForm(`
+        <div class="ds-form-field">
+          <input name="a"><span>separator</span><input name="b">
+        </div>
+      `);
+      const f = Form({ element: form });
+      const [ first, second ] = form.querySelectorAll('input');
+      f.showError(first, 'First');
+      f.showError(second, 'Second');
+      expect(form.querySelectorAll('.ds-form-error')).toHaveLength(2);
+      f.clearError(first);
+      expect(form.querySelector('.ds-form-error').textContent).toBe('Second');
+      f.destroy();
+    });
   });
 
   // ── Submit ──
@@ -252,6 +285,19 @@ describe('Form', () => {
     test('cleans up event listeners', () => {
       const form = makeForm('<input name="x" value="test">');
       const f = Form({ element: form });
+      expect(() => f.destroy()).not.toThrow();
+    });
+
+    test('event delegation validates fields added after initialization', () => {
+      const form = makeForm('');
+      const f = Form({ element: form });
+      const input = document.createElement('input');
+      input.setAttribute('data-required', 'true');
+      form.appendChild(input);
+      input.dispatchEvent(new FocusEvent('blur'));
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      f.destroy();
+      expect(form.querySelector('.ds-form-error')).toBeNull();
       expect(() => f.destroy()).not.toThrow();
     });
   });

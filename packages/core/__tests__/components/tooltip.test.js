@@ -8,6 +8,8 @@ import { resetScheduler } from '../../src/scheduler.js';
 import { Tooltip } from '@kupola/components';
 
 afterEach(() => {
+  jest.useRealTimers();
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   resetScheduler();
 });
@@ -74,6 +76,19 @@ describe('Tooltip show/hide', () => {
     expect(tooltips.length).toBe(1);
     tip.destroy();
   });
+
+  test('connects the tooltip to its target without replacing existing descriptions', () => {
+    const btn = document.createElement('button');
+    btn.setAttribute('aria-describedby', 'existing-description');
+    const tip = Tooltip({ target: btn, content: 'Tip' });
+
+    tip.show();
+    const tooltipEl = document.body.querySelector('.ds-tooltip');
+    expect(btn.getAttribute('aria-describedby')).toBe(`existing-description ${tooltipEl.id}`);
+
+    tip.destroy();
+    expect(btn.getAttribute('aria-describedby')).toBe('existing-description');
+  });
 });
 
 // ─── Hover trigger ───────────────────────────────────────────────────────────
@@ -105,6 +120,33 @@ describe('Tooltip hover trigger', () => {
     const tooltipEl = document.body.querySelector('.ds-tooltip');
     expect(tooltipEl.classList.contains('is-visible')).toBe(false);
     tip.destroy();
+  });
+
+  test('cancels a delayed show when the pointer leaves', () => {
+    jest.useFakeTimers();
+    const btn = document.createElement('button');
+    document.body.appendChild(btn);
+    const tip = Tooltip({ target: btn, content: 'Delayed', delay: 100 });
+
+    btn.dispatchEvent(new Event('mouseenter'));
+    expect(jest.getTimerCount()).toBe(1);
+    btn.dispatchEvent(new Event('mouseleave'));
+    expect(jest.getTimerCount()).toBe(0);
+    jest.advanceTimersByTime(100);
+    expect(document.body.querySelector('.ds-tooltip')).toBeNull();
+    tip.destroy();
+  });
+
+  test('does not schedule duplicate delayed shows', () => {
+    jest.useFakeTimers();
+    const btn = document.createElement('button');
+    const tip = Tooltip({ target: btn, content: 'Delayed', delay: 100 });
+
+    btn.dispatchEvent(new Event('mouseenter'));
+    btn.dispatchEvent(new Event('mouseenter'));
+    expect(jest.getTimerCount()).toBe(1);
+    tip.destroy();
+    expect(jest.getTimerCount()).toBe(0);
   });
 });
 
@@ -201,6 +243,15 @@ describe('Tooltip placement', () => {
     expect(tooltipEl.classList.contains('ds-tooltip--top')).toBe(true);
     tip.destroy();
   });
+
+  test('normalizes an unsupported placement', () => {
+    const btn = document.createElement('button');
+    const tip = Tooltip({ target: btn, content: 'Tip', placement: 'diagonal' });
+    tip.show();
+
+    expect(document.body.querySelector('.ds-tooltip').classList.contains('ds-tooltip--top')).toBe(true);
+    tip.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -233,5 +284,20 @@ describe('Tooltip destroy', () => {
     btn.dispatchEvent(new Event('mouseenter'));
     const tooltipEl = document.body.querySelector('.ds-tooltip');
     expect(tooltipEl).toBeNull();
+  });
+
+  test('cancels pending work and is idempotent', () => {
+    jest.useFakeTimers();
+    const btn = document.createElement('button');
+    const tip = Tooltip({ target: btn, content: 'Tip', delay: 100 });
+    btn.dispatchEvent(new Event('mouseenter'));
+
+    tip.destroy();
+    expect(() => tip.destroy()).not.toThrow();
+    expect(jest.getTimerCount()).toBe(0);
+    jest.advanceTimersByTime(100);
+    expect(document.body.querySelector('.ds-tooltip')).toBeNull();
+    tip.show();
+    expect(document.body.querySelector('.ds-tooltip')).toBeNull();
   });
 });

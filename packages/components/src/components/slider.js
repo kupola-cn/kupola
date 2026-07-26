@@ -22,6 +22,7 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a Slider component instance.
@@ -48,6 +49,8 @@ export function Slider(options = {}) {
   } = options;
 
   let _value = _clamp(initialValue, min, max);
+  let destroyed = false;
+  const listeners = createListenerRegistry();
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -56,14 +59,10 @@ export function Slider(options = {}) {
   }
 
   function setValue(val) {
+    if (destroyed) {return;}
     _value = _clamp(val, min, max);
     _updateUI();
     if (onChange) {onChange(_value);}
-  }
-
-  function destroy() {
-    if (inputEl) {inputEl.removeEventListener('input', _handleInput);}
-    instance.destroy();
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
@@ -119,16 +118,23 @@ export function Slider(options = {}) {
     inputEl.step = step;
     inputEl.value = _value;
     inputEl.disabled = disabled;
-    inputEl.addEventListener('input', _handleInput);
+    listeners.on(inputEl, 'input', _handleInput);
   }
 
-  // Initial UI update
   _updateUI();
 
-  return {
+  const api = {
     get element() { return container; },
     getValue,
     setValue,
-    destroy,
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      listeners.destroy();
+      instance.destroy();
+      Object.freeze(api);
+    },
   };
+
+  return api;
 }

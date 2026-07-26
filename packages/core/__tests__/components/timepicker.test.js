@@ -72,6 +72,19 @@ describe('Timepicker rendering', () => {
     const panel = document.body.querySelector('.ds-timepicker__panel');
     expect(panel.style.display).toBe('none');
   });
+
+  test('preserves the clock icon and creates unique aria controls', () => {
+    const first = Timepicker();
+    const second = Timepicker();
+    document.body.append(first.element, second.element);
+    const inputs = document.querySelectorAll('.ds-timepicker__input');
+    expect(inputs[0].getAttribute('aria-controls')).not.toBe(
+      inputs[1].getAttribute('aria-controls'),
+    );
+    expect(document.querySelector('.ds-timepicker__icon svg')).not.toBeNull();
+    first.destroy();
+    second.destroy();
+  });
 });
 
 // ─── Value handling ──────────────────────────────────────────────────────────
@@ -94,6 +107,31 @@ describe('Timepicker value', () => {
     expect(view.getValue()).toBe('09:15');
     const input = document.body.querySelector('.ds-timepicker__input');
     expect(input.value).toBe('09:15');
+  });
+
+  test('rejects invalid and out-of-range values', () => {
+    const view = Timepicker({ value: '25:99', minTime: '09:00', maxTime: '17:00' });
+    document.body.appendChild(view.element);
+    expect(view.getValue()).toBe('');
+    view.setValue('08:59');
+    expect(view.getValue()).toBe('');
+    view.setValue('9:30');
+    expect(view.getValue()).toBe('09:30');
+    view.setValue('17:01');
+    expect(view.getValue()).toBe('09:30');
+    view.destroy();
+  });
+
+  test('clear resets the value once and notifies onChange', () => {
+    const onChange = jest.fn();
+    const view = Timepicker({ value: '10:30', onChange });
+    document.body.appendChild(view.element);
+    view.clear();
+    expect(view.getValue()).toBe('');
+    expect(onChange).toHaveBeenLastCalledWith('');
+    view.clear();
+    expect(onChange).toHaveBeenCalledTimes(1);
+    view.destroy();
   });
 
   test('clicking a hour item selects time', () => {
@@ -130,6 +168,18 @@ describe('Timepicker value', () => {
     expect(view.getValue()).toBe('10:30');
     expect(onChange).toHaveBeenCalled();
   });
+
+  test('12h period control converts between AM and PM', () => {
+    const view = Timepicker({ value: '09:15', format: '12h' });
+    document.body.appendChild(view.element);
+    const pm = document.querySelector('[data-period="PM"]');
+    pm.click();
+    expect(view.getValue()).toBe('21:15');
+    expect(pm.classList.contains('is-selected')).toBe(true);
+    document.querySelector('[data-period="AM"]').click();
+    expect(view.getValue()).toBe('09:15');
+    view.destroy();
+  });
 });
 
 // ─── Panel toggle ────────────────────────────────────────────────────────────
@@ -158,6 +208,48 @@ describe('Timepicker panel', () => {
     input.click();
     expect(panel.style.display).toBe('none');
   });
+
+  test('only acquires document listeners while open', () => {
+    const addSpy = jest.spyOn(document, 'addEventListener');
+    const removeSpy = jest.spyOn(document, 'removeEventListener');
+    const view = Timepicker();
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'click' || event === 'keydown')).toBe(false);
+    view.open();
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'click')).toBe(true);
+    expect(addSpy.mock.calls.some(([ event ]) => event === 'keydown')).toBe(true);
+    view.close();
+    expect(removeSpy.mock.calls.some(([ event ]) => event === 'click')).toBe(true);
+    expect(removeSpy.mock.calls.some(([ event ]) => event === 'keydown')).toBe(true);
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
+    view.destroy();
+  });
+
+  test('Escape closes only the most recently opened picker', () => {
+    const first = Timepicker();
+    const second = Timepicker();
+    document.body.append(first.element, second.element);
+    first.open();
+    second.open();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(first.isOpen()).toBe(true);
+    expect(second.isOpen()).toBe(false);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(first.isOpen()).toBe(false);
+    first.destroy();
+    second.destroy();
+  });
+
+  test('Tab closes without preventing focus navigation', () => {
+    const view = Timepicker();
+    document.body.appendChild(view.element);
+    view.open();
+    const event = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(view.isOpen()).toBe(false);
+    view.destroy();
+  });
 });
 
 // ─── Disabled state ──────────────────────────────────────────────────────────
@@ -179,6 +271,11 @@ describe('Timepicker destroy', () => {
     const view = Timepicker();
     document.body.appendChild(view.element);
 
+    view.open();
     expect(() => view.destroy()).not.toThrow();
+    expect(view.isOpen()).toBe(false);
+    expect(() => view.destroy()).not.toThrow();
+    view.open();
+    expect(view.isOpen()).toBe(false);
   });
 });

@@ -21,6 +21,7 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a Checkbox component instance.
@@ -45,34 +46,8 @@ export function Checkbox(options = {}) {
   } = options;
 
   let _checked = initialChecked;
-
-  // ── Public API ─────────────────────────────────────────────────────────────
-
-  function isChecked() {
-    return _checked;
-  }
-
-  function setChecked(val) {
-    _checked = !!val;
-    if (inputEl) {inputEl.checked = _checked;}
-    _syncAria();
-    if (onChange) {onChange(_checked);}
-  }
-
-  function destroy() {
-    if (inputEl) {inputEl.removeEventListener('change', _handleChange);}
-    instance.destroy();
-  }
-
-  // ── Internal ───────────────────────────────────────────────────────────────
-
-  function _handleChange() {
-    _checked = inputEl.checked;
-    _syncAria();
-    if (onChange) {onChange(_checked);}
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
+  const listeners = createListenerRegistry();
+  let destroyed = false;
 
   const tpl = html`
     <label class="ds-checkbox" role="checkbox" aria-checked="${initialChecked}" ${disabled ? 'aria-disabled="true"' : ''}>
@@ -87,12 +62,12 @@ export function Checkbox(options = {}) {
 
   const inputEl = container.querySelector('input');
   const labelEl = container.querySelector('.ds-checkbox');
+
   if (inputEl) {
     inputEl.checked = _checked;
     inputEl.disabled = disabled;
     if (name) {inputEl.name = name;}
     if (value) {inputEl.value = value;}
-    inputEl.addEventListener('change', _handleChange);
   }
 
   function _syncAria() {
@@ -105,10 +80,38 @@ export function Checkbox(options = {}) {
     }
   }
 
-  return {
+  function _handleChange() {
+    _checked = inputEl.checked;
+    _syncAria();
+    onChange?.(_checked);
+  }
+
+  function isChecked() {
+    return _checked;
+  }
+
+  function setChecked(val) {
+    if (destroyed) {return;}
+    _checked = !!val;
+    inputEl.checked = _checked;
+    _syncAria();
+    onChange?.(_checked);
+  }
+
+  listeners.on(inputEl, 'change', _handleChange);
+
+  const api = {
     get element() { return container; },
     isChecked,
     setChecked,
-    destroy,
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      listeners.destroy();
+      instance.destroy();
+      Object.freeze(api);
+    },
   };
+
+  return api;
 }

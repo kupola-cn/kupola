@@ -4,6 +4,8 @@ import { Message } from '@kupola/components';
 describe('Message', () => {
   afterEach(() => {
     document.body.innerHTML = '';
+    jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   // ── Rendering ──
@@ -87,14 +89,68 @@ describe('Message', () => {
       msg.destroy();
     });
 
-    test('close() removes message', () => {
+    test('close() removes message and empty container immediately without motion', () => {
       const msg = Message({ duration: 0 });
       const result = msg.show('Hello', 'success');
       const container = document.querySelector('.ds-message');
       expect(container.querySelectorAll('.ds-message__item').length).toBe(1);
       result.close();
-      // After close, item gets is-exiting class
       expect(result.element.classList.contains('is-exiting')).toBe(true);
+      expect(result.element.isConnected).toBe(false);
+      expect(document.querySelector('.ds-message')).toBeNull();
+      msg.destroy();
+    });
+
+    test('close() is idempotent', () => {
+      const msg = Message({ duration: 0 });
+      const result = msg.show('Hello', 'success');
+
+      result.close();
+      expect(() => result.close()).not.toThrow();
+      expect(result.element.isConnected).toBe(false);
+      msg.destroy();
+    });
+
+    test('uses motion events with a timeout fallback', () => {
+      jest.useFakeTimers();
+      jest.spyOn(window, 'getComputedStyle').mockReturnValue({
+        animationDuration: '200ms',
+        animationDelay: '50ms',
+        animationIterationCount: '1',
+        transitionDuration: '0s',
+        transitionDelay: '0s',
+      });
+      const msg = Message({ duration: 0 });
+      const result = msg.show('Hello', 'success');
+
+      result.close();
+      expect(result.element.isConnected).toBe(true);
+      jest.advanceTimersByTime(299);
+      expect(result.element.isConnected).toBe(true);
+      jest.advanceTimersByTime(1);
+      expect(result.element.isConnected).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
+      msg.destroy();
+    });
+
+    test('ignores bubbled motion events from message children', () => {
+      jest.useFakeTimers();
+      jest.spyOn(window, 'getComputedStyle').mockReturnValue({
+        animationDuration: '1s',
+        animationDelay: '0s',
+        animationIterationCount: '1',
+        transitionDuration: '0s',
+        transitionDelay: '0s',
+      });
+      const msg = Message({ duration: 0 });
+      const result = msg.show('Hello', 'success');
+
+      result.close();
+      result.element.firstElementChild.dispatchEvent(new Event('animationend', { bubbles: true }));
+      expect(result.element.isConnected).toBe(true);
+      result.element.dispatchEvent(new Event('animationend'));
+      expect(result.element.isConnected).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
       msg.destroy();
     });
   });
@@ -108,9 +164,30 @@ describe('Message', () => {
       msg.info('3');
       msg.info('4');
       const items = document.querySelectorAll('.ds-message__item');
-      // 4 items appended, but oldest gets is-exiting class
-      expect(items.length).toBe(4);
-      expect(items[0].classList.contains('is-exiting')).toBe(true);
+      expect(items.length).toBe(3);
+      expect(items[0].querySelector('.ds-message__content').textContent).toBe('2');
+      msg.destroy();
+    });
+
+    test('normalizes invalid maxCount instead of crashing', () => {
+      const msg = Message({ duration: 0, maxCount: 0 });
+      expect(() => msg.info('1')).not.toThrow();
+      expect(document.querySelectorAll('.ds-message__item')).toHaveLength(1);
+      msg.destroy();
+    });
+  });
+
+  describe('auto-close', () => {
+    test('removes a message after its duration', () => {
+      jest.useFakeTimers();
+      const msg = Message({ duration: 1000 });
+      const result = msg.info('Timed');
+
+      jest.advanceTimersByTime(999);
+      expect(result.element.isConnected).toBe(true);
+      jest.advanceTimersByTime(1);
+      expect(result.element.isConnected).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
       msg.destroy();
     });
   });
@@ -131,6 +208,19 @@ describe('Message', () => {
       msg.destroy();
       const result = msg.success('After');
       expect(result).toBeNull();
+    });
+
+    test('clears all pending timers and tolerates repeated destroy', () => {
+      jest.useFakeTimers();
+      const msg = Message({ duration: 5000 });
+      msg.success('One');
+      msg.info('Two');
+
+      expect(jest.getTimerCount()).toBe(2);
+      msg.destroy();
+      msg.destroy();
+      expect(jest.getTimerCount()).toBe(0);
+      expect(document.querySelector('.ds-message')).toBeNull();
     });
   });
 });

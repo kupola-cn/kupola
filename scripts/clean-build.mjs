@@ -3,9 +3,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
+const packageNames = [ 'core', 'platform', 'components', 'ai-adapter', 'auth', 'router' ];
 const targets = [
   path.resolve(rootDir, 'dist'),
-  path.resolve(rootDir, 'packages', 'ai-adapter', 'dist'),
+  ...packageNames.map(name => path.resolve(rootDir, 'packages', name, 'dist')),
 ];
 
 for (const target of targets) {

@@ -21,7 +21,25 @@
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
 import { t } from '@kupola/platform/i18n';
-import { getIconHtml } from './icon-helper';
+import { getIconTemplate } from './icon-helper';
+import { createListenerRegistry } from './listener-registry';
+import { registerOverlayKeydown } from './overlay-stack';
+
+let timepickerId = 0;
+
+function parseTime(value) {
+  if (typeof value !== 'string') {return null;}
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) {return null;}
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) {return null;}
+  return { hours, minutes, total: hours * 60 + minutes };
+}
+
+function formatTime(hours, minutes) {
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
 
 /**
  * Create a Timepicker component instance.
@@ -35,16 +53,33 @@ import { getIconHtml } from './icon-helper';
  * @returns {{ element: DocumentFragment, getValue: Function, setValue: Function, destroy: Function }}
  */
 export function Timepicker(options = {}) {
-  const {
-    value: initialValue = '',
-    format = '24h',
-    step = 1,
-    disabled = false,
-    onChange = null,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const format = config.format === '12h' ? '12h' : '24h';
+  const disabled = config.disabled === true;
+  const onChange = typeof config.onChange === 'function' ? config.onChange : null;
+  const placeholder = config.placeholder ?? t('timepicker.placeholder');
+  const name = config.name == null ? '' : String(config.name);
+  const minuteStep = Number.isFinite(Number(config.step)) && Number(config.step) > 0
+    ? Math.min(60, Math.floor(Number(config.step)) || 1)
+    : 1;
+  const minTime = parseTime(config.minTime);
+  const maxTime = parseTime(config.maxTime);
+  const useRange = !minTime || !maxTime || minTime.total <= maxTime.total;
 
-  let _value = initialValue;
+  const parsedInitial = parseTime(config.value);
+  let _value = parsedInitial && isAllowed(parsedInitial.total)
+    ? formatTime(parsedInitial.hours, parsedInitial.minutes)
+    : '';
   let _open = false;
+  let destroyed = false;
+  let releaseKeydown = null;
+  const listeners = createListenerRegistry();
+  const openListeners = createListenerRegistry();
+
+  function isAllowed(total) {
+    if (!useRange) {return true;}
+    return (!minTime || total >= minTime.total) && (!maxTime || total <= maxTime.total);
+  }
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -53,37 +88,57 @@ export function Timepicker(options = {}) {
   }
 
   function setValue(val) {
-    _value = val;
-    if (inputEl) {inputEl.value = _value;}
-    _updateDisplay();
-    if (onChange) {onChange(_value);}
+    if (destroyed) {return;}
+    if (val === '' || val === null || val === undefined) {
+      _commitValue('');
+      return;
+    }
+    const parsed = parseTime(val);
+    if (!parsed || !isAllowed(parsed.total)) {return;}
+    _commitValue(formatTime(parsed.hours, parsed.minutes));
+  }
+
+  function clear() {
+    setValue('');
   }
 
   function destroy() {
+    if (destroyed) {return;}
     _closePanel();
-    if (inputEl) {inputEl.removeEventListener('click', _togglePanel);}
-    if (inputEl) {inputEl.removeEventListener('change', _handleInput);}
+    destroyed = true;
+    releaseKeydown?.();
+    releaseKeydown = null;
+    openListeners.destroy();
+    listeners.destroy();
     instance.destroy();
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
 
   function _togglePanel() {
+    if (destroyed || disabled) {return;}
     if (_open) {_closePanel();} else {_openPanel();}
   }
 
   function _openPanel() {
+    if (destroyed || disabled || _open) {return;}
     _open = true;
     if (panelEl) {panelEl.style.display = 'block';}
-    if (!_docClickBound) {
-      document.addEventListener('click', _handleDocClick);
-      _docClickBound = true;
-    }
+    inputEl?.setAttribute('aria-expanded', 'true');
+    openListeners.on(document, 'click', _handleDocClick);
+    releaseKeydown = registerOverlayKeydown(_handleKeydown);
+    _updateUI();
   }
 
-  function _closePanel() {
+  function _closePanel(restoreFocus = false) {
+    if (!_open) {return;}
     _open = false;
     if (panelEl) {panelEl.style.display = 'none';}
+    inputEl?.setAttribute('aria-expanded', 'false');
+    openListeners.clear();
+    releaseKeydown?.();
+    releaseKeydown = null;
+    if (restoreFocus) {inputEl?.focus();}
   }
 
   function _handleDocClick(e) {
@@ -92,46 +147,84 @@ export function Timepicker(options = {}) {
     }
   }
 
-  function _handleInput(e) {
-    _value = e.target.value;
-    _updateDisplay();
-    if (onChange) {onChange(_value);}
-  }
-
-  function _selectTime(h, m) {
-    const hh = String(h).padStart(2, '0');
-    const mm = String(m).padStart(2, '0');
-    _value = `${hh}:${mm}`;
-    if (inputEl) {inputEl.value = _value;}
-    _updateDisplay();
-    _closePanel();
-    if (onChange) {onChange(_value);}
-  }
-
-  function _updateDisplay() {
-    if (!displayEl) {return;}
-    if (!_value) { displayEl.textContent = '--:--'; return; }
-    const parts = _value.split(':');
-    let h = parseInt(parts[0]) || 0;
-    const m = parseInt(parts[1]) || 0;
-    if (format === '12h') {
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      h = h % 12 || 12;
-      displayEl.textContent = `${h}:${String(m).padStart(2, '0')} ${ampm}`;
-    } else {
-      displayEl.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  function _handleKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      _closePanel(true);
+    } else if (event.key === 'Tab') {
+      _closePanel();
     }
+  }
+
+  function _commitValue(value) {
+    if (_value === value) {return;}
+    _value = value;
+    _updateUI();
+    if (onChange) {onChange(_value);}
+  }
+
+  function _currentParts() {
+    return parseTime(_value) || { hours: 0, minutes: 0, total: 0 };
+  }
+
+  function _selectHour(displayHour) {
+    const current = _currentParts();
+    let hours = displayHour;
+    if (format === '12h') {
+      const isPM = current.hours >= 12;
+      hours = displayHour % 12 + (isPM ? 12 : 0);
+    }
+    const total = hours * 60 + current.minutes;
+    if (isAllowed(total)) {_commitValue(formatTime(hours, current.minutes));}
+  }
+
+  function _selectMinute(minutes) {
+    const current = _currentParts();
+    const total = current.hours * 60 + minutes;
+    if (!isAllowed(total)) {return;}
+    _commitValue(formatTime(current.hours, minutes));
+    _closePanel();
+  }
+
+  function _setPeriod(period) {
+    const current = _currentParts();
+    let hours = current.hours % 12;
+    if (period === 'PM') {hours += 12;}
+    const total = hours * 60 + current.minutes;
+    if (isAllowed(total)) {_commitValue(formatTime(hours, current.minutes));}
+  }
+
+  function _updateUI() {
+    if (inputEl) {inputEl.value = _value;}
+    const current = parseTime(_value);
+    hourGrid?.querySelectorAll('.ds-timepicker__item').forEach(button => {
+      const hour = Number(button.dataset.hour);
+      const selected = current && (format === '12h'
+        ? (current.hours % 12 || 12) === hour
+        : current.hours === hour);
+      button.classList.toggle('is-selected', Boolean(selected));
+    });
+    minGrid?.querySelectorAll('.ds-timepicker__item').forEach(button => {
+      button.classList.toggle('is-selected', Boolean(current)
+        && current.minutes === Number(button.dataset.minute));
+    });
+    periodEl?.querySelectorAll('button').forEach(button => {
+      button.classList.toggle('is-selected', Boolean(current)
+        && button.dataset.period === (current.hours >= 12 ? 'PM' : 'AM'));
+    });
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const tpl = html`
-    <div class="ds-timepicker">
+    <div class="ds-timepicker${disabled ? ' is-disabled' : ''}">
       <div class="ds-timepicker__input-wrap">
-        <input class="ds-timepicker__input" type="text" readonly placeholder="${t('timepicker.placeholder')}" />
-        <span class="ds-timepicker__icon">${getIconHtml('clock')}</span>
+        <input class="ds-timepicker__input" type="text" readonly placeholder="${placeholder}"
+          name="${name}" aria-haspopup="dialog" aria-expanded="false"
+          aria-controls="ds-timepicker-panel-${++timepickerId}" />
+        <span class="ds-timepicker__icon">${getIconTemplate('clock')}</span>
       </div>
-      <div class="ds-timepicker__panel">
+      <div class="ds-timepicker__panel" id="ds-timepicker-panel-${timepickerId}" role="dialog">
         <div class="ds-timepicker__body">
           <div class="ds-timepicker__section">
             <span class="ds-timepicker__section-label">Hours</span>
@@ -141,6 +234,12 @@ export function Timepicker(options = {}) {
             <span class="ds-timepicker__section-label">Minutes</span>
             <div class="ds-timepicker__grid ds-timepicker__grid--minute"></div>
           </div>
+          ${format === '12h' ? html`
+            <div class="ds-timepicker__period" aria-label="Period">
+              <button type="button" data-period="AM">AM</button>
+              <button type="button" data-period="PM">PM</button>
+            </div>
+          ` : ''}
         </div>
       </div>
     </div>
@@ -152,61 +251,70 @@ export function Timepicker(options = {}) {
   const wrapperEl = container.querySelector('.ds-timepicker');
   const inputEl = container.querySelector('.ds-timepicker__input');
   const panelEl = container.querySelector('.ds-timepicker__panel');
-  const displayEl = container.querySelector('.ds-timepicker__icon');
+  const hourGrid = container.querySelector('.ds-timepicker__grid--hour');
+  const minGrid = container.querySelector('.ds-timepicker__grid--minute');
+  const periodEl = container.querySelector('.ds-timepicker__period');
 
   // Panel starts hidden
   if (panelEl) {panelEl.style.display = 'none';}
 
-  let _docClickBound = false;
-
   // Populate hour grid
-  const hourGrid = container.querySelector('.ds-timepicker__grid--hour');
-  const maxH = format === '12h' ? 12 : 24;
   const startH = format === '12h' ? 1 : 0;
   for (let h = startH; h < (format === '12h' ? 13 : 24); h++) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'ds-timepicker__item';
     btn.textContent = String(h).padStart(2, '0');
-    btn.addEventListener('click', () => {
-      const curM = _value ? (parseInt(_value.split(':')[1]) || 0) : 0;
-      let finalH = h;
-      if (format === '12h') {
-        const isPM = _value && parseInt(_value.split(':')[0]) >= 12;
-        if (isPM && h < 12) {finalH = h + 12;}
-        else if (!isPM && h === 12) {finalH = 0;}
-      }
-      _selectTime(finalH, curM);
-    });
+    btn.dataset.hour = String(h);
     hourGrid.appendChild(btn);
   }
 
   // Populate minute grid
-  const minGrid = container.querySelector('.ds-timepicker__grid--minute');
-  for (let m = 0; m < 60; m += step) {
+  for (let m = 0; m < 60; m += minuteStep) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'ds-timepicker__item';
     btn.textContent = String(m).padStart(2, '0');
-    btn.addEventListener('click', () => {
-      const curH = _value ? (parseInt(_value.split(':')[0]) || 0) : 0;
-      _selectTime(curH, m);
-    });
+    btn.dataset.minute = String(m);
     minGrid.appendChild(btn);
   }
+
+  listeners.on(hourGrid, 'click', event => {
+    const button = event.target.closest?.('[data-hour]');
+    if (button && hourGrid.contains(button)) {_selectHour(Number(button.dataset.hour));}
+  });
+  listeners.on(minGrid, 'click', event => {
+    const button = event.target.closest?.('[data-minute]');
+    if (button && minGrid.contains(button)) {_selectMinute(Number(button.dataset.minute));}
+  });
+  listeners.on(periodEl, 'click', event => {
+    const button = event.target.closest?.('[data-period]');
+    if (button && periodEl.contains(button)) {_setPeriod(button.dataset.period);}
+  });
 
   if (inputEl) {
     inputEl.value = _value;
     inputEl.disabled = disabled;
-    inputEl.addEventListener('click', _togglePanel);
+    listeners.on(inputEl, 'click', _togglePanel);
+    listeners.on(inputEl, 'keydown', event => {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        event.stopPropagation();
+        _openPanel();
+      }
+    });
   }
 
-  _updateDisplay();
+  _updateUI();
 
   return {
     get element() { return container; },
     getValue,
     setValue,
+    clear,
+    open: _openPanel,
+    close: _closePanel,
+    isOpen: () => _open,
     destroy,
   };
 }

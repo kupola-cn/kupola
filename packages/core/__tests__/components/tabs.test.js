@@ -87,6 +87,34 @@ describe('Tabs rendering', () => {
 
     view.destroy();
   });
+
+  test('supports typed title, content, and card aliases', () => {
+    const view = Tabs({
+      tabs: [ { key: 'typed', title: 'Typed tab', content: html`<strong>Typed panel</strong>` } ],
+      type: 'card',
+    });
+    document.body.appendChild(view.element);
+
+    expect(document.querySelector('.ds-tab').textContent).toBe('Typed tab');
+    expect(document.querySelector('.ds-tabs__panel strong').textContent).toBe('Typed panel');
+    expect(document.querySelector('.ds-tabs').classList.contains('ds-tabs--filled')).toBe(true);
+    view.destroy();
+  });
+
+  test('adds tablist, tab, and tabpanel accessibility semantics', () => {
+    const view = Tabs({ tabs: TABS, panels: PANELS });
+    document.body.appendChild(view.element);
+    const tabs = document.querySelectorAll('[role="tab"]');
+    const panels = document.querySelectorAll('[role="tabpanel"]');
+
+    expect(document.querySelector('[role="tablist"]')).not.toBeNull();
+    expect(tabs[0].getAttribute('aria-controls')).toBe(panels[0].id);
+    expect(panels[0].getAttribute('aria-labelledby')).toBe(tabs[0].id);
+    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[0].tabIndex).toBe(0);
+    expect(tabs[1].tabIndex).toBe(-1);
+    view.destroy();
+  });
 });
 
 // ─── Tab switching ───────────────────────────────────────────────────────────
@@ -141,6 +169,82 @@ describe('Tabs switching', () => {
     expect(view.getActive()).toBe('b');
     view.destroy();
   });
+
+  test('ignores unknown and disabled active keys', () => {
+    const view = Tabs({
+      tabs: [ TABS[0], { ...TABS[1], disabled: true } ],
+      activeKey: 'missing',
+    });
+    document.body.appendChild(view.element);
+
+    expect(view.getActive()).toBe('a');
+    view.setActive('b');
+    view.setActive('missing');
+    expect(view.getActive()).toBe('a');
+    expect(document.querySelectorAll('.ds-tab')[1].disabled).toBe(true);
+    view.destroy();
+  });
+
+  test('supports arrow, Home, and End keyboard navigation', () => {
+    const view = Tabs({
+      tabs: [ TABS[0], { ...TABS[1], disabled: true }, TABS[2] ],
+      panels: PANELS,
+    });
+    document.body.appendChild(view.element);
+    let tabs = document.querySelectorAll('.ds-tab');
+
+    tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(view.getActive()).toBe('c');
+    expect(document.activeElement).toBe(tabs[2]);
+    tabs[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    expect(view.getActive()).toBe('a');
+    tabs = document.querySelectorAll('.ds-tab');
+    tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    expect(view.getActive()).toBe('c');
+    view.destroy();
+  });
+});
+
+describe('Tabs dynamic items', () => {
+  test('addTab and removeTab update DOM and choose a valid fallback', () => {
+    const onChange = jest.fn();
+    const onClose = jest.fn();
+    const view = Tabs({ tabs: TABS.slice(0, 2), panels: PANELS, onChange, onClose });
+    document.body.appendChild(view.element);
+
+    view.addTab({ key: 'c', title: 'Tab C', content: 'Panel C' });
+    expect(document.querySelectorAll('.ds-tab')).toHaveLength(3);
+    view.setActive('b');
+    view.removeTab('b');
+
+    expect(view.getActive()).toBe('c');
+    expect(onClose).toHaveBeenCalledWith('b');
+    expect(onChange).toHaveBeenLastCalledWith('c');
+    expect(document.querySelectorAll('.ds-tab')).toHaveLength(2);
+    view.destroy();
+  });
+
+  test('closable control removes the tab exactly once', () => {
+    const onClose = jest.fn();
+    const view = Tabs({ tabs: [ { key: 'a', label: 'A', closable: true } ], onClose });
+    document.body.appendChild(view.element);
+    const close = document.querySelector('.ds-tabs__close');
+
+    close.click();
+    close.click();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('.ds-tab')).toHaveLength(0);
+    view.destroy();
+  });
+
+  test('ignores duplicate and invalid additions', () => {
+    const view = Tabs({ tabs: [ TABS[0], TABS[0], null ] });
+    document.body.appendChild(view.element);
+    view.addTab({ key: 'a', title: 'Duplicate' });
+    view.addTab({ title: 'Missing key' });
+    expect(document.querySelectorAll('.ds-tab')).toHaveLength(1);
+    view.destroy();
+  });
 });
 
 // ─── onChange callback ───────────────────────────────────────────────────────
@@ -181,6 +285,10 @@ describe('Tabs destroy', () => {
     document.body.appendChild(container);
 
     view.destroy();
-    // Should not throw
+    view.destroy();
+    view.setActive('b');
+    view.addTab({ key: 'd', title: 'D' });
+    view.removeTab('a');
+    expect(view.getActive()).toBe('a');
   });
 });

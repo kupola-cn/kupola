@@ -2,14 +2,14 @@
  * Build CSS — copy source + produce minified bundles.
  *
  * Output:
- *   dist/css/index.css          (full, unminified)
- *   dist/css/index.min.css      (full, minified)
- *   dist/css/tokens.css         (tokens only)
- *   dist/css/tokens.min.css
- *   dist/css/components.css     (components only)
- *   dist/css/components.min.css
- *   dist/css/responsive.css     (responsive utilities)
- *   dist/css/responsive.min.css
+ *   packages/platform/dist/css/index.css          (full, unminified)
+ *   packages/platform/dist/css/index.min.css      (full, minified)
+ *   packages/platform/dist/css/tokens.css         (tokens only)
+ *   packages/platform/dist/css/tokens.min.css
+ *   packages/platform/dist/css/components.css     (components only)
+ *   packages/platform/dist/css/components.min.css
+ *   packages/platform/dist/css/responsive.css     (responsive utilities)
+ *   packages/platform/dist/css/responsive.min.css
  */
 
 const fs = require('fs');
@@ -17,7 +17,7 @@ const path = require('path');
 const CleanCSS = require('clean-css');
 
 const SRC = path.join(__dirname, '..', 'packages', 'css');
-const DIST = path.join(__dirname, '..', 'dist', 'css');
+const DIST = path.join(__dirname, '..', 'packages', 'platform', 'dist', 'css');
 
 // 1. Copy source CSS files to dist
 fs.mkdirSync(DIST, { recursive: true });

@@ -1,53 +1,62 @@
 {
   "name": "@kupola/platform",
-  "version": "3.2.4",
+  "version": "3.3.1",
   "description": "Kupola platform — Template rendering, component system, directives, theme, lazy loading, SSR, i18n.",
   "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "main": "dist/kupola-platform.cjs",
   "module": "dist/kupola-platform.esm.js",
   "types": "src/platform.d.ts",
   "exports": {
     ".": {
+      "types": "./src/platform.d.ts",
       "import": "./dist/kupola-platform.esm.js",
-      "require": "./dist/kupola-platform.cjs",
-      "types": "./src/platform.d.ts"
+      "require": "./dist/kupola-platform.cjs"
     },
     "./template": {
+      "types": "./src/template.d.ts",
       "import": "./dist/kupola-platform-template.esm.js",
       "require": "./dist/kupola-platform-template.cjs"
     },
     "./render": {
+      "types": "./src/render.d.ts",
       "import": "./dist/kupola-platform-render.esm.js",
       "require": "./dist/kupola-platform-render.cjs"
     },
     "./component": {
+      "types": "./src/component.d.ts",
       "import": "./dist/kupola-platform-component.esm.js",
       "require": "./dist/kupola-platform-component.cjs"
     },
     "./directives": {
+      "types": "./src/directives.d.ts",
       "import": "./dist/kupola-platform-directives.esm.js",
-      "require": "./dist/kupola-platform-directives.cjs",
-      "types": "./src/directives.d.ts"
+      "require": "./dist/kupola-platform-directives.cjs"
     },
     "./theme": {
+      "types": "./src/theme.d.ts",
       "import": "./dist/kupola-platform-theme.esm.js",
       "require": "./dist/kupola-platform-theme.cjs"
     },
     "./lazy": {
+      "types": "./src/lazy.d.ts",
       "import": "./dist/kupola-platform-lazy.esm.js",
       "require": "./dist/kupola-platform-lazy.cjs"
     },
     "./server": {
+      "types": "./src/server.d.ts",
       "import": "./dist/kupola-platform-server.esm.js",
-      "require": "./dist/kupola-platform-server.cjs",
-      "types": "./src/server.d.ts"
+      "require": "./dist/kupola-platform-server.cjs"
     },
     "./i18n": {
+      "types": "./src/i18n.d.ts",
       "import": "./dist/kupola-platform-i18n.esm.js",
-      "require": "./dist/kupola-platform-i18n.cjs",
-      "types": "./src/i18n.d.ts"
+      "require": "./dist/kupola-platform-i18n.cjs"
     },
     "./errors": {
+      "types": "./src/errors.d.ts",
       "import": "./dist/kupola-platform-errors.esm.js",
       "require": "./dist/kupola-platform-errors.cjs"
     },
@@ -58,7 +67,7 @@
   },
   "files": [
     "dist/",
-    "src/"
+    "src/**/*.d.ts"
   ],
   "keywords": [
     "kupola",

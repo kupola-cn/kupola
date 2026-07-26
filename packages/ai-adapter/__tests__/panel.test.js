@@ -31,7 +31,7 @@ describe('AIPanel', () => {
 
   afterEach(() => {
     panel.destroy();
-    if (container.parentNode) container.parentNode.removeChild(container);
+    if (container.parentNode) {container.parentNode.removeChild(container);}
   });
 
   it('should construct with adapter and options', () => {
@@ -114,7 +114,7 @@ describe('AIPanel', () => {
   });
 
   it('should send input when send button clicked', async () => {
-    adapter.query.register('search', async () => [{ id: 1 }]);
+    adapter.query.register('search', async () => [ { id: 1 } ]);
     panel.mount(container);
 
     const input = container.querySelector('.ds-ai-input');
@@ -141,7 +141,7 @@ describe('AIPanel', () => {
 
     await new Promise(r => setTimeout(r, 100));
 
-    const viewButton = [...container.querySelectorAll('.ds-ai-msg button')]
+    const viewButton = [ ...container.querySelectorAll('.ds-ai-msg button') ]
       .find(btn => btn.textContent === '查看数据');
     expect(viewButton).toBeTruthy();
 
@@ -155,8 +155,8 @@ describe('AIPanel', () => {
   });
 
   it('should pass panel context into adapter permissions', async () => {
-    adapter.query.register('search', jest.fn().mockResolvedValue([{ id: 1 }]));
-    adapter.use(createAuthGuard({ restrictedQueries: ['search'], allowedRoles: ['admin'] }));
+    adapter.query.register('search', jest.fn().mockResolvedValue([ { id: 1 } ]));
+    adapter.use(createAuthGuard({ restrictedQueries: [ 'search' ], allowedRoles: [ 'admin' ] }));
     panel.destroy();
     panel = new AIPanel(adapter, { context: () => ({ role: 'user' }) });
     panel.mount(container);

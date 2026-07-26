@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /**
  * Table - 2.0
  *
@@ -9,6 +10,7 @@
  */
 
 import { t } from '@kupola/platform/i18n';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * @typedef {Object} TableColumn
@@ -41,7 +43,7 @@ import { t } from '@kupola/platform/i18n';
  * @param {boolean} [options.resizable=false] - Column resize
  * @param {boolean} [options.draggable=false] - Row drag
  * @param {Object|null} [options.tree=null] - Tree data config { childrenKey, defaultExpandAll }
- * @param {Object|null} [options.virtualScroll=null] - Virtual scroll { rowHeight, overscan }
+ * @param {Object|null} [options.virtualScroll=null] - Virtual scroll { rowHeight, overscan, height, visibleRows }
  * @param {Function|null} [options.mergeCells=null] - Merge cells function(data) => [{row,col,rowSpan,colSpan}]
  * @param {boolean} [options.showFilter=false] - Show filter input
  * @param {boolean} [options.showToolbar=false] - Show toolbar
@@ -61,7 +63,7 @@ import { t } from '@kupola/platform/i18n';
  * @param {Function} [options.onEditCancel=null] - Edit cancel callback
  * @param {Function} [options.onRowDragEnd=null] - Row drag end callback
  * @param {Function} [options.onColumnResize=null] - Column resize callback
- * @returns {Object} { element, destroy, setData, setLoading, getData, getProcessedData, getSelectedRows, getSelectedKeys, selectRow, deselectRow, selectAll, deselectAll, toggleExpand, expandAll, collapseAll, setSort, clearSort, setPage, setPageSize, setFilterText, getFilterText, exportCSV, refresh }
+ * @returns {Object} Table element, state accessors, mutation methods, export, refresh, and destroy lifecycle
  */
 export function Table(options = {}) {
   if (!(options && typeof options === 'object')) {
@@ -69,7 +71,8 @@ export function Table(options = {}) {
   }
 
   const element = document.createElement('div');
-  const _listeners = [];
+  const listeners = createListenerRegistry();
+  const interactionListeners = createListenerRegistry();
 
   // Core config
   const columns = options.columns || [];
@@ -85,7 +88,7 @@ export function Table(options = {}) {
   const multiSort = options.multiSort || false;
 
   // Column index map for O(1) lookup
-  const _columnsMap = new Map(columns.map(col => [col.key, col]));
+  const _columnsMap = new Map(columns.map(col => [ col.key, col ]));
 
   // State
   let _data = Array.isArray(options.data) ? [ ...options.data ] : [];
@@ -100,11 +103,17 @@ export function Table(options = {}) {
   let _editingCell = null; // { rowKey, colKey }
   let _editBuffer = {};
   let _reactiveCleanups = [];
-  let _resizeCleanups = [];
+  let _dataSubscription = null;
+  let _loadingSubscription = null;
   let _filterDebounceTimer = null;
+  let _virtualScrollTop = 0;
+  let _virtualFrame = null;
+  let _destroyed = false;
+  const _requestFrame = globalThis.requestAnimationFrame || (fn => setTimeout(fn, 16));
+  const _cancelFrame = globalThis.cancelAnimationFrame || clearTimeout;
 
-  // Sort cache - Map for multiple sort results, keyed by sort config + data reference
-  let _sortCache = new Map();
+  // Sort cache is keyed by array identity, not stringified row data.
+  let _sortCache = new WeakMap();
 
   // Processed data cache (for avoiding repeated calls during render)
   let _processedCache = null;
@@ -149,6 +158,14 @@ export function Table(options = {}) {
     return _flattenVisible(data, 0);
   }
 
+  function _isVirtualEnabled() {
+    return !!virtualScroll && !expandable && !mergeCellsFn && !draggable;
+  }
+
+  function _shouldPaginate() {
+    return !_isVirtualEnabled() && options.showPagination !== false && _pageSize > 0;
+  }
+
   // === Data processing: sort → filter → paginate ===
   function getProcessedData() {
     // Check if cache is valid
@@ -172,13 +189,7 @@ export function Table(options = {}) {
       if (treeConfig) {
         data = _filterTree(data, text);
       } else {
-        data = data.filter(row =>
-          columns.some(col => {
-            const val = row[col.key];
-            if (col.filterFn) {return col.filterFn(val, _filterText);}
-            return val != null && String(val).toLowerCase().includes(text);
-          }),
-        );
+        data = data.filter(row => _rowMatchesFilter(row, text));
       }
     }
 
@@ -187,7 +198,7 @@ export function Table(options = {}) {
 
     // Paginate
     let pageData = flatData;
-    if (options.showPagination !== false && _pageSize > 0) {
+    if (_shouldPaginate()) {
       const start = (_currentPage - 1) * _pageSize;
       pageData = flatData.slice(start, start + _pageSize);
     }
@@ -200,7 +211,11 @@ export function Table(options = {}) {
 
   // Clear caches when data/state changes
   function _clearCaches() {
-    _sortCache.clear();
+    _sortCache = new WeakMap();
+    _processedCache = null;
+  }
+
+  function _clearProcessedCache() {
     _processedCache = null;
   }
 
@@ -208,10 +223,7 @@ export function Table(options = {}) {
     const childrenKey = ck || treeConfig?.childrenKey || 'children';
     return data.reduce((acc, row) => {
       const children = row[childrenKey] ? _filterTree(row[childrenKey], text, childrenKey) : [];
-      const selfMatch = columns.some(col => {
-        const v = row[col.key];
-        return v != null && String(v).toLowerCase().includes(text);
-      });
+      const selfMatch = _rowMatchesFilter(row, text);
       if (selfMatch || children.length > 0) {
         acc.push({ ...row, [childrenKey]: children });
         if (children.length > 0) {_treeExpandedKeys.add(row[rowKey]);}
@@ -220,18 +232,22 @@ export function Table(options = {}) {
     }, []);
   }
 
+  function _rowMatchesFilter(row, text) {
+    return columns.some(col => {
+      const val = row[col.key];
+      if (col.filterFn) {return col.filterFn(val, _filterText);}
+      return val != null && String(val).toLowerCase().includes(text);
+    });
+  }
+
   function _sortData(data) {
-    // Generate cache key from sorts configuration
-    const sortKey = JSON.stringify(_sorts);
-    
-    // Combine data reference with sort config for unique cache key
-    const cacheKey = `${sortKey}-${data}`;
-    
-    // Check cache
-    if (_sortCache.has(cacheKey)) {
-      return _sortCache.get(cacheKey);
+    const sortKey = JSON.stringify(_sorts.map(({ key, order }) => [ key, order ]));
+    let cacheForData = _sortCache.get(data);
+
+    if (cacheForData?.has(sortKey)) {
+      return cacheForData.get(sortKey);
     }
-    
+
     const sorted = [ ...data ].sort((a, b) => {
       for (const s of _sorts) {
         // O(1) lookup using Map instead of O(n) find
@@ -253,28 +269,37 @@ export function Table(options = {}) {
       }
       return 0;
     });
-    
+
     let result = sorted;
     if (treeConfig) {
       const ck = treeConfig.childrenKey || 'children';
       result = sorted.map(row => row[ck]?.length ? { ...row, [ck]: _sortData(row[ck]) } : row);
     }
-    
+
     // Update cache (keep last 5 cache entries)
-    if (_sortCache.size >= 5) {
-      const firstKey = _sortCache.keys().next().value;
-      _sortCache.delete(firstKey);
+    if (!cacheForData) {
+      cacheForData = new Map();
+      _sortCache.set(data, cacheForData);
+    } else if (cacheForData.size >= 5) {
+      const firstKey = cacheForData.keys().next().value;
+      cacheForData.delete(firstKey);
     }
-    _sortCache.set(cacheKey, result);
-    
+    cacheForData.set(sortKey, result);
+
     return result;
   }
 
   // === Render ===
   function _render() {
-    // Clear cache at start of render cycle
-    _processedCache = null;
+    if (_destroyed) {return;}
+    _cancelFilterDebounce();
+    _runInteractionCleanups();
+
     const { pageData, total } = getProcessedData();
+    const virtualState = _isVirtualEnabled() && !_loading && pageData.length > 0
+      ? _getVirtualState(pageData)
+      : null;
+    element.classList.toggle('ds-table-virtual-wrapper', !!virtualState);
     element.innerHTML = '';
 
     // Toolbar
@@ -285,23 +310,98 @@ export function Table(options = {}) {
     // Table container
     const tableContainer = document.createElement('div');
     tableContainer.className = 'ds-table-container';
+    if (virtualState) {
+      tableContainer.style.height = virtualState.heightStyle;
+      tableContainer.style.overflowY = 'auto';
+      interactionListeners.on(tableContainer, 'scroll', _handleVirtualScroll);
+    }
 
     const table = document.createElement('table');
     table.className = _getTableClass();
 
     table.appendChild(_renderThead());
-    table.appendChild(_renderTbody(pageData));
+    table.appendChild(_renderTbody(virtualState ? virtualState.rows : pageData, virtualState));
     tableContainer.appendChild(table);
     element.appendChild(tableContainer);
+    if (virtualState) {
+      tableContainer.scrollTop = _virtualScrollTop;
+    }
 
     // Pagination
-    if (options.showPagination !== false && total > _pageSize) {
+    if (_shouldPaginate() && total > _pageSize) {
       element.appendChild(_renderPagination(total));
     }
 
     // Post-render
     if (resizable) {_initColumnResize();}
     if (draggable) {_initRowDrag();}
+  }
+
+  function _runInteractionCleanups() {
+    interactionListeners.clear();
+  }
+
+  function _getVirtualState(data) {
+    const rowHeight = Math.max(1, Number(virtualScroll.rowHeight) || 40);
+    const overscan = Math.max(0, Number(virtualScroll.overscan) || 5);
+    const viewportHeight = _getVirtualViewportHeight(rowHeight, data.length);
+    const maxScrollTop = Math.max(0, data.length * rowHeight - viewportHeight);
+    _virtualScrollTop = Math.max(0, Math.min(_virtualScrollTop, maxScrollTop));
+
+    const start = Math.max(0, Math.floor(_virtualScrollTop / rowHeight) - overscan);
+    const visibleCount = Math.ceil(viewportHeight / rowHeight) + overscan * 2;
+    const end = Math.min(data.length, start + visibleCount);
+
+    return {
+      rows: data.slice(start, end),
+      topHeight: start * rowHeight,
+      bottomHeight: Math.max(0, (data.length - end) * rowHeight),
+      heightStyle: _getVirtualHeightStyle(viewportHeight),
+    };
+  }
+
+  function _getVirtualViewportHeight(rowHeight, totalRows) {
+    const configured = virtualScroll.height ?? virtualScroll.viewportHeight;
+    if (typeof configured === 'number' && configured > 0) {
+      return configured;
+    }
+    if (typeof configured === 'string') {
+      const parsed = Number.parseFloat(configured);
+      if (Number.isFinite(parsed) && parsed > 0) {return parsed;}
+    }
+
+    const visibleRows = Math.max(1, Number(virtualScroll.visibleRows) || _pageSize || 10);
+    return rowHeight * Math.min(totalRows || visibleRows, visibleRows);
+  }
+
+  function _getVirtualHeightStyle(viewportHeight) {
+    const configured = virtualScroll.height ?? virtualScroll.viewportHeight;
+    return typeof configured === 'string' ? configured : `${viewportHeight}px`;
+  }
+
+  function _handleVirtualScroll(event) {
+    _virtualScrollTop = event.currentTarget.scrollTop;
+    _scheduleRender();
+  }
+
+  function _scheduleRender() {
+    if (_virtualFrame != null || _destroyed) {return;}
+    _virtualFrame = _requestFrame(() => {
+      _virtualFrame = null;
+      _render();
+    });
+  }
+
+  function _cancelVirtualFrame() {
+    if (_virtualFrame == null) {return;}
+    _cancelFrame(_virtualFrame);
+    _virtualFrame = null;
+  }
+
+  function _cancelFilterDebounce() {
+    if (_filterDebounceTimer === null) {return;}
+    clearTimeout(_filterDebounceTimer);
+    _filterDebounceTimer = null;
   }
 
   function _getTableClass() {
@@ -334,11 +434,15 @@ export function Table(options = {}) {
       input.className = 'ds-table-filter-input';
       input.placeholder = 'Filter...';
       input.value = _filterText;
-      input.addEventListener('input', () => {
-        clearTimeout(_filterDebounceTimer);
+      interactionListeners.on(input, 'input', () => {
+        _cancelFilterDebounce();
         _filterDebounceTimer = setTimeout(() => {
+          _filterDebounceTimer = null;
+          if (_destroyed) {return;}
           _filterText = input.value;
           _currentPage = 1;
+          _virtualScrollTop = 0;
+          _clearProcessedCache();
           _render();
           if (options.onFilter) {options.onFilter(_filterText);}
         }, 300);
@@ -375,7 +479,7 @@ export function Table(options = {}) {
         const sortInfo = _sorts.find(s => s.key === col.key);
         if (sortInfo) {th.classList.add(`ds-table-sort-${sortInfo.order}`);}
 
-        th.addEventListener('click', () => _handleSort(col.key));
+        interactionListeners.on(th, 'click', () => _handleSort(col.key));
 
         const indicator = document.createElement('span');
         indicator.className = 'ds-table-sort-icon';
@@ -412,13 +516,13 @@ export function Table(options = {}) {
       const { pageData } = getProcessedData();
       const allKeys = pageData.map(r => r[rowKey]);
       cb.checked = allKeys.length > 0 && allKeys.every(k => _selectedKeys.has(k));
-      cb.addEventListener('change', () => cb.checked ? selectAll() : deselectAll());
+      interactionListeners.on(cb, 'change', () => cb.checked ? selectAll() : deselectAll());
       th.appendChild(cb);
     }
     tr.appendChild(th);
   }
 
-  function _renderTbody(data) {
+  function _renderTbody(data, virtualState = null) {
     const tbody = document.createElement('tbody');
 
     if (_loading) {
@@ -443,6 +547,10 @@ export function Table(options = {}) {
       mergeConfig.forEach(m => mergeMap.set(`${m.row}-${m.col}`, m));
       const skipCells = new Set();
 
+      if (virtualState?.topHeight) {
+        _appendVirtualSpacer(tbody, virtualState.topHeight);
+      }
+
       data.forEach((row, rowIndex) => {
         const key = row[rowKey] ?? rowIndex;
         const isSelected = _selectedKeys.has(key);
@@ -454,7 +562,7 @@ export function Table(options = {}) {
         if (draggable) { tr.draggable = true; tr.classList.add('ds-table-draggable'); }
 
         if (options.onRowClick) {
-          tr.addEventListener('click', () => options.onRowClick(row, key));
+          interactionListeners.on(tr, 'click', () => options.onRowClick(row, key));
         }
 
         if (selection) {_renderSelectionCell(tr, key, isSelected);}
@@ -488,7 +596,7 @@ export function Table(options = {}) {
             td.appendChild(_renderEditCell(td, row, col, key));
           } else if (col.editable && editable) {
             td.classList.add('ds-table-editable-cell');
-            td.addEventListener('dblclick', () => _startEdit(key, col.key, value));
+            interactionListeners.on(td, 'dblclick', () => _startEdit(key, col.key, value));
             _renderCellValue(td, col, value, row);
           } else if (col.render) {
             const result = col.render(value, row);
@@ -516,8 +624,25 @@ export function Table(options = {}) {
           tbody.appendChild(expandTr);
         }
       });
+
+      if (virtualState?.bottomHeight) {
+        _appendVirtualSpacer(tbody, virtualState.bottomHeight);
+      }
     }
     return tbody;
+  }
+
+  function _appendVirtualSpacer(tbody, height) {
+    const tr = document.createElement('tr');
+    tr.className = 'ds-table-virtual-spacer';
+    tr.setAttribute('aria-hidden', 'true');
+    const td = document.createElement('td');
+    td.colSpan = _getTotalColCount();
+    td.style.height = `${height}px`;
+    td.style.padding = '0';
+    td.style.border = '0';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
   }
 
   function _renderCellValue(td, col, value, row) {
@@ -536,7 +661,7 @@ export function Table(options = {}) {
     const input = document.createElement('input');
     input.type = selection === 'radio' ? 'radio' : 'checkbox';
     input.checked = isSelected;
-    input.addEventListener('change', () => {
+    interactionListeners.on(input, 'change', () => {
       if (input.checked) {selectRow(key);}
       else {deselectRow(key);}
     });
@@ -551,7 +676,7 @@ export function Table(options = {}) {
     btn.type = 'button';
     btn.className = 'ds-table-expand-btn';
     btn.textContent = isExpanded ? '\u25BC' : '\u25B6';
-    btn.addEventListener('click', () => toggleExpand(key));
+    interactionListeners.on(btn, 'click', () => toggleExpand(key));
     td.appendChild(btn);
     tr.appendChild(td);
   }
@@ -563,7 +688,7 @@ export function Table(options = {}) {
     input.type = 'text';
     input.className = 'ds-table-edit-input';
     input.value = _editBuffer[col.key] ?? row[col.key] ?? '';
-    input.addEventListener('input', () => { _editBuffer[col.key] = input.value; });
+    interactionListeners.on(input, 'input', () => { _editBuffer[col.key] = input.value; });
 
     const actions = document.createElement('div');
     actions.className = 'ds-table-edit-actions';
@@ -572,13 +697,13 @@ export function Table(options = {}) {
     saveBtn.type = 'button';
     saveBtn.className = 'ds-table-edit-save';
     saveBtn.textContent = '\u2713';
-    saveBtn.addEventListener('click', () => _saveEdit(key, col.key));
+    interactionListeners.on(saveBtn, 'click', () => _saveEdit(key, col.key));
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
     cancelBtn.className = 'ds-table-edit-cancel';
     cancelBtn.textContent = '\u2717';
-    cancelBtn.addEventListener('click', _cancelEdit);
+    interactionListeners.on(cancelBtn, 'click', _cancelEdit);
 
     actions.appendChild(saveBtn);
     actions.appendChild(cancelBtn);
@@ -597,6 +722,7 @@ export function Table(options = {}) {
     const row = _data.find(r => r[rowKey] === rowKeyVal);
     if (row && _editBuffer[colKey] !== undefined) {
       row[colKey] = _editBuffer[colKey];
+      _clearCaches();
     }
     _editingCell = null;
     _editBuffer = {};
@@ -617,9 +743,8 @@ export function Table(options = {}) {
 
   // === Sort ===
   function _handleSort(key) {
-    // Only clear processed cache, keep sort cache (it's data-reference based)
-    _processedCache = null;
-    
+    _clearProcessedCache();
+
     const existing = _sorts.find(s => s.key === key);
     if (existing) {
       if (existing.order === 'asc') {existing.order = 'desc';}
@@ -630,6 +755,7 @@ export function Table(options = {}) {
       else {_sorts.push({ key, order: 'asc' });}
     }
     _currentPage = 1;
+    _virtualScrollTop = 0;
     _render();
     if (options.onSort) {options.onSort(_sorts);}
   }
@@ -655,7 +781,14 @@ export function Table(options = {}) {
     prevBtn.className = 'ds-table-page-btn';
     prevBtn.textContent = '\u2039';
     prevBtn.disabled = _currentPage <= 1;
-    prevBtn.addEventListener('click', () => { if (_currentPage > 1) { _currentPage--; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} } });
+    interactionListeners.on(prevBtn, 'click', () => {
+      if (_currentPage > 1) {
+        _currentPage--;
+        _clearProcessedCache();
+        _render();
+        if (options.onPageChange) {options.onPageChange(_currentPage);}
+      }
+    });
     pages.appendChild(prevBtn);
 
     // Page numbers
@@ -671,7 +804,12 @@ export function Table(options = {}) {
         btn.type = 'button';
         btn.className = 'ds-table-page-btn' + (p === _currentPage ? ' active' : '');
         btn.textContent = p;
-        btn.addEventListener('click', () => { _currentPage = p; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} });
+        interactionListeners.on(btn, 'click', () => {
+          _currentPage = p;
+          _clearProcessedCache();
+          _render();
+          if (options.onPageChange) {options.onPageChange(_currentPage);}
+        });
         pages.appendChild(btn);
       }
     });
@@ -682,7 +820,14 @@ export function Table(options = {}) {
     nextBtn.className = 'ds-table-page-btn';
     nextBtn.textContent = '\u203A';
     nextBtn.disabled = _currentPage >= totalPages;
-    nextBtn.addEventListener('click', () => { if (_currentPage < totalPages) { _currentPage++; _render(); if (options.onPageChange) {options.onPageChange(_currentPage);} } });
+    interactionListeners.on(nextBtn, 'click', () => {
+      if (_currentPage < totalPages) {
+        _currentPage++;
+        _clearProcessedCache();
+        _render();
+        if (options.onPageChange) {options.onPageChange(_currentPage);}
+      }
+    });
     pages.appendChild(nextBtn);
 
     // Page size selector
@@ -696,7 +841,12 @@ export function Table(options = {}) {
         if (size === _pageSize) {opt.selected = true;}
         select.appendChild(opt);
       });
-      select.addEventListener('change', () => { _pageSize = Number(select.value); _currentPage = 1; _render(); });
+      interactionListeners.on(select, 'change', () => {
+        _pageSize = Number(select.value);
+        _currentPage = 1;
+        _clearProcessedCache();
+        _render();
+      });
       pagination.appendChild(info);
       pagination.appendChild(pages);
       pagination.appendChild(select);
@@ -730,6 +880,7 @@ export function Table(options = {}) {
     const handles = element.querySelectorAll('.ds-table-resize-handle');
     handles.forEach(handle => {
       let startX, startWidth, col;
+      let cleanupDocumentListeners = null;
       const handleMouseDown = (e) => {
         const th = handle.parentElement;
         startX = e.pageX;
@@ -737,23 +888,28 @@ export function Table(options = {}) {
         const colKey = handle.getAttribute('data-col-key');
         col = columns.find(c => c.key === colKey);
 
+        const resizeListeners = createListenerRegistry();
+
         const onMouseMove = (e) => {
           const diff = e.pageX - startX;
           const newWidth = Math.max(50, startWidth + diff);
           th.style.width = newWidth + 'px';
         };
         const onMouseUp = () => {
-          document.removeEventListener('mousemove', onMouseMove);
-          document.removeEventListener('mouseup', onMouseUp);
+          resizeListeners.destroy();
           if (col && options.onColumnResize) {
             options.onColumnResize(col.key, th.offsetWidth);
           }
         };
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+        cleanupDocumentListeners?.();
+        cleanupDocumentListeners = () => {
+          resizeListeners.destroy();
+          cleanupDocumentListeners = null;
+        };
+        resizeListeners.on(document, 'mousemove', onMouseMove);
+        resizeListeners.on(document, 'mouseup', onMouseUp);
       };
-      handle.addEventListener('mousedown', handleMouseDown);
-      _resizeCleanups.push(() => handle.removeEventListener('mousedown', handleMouseDown));
+      interactionListeners.on(handle, 'mousedown', handleMouseDown);
     });
   }
 
@@ -783,18 +939,11 @@ export function Table(options = {}) {
         rows.forEach(r => r.classList.remove('ds-table-drag-over'));
       };
 
-      row.addEventListener('dragstart', onDragStart);
-      row.addEventListener('dragover', onDragOver);
-      row.addEventListener('dragleave', onDragLeave);
-      row.addEventListener('drop', onDrop);
-      row.addEventListener('dragend', onDragEnd);
-      _resizeCleanups.push(() => {
-        row.removeEventListener('dragstart', onDragStart);
-        row.removeEventListener('dragover', onDragOver);
-        row.removeEventListener('dragleave', onDragLeave);
-        row.removeEventListener('drop', onDrop);
-        row.removeEventListener('dragend', onDragEnd);
-      });
+      interactionListeners.on(row, 'dragstart', onDragStart);
+      interactionListeners.on(row, 'dragover', onDragOver);
+      interactionListeners.on(row, 'dragleave', onDragLeave);
+      interactionListeners.on(row, 'drop', onDrop);
+      interactionListeners.on(row, 'dragend', onDragEnd);
     });
   }
 
@@ -804,6 +953,7 @@ export function Table(options = {}) {
     if (fromIdx === -1 || toIdx === -1) {return;}
     const [ item ] = _data.splice(fromIdx, 1);
     _data.splice(toIdx, 0, item);
+    _clearCaches();
     _render();
     if (options.onRowDragEnd) {options.onRowDragEnd(fromKey, toKey);}
   }
@@ -813,15 +963,26 @@ export function Table(options = {}) {
   function setData(data) {
     // Clear caches before data change
     _clearCaches();
-    
+    _virtualScrollTop = 0;
+    if (_dataSubscription) {
+      _dataSubscription();
+      _reactiveCleanups = _reactiveCleanups.filter(cleanup => cleanup !== _dataSubscription);
+    }
+    _dataSubscription = null;
+
     if (data && typeof data === 'object' && 'value' in data) {
       _data = Array.isArray(data.value) ? [ ...data.value ] : [];
       if (data.subscribe) {
-        _reactiveCleanups.push(data.subscribe((newVal) => {
+        _dataSubscription = data.subscribe((newVal) => {
           _clearCaches();
           _data = Array.isArray(newVal) ? [ ...newVal ] : [];
           _render();
-        }));
+        });
+        if (typeof _dataSubscription === 'function') {
+          _reactiveCleanups.push(_dataSubscription);
+        } else {
+          _dataSubscription = null;
+        }
       }
     } else if (Array.isArray(data)) {
       _data = [ ...data ];
@@ -836,10 +997,20 @@ export function Table(options = {}) {
   }
 
   function setLoading(loading) {
+    if (_loadingSubscription) {
+      _loadingSubscription();
+      _reactiveCleanups = _reactiveCleanups.filter(cleanup => cleanup !== _loadingSubscription);
+    }
+    _loadingSubscription = null;
     if (loading && typeof loading === 'object' && 'value' in loading) {
       _loading = !!loading.value;
       if (loading.subscribe) {
-        _reactiveCleanups.push(loading.subscribe((val) => { _loading = !!val; _render(); }));
+        _loadingSubscription = loading.subscribe((val) => { _loading = !!val; _render(); });
+        if (typeof _loadingSubscription === 'function') {
+          _reactiveCleanups.push(_loadingSubscription);
+        } else {
+          _loadingSubscription = null;
+        }
       }
     } else {
       _loading = !!loading;
@@ -904,8 +1075,7 @@ export function Table(options = {}) {
   }
 
   function setSort(key, order) {
-    // Only clear processed cache, keep sort cache
-    _processedCache = null;
+    _clearProcessedCache();
     if (!multiSort) {_sorts = [ { key, order: order || 'asc' } ];}
     else {
       const existing = _sorts.find(s => s.key === key);
@@ -913,60 +1083,74 @@ export function Table(options = {}) {
       else {_sorts.push({ key, order: order || 'asc' });}
     }
     _currentPage = 1;
+    _virtualScrollTop = 0;
     _render();
   }
 
   function clearSort() {
-    // Only clear processed cache, keep sort cache
-    _processedCache = null;
+    _clearProcessedCache();
     _sorts = [];
+    _virtualScrollTop = 0;
     _render();
   }
 
   function setPage(page) {
-    _currentPage = Math.max(1, page);
+    const targetPage = Math.max(1, Math.floor(Number(page)) || 1);
+    const { total } = getProcessedData();
+    const totalPages = Math.ceil(total / _pageSize) || 1;
+    _currentPage = Math.min(targetPage, totalPages);
+    _clearProcessedCache();
     _render();
     if (options.onPageChange) {options.onPageChange(_currentPage);}
   }
 
   function setPageSize(size) {
-    _pageSize = size;
+    _pageSize = Math.max(1, Math.floor(Number(size)) || 1);
     _currentPage = 1;
+    _clearProcessedCache();
     _render();
   }
 
   function setFilterText(text) {
-    _clearCaches();
-    _filterText = text;
+    _clearProcessedCache();
+    _filterText = text == null ? '' : String(text);
     _currentPage = 1;
+    _virtualScrollTop = 0;
     _render();
   }
 
   function getFilterText() { return _filterText; }
 
   function exportCSV() {
-    const headers = columns.map(c => c.title || c.key).join(',');
+    const headers = columns.map(c => _escapeCSV(c.title || c.key)).join(',');
     const { pageData } = getProcessedData();
     const rows = pageData.map(row =>
       columns.map(col => {
         const val = row[col.key];
-        const str = val != null ? String(val) : '';
-        return str.includes(',') ? `"${str}"` : str;
+        return _escapeCSV(val);
       }).join(','),
     );
     return [ headers, ...rows ].join('\n');
   }
 
+  function _escapeCSV(value) {
+    const str = value != null ? String(value) : '';
+    return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  }
+
   function refresh() { _render(); }
 
   function destroy() {
-    _listeners.forEach(({ el, event, handler }) => el.removeEventListener(event, handler));
-    _listeners.length = 0;
+    if (_destroyed) {return;}
+    _destroyed = true;
+    _cancelVirtualFrame();
+    listeners.destroy();
+    interactionListeners.destroy();
     _reactiveCleanups.forEach(fn => fn());
     _reactiveCleanups.length = 0;
-    _resizeCleanups.forEach(fn => fn());
-    _resizeCleanups.length = 0;
-    clearTimeout(_filterDebounceTimer);
+    _dataSubscription = null;
+    _loadingSubscription = null;
+    _cancelFilterDebounce();
     element.remove();
   }
 

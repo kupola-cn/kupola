@@ -197,9 +197,8 @@ describe('Table', () => {
         { key: 'age', title: 'Age', sortable: true },
       ];
       const table = Table({ data: sampleData, columns: cols });
-      const th = getHeaders(table)[1]; // Age column
-      th.click(); // asc
-      th.click(); // desc
+      getHeaders(table)[1].click(); // asc
+      getHeaders(table)[1].click(); // desc
       const rows = getRows(table);
       expect(rows[0].querySelectorAll('td')[0].textContent).toBe('Charlie');
     });
@@ -210,10 +209,9 @@ describe('Table', () => {
         { key: 'age', title: 'Age', sortable: true },
       ];
       const table = Table({ data: sampleData, columns: cols });
-      const th = getHeaders(table)[1]; // Age column
-      th.click(); // asc
-      th.click(); // desc
-      th.click(); // clear
+      getHeaders(table)[1].click(); // asc
+      getHeaders(table)[1].click(); // desc
+      getHeaders(table)[1].click(); // clear
       // Should be back to original order
       expect(getRows(table)[0].querySelectorAll('td')[0].textContent).toBe('Alice');
     });
@@ -273,6 +271,24 @@ describe('Table', () => {
       const names = Array.from(getRows(table)).map(r => r.querySelector('td').textContent);
       expect(names[0]).toBe('Bob');
     });
+
+    test('invalidates sort cache after inline edits', () => {
+      const data = [
+        { id: 1, name: 'Bob' },
+        { id: 2, name: 'Carl' },
+      ];
+      const cols = [ { key: 'name', title: 'Name', sortable: true, editable: true } ];
+      const table = Table({ data, columns: cols, editable: true });
+      table.setSort('name', 'asc');
+
+      getRows(table)[1].querySelector('td').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+      const input = table.element.querySelector('.ds-table-edit-input');
+      input.value = 'Aaron';
+      input.dispatchEvent(new Event('input'));
+      table.element.querySelector('.ds-table-edit-save').click();
+
+      expect(getRows(table)[0].querySelector('td').textContent).toBe('Aaron');
+    });
   });
 
   // === Filter ===
@@ -307,11 +323,52 @@ describe('Table', () => {
       table.setFilterText('zzzzz');
       expect(table.element.querySelector('.ds-table-empty')).toBeTruthy();
     });
+
+    test('cancels a pending filter from a stale toolbar after another render', () => {
+      jest.useFakeTimers();
+      const onFilter = jest.fn();
+      const table = Table({ columns, data: sampleData, showFilter: true, onFilter });
+      const input = table.element.querySelector('.ds-table-filter-input');
+      input.value = 'stale';
+      input.dispatchEvent(new Event('input'));
+      expect(jest.getTimerCount()).toBe(1);
+
+      table.setData(sampleData.slice(0, 2));
+      expect(jest.getTimerCount()).toBe(0);
+      jest.advanceTimersByTime(300);
+
+      expect(table.getFilterText()).toBe('');
+      expect(onFilter).not.toHaveBeenCalled();
+      table.destroy();
+      jest.useRealTimers();
+    });
+  });
+
+  // === Virtual Scroll ===
+  describe('virtual scroll', () => {
+    test('renders only the viewport window plus overscan rows', () => {
+      const bigData = Array.from({ length: 100 }, (_, i) => ({
+        id: i + 1, name: `User${i + 1}`, age: 20 + i, city: 'City',
+      }));
+      const table = Table({
+        data: bigData,
+        columns,
+        virtualScroll: { rowHeight: 30, visibleRows: 5, overscan: 1 },
+      });
+
+      const renderedRows = table.element.querySelectorAll('tbody tr[data-row-key]');
+      expect(table.element.classList.contains('ds-table-virtual-wrapper')).toBe(true);
+      expect(renderedRows.length).toBe(7);
+      expect(renderedRows[0].querySelector('td').textContent).toBe('User1');
+      expect(table.element.querySelector('.ds-table-virtual-spacer')).toBeTruthy();
+    });
   });
 
   // === Pagination ===
   describe('pagination', () => {
-    const bigData = Array.from({ length: 25 }, (_, i) => ({ id: i + 1, name: `User${i + 1}`, age: 20 + i, city: 'City' }));
+    const bigData = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1, name: `User${i + 1}`, age: 20 + i, city: 'City',
+    }));
 
     test('paginates data with default page size', () => {
       const table = Table({ data: bigData, columns, pageSize: 10 });
@@ -396,7 +453,8 @@ describe('Table', () => {
       const table = Table({ data: sampleData, columns, selection: 'checkbox' });
       table.selectRow(1);
       expect(table.getSelectedKeys()).toContain(1);
-      expect(table.element.querySelector('tr[data-row-key="1"]').classList.contains('ds-table-row-selected')).toBe(true);
+      const selectedRow = table.element.querySelector('tr[data-row-key="1"]');
+      expect(selectedRow.classList.contains('ds-table-row-selected')).toBe(true);
     });
 
     test('deselectRow deselects a row', () => {
@@ -541,6 +599,14 @@ describe('Table', () => {
       const table = Table({ data, columns });
       const csv = table.exportCSV();
       expect(csv).toContain('"Smith, John"');
+    });
+
+    test('escapes quotes and newlines in values', () => {
+      const data = [ { id: 1, name: 'A "quoted" value', age: 30, city: 'Line\nBreak' } ];
+      const table = Table({ data, columns });
+      const csv = table.exportCSV();
+      expect(csv).toContain('"A ""quoted"" value"');
+      expect(csv).toContain('"Line\nBreak"');
     });
   });
 

@@ -6,6 +6,23 @@ describe('http-guard', () => {
   });
 
   describe('createHttpGuard', () => {
+    it('should reject invalid options and interceptors', () => {
+      expect(() => createHttpGuard(null)).toThrow(TypeError);
+      expect(() => createHttpGuard({ interceptors: { request: [ null ] } })).toThrow(TypeError);
+      expect(() => createHttpGuard({ interceptors: { request: {} } })).toThrow(TypeError);
+      expect(() => createHttpGuard({ beforeRequest: true })).toThrow(TypeError);
+      expect(() => createHttpGuard({ onUnauthorized: true })).toThrow(TypeError);
+    });
+
+    it('should reject invalid request configurations and interceptor results', async () => {
+      const guard = createHttpGuard({
+        beforeRequest: () => null,
+      });
+
+      await expect(guard.get('/api/users')).rejects.toThrow(/return an object/);
+      await expect(guard.get('/api/users', [])).rejects.toThrow(/config must be an object/);
+    });
+
     it('should create HTTP guard with methods', () => {
       const guard = createHttpGuard();
 
@@ -35,6 +52,40 @@ describe('http-guard', () => {
 
       expect(fetch).toHaveBeenCalledWith('/api/users', expect.objectContaining({ method: 'POST' }));
       expect(response.status).toBe(201);
+    });
+
+    it('should preserve non-JSON request bodies', async () => {
+      const body = new URLSearchParams({ name: 'Test' });
+      global.fetch.mockResolvedValueOnce({ status: 200 });
+
+      const guard = createHttpGuard();
+      await guard.post('/api/users', body);
+
+      expect(fetch).toHaveBeenCalledWith('/api/users', expect.objectContaining({ body }));
+    });
+
+    it('should keep request fields authoritative over fetchOptions', async () => {
+      global.fetch.mockResolvedValueOnce({ status: 200 });
+
+      await createHttpGuard().post('/api/users', { name: 'Test' }, {
+        headers: { 'X-Request': 'request' },
+        fetchOptions: {
+          method: 'DELETE',
+          body: 'wrong-body',
+          headers: { 'X-Fetch': 'fetch' },
+          credentials: 'include',
+        },
+      });
+
+      expect(fetch).toHaveBeenCalledWith('/api/users', expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ name: 'Test' }),
+        headers: {
+          'X-Fetch': 'fetch',
+          'X-Request': 'request',
+        },
+        credentials: 'include',
+      }));
     });
 
     it('should make PUT request', async () => {
@@ -87,6 +138,23 @@ describe('http-guard', () => {
       }));
     });
 
+    it('should await asynchronous request interceptors', async () => {
+      global.fetch.mockResolvedValueOnce({ status: 200 });
+
+      const guard = createHttpGuard({
+        beforeRequest: async (config) => ({
+          ...config,
+          headers: { 'X-Async': 'ready' },
+        }),
+      });
+
+      await guard.get('/api/users');
+
+      expect(fetch).toHaveBeenCalledWith('/api/users', expect.objectContaining({
+        headers: { 'X-Async': 'ready' },
+      }));
+    });
+
     it('should throw error when permission denied', async () => {
       const onPermissionDenied = jest.fn();
 
@@ -113,6 +181,18 @@ describe('http-guard', () => {
 
       expect(afterResponse).toHaveBeenCalled();
     });
+
+    it('should await asynchronous response interceptors', async () => {
+      global.fetch.mockResolvedValueOnce({ status: 200, value: 'original' });
+
+      const guard = createHttpGuard({
+        afterResponse: async (response) => ({ ...response, value: 'updated' }),
+      });
+
+      const response = await guard.get('/api/users');
+
+      expect(response.value).toBe('updated');
+    });
   });
 
   describe('error handling', () => {
@@ -137,6 +217,29 @@ describe('http-guard', () => {
 
       expect(onPermissionDenied).toHaveBeenCalled();
     });
+
+    it('should not let status callbacks replace the response', async () => {
+      global.fetch.mockResolvedValueOnce({ status: 401 });
+      const error = new Error('callback failed');
+      const onUnauthorized = jest.fn(() => { throw error; });
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const response = await createHttpGuard({ onUnauthorized }).get('/api/users');
+
+      expect(response.status).toBe(401);
+      expect(onUnauthorized).toHaveBeenCalledTimes(1);
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should reject invalid response interceptor results', async () => {
+      global.fetch.mockResolvedValueOnce({ status: 200 });
+      const guard = createHttpGuard({
+        interceptors: { response: [ () => null ] },
+      });
+
+      await expect(guard.get('/api/users')).rejects.toThrow(/response object/);
+    });
   });
 
   describe('custom interceptors', () => {
@@ -148,7 +251,7 @@ describe('http-guard', () => {
 
       const guard = createHttpGuard({
         interceptors: {
-          request: [interceptor1, interceptor2],
+          request: [ interceptor1, interceptor2 ],
         },
       });
 
@@ -166,7 +269,7 @@ describe('http-guard', () => {
 
       const guard = createHttpGuard({
         interceptors: {
-          response: [interceptor1, interceptor2],
+          response: [ interceptor1, interceptor2 ],
         },
       });
 

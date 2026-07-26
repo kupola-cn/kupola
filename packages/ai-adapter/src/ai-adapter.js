@@ -1,131 +1,191 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/ai-adapter — Main Adapter Class (v1.2)
+ * @kupola/ai-adapter — Main Adapter Class (v2.0)
  *
- * Enhancements over v1.1:
- * - EventBus: replaces internal Map-based listeners with full pub/sub (once, wildcard)
- * - DevTools: getDevToolsSnapshot() + createDevToolsLogger middleware
- * - Normalized event names: input / parsed / result / flow:step / flow:complete / action:before / action:after
+ * 重构改进：
+ * - 分离业务门面与基础设施
+ * - 集成 CommandBus
+ * - 全局错误边界
+ * - 更好的中间件支持
  */
 
-import { IntentParser, RuleBasedParser } from './intent-parser.js';
-import { QueryEngine } from './query-engine.js';
-import { ActionEngine } from './action-engine.js';
-import { FlowEngine } from './flow-engine.js';
-import { EventBus } from './event-bus.js';
+import { AIInfrastructure } from './infrastructure.js';
 import { CapabilityRegistry } from './capability-registry.js';
 
 export class AIAdapter {
   constructor(options = {}) {
-    // Initialize engines — pass bus so they can emit directly
-    this.query = new QueryEngine(options.query);
-    this.action = new ActionEngine(options.action);
-    this.flow = new FlowEngine(options.flow);
+    this.infrastructure = options.infrastructure || new AIInfrastructure(options);
 
-    // Initialize parser
-    const fallbackParser = options.parser || RuleBasedParser.createDefault();
-    this.parser = new IntentParser({
-      ai: options.ai || null,
-      fallback: fallbackParser,
-      maxContext: options.maxContext,
-    });
+    this.query = this.infrastructure.query;
+    this.action = this.infrastructure.action;
+    this.flow = this.infrastructure.flow;
+    this.parser = this.infrastructure.parser;
+    this.bus = this.infrastructure.bus;
+    this.commandBus = this.infrastructure.commandBus;
 
-    // EventBus (replaces the old Map-based listeners)
-    this.bus = options.bus || new EventBus();
-
-    // Centralized AI-facing capability registry
-    this.capability = new CapabilityRegistry(this, options.capability || {});
-
-    // Message log
     this.messages = [];
     this.maxMessages = options.maxMessages || 50;
 
-    // Middleware pipeline
     this.middlewares = [];
+
+    this.errorHandler = options.errorHandler || ((error) => {
+      if (typeof console !== 'undefined' && console.error) {
+        console.error('[AIAdapter] Error:', error);
+      }
+    });
+
+    this.capability = new CapabilityRegistry(this, options.capability || {});
+
+    this._setupEventForwarding();
   }
 
-  /**
-   * Add a middleware to the processing pipeline.
-   * Middleware signature: async (ctx, next) => { ... }
-   *
-   * ctx = { input, context, command?, result?, adapter }
-   *
-   * Example:
-   *   adapter.use(async (ctx, next) => {
-   *     console.log('Before:', ctx.input);
-   *     await next();
-   *     console.log('After:', ctx.result);
-   *   });
-   *
-   * @param {Function} middleware
-   * @returns {AIAdapter} this (for chaining)
-   */
+  _setupEventForwarding() {
+    this.bus.on('query:before', (data) => this.bus.emit('result', { command: { engine: 'query', type: data.type }, result: data }));
+    this.bus.on('query:after', (data) => this.bus.emit('result', { command: { engine: 'query', type: data.type }, result: data.result }));
+
+    this.bus.on('action:after', (data) => {
+      this.bus.emit('result', { command: { engine: 'action', type: data.type }, result: data.result });
+    });
+
+    this.bus.on('flow:after', (data) => {
+      this.bus.emit('flow:complete', data);
+      this.bus.emit('result', { command: { engine: 'flow', type: data.name }, result: data });
+    });
+    this.bus.on('flow:step:before', (data) => this.bus.emit('flow:step', { step: data.step, label: data.label, status: 'running' }));
+    this.bus.on('flow:step:running', (data) => this.bus.emit('flow:step', { step: data.step, label: data.label, status: 'running' }));
+    this.bus.on('flow:step:done', (data) => this.bus.emit('flow:step', { step: data.step, label: data.label, status: 'done' }));
+
+    this.bus.on('flow:step:error', (data) => this.bus.emit('flow:step', { step: data.step, label: data.label, status: 'error' }));
+    this.bus.on('flow:step:skipped', (data) => this.bus.emit('flow:step', { step: data.step, label: data.label, status: 'skipped' }));
+  }
+
   use(middleware) {
     this.middlewares.push(middleware);
     return this;
   }
 
-  /**
-   * Process natural language input end-to-end.
-   * Parses first, then runs middleware around the execution step so guards can
-   * inspect the structured command before anything is executed.
-   */
   async process(input, context = {}) {
-    this._addMessage('user', input);
-    this.bus.emit('input', { input });
-
-    const command = await this.parser.parse(input, context);
-    command.context = this._mergeContext(command.context, context);
-
-    const ctx = {
-      input,
-      context,
-      command,
-      result: null,
-      adapter: this,
-      finalized: false,
-    };
-
-    const chain = this._buildMiddlewareChain(ctx, async () => {
-      ctx.result = await this._processCommand(ctx.command, ctx.context);
-      ctx.finalized = true;
-    });
-    await chain();
-
-    if (!ctx.finalized) {
-      this._finalizeMiddlewareResult(ctx);
+    if (!input || !input.trim()) {
+      return { type: 'error', engine: 'unknown', success: false, error: 'Empty input' };
     }
 
-    return ctx.result;
+    try {
+      const trimmedInput = input.trim();
+      this._addMessage('user', trimmedInput);
+
+      const ctx = {
+        input: trimmedInput,
+        context,
+        adapter: this,
+      };
+
+      this.bus.emit('input', { input: trimmedInput });
+
+      const command = await this.parser.parse(ctx.input, ctx.context);
+      ctx.command = command;
+      this.bus.emit('parsed', { ...command, input: ctx.input, context: ctx.context });
+
+      await this._runMiddlewares(ctx);
+
+      if (ctx.result) {
+        const msg = ctx.result.message || ctx.result.error || 'Operation failed.';
+        if (ctx.result.success === false) {
+          this._addMessage('system', `❌ ${msg}`);
+        } else {
+          this._addMessage('system', msg);
+        }
+        this.bus.emit('result', { command, result: ctx.result });
+        return ctx.result;
+      }
+
+      let result;
+      if (command.engine === 'unknown') {
+        const msg = command.error || 'I didn\'t understand that. Try: 查询..., 添加..., 执行...';
+        result = { success: false, error: msg, result: command };
+      } else {
+        result = await this.commandBus.dispatch(command, ctx.context);
+      }
+
+      ctx.result = result;
+
+      const message = this._formatResultMessage(command, result);
+
+      this._addMessage('system', message);
+
+      if (command.engine !== 'unknown') {
+        const learnResult = this.flow.trackAction(command);
+        if (learnResult.suggest) {
+          this._addMessage('suggestion', learnResult.message);
+        }
+      }
+
+      this.bus.emit('result', { command, result });
+
+      const returnType = command.engine === 'unknown' ? 'error' : command.type;
+      return { result, type: returnType, engine: command.engine, message };
+    } catch (error) {
+      this.errorHandler(error);
+      this._addMessage('system', `❌ ${error.message || 'Operation failed.'}`);
+      this.bus.emit('result', { command: { engine: 'unknown', type: 'error' }, result: { success: false, error: error.message } });
+      return { type: 'error', engine: 'unknown', success: false, error: error.message, message: error.message };
+    }
   }
 
-  /**
-   * Undo the last action.
-   */
+  async _runMiddlewares(ctx) {
+    const middlewares = this.middlewares;
+    let index = 0;
+
+    const next = async () => {
+      if (index >= middlewares.length) {
+        return;
+      }
+      const mw = middlewares[index++];
+      await mw(ctx, next);
+    };
+
+    await next();
+  }
+
   async undo() {
-    const result = await this.action.undo();
-    const msg = result.success ? `✅ ${result.message}` : `❌ ${result.message || result.error}`;
-    this._addMessage('system', msg);
-    return result;
+    try {
+      const result = await this.action.undo();
+      if (result.success) {
+        this._addMessage('system', `↩️ ${result.message}`);
+      }
+      return result;
+    } catch (error) {
+      this.errorHandler(error);
+      return { success: false, error: error.message };
+    }
   }
 
-  /**
-   * Get the UI panel component (for Kupola integration).
-   */
+  _formatResultMessage(command, result) {
+    if (result.success === false) {
+      const err = result.error || result.message || 'Operation failed.';
+      return `❌ ${err}`;
+    }
+
+    if (command.engine === 'query') {
+      if (result.summary) return result.summary;
+      if (Array.isArray(result.data)) {
+        return `Found ${result.data.length} ${command.type} record(s).`;
+      }
+      return `Query "${command.type}" completed.`;
+    }
+
+    if (command.engine === 'action') {
+      return `Action "${command.type}" completed successfully.`;
+    }
+
+    if (command.engine === 'flow') {
+      return `Flow "${command.params?.name || command.name}" executed successfully.`;
+    }
+
+    return 'Operation completed.';
+  }
+
   getPanelHTML() {
-    return `
-      <div class="ds-ai-panel" k-data="{ aiInput: '', aiMessages: [] }">
-        <div class="ds-ai-messages">
-          <template k-for="msg in aiMessages" :key="msg.timestamp || msg.role + ':' + msg.text">
-            <div class="ds-ai-msg" k-class="'ds-ai-msg-' + msg.role" k-text="msg.text"></div>
-          </template>
-        </div>
-        <form class="ds-ai-input-area" @submit.prevent="if(aiInput) { submitAI(aiInput); aiInput = '' }">
-          <input class="ds-ai-input" k-model.trim="aiInput" placeholder="输入指令..." />
-          <button class="ds-ai-send-btn" :disabled="!aiInput">发送</button>
-        </form>
-      </div>
-    `;
+    return this._buildPanelHTML();
   }
 
   getMessages() {
@@ -135,11 +195,34 @@ export class AIAdapter {
   clearConversation() {
     this.messages = [];
     this.parser.clearContext();
-    this.query.clearHistory();
-    this.flow.clearHistory();
   }
 
-  // ── EventBus proxy methods ─────────────────────────────
+  getDevToolsSnapshot() {
+    return {
+      version: '2.0.3',
+      messages: this.getMessages(),
+      middlewares: this.middlewares.length,
+      query: {
+        registered: this.query.handlers.size,
+        history: this.query.history.length,
+        cache: this.query.cache.size,
+      },
+      action: {
+        registered: this.action.handlers.size,
+        undoStack: this.action.undoStack.length,
+        audit: this.action.auditLog.length,
+      },
+      capability: {
+        registered: this.capability.items.size,
+        ai: this.capability.getAICapabilities().length,
+      },
+      flow: {
+        defined: this.flow.flows.size,
+        executions: this.flow.executions.length,
+      },
+      events: this.bus.eventNames(),
+    };
+  }
 
   on(event, callback) {
     return this.bus.on(event, callback);
@@ -157,119 +240,10 @@ export class AIAdapter {
     return this.bus.wildcard(pattern, callback);
   }
 
-  // ── DevTools ───────────────────────────────────────────
-
-  /**
-   * Return a snapshot of the adapter's full runtime state.
-   * Useful for DevTools panels, debugging, and telemetry.
-   */
-  getDevToolsSnapshot() {
-    return {
-      version: '2.0.3',
-      messages: [...this.messages],
-      middlewares: this.middlewares.length,
-      query: {
-        registered: this.query.handlers.size,
-        history: this.query.history.length,
-        cache: (this.query.cache || new Map()).size,
-      },
-      action: {
-        registered: this.action.handlers.size,
-        undoStack: this.action.undoStack.length,
-        audit: this.action.auditLog.length,
-      },
-      capability: {
-        registered: this.capability.list().length,
-        ai: this.capability.getAICapabilities().length,
-      },
-      flow: {
-        defined: this.flow.flows.size,
-        executions: this.flow.executions.length,
-      },
-      events: this.bus.eventNames(),
-    };
-  }
-
-  // ── Private ────────────────────────────────────────────
-
-  _buildMiddlewareChain(ctx, terminal = async () => {}) {
-    const middlewares = this.middlewares;
-    let index = 0;
-
-    const next = async () => {
-      if (index >= middlewares.length) {
-        await terminal();
-        return;
-      }
-      const mw = middlewares[index++];
-      await mw(ctx, next);
-    };
-
-    return async () => {
-      await next();
-    };
-  }
-
-  async _processCommand(command, context = {}) {
-    if (command.engine === 'unknown') {
-      const msg = command.error || 'I didn\'t understand that. Try: 查询..., 添加..., 执行...';
-      this._addMessage('system', msg);
-      const output = { type: 'error', engine: 'unknown', result: command, message: msg };
-      this.bus.emit('result', { command, result: output });
-      return output;
-    }
-
-    this.bus.emit('parsed', command);
-
-    // Slot filling: ask for missing params
-    if (command.missingSlots && command.missingSlots.length > 0) {
-      const question = command.slotQuestion || `请提供: ${command.missingSlots.join(', ')}`;
-      this._addMessage('system', question);
-      const output = { type: 'slot-fill', engine: command.engine, result: command, message: question, missingSlots: command.missingSlots };
-      this.bus.emit('result', { command, result: output });
-      return output;
-    }
-
-    // Route to appropriate engine
-    let result;
-    switch (command.engine) {
-      case 'query':
-        result = await this.query.execute(command);
-        break;
-      case 'action':
-        this.bus.emit('action:before', { type: command.type, params: command.params });
-        result = await this.action.execute(command, {
-          onConfirm: context.onConfirm || this._defaultConfirm.bind(this),
-        });
-        this.bus.emit('action:after', { type: command.type, result });
-        const suggestion = this.flow.trackAction(command);
-        if (suggestion.suggest) {
-          this._addMessage('suggestion', suggestion.message);
-          result.suggestion = suggestion;
-        }
-        break;
-      case 'flow':
-        if (command.type === 'execute') {
-          result = await this.flow.execute(command.params.name, command.params.data || {}, {
-            onStep: (i, label, status) => this.bus.emit('flow:step', { step: i, label, status }),
-            onComplete: () => this.bus.emit('flow:complete', { flow: command.params.name }),
-          }, { context: command.context || context });
-        } else if (command.type === 'define') {
-          result = { success: true, message: `Flow "${command.params.name}" defined.`, data: command.params };
-        } else {
-          result = { success: false, error: `Unknown flow command: ${command.type}` };
-        }
-        break;
-      default:
-        result = { success: false, error: `Unknown engine: ${command.engine}` };
-    }
-
-    // Format response message
-    const message = this._formatResponse(command, result);
-    this._addMessage('system', message);
-    this.bus.emit('result', { command, result });
-
-    return { type: command.engine, engine: command.engine, result, message, confidence: command.confidence };
+  dispose() {
+    this.infrastructure.dispose();
+    this.middlewares = [];
+    this.messages = [];
   }
 
   _addMessage(role, text) {
@@ -279,68 +253,36 @@ export class AIAdapter {
     }
   }
 
-  _finalizeMiddlewareResult(ctx) {
-    if (!ctx.result) {
-      ctx.result = {
-        type: 'error',
-        engine: 'middleware',
-        success: false,
-        error: 'Middleware stopped processing without returning a result.',
-      };
-    }
+  _buildPanelHTML() {
+    const messages = this.messages.length > 0 
+      ? this.messages.map((msg, i) => `
+          <div class="ds-ai-msg ds-ai-msg-${msg.role}" :key="${i}" k-class="{ 'is-active': ${i === this.messages.length - 1} }">
+            <div class="ds-ai-msg-text">${this._esc(msg.text)}</div>
+          </div>
+        `).join('')
+      : '<div class="ds-ai-msg" :key="0" k-class="{ visible: true }"><div class="ds-ai-msg-text">Start typing...</div></div>';
 
-    const message = ctx.result.message || ctx.result.error || 'Operation stopped.';
-    ctx.result.message = ctx.result.message || message;
-
-    const displayMessage = ctx.result.success === false && !/^[❌⚠️]/.test(message)
-      ? `❌ ${message}`
-      : message;
-
-    this._addMessage('system', displayMessage);
-    this.bus.emit('result', { command: ctx.command, result: ctx.result });
-    ctx.finalized = true;
+    return `
+      <div class="ds-ai-panel" k-data="{ messages: ${JSON.stringify(this.messages)} }">
+        <div class="ds-ai-header">
+          <span class="ds-ai-title">AI Assistant</span>
+          <div class="ds-ai-header-actions">
+            <button class="ds-ai-min-btn" title="最小化">─</button>
+            <button class="ds-ai-close-btn" title="关闭">✕</button>
+          </div>
+        </div>
+        <div class="ds-ai-messages">${messages}</div>
+        <form @submit.prevent="handleSubmit">
+          <input class="ds-ai-input" type="text" k-model.trim="input" placeholder="输入指令..." />
+          <button class="ds-ai-send-btn" type="submit">发送</button>
+        </form>
+      </div>
+    `;
   }
 
-  _mergeContext(commandContext, processContext) {
-    return {
-      ...(commandContext || {}),
-      ...(processContext || {}),
-    };
-  }
-
-  _formatResponse(command, result) {
-    if (!result.success) {
-      if (result.cancelled) return `⏸️ Operation cancelled.`;
-      return `❌ ${result.error || 'Operation failed.'}`;
-    }
-
-    const conf = command.confidence < 0.7 ? ` (confidence: ${Math.round(command.confidence * 100)}%)` : '';
-
-    switch (command.engine) {
-      case 'query':
-        return `🔍 ${result.summary}${conf}${result.cached ? ' (cached)' : ''}`;
-      case 'action':
-        return `✅ Action "${command.type}" completed.${result.undoable ? ' (undoable)' : ''}${conf}`;
-      case 'flow':
-        if (result.logs) {
-          const done = result.logs.filter(l => l.status === 'success').length;
-          return `📌 Flow completed: ${done}/${result.logs.length} steps done.`;
-        }
-        return `📌 ${result.message || 'Flow operation complete.'}`;
-      default:
-        return 'Done.';
-    }
-  }
-
-  async _defaultConfirm(label, params) {
-    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      if (String(window.confirm).includes('notImplemented')) return false;
-      try {
-        return !!window.confirm(`确认执行「${label}」？\n${JSON.stringify(params || {}, null, 2)}`);
-      } catch {
-        return false;
-      }
-    }
-    return false;
+  _esc(str) {
+    const d = document.createElement('div');
+    d.textContent = String(str ?? '');
+    return d.innerHTML;
   }
 }

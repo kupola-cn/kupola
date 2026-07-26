@@ -81,11 +81,11 @@ describe('Signal + Effect integration', () => {
       log.push(name.value);
     });
 
-    expect(log).toEqual(['Alice']);
+    expect(log).toEqual([ 'Alice' ]);
 
     name.value = 'Bob';
     flushJobs();
-    expect(log).toEqual(['Alice', 'Bob']);
+    expect(log).toEqual([ 'Alice', 'Bob' ]);
   });
 
   test('multiple effects on same signal', () => {
@@ -99,8 +99,8 @@ describe('Signal + Effect integration', () => {
     x.value = 5;
     flushJobs();
 
-    expect(log1).toEqual([0, 5]);
-    expect(log2).toEqual([0, 50]);
+    expect(log1).toEqual([ 0, 5 ]);
+    expect(log2).toEqual([ 0, 50 ]);
   });
 
   test('computed does not recompute if dependency unchanged', () => {
@@ -203,7 +203,7 @@ describe('SSR hydration boundary cases', () => {
   test('renderToString handles array of templates', async () => {
     // renderToString already imported at top of file
 
-    const items = ['a', 'b', 'c'].map(i => html`<li>${i}</li>`);
+    const items = [ 'a', 'b', 'c' ].map(i => html`<li>${i}</li>`);
     const tpl = html`<ul>${items}</ul>`;
     const result = renderToString(tpl);
     expect(result).toContain('<li>a</li>');
@@ -327,7 +327,7 @@ describe('Error boundary', () => {
 
     const view = ErrorBoundary(
       () => { throw new Error('test error'); },
-      { fallback: (err) => err.message }
+      { fallback: (err) => err.message },
     );
 
     expect(view.element).toBeDefined();
@@ -352,10 +352,10 @@ describe('Error boundary', () => {
 
     const view = ErrorBoundary(
       () => { throw new Error('callback test'); },
-      { onError: (err) => errors.push(err.message) }
+      { onError: (err) => errors.push(err.message) },
     );
 
-    expect(errors).toEqual(['callback test']);
+    expect(errors).toEqual([ 'callback test' ]);
     expect(error).toHaveBeenCalledWith('[Kupola ErrorBoundary]', view.error);
   });
 });
@@ -370,17 +370,17 @@ describe('Signal cleanup / memory leak detection', () => {
     const log = [];
 
     const dispose = effect(() => log.push(count.value));
-    expect(log).toEqual([0]);
+    expect(log).toEqual([ 0 ]);
 
     count.value = 1;
     flushJobs();
-    expect(log).toEqual([0, 1]);
+    expect(log).toEqual([ 0, 1 ]);
 
     // Dispose should stop tracking
     dispose();
     count.value = 2;
     flushJobs();
-    expect(log).toEqual([0, 1]); // No new entry
+    expect(log).toEqual([ 0, 1 ]); // No new entry
   });
 
   test('computed disposes when no subscribers', () => {
@@ -413,16 +413,16 @@ describe('Signal cleanup / memory leak detection', () => {
     x.value = 1;
     flushJobs();
 
-    expect(log1).toEqual([0, 1]);
-    expect(log2).toEqual([0, 1]);
+    expect(log1).toEqual([ 0, 1 ]);
+    expect(log2).toEqual([ 0, 1 ]);
 
     // Dispose only first effect
     d1();
     x.value = 2;
     flushJobs();
 
-    expect(log1).toEqual([0, 1]); // Stopped
-    expect(log2).toEqual([0, 1, 2]); // Still running
+    expect(log1).toEqual([ 0, 1 ]); // Stopped
+    expect(log2).toEqual([ 0, 1, 2 ]); // Still running
 
     d2();
   });

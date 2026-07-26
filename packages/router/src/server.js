@@ -1,5 +1,20 @@
-import { flattenRoutes, matchRoute } from './matcher.js';
+// SPDX-License-Identifier: MIT
+/**
+ * @kupola/router — Server-side routing utilities.
+ *
+ * @module server
+ */
 
+import { flattenRoutes, matchRoute, resolvePath } from './matcher.js';
+
+/**
+ * Match route on server side.
+ * @param {Array} routes - Route configuration array
+ * @param {string} path - Path to match
+ * @param {Object} [options={}] - Match options
+ * @param {Object} [options.query={}] - Query parameters
+ * @returns {Object|null} Matched route
+ */
 export function matchRouteServer(routes, path, options = {}) {
   const { query = {} } = options;
   const records = flattenRoutes(routes);
@@ -9,40 +24,18 @@ export function matchRouteServer(routes, path, options = {}) {
 export function createServerRouter(options) {
   const { routes } = options;
   const records = flattenRoutes(routes);
-  
+
   return {
     match(path, query = {}) {
       return matchRoute(records, path, query);
     },
-    
+
     resolve(to) {
-      if (to.path) {
-        if (to.params) {
-          let resolvedPath = to.path;
-          for (const [key, value] of Object.entries(to.params)) {
-            resolvedPath = resolvedPath.replace(`:${key}`, value);
-          }
-          return resolvedPath;
-        }
-        return to.path;
-      }
-      
-      if (to.name) {
-        const record = records.find(r => r.name === to.name);
-        if (record) {
-          let resolvedPath = record.path;
-          if (to.params) {
-            for (const [key, value] of Object.entries(to.params)) {
-              resolvedPath = resolvedPath.replace(`:${key}`, value);
-            }
-          }
-          return resolvedPath;
-        }
-      }
-      
-      return '/';
+      const path = resolvePath(records, to);
+      const search = new URLSearchParams(to?.query || {}).toString();
+      return search ? `${path}?${search}` : path;
     },
-    
+
     get records() {
       return records;
     },

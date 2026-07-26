@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import {
   requireAuth,
   requirePermission,
@@ -27,6 +31,10 @@ describe('router-tools', () => {
   });
 
   describe('requirePermission', () => {
+    it('should fail closed for incomplete auth contexts', () => {
+      expect(requirePermission({}, 'user:read')).toBe(false);
+    });
+
     it('should return true if user has permission', () => {
       const context = { hasPermission: jest.fn(() => true) };
       expect(requirePermission(context, 'user:read')).toBe(true);
@@ -51,6 +59,10 @@ describe('router-tools', () => {
   });
 
   describe('requireRole', () => {
+    it('should fail closed for incomplete auth contexts', () => {
+      expect(requireRole({}, 'admin')).toBe(false);
+    });
+
     it('should return true if user has role', () => {
       const context = { hasRole: jest.fn(() => true) };
       expect(requireRole(context, 'admin')).toBe(true);
@@ -81,12 +93,16 @@ describe('router-tools', () => {
 
     it('should redirect to URL', () => {
       global.window = { location: { href: '' } };
-      expect(() => redirectTo('/login')).not.toThrow();
+      redirectTo('/login');
+      expect(global.window.location.href).toBe('/login');
     });
 
     it('should redirect with redirectUrl parameter', () => {
       global.window = { location: { href: '', origin: 'http://localhost:3000' } };
-      expect(() => redirectTo('/login', { redirectUrl: '/dashboard' })).not.toThrow();
+      redirectTo('/login', { redirectUrl: '/dashboard' });
+      expect(global.window.location.href).toBe(
+        'http://localhost:3000/login?redirectUrl=%2Fdashboard',
+      );
     });
 
     it('should do nothing in non-browser environment', () => {

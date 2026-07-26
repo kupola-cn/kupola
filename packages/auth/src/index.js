@@ -36,17 +36,22 @@ export {
   hydrateAuthContext,
   getAuthContext,
   setAuthContext,
+  onAuthContextChange,
   AUTH_KEY,
+  createAuthStore,
 } from './auth-context.js';
 
 export {
   registerPermissionHandler,
   getPermissionHandler,
   clearPermissionHandler,
+  onPermissionHandlerChange,
 } from './permission-handler.js';
 
 export {
   PermissionDirective,
+  createPermissionDirectiveDefinition,
+  registerPermissionDirective,
   processPermissionDirectives,
   clearCache,
 } from './directive.js';

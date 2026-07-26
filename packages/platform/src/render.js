@@ -6,8 +6,16 @@
  * @module render
  */
 
-import { effect } from '@kupola/core';
+import { effect, getErrorHandler, runWithScheduler } from '@kupola/core';
 import { HtmlString } from './template.js';
+import { walk } from './directives.js';
+import {
+  createProvideContext,
+  disposeProvideContext,
+  getCurrentProvideContext,
+  provideInContext,
+  runWithProvideContext,
+} from './context.js';
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 /** Minimal HTML entity escaping for text content. */
@@ -69,46 +77,23 @@ function serialize(tpl) {
     parts.push(tpl.strings[i]);
     if (i < tpl.values.length) {
       const v = tpl.values[i];
-      if (isTemplateResultLike(v)) {
-        parts.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
-        parts.push(v.map(serializeNested).join(''));
+      if (isTemplateResultLike(v)
+        || (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0]))) {
+        // Keep nested templates behind the parent value marker so their
+        // reactive parts are owned by a TemplateInstance instead of being
+        // flattened into the parent's HTML string.
+        parts.push(marker(i));
       } else if (typeof v === 'function') {
         parts.push(marker(i));
       } else if (isSignalLike(v)) {
         parts.push(marker(i));
       } else if (isHtmlString(v)) {
         parts.push(v.content);
-      } else {
-        parts.push(escapeHtml(v ?? ''));
-      }
-    }
-  }
-  return parts.join('');
-}
-
-/** Render a nested TemplateResult to a static HTML string. */
-function serializeNested(tpl) {
-  const parts = [];
-  for (let i = 0; i < tpl.strings.length; i++) {
-    parts.push(tpl.strings[i]);
-    if (i < tpl.values.length) {
-      const v = tpl.values[i];
-      if (isTemplateResultLike(v)) {
-        parts.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
-        parts.push(v.map(serializeNested).join(''));
-      } else if (isSignalLike(v)) {
-        const signalValue = v.value;
-        if (isHtmlString(signalValue)) {
-          parts.push(signalValue.content);
-        } else {
-          parts.push(escapeHtml(signalValue));
-        }
-      } else if (typeof v === 'function') {
-        parts.push(marker(i));
-      } else if (isHtmlString(v)) {
-        parts.push(v.content);
+      } else if (v == null || v === false) {
+        const valueMarker = marker(i);
+        const position = classifyPosition(`${parts.join('')}${valueMarker}`, valueMarker);
+        // Inlining `false` would create a truthy HTML boolean attribute.
+        parts.push(position.type === 'text' ? escapeHtml(v ?? '') : valueMarker);
       } else {
         parts.push(escapeHtml(v ?? ''));
       }
@@ -166,6 +151,39 @@ function parseHTML(htmlStr) {
   return tpl.content;
 }
 
+function createMountedTemplate(tpl) {
+  const htmlStr = serialize(tpl);
+  const fragment = parseHTML(htmlStr);
+  const instance = new TemplateInstance();
+  instance.fragment = fragment;
+  try {
+    _processNode(fragment, tpl.values, htmlStr, instance);
+    for (const part of instance.parts) {
+      part.mount();
+    }
+  } catch (error) {
+    try {
+      instance.destroy();
+    } catch {
+      // Preserve the original template mount error.
+    }
+    throw error;
+  }
+  return { fragment, instance };
+}
+
+function destroyTemplateInstances(instances) {
+  let firstError;
+  for (const instance of instances) {
+    try {
+      instance.destroy();
+    } catch (error) {
+      if (!firstError) {firstError = error;}
+    }
+  }
+  if (firstError) {throw firstError;}
+}
+
 // ─── Part Classes ────────────────────────────────────────────────────────────
 
 /**
@@ -182,14 +200,16 @@ export class TextPart {
     /** @type {Text|null} */
     this.node = null;
     this._dispose = null;
+    this._fragmentNodes = [];
+    this._childInstances = [];
+    this._anchor = null;
+    this._provideContext = getCurrentProvideContext();
   }
 
   /** Create the initial DOM and bind the reactive effect. */
   mount() {
-    const placeholder = document.createTextNode('');
-    if (this._insertBefore) {
-      this.container.insertBefore(placeholder, this._insertBefore);
-    } else {
+    const placeholder = this._anchor || document.createTextNode('');
+    if (!this._anchor) {
       this.container.appendChild(placeholder);
     }
     this.node = placeholder;
@@ -197,49 +217,133 @@ export class TextPart {
     if (isSignalLike(this.rawValue)) {
       const raw = this.rawValue;
       this._dispose = effect(() => {
-        const v = raw.value;
-        if (isHtmlString(v)) {
-          this.node.textContent = '';
-          const fragment = parseHTML(v.content);
-          this.node.parentNode.insertBefore(fragment, this.node);
-          this.node.remove();
-        } else {
-          this.node.textContent = v != null ? String(v) : '';
-        }
+        runWithProvideContext(this._provideContext, () => this._setValue(raw.value));
       });
     } else if (typeof this.rawValue === 'function') {
       const fn = this.rawValue;
       this._dispose = effect(() => {
-        const v = fn();
-        if (isTemplateResultLike(v)) {
-          this.node.textContent = '';
-          const fragment = parseHTML(serialize(v));
-          this.node.parentNode.insertBefore(fragment, this.node);
-          this.node.remove();
-        } else if (isHtmlString(v)) {
-          this.node.textContent = '';
-          const fragment = parseHTML(v.content);
-          this.node.parentNode.insertBefore(fragment, this.node);
-          this.node.remove();
-        } else {
-          this.node.textContent = v != null ? String(v) : '';
-        }
+        runWithProvideContext(this._provideContext, () => this._setValue(fn()));
       });
-    } else if (isTemplateResultLike(this.rawValue)) {
-      this.node.textContent = serializeNested(this.rawValue);
-    } else if (isHtmlString(this.rawValue)) {
-      this.node.textContent = '';
-      const fragment = parseHTML(this.rawValue.content);
-      this.node.parentNode.insertBefore(fragment, this.node);
-      this.node.remove();
     } else {
-      this.node.textContent = this.rawValue != null ? String(this.rawValue) : '';
+      this._setValue(this.rawValue);
     }
   }
 
+  _setValue(value) {
+    if (isTemplateResultLike(value)) {
+      this._setTemplate(value);
+    } else if (Array.isArray(value) && value.length > 0
+      && value.every(isTemplateResultLike)) {
+      this._setTemplates(value);
+    } else if (isHtmlString(value)) {
+      this._setHtml(value.content);
+    } else {
+      this._setText(value);
+    }
+  }
+
+  _setText(value) {
+    this._clearDynamicContent();
+    if (this.node) {
+      this.node.textContent = value != null ? String(value) : '';
+    }
+  }
+
+  _setHtml(content) {
+    this._replaceDynamicFragment(parseHTML(content));
+  }
+
+  _setTemplate(tpl) {
+    this._setTemplates([ tpl ]);
+  }
+
+  _setTemplates(templates) {
+    const fragments = [];
+    const instances = [];
+    try {
+      for (const tpl of templates) {
+        const mounted = createMountedTemplate(tpl);
+        fragments.push(mounted.fragment);
+        instances.push(mounted.instance);
+      }
+
+      const fragment = document.createDocumentFragment();
+      for (const childFragment of fragments) {
+        fragment.appendChild(childFragment);
+      }
+
+      const inserted = this._replaceDynamicFragment(fragment, instances);
+      if (!inserted) {
+        destroyTemplateInstances(instances);
+      }
+    } catch (error) {
+      try {
+        destroyTemplateInstances(instances);
+      } catch {
+        // Preserve the original template replacement error.
+      }
+      throw error;
+    }
+  }
+
+  _replaceDynamicFragment(fragment, instance = null) {
+    this._clearDynamicContent();
+    if (!this.node?.parentNode) {return false;}
+    this.node.textContent = '';
+    const nodes = [ ...fragment.childNodes ];
+    this.node.parentNode.insertBefore(fragment, this.node);
+    this._fragmentNodes = nodes;
+    if (instance) {
+      if (Array.isArray(instance)) {
+        this._childInstances.push(...instance);
+      } else {
+        this._childInstances.push(instance);
+      }
+    }
+    return true;
+  }
+
+  _clearDynamicContent() {
+    let firstError;
+    for (const instance of [ ...this._childInstances ]) {
+      try {
+        instance.destroy();
+      } catch (error) {
+        if (!firstError) {firstError = error;}
+      }
+    }
+    this._childInstances.length = 0;
+    for (const node of [ ...this._fragmentNodes ]) {
+      try {
+        node.remove();
+      } catch (error) {
+        if (!firstError) {firstError = error;}
+      }
+    }
+    this._fragmentNodes.length = 0;
+    if (firstError) {throw firstError;}
+  }
+
   destroy() {
-    this._dispose?.();
-    this.node?.remove();
+    let firstError;
+    try {
+      this._dispose?.();
+    } catch (error) {
+      firstError = error;
+    } finally {
+      this._dispose = null;
+    }
+    try {
+      this._clearDynamicContent();
+    } catch (error) {
+      if (!firstError) {firstError = error;}
+    }
+    try {
+      this.node?.remove();
+    } catch (error) {
+      if (!firstError) {firstError = error;}
+    }
+    if (firstError) {throw firstError;}
   }
 }
 
@@ -257,31 +361,38 @@ export class AttrPart {
     this.attrName = attrName;
     this.rawValue = rawValue;
     this._dispose = null;
+    this._provideContext = getCurrentProvideContext();
   }
 
   mount() {
     if (isSignalLike(this.rawValue)) {
       const raw = this.rawValue;
       this._dispose = effect(() => {
-        const v = raw.value;
-        if (v == null || v === false) {
-          this.element.removeAttribute(this.attrName);
-        } else {
-          this.element.setAttribute(this.attrName, String(v));
-        }
+        runWithProvideContext(this._provideContext, () => {
+          const v = raw.value;
+          if (v == null || v === false) {
+            this.element.removeAttribute(this.attrName);
+          } else {
+            this.element.setAttribute(this.attrName, String(v));
+          }
+        });
       });
     } else if (typeof this.rawValue === 'function') {
       const fn = this.rawValue;
       this._dispose = effect(() => {
-        const v = fn();
-        if (v == null || v === false) {
-          this.element.removeAttribute(this.attrName);
-        } else {
-          this.element.setAttribute(this.attrName, String(v));
-        }
+        runWithProvideContext(this._provideContext, () => {
+          const v = fn();
+          if (v == null || v === false) {
+            this.element.removeAttribute(this.attrName);
+          } else {
+            this.element.setAttribute(this.attrName, String(v));
+          }
+        });
       });
     } else {
-      if (this.rawValue != null && this.rawValue !== false) {
+      if (this.rawValue == null || this.rawValue === false) {
+        this.element.removeAttribute(this.attrName);
+      } else {
         this.element.setAttribute(this.attrName, String(this.rawValue));
       }
     }
@@ -306,11 +417,15 @@ export class EventPart {
     this.eventName = attrName.slice(2).toLowerCase(); // onclick → click
     this.handler = handler;
     this._bound = null;
+    this._provideContext = getCurrentProvideContext();
   }
 
   mount() {
     if (typeof this.handler === 'function') {
-      this._bound = (e) => this.handler(e);
+      this._bound = e => runWithProvideContext(
+        this._provideContext,
+        () => this.handler(e),
+      );
       this.element.addEventListener(this.eventName, this._bound);
     }
   }
@@ -323,17 +438,367 @@ export class EventPart {
   }
 }
 
+let iconResolver = null;
+
 function getIconResolver() {
-  if (typeof window !== 'undefined' && window.__kupolaIconResolver) {
-    return window.__kupolaIconResolver;
-  }
-  return null;
+  return iconResolver;
 }
 
 export function setIconResolver(resolver) {
-  if (typeof window !== 'undefined') {
-    window.__kupolaIconResolver = resolver;
+  if (resolver !== null && typeof resolver !== 'function') {
+    throw new TypeError('[kupola] setIconResolver() expects a function or null.');
   }
+  iconResolver = resolver;
+}
+
+function reportIconError(error) {
+  const handler = getErrorHandler();
+  const context = { source: 'platform', phase: 'icon' };
+  if (handler) {
+    try {
+      handler(error, context);
+      return;
+    } catch (handlerError) {
+      if (typeof console !== 'undefined' && typeof console.error === 'function') {
+        console.error('[kupola] Icon error handler failed.', handlerError);
+      }
+      return;
+    }
+  }
+  if (typeof console !== 'undefined' && typeof console.error === 'function') {
+    console.error('[kupola] Icon resolver failed.', error);
+  }
+}
+
+export function mount(tpl, container, options = {}) {
+  const root = typeof container === 'string' ? document.querySelector(container) : container;
+  if (!root) {
+    throw new Error('[kupola] mount() container not found');
+  }
+
+  const scheduler = options?.scheduler;
+  const walkOptions = {
+    scheduler,
+    sanitizer: options?.sanitizer,
+    customDirectives: options?.customDirectives,
+  };
+  const existingNodes = new Set(root.childNodes);
+  const instance = render(tpl, root, { scheduler });
+  const ownedNodes = [ ...root.childNodes ].filter(node => !existingNodes.has(node));
+  const removeOwnedNodes = () => {
+    for (const node of ownedNodes) {
+      if (node.parentNode === root) {node.remove();}
+    }
+  };
+  let walkInstance;
+  try {
+    walkInstance = walk(root, walkOptions);
+  } catch (error) {
+    try {
+      instance.destroy();
+    } catch {
+      // Preserve the original walk initialization error.
+    } finally {
+      removeOwnedNodes();
+    }
+    throw error;
+  }
+
+  const destroyRender = instance.destroy.bind(instance);
+  let destroyed = false;
+  instance.destroy = () => {
+    if (destroyed) {return;}
+    destroyed = true;
+    let firstError;
+    try {
+      walkInstance.destroy();
+    } catch (error) {
+      firstError = error;
+    }
+    try {
+      destroyRender();
+    } catch (error) {
+      if (!firstError) {firstError = error;}
+    } finally {
+      removeOwnedNodes();
+    }
+    if (firstError) {throw firstError;}
+  };
+
+  return instance;
+}
+
+export function createApp(tpl, options = {}) {
+  const plugins = [];
+  let mountedInstance = null;
+  let activePlugins = [];
+  let mounting = false;
+  let destroying = false;
+  let destroyingPromise = null;
+  const scheduler = options?.scheduler;
+  const appProvidedValues = new Map();
+  let appContext = createProvideContext();
+  const resetAppContext = (clearProvidedValues = false) => {
+    disposeProvideContext(appContext);
+    appContext = createProvideContext();
+    if (clearProvidedValues) {appProvidedValues.clear();}
+    for (const [ key, value ] of appProvidedValues) {
+      provideInContext(appContext, key, value);
+    }
+  };
+  const withAppContext = fn => runWithProvideContext(appContext, fn);
+  const withAppScheduler = fn => scheduler === undefined
+    ? withAppContext(fn)
+    : runWithScheduler(scheduler, () => withAppContext(fn));
+  const runAppHook = hook => withAppScheduler(hook);
+  const asyncPluginHook = Symbol('kupolaAsyncPluginHook');
+  const runSyncPluginHook = (plugin, hookName, asyncMethod) => {
+    const result = plugin[hookName]();
+    if (result == null || (typeof result !== 'object' && typeof result !== 'function')
+      || typeof result.then !== 'function') {
+      return;
+    }
+    // The synchronous API cannot await this work. Handle a later rejection so
+    // the caller gets one actionable error instead of an unhandled rejection.
+    Promise.resolve(result).catch(() => {});
+    const error = new Error(
+      `[kupola] Plugin ${hookName}() returned a Promise; use ${asyncMethod}() instead.`,
+    );
+    error[asyncPluginHook] = true;
+    throw error;
+  };
+
+  const destroyPlugins = installedPlugins => {
+    let firstError;
+    for (const plugin of [ ...installedPlugins ].reverse()) {
+      if (typeof plugin.destroy !== 'function') {continue;}
+      try {
+        runSyncPluginHook(plugin, 'destroy', 'destroyAsync');
+      } catch (error) {
+        if (!firstError) {firstError = error;}
+      }
+    }
+    if (firstError) {throw firstError;}
+  };
+
+  const destroyPluginsAsync = async installedPlugins => {
+    let firstError;
+    for (const plugin of [ ...installedPlugins ].reverse()) {
+      if (typeof plugin.destroy !== 'function') {continue;}
+      try {
+        await runAppHook(() => plugin.destroy());
+      } catch (error) {
+        if (!firstError) {firstError = error;}
+      }
+    }
+    if (firstError) {throw firstError;}
+  };
+
+  return {
+    use(plugin) {
+      if (mountedInstance) {
+        throw new Error('[kupola] Cannot add plugins after app mount.');
+      }
+      if (mounting || destroying) {
+        throw new Error('[kupola] Cannot add plugins while an app lifecycle transition is pending.');
+      }
+      if (typeof plugin === 'function') {
+        plugins.push({ install: plugin });
+      } else if (plugin && typeof plugin.install === 'function') {
+        plugins.push(plugin);
+      }
+      return this;
+    },
+
+    provide(key, value) {
+      appProvidedValues.set(key, value);
+      provideInContext(appContext, key, value);
+      return this;
+    },
+
+    mount(container) {
+      return withAppScheduler(() => {
+        if (mounting) {
+          throw new Error('[kupola] Cannot mount while an async app mount is pending.');
+        }
+        if (destroying) {
+          throw new Error('[kupola] Cannot mount while async app cleanup is pending.');
+        }
+        if (mountedInstance) {
+          throw new Error('[kupola] Cannot mount an app more than once. Call destroy() first.');
+        }
+
+        const installedPlugins = [];
+        let instance = null;
+        try {
+          for (const plugin of plugins) {
+            try {
+              runSyncPluginHook(plugin, 'install', 'mountAsync');
+              installedPlugins.push(plugin);
+            } catch (error) {
+              if (error?.[asyncPluginHook]) {installedPlugins.push(plugin);}
+              throw error;
+            }
+          }
+
+          instance = mount(tpl, container, options);
+          mountedInstance = instance;
+          activePlugins = installedPlugins;
+
+          for (const plugin of installedPlugins) {
+            if (typeof plugin.init === 'function') {
+              runSyncPluginHook(plugin, 'init', 'mountAsync');
+            }
+          }
+
+          return instance;
+        } catch (error) {
+          mountedInstance = null;
+          activePlugins = [];
+          try {
+            instance?.destroy();
+          } catch {
+            // Preserve the original mount or plugin error.
+          }
+          try {
+            destroyPlugins(installedPlugins);
+          } catch {
+            // Preserve the original mount or plugin error.
+          }
+          resetAppContext();
+          throw error;
+        }
+      });
+    },
+
+    mountAsync(container) {
+      if (mounting) {
+        return Promise.reject(new Error('[kupola] Cannot mount while an async app mount is pending.'));
+      }
+      if (destroying) {
+        return Promise.reject(new Error('[kupola] Cannot mount while async app cleanup is pending.'));
+      }
+      if (mountedInstance) {
+        return Promise.reject(new Error('[kupola] Cannot mount an app more than once. Call destroy() first.'));
+      }
+
+      mounting = true;
+      const installedPlugins = [];
+      let instance = null;
+      const operation = (async () => {
+        try {
+          for (const plugin of plugins) {
+            await runAppHook(() => plugin.install());
+            installedPlugins.push(plugin);
+          }
+
+          instance = runAppHook(() => mount(tpl, container, options));
+          mountedInstance = instance;
+          activePlugins = installedPlugins;
+
+          for (const plugin of installedPlugins) {
+            if (typeof plugin.init === 'function') {
+              await runAppHook(() => plugin.init());
+            }
+          }
+
+          return instance;
+        } catch (error) {
+          mountedInstance = null;
+          activePlugins = [];
+          try {
+            if (instance) {runAppHook(() => instance.destroy());}
+          } catch {
+            // Preserve the original mount or plugin error.
+          }
+          try {
+            await runAppHook(() => destroyPluginsAsync(installedPlugins));
+          } catch {
+            // Preserve the original mount or plugin error.
+          }
+          runAppHook(() => resetAppContext());
+          throw error;
+        } finally {
+          mounting = false;
+        }
+      })();
+
+      return operation;
+    },
+
+    destroyAsync() {
+      if (mounting) {
+        return Promise.reject(new Error('[kupola] Cannot destroy while an async app mount is pending.'));
+      }
+      if (destroying) {
+        return destroyingPromise;
+      }
+
+      const instance = mountedInstance;
+      const installedPlugins = activePlugins;
+      mountedInstance = null;
+      activePlugins = [];
+      destroying = true;
+
+      const operation = (async () => {
+        let firstError;
+        try {
+          if (instance) {runAppHook(() => instance.destroy());}
+        } catch (error) {
+          firstError = error;
+        }
+
+        try {
+          await destroyPluginsAsync(installedPlugins);
+        } catch (error) {
+          if (!firstError) {firstError = error;}
+        } finally {
+          try {
+            runAppHook(() => resetAppContext(true));
+          } catch (error) {
+            if (!firstError) {firstError = error;}
+          }
+          destroying = false;
+          destroyingPromise = null;
+        }
+        if (firstError) {throw firstError;}
+      })();
+      destroyingPromise = operation;
+      return operation;
+    },
+
+    destroy() {
+      if (mounting) {
+        throw new Error('[kupola] Cannot destroy while an async app mount is pending.');
+      }
+      if (destroying) {
+        throw new Error('[kupola] Cannot destroy while async app cleanup is pending.');
+      }
+      withAppScheduler(() => {
+        const instance = mountedInstance;
+        const installedPlugins = activePlugins;
+        mountedInstance = null;
+        activePlugins = [];
+
+        let firstError;
+        try {
+          instance?.destroy();
+        } catch (error) {
+          firstError = error;
+        }
+
+        try {
+          destroyPlugins(installedPlugins);
+        } catch (error) {
+          if (!firstError) {firstError = error;}
+        }
+
+        resetAppContext(true);
+
+        if (firstError) {throw firstError;}
+      });
+    },
+  };
 }
 
 /**
@@ -350,37 +815,62 @@ export class IconPart {
     this.nameValue = nameValue;
     this.sizeValue = sizeValue;
     this._dispose = null;
+    this._activeRequest = null;
+    this._isDestroyed = false;
+    this._provideContext = getCurrentProvideContext();
   }
 
-  async mount() {
+  mount() {
     const resolveIcon = getIconResolver();
-    
+
     const renderIcon = async () => {
-      const name = isSignalLike(this.nameValue) ? this.nameValue.value : this.nameValue;
-      const size = isSignalLike(this.sizeValue) ? this.sizeValue.value : this.sizeValue;
-      
-      if (!name) {
+      if (this._isDestroyed) {return;}
+
+      let requestId = null;
+      try {
+        const name = isSignalLike(this.nameValue) ? this.nameValue.value : this.nameValue;
+        const size = isSignalLike(this.sizeValue) ? this.sizeValue.value : this.sizeValue;
+
+        if (!name || !resolveIcon) {
+          this._activeRequest = null;
+          this.element.innerHTML = '';
+          return;
+        }
+
+        requestId = Symbol();
+        this._activeRequest = requestId;
         this.element.innerHTML = '';
-        return;
-      }
-      
-      if (resolveIcon) {
         const svgContent = await resolveIcon(name, size);
-        this.element.innerHTML = svgContent || '';
+        if (this._activeRequest === requestId && !this._isDestroyed) {
+          this.element.innerHTML = svgContent || '';
+        }
+      } catch (error) {
+        if (!this._isDestroyed && (requestId === null || this._activeRequest === requestId)) {
+          this.element.innerHTML = '';
+          reportIconError(error);
+        }
+      } finally {
+        if (this._activeRequest === requestId) {
+          this._activeRequest = null;
+        }
       }
     };
-    
+
     if (isSignalLike(this.nameValue) || isSignalLike(this.sizeValue)) {
       this._dispose = effect(() => {
-        renderIcon();
+        runWithProvideContext(this._provideContext, renderIcon);
       });
     } else {
-      renderIcon();
+      runWithProvideContext(this._provideContext, renderIcon);
     }
   }
 
   destroy() {
+    if (this._isDestroyed) {return;}
+    this._isDestroyed = true;
+    this._activeRequest = null;
     this._dispose?.();
+    this._dispose = null;
   }
 }
 
@@ -399,10 +889,16 @@ export class TemplateInstance {
 
   /** Remove all reactive effects and event listeners. */
   destroy() {
+    let firstError;
     for (const part of this.parts) {
-      part.destroy();
+      try {
+        part.destroy();
+      } catch (error) {
+        if (!firstError) {firstError = error;}
+      }
     }
     this.parts.length = 0;
+    if (firstError) {throw firstError;}
   }
 }
 
@@ -423,28 +919,32 @@ export class TemplateInstance {
  * @param {Element}        container DOM element to render into
  * @returns {TemplateInstance}       Call `.destroy()` to clean up
  */
-export function render(tpl, container) {
-  const instance = new TemplateInstance();
+function renderTemplate(tpl, container) {
+  const { fragment, instance } = createMountedTemplate(tpl);
 
-  // 1. Serialize template to HTML string with markers
-  const htmlStr = serialize(tpl);
-
-  // 2. Parse HTML into DOM
-  const fragment = parseHTML(htmlStr);
-  instance.fragment = fragment;
-
-  // 3. Walk DOM to find markers and create Parts
-  _processNode(fragment, tpl.values, htmlStr, instance);
-
-  // 4. Mount all parts (establish reactive effects / event listeners)
-  for (const part of instance.parts) {
-    part.mount();
+  try {
+    container.appendChild(fragment);
+  } catch (error) {
+    try {
+      instance.destroy();
+    } catch {
+      // Preserve the original container append error.
+    }
+    throw error;
   }
 
-  // 5. Append fragment to container
-  container.appendChild(fragment);
-
   return instance;
+}
+
+/**
+ * Render with an optional app-local scheduler. Without the option, preserve
+ * the legacy global scheduler behavior.
+ */
+export function render(tpl, container, options = {}) {
+  if (options && options.scheduler !== undefined) {
+    return runWithScheduler(options.scheduler, () => renderTemplate(tpl, container));
+  }
+  return renderTemplate(tpl, container);
 }
 
 /**
@@ -490,6 +990,9 @@ function _processTextNode(textNode, values, htmlStr, instance, parent) {
       parent.insertBefore(document.createTextNode(before), textNode);
     }
 
+    const anchor = document.createTextNode('');
+    parent.insertBefore(anchor, textNode);
+
     // Create TextPart
     const part = new TextPart(parent, values[i]);
     instance.parts.push(part);
@@ -506,7 +1009,7 @@ function _processTextNode(textNode, values, htmlStr, instance, parent) {
 
     // The TextPart will create its own text node during mount().
     // We need to tell it where to insert (before afterNode, or at end).
-    part._insertBefore = afterNode !== textNode ? afterNode : null;
+    part._anchor = anchor;
 
     // Recursively check the "after" text for more markers
     if (after) {
@@ -523,10 +1026,10 @@ function _processElement(element, values, htmlStr, instance) {
   if (element.tagName.toLowerCase() === 'icon') {
     const nameAttr = element.getAttribute('name');
     const sizeAttr = element.getAttribute('size');
-    
+
     let nameValue = nameAttr;
     let sizeValue = sizeAttr ? parseInt(sizeAttr, 10) : 16;
-    
+
     for (let i = 0; i < values.length; i++) {
       const m = marker(i);
       if (nameAttr && nameAttr.includes(m)) {
@@ -538,7 +1041,7 @@ function _processElement(element, values, htmlStr, instance) {
         element.removeAttribute('size');
       }
     }
-    
+
     const part = new IconPart(element, nameValue, sizeValue);
     instance.parts.push(part);
     return;

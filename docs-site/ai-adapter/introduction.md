@@ -139,6 +139,11 @@ adapter.flow.define('发工资条', {
 // 4. 处理自然语言输入
 const result = await adapter.process('查询张三');
 console.log(result.message); // 🔍 Found 1 employee record(s).
+
+// 5. 列出和执行流程
+const flows = await adapter.flow.list();
+console.log(flows); // [{ name: '发工资条', createdAt: '2026-07-01', lastRunAt: '2026-07-25' }]
+await adapter.flow.execute('发工资条', { month: '2026-07' });
 ```
 
 ## 核心概念
@@ -148,10 +153,10 @@ console.log(result.message); // 🔍 Found 1 employee record(s).
 | **意图解析** | 将自然语言转为结构化命令 | `IntentParser` / `RuleBasedParser` |
 | **查询引擎** | 处理只读数据查询，支持缓存、分页、聚合 | `QueryEngine` |
 | **执行引擎** | 处理写操作（增删改），支持确认、撤销、审计、**操作依赖** | `ActionEngine` |
-| **流程引擎** | 处理多步骤可重复流程，支持持久化、自动学习 | `FlowEngine` |
+| **流程引擎** | 处理多步骤可重复流程，支持持久化（localStorage）、自动学习 | `FlowEngine` |
 | **事件总线** | 标准化 pub/sub，支持 `once()` / `wildcard()` | `EventBus` |
 | **中间件** | 可扩展的处理管道，内置速率限制、权限守卫、DevTools 日志 | `adapter.use()` |
-| **UI 组件** | 对话面板、数据看板、语音交互 | `AIPanel` / `AIDashboard` / `VoiceController` |
+| **UI 组件** | 对话面板（含我的流程 tab）、数据看板、语音交互 | `AIPanel` / `AIDashboard` / `VoiceController` |
 
 ## 安全模型
 

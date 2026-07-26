@@ -131,6 +131,24 @@ describe('Heatmap', () => {
       expect(cell.dataset.value).toBe('99');
       hm.destroy();
     });
+
+    test('preserves cell interactions after updating data', () => {
+      const onCellClick = jest.fn();
+      const hm = Heatmap({ ...defaultOpts, onCellClick });
+      hm.updateData([ { date: '2024-01-15', value: 99 } ]);
+
+      hm.element.querySelector('.ds-heatmap__cell[data-date="2024-01-15"]').click();
+
+      expect(onCellClick).toHaveBeenCalledWith({ date: '2024-01-15', value: 99 });
+      hm.destroy();
+    });
+
+    test('accepts non-array updates as an empty dataset', () => {
+      const hm = Heatmap(defaultOpts);
+      expect(() => hm.updateData(null)).not.toThrow();
+      expect(hm.element.querySelector('[data-date="2024-01-15"]').dataset.value).toBe('0');
+      hm.destroy();
+    });
   });
 
   // ── onCellClick ──
@@ -155,6 +173,8 @@ describe('Heatmap', () => {
       expect(document.querySelector('.ds-heatmap')).not.toBeNull();
       hm.destroy();
       expect(document.querySelector('.ds-heatmap')).toBeNull();
+      expect(() => hm.destroy()).not.toThrow();
+      expect(() => hm.updateData(sampleData)).not.toThrow();
       document.body.innerHTML = '';
     });
   });

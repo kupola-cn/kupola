@@ -13,6 +13,7 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.useRealTimers();
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   resetScheduler();
 });
@@ -101,6 +102,33 @@ describe('Countdown behavior', () => {
     Date.now.mockRestore();
   });
 
+  test('supports Date targets, onTick, and the onFinish callback alias', () => {
+    const now = Date.now();
+    jest.spyOn(Date, 'now').mockReturnValue(now);
+    const onTick = jest.fn();
+    const onFinish = jest.fn();
+    const view = Countdown({ target: new Date(now + 1000), onTick, onFinish });
+
+    expect(onTick).toHaveBeenLastCalledWith(1000);
+    Date.now.mockReturnValue(now + 1000);
+    jest.advanceTimersByTime(1000);
+    expect(onTick).toHaveBeenLastCalledWith(0);
+    expect(onFinish).toHaveBeenCalledTimes(1);
+    view.destroy();
+  });
+
+  test('does not leave an interval running for an expired target', () => {
+    const now = Date.now();
+    jest.spyOn(Date, 'now').mockReturnValue(now);
+    const onComplete = jest.fn();
+
+    const view = Countdown({ target: now - 1, onComplete });
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+    view.destroy();
+  });
+
   test('stop() halts the countdown', () => {
     const now = Date.now();
     jest.spyOn(Date, 'now').mockReturnValue(now);
@@ -149,7 +177,13 @@ describe('Countdown destroy', () => {
     const view = Countdown({ target: now + 60000 });
     document.body.appendChild(view.element);
 
+    expect(jest.getTimerCount()).toBe(1);
     expect(() => view.destroy()).not.toThrow();
+    expect(() => view.destroy()).not.toThrow();
+    expect(jest.getTimerCount()).toBe(0);
+
+    view.start(now + 120000);
+    expect(jest.getTimerCount()).toBe(0);
 
     Date.now.mockRestore();
   });

@@ -60,9 +60,10 @@ describe('signal', () => {
     expect(String(s)).toBe('hello');
   });
 
-  test('toJSON() returns JSON string', () => {
+  test('toJSON() returns a JSON-serializable value', () => {
     const s = signal({ a: 1 });
-    expect(s.toJSON()).toBe('{"a":1}');
+    expect(s.toJSON()).toEqual({ a: 1 });
+    expect(JSON.stringify(s)).toBe('{"a":1}');
   });
 
   test('handles NaN correctly (Object.is)', () => {

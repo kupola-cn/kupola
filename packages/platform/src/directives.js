@@ -24,7 +24,14 @@
  * @module directives
  */
 
-import { signal, withoutTracking, effect, flushJobs } from '@kupola/core';
+import {
+  effect,
+  flushJobs,
+  getCurrentScheduler,
+  runWithScheduler,
+  signal,
+  withoutTracking,
+} from '@kupola/core';
 
 // ─── Scope Registry ──────────────────────────────────────────────────────────
 
@@ -39,6 +46,14 @@ function formatDiagnostic(code, message) {
 
 function warn(code, message) {
   console.warn(formatDiagnostic(code, message));
+}
+
+function flushReactiveJobs(scheduler = getCurrentScheduler()) {
+  if (scheduler) {
+    if (typeof scheduler.flushJobs === 'function') {scheduler.flushJobs();}
+    return;
+  }
+  flushJobs();
 }
 
 /**
@@ -188,8 +203,16 @@ function isSafeScopePropertyName(name) {
   return safePattern.test(name) && !name.includes('__proto__') && !name.includes('constructor') && !name.includes('prototype');
 }
 
-function createDomContext(root, disposers, refs = Object.create(null), appRefs = refs, sanitizer) {
+function createDomContext(
+  root,
+  disposers,
+  refs = Object.create(null),
+  appRefs = refs,
+  sanitizer,
+  scopedDirectives = null,
+) {
   const queryRoot = root && root.querySelector ? root : document;
+  const scheduler = getCurrentScheduler();
 
   const queryOne = (selector, context = queryRoot) => $(selector, context);
   const queryAll = (selector, context = queryRoot) => $$(selector, context);
@@ -268,7 +291,7 @@ function createDomContext(root, disposers, refs = Object.create(null), appRefs =
       const previous = oldValue;
       oldValue = value;
       runCallback(value, previous);
-    });
+    }, { scheduler: options.scheduler !== undefined ? options.scheduler : scheduler });
 
     const dispose = () => {
       if (!active) {return;}
@@ -286,6 +309,8 @@ function createDomContext(root, disposers, refs = Object.create(null), appRefs =
     refs,
     appRefs,
     sanitizer,
+    customDirectives: scopedDirectives,
+    scheduler,
     $: queryOne,
     $$: queryAll,
     on,
@@ -383,15 +408,6 @@ function scheduleCacheCleanup() {
       }
     }
   }, CACHE_EXPIRE_MS);
-}
-
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
-    if (cacheCleanupTimer) {
-      clearTimeout(cacheCleanupTimer);
-      cacheCleanupTimer = null;
-    }
-  });
 }
 
 function cacheExpression(key, fn) {
@@ -835,6 +851,7 @@ function handleBind(el, expr, attrName, scope, disposers) {
  * Apply k-on directive: event listener.
  */
 function handleOn(el, expr, eventName, modifiers, scope, disposers) {
+  const scheduler = getCurrentScheduler();
   validateEventModifiers(el, eventName, modifiers);
   const stop = modifiers.includes('stop');
   const prevent = modifiers.includes('prevent');
@@ -903,12 +920,14 @@ function handleOn(el, expr, eventName, modifiers, scope, disposers) {
 
   const run = (e) => {
     if (!active) {return;}
-    evaluateStatement(expr, scope, { event: e, $event: e }, {
-      directive: `k-on:${eventName}`,
-      element: el,
+    runWithScheduler(scheduler, () => {
+      evaluateStatement(expr, scope, { event: e, $event: e }, {
+        directive: `k-on:${eventName}`,
+        element: el,
+      });
+      flushReactiveJobs(scheduler);
+      if (once) {cleanup();}
     });
-    flushJobs();
-    if (once) {cleanup();}
   };
 
   const handler = (e) => {
@@ -1165,6 +1184,7 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
   }
 
   validateModelModifiers(el, modifiers);
+  const scheduler = getCurrentScheduler();
 
   const debounce = modifiers.includes('debounce');
   const debounceDelay = Number(modifiers.find(item => /^\d+$/.test(item)) || 250);
@@ -1181,9 +1201,11 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
 
   // Listen for user input
   const commit = () => {
-    const currentValue = evaluate(expr, scope, null, { directive: 'k-model', element: el });
-    setModelExpression(expr, scope, getModelValue(el, currentValue, modifiers), el);
-    flushJobs();
+    runWithScheduler(scheduler, () => {
+      const currentValue = evaluate(expr, scope, null, { directive: 'k-model', element: el });
+      setModelExpression(expr, scope, getModelValue(el, currentValue, modifiers), el);
+      flushReactiveJobs(scheduler);
+    });
   };
 
   const inputHandler = (event) => {
@@ -1218,8 +1240,10 @@ function handleModel(el, expr, scope, disposers, modifiers = []) {
   const form = el.form;
   if (form) {
     const formResetHandler = () => {
-      setModelExpression(expr, scope, initialValue, el);
-      flushJobs();
+      runWithScheduler(scheduler, () => {
+        setModelExpression(expr, scope, initialValue, el);
+        flushReactiveJobs(scheduler);
+      });
     };
     form.addEventListener('reset', formResetHandler);
     disposers.push(() => {
@@ -1287,10 +1311,16 @@ function removeMountedNodes(nodes) {
 }
 
 function cleanDisposers(disposers) {
+  let firstError;
   for (const dispose of disposers) {
-    dispose();
+    try {
+      dispose();
+    } catch (error) {
+      if (!firstError) {firstError = error;}
+    }
   }
   disposers.length = 0;
+  return firstError;
 }
 
 function nextFrame(callback) {
@@ -1532,19 +1562,25 @@ function handleIf(el, expr, scope, disposers, ctx) {
     childDisposers = [];
     currentBranch = null;
 
-    cleanDisposers(disposersForNodes);
+    let firstError = cleanDisposers(disposersForNodes);
 
     if (withTransition && transitionEl) {
       let cancel = null;
-      cancel = runTransition(transitionEl, 'leave', () => {
+      try {
+        cancel = runTransition(transitionEl, 'leave', () => {
+          removeMountedNodes(nodes);
+          cancelLeaves = cancelLeaves.filter(item => item !== cancel);
+        });
+        cancelLeaves.push(cancel);
+      } catch (error) {
         removeMountedNodes(nodes);
-        cancelLeaves = cancelLeaves.filter(item => item !== cancel);
-      });
-      cancelLeaves.push(cancel);
-      return;
+        if (!firstError) {firstError = error;}
+      }
+    } else {
+      removeMountedNodes(nodes);
     }
 
-    removeMountedNodes(nodes);
+    if (firstError) {throw firstError;}
   };
 
   const mount = (branch, withTransition = false) => {
@@ -1686,17 +1722,21 @@ function handleFor(el, expr, scope, disposers, ctx) {
   let keyedBlocks = new Map();
 
   const unmount = () => {
-    cleanDisposers(childDisposers);
+    const firstError = cleanDisposers(childDisposers);
     removeMountedNodes(currentNodes);
     currentNodes = [];
+    if (firstError) {throw firstError;}
   };
 
   const unmountKeyed = () => {
+    let firstError;
     for (const block of keyedBlocks.values()) {
-      cleanDisposers(block.disposers);
+      const error = cleanDisposers(block.disposers);
       removeMountedNodes(block.nodes);
+      if (!firstError && error) {firstError = error;}
     }
     keyedBlocks = new Map();
+    if (firstError) {throw firstError;}
   };
 
   const createLocals = (entry) => {
@@ -1761,12 +1801,15 @@ function handleFor(el, expr, scope, disposers, ctx) {
       insertNodesBefore(marker.parentNode, marker, block.nodes);
     }
 
+    let cleanupError;
     for (const block of staleBlocks.values()) {
-      cleanDisposers(block.disposers);
+      const error = cleanDisposers(block.disposers);
       removeMountedNodes(block.nodes);
+      if (!cleanupError && error) {cleanupError = error;}
     }
 
     keyedBlocks = nextBlocks;
+    if (cleanupError) {throw cleanupError;}
   };
 
   const dispose = effect(() => {
@@ -1818,8 +1861,10 @@ export function registerDirective(name, definition) {
   customDirectives.set(name, definition);
 }
 
-function validateDirectiveSyntax(el, directiveName, base, arg, modifiers) {
-  if (!KNOWN_DIRECTIVES.has(base) && !customDirectives.has(base)) {
+function validateDirectiveSyntax(el, directiveName, base, arg, modifiers, scopedDirectives) {
+  if (!KNOWN_DIRECTIVES.has(base)
+    && !scopedDirectives?.has(base)
+    && !customDirectives.has(base)) {
     warn('W017', `${describeElement(el)} has unknown directive "${directiveName}".`);
     return false;
   }
@@ -2048,7 +2093,9 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
     const { base, arg, modifiers } = parseDirective(full);
     const directiveName = name.startsWith(':') || name.startsWith('@') ? name : full;
 
-    if (!validateDirectiveSyntax(el, directiveName, base, arg, modifiers)) {continue;}
+    if (!validateDirectiveSyntax(el, directiveName, base, arg, modifiers, ctx.customDirectives)) {
+      continue;
+    }
 
     if (base === 'k-on' && !arg) {
       warnMissingDirectiveArgument(el, directiveName, 'an event name');
@@ -2087,7 +2134,7 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
       break;
     case 'k-init':
       evaluateStatement(expr, scope, null, { directive: 'k-init', element: el });
-      flushJobs();
+      flushReactiveJobs();
       break;
     case 'k-cloak':
       el.removeAttribute('k-cloak');
@@ -2104,7 +2151,9 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
       }
       break;
     default: {
-      const customDirective = customDirectives.get(base);
+      const customDirective = ctx.customDirectives?.has(base)
+        ? ctx.customDirectives.get(base)
+        : customDirectives.get(base);
       if (customDirective) {
         const binding = { value: expr, arg, modifiers };
         if (customDirective.mount) {
@@ -2128,16 +2177,16 @@ function getDirectDataChildren(el) {
   ));
 }
 
-function processNestedDataChildren(children, disposers, appRefs, sanitizer) {
+function processNestedDataChildren(children, disposers, appRefs, sanitizer, scopedDirectives) {
   for (const child of children) {
     if (!child.parentElement || !child.hasAttribute('k-data')) {continue;}
-    processDataElement(child, disposers, appRefs, sanitizer);
+    processDataElement(child, disposers, appRefs, sanitizer, scopedDirectives);
   }
 }
 
 function processSubtree(el, scope, disposers, ctx, allowRootTransition = false) {
   if (el.hasAttribute('k-data')) {
-    processDataElement(el, disposers, ctx.appRefs, ctx.sanitizer);
+    processDataElement(el, disposers, ctx.appRefs, ctx.sanitizer, ctx.customDirectives);
     return;
   }
 
@@ -2145,7 +2194,13 @@ function processSubtree(el, scope, disposers, ctx, allowRootTransition = false) 
   const nestedDataChildren = skipChildren ? [] : getDirectDataChildren(el);
   if (!skipChildren) {
     walkChildren(el, scope, disposers, ctx);
-    processNestedDataChildren(nestedDataChildren, disposers, ctx.appRefs, ctx.sanitizer);
+    processNestedDataChildren(
+      nestedDataChildren,
+      disposers,
+      ctx.appRefs,
+      ctx.sanitizer,
+      ctx.customDirectives,
+    );
   }
 }
 
@@ -2167,9 +2222,22 @@ function walkChildren(parent, scope, disposers, ctx) {
 /**
  * Process a k-data element: create scope, process self + children.
  */
-function processDataElement(el, disposers, appRefs = Object.create(null), sanitizer) {
+function processDataElement(
+  el,
+  disposers,
+  appRefs = Object.create(null),
+  sanitizer,
+  scopedDirectives,
+) {
   const expr = el.getAttribute('k-data');
-  const ctx = createDomContext(el, disposers, Object.create(null), appRefs, sanitizer);
+  const ctx = createDomContext(
+    el,
+    disposers,
+    Object.create(null),
+    appRefs,
+    sanitizer,
+    scopedDirectives,
+  );
   let data = {};
   if (isBlankExpression(expr)) {
     warnEmptyDirectiveExpression(el, 'k-data');
@@ -2199,7 +2267,13 @@ function processDataElement(el, disposers, appRefs = Object.create(null), saniti
 
   // Handle nested k-data elements
   if (!skipChildren) {
-    processNestedDataChildren(nestedDataChildren, disposers, appRefs, sanitizer);
+    processNestedDataChildren(
+      nestedDataChildren,
+      disposers,
+      appRefs,
+      sanitizer,
+      scopedDirectives,
+    );
   }
 
   return ctx;
@@ -2268,6 +2342,15 @@ function resolveOptionalWalkRoot(root) {
   return root;
 }
 
+function normalizeCustomDirectives(value) {
+  if (value === undefined || value === null) {return null;}
+  if (value instanceof Map) {return value;}
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    return new Map(Object.entries(value));
+  }
+  throw new TypeError('[kupola] walk() customDirectives must be a Map or object.');
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -2279,7 +2362,7 @@ function resolveOptionalWalkRoot(root) {
  * `k-init`, `k-cloak` directives.
  *
  * @param {Element|string} root  Root element or selector to walk.
- * @param {{ autoDestroy?: boolean }} [options]
+ * @param {{ autoDestroy?: boolean, scheduler?: Object|null }} [options]
  * @returns {{
  *   destroy: Function, root: Element, refs: Object,
  *   $: Function, $$: Function, on: Function, watch: Function
@@ -2287,6 +2370,13 @@ function resolveOptionalWalkRoot(root) {
  *   Call destroy() to clean up all effects/listeners.
  */
 export function walk(root, options = {}) {
+  if (options && options.scheduler !== undefined) {
+    return runWithScheduler(options.scheduler, () => walkInternal(root, options));
+  }
+  return walkInternal(root, options);
+}
+
+function walkInternal(root, options = {}) {
   root = resolveWalkRoot(root);
   warnDuplicateWalk(root);
   if (options.sanitizer != null && typeof options.sanitizer !== 'function') {
@@ -2297,11 +2387,19 @@ export function walk(root, options = {}) {
 
   /** @type {Function[]} */
   const disposers = [];
-  const ctx = createDomContext(root, disposers, Object.create(null), undefined, options.sanitizer);
+  const scopedDirectives = normalizeCustomDirectives(options.customDirectives);
+  const ctx = createDomContext(
+    root,
+    disposers,
+    Object.create(null),
+    undefined,
+    options.sanitizer,
+    scopedDirectives,
+  );
 
   try {
     if (root.hasAttribute && root.hasAttribute('k-data')) {
-      processDataElement(root, disposers, ctx.refs, ctx.sanitizer);
+      processDataElement(root, disposers, ctx.refs, ctx.sanitizer, ctx.customDirectives);
     } else {
       // Find top-level k-data elements within root
       const dataElements = root.querySelectorAll
@@ -2331,7 +2429,7 @@ export function walk(root, options = {}) {
             parent = parent.parentElement;
           }
           if (!isNested) {
-            processDataElement(el, disposers, ctx.refs, ctx.sanitizer);
+            processDataElement(el, disposers, ctx.refs, ctx.sanitizer, ctx.customDirectives);
           }
         }
       } else {
@@ -2346,6 +2444,7 @@ export function walk(root, options = {}) {
     }
   } catch (error) {
     cleanDisposers(disposers);
+    walkRootCount -= 1;
     throw error;
   }
 
@@ -2363,10 +2462,8 @@ export function walk(root, options = {}) {
       walkRootCount -= 1;
       activeWalkRoots.delete(root);
       unobserveAutoDestroyRoot(root);
-      for (const dispose of disposers) {
-        dispose();
-      }
-      disposers.length = 0;
+      const firstError = cleanDisposers(disposers);
+      if (firstError) {throw firstError;}
     },
   };
 

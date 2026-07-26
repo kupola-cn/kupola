@@ -22,6 +22,7 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a NumberInput component instance.
@@ -49,62 +50,18 @@ export function NumberInput(options = {}) {
     onChange = null,
   } = options;
 
-  // Generate unique id for label association
   const _id = id || (label ? `ds-numinput-${Math.random().toString(36).slice(2, 8)}` : '');
   const _hasLabel = !!label;
+  const listeners = createListenerRegistry();
+  let destroyed = false;
 
-  let _value = _clamp(initialValue);
-
-  // ── Public API ─────────────────────────────────────────────────────────────
-
-  function getValue() {
-    return _value;
+  function normalizeValue(val) {
+    const num = Number(val);
+    const normalized = Number.isFinite(num) ? num : 0;
+    return Math.max(min, Math.min(max, normalized));
   }
 
-  function setValue(val) {
-    _value = _clamp(Number(val) || 0);
-    if (inputEl) {inputEl.value = _value;}
-    _updateButtons();
-    if (onChange) {onChange(_value);}
-  }
-
-  function destroy() {
-    if (inputEl) {inputEl.removeEventListener('change', _handleChange);}
-    if (decBtn) {decBtn.removeEventListener('click', _decrease);}
-    if (incBtn) {incBtn.removeEventListener('click', _increase);}
-    instance.destroy();
-  }
-
-  // ── Internal ───────────────────────────────────────────────────────────────
-
-  function _clamp(val) {
-    return Math.max(min, Math.min(max, val));
-  }
-
-  function _handleChange(e) {
-    const val = Number(e.target.value);
-    if (!isNaN(val)) {
-      _value = _clamp(val);
-      e.target.value = _value;
-      _updateButtons();
-      if (onChange) {onChange(_value);}
-    }
-  }
-
-  function _increase() {
-    setValue(_value + step);
-  }
-
-  function _decrease() {
-    setValue(_value - step);
-  }
-
-  function _updateButtons() {
-    if (decBtn) {decBtn.disabled = disabled || _value <= min;}
-    if (incBtn) {incBtn.disabled = disabled || _value >= max;}
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
+  let _value = normalizeValue(initialValue);
 
   const tpl = html`
     ${_hasLabel ? html`<label class="ds-form-label" for="${_id}">${label}</label>` : ''}
@@ -128,23 +85,68 @@ export function NumberInput(options = {}) {
     inputEl.max = max;
     inputEl.step = step;
     inputEl.disabled = disabled;
-    inputEl.addEventListener('change', _handleChange);
   }
 
-  if (decBtn) {
-    decBtn.disabled = disabled || _value <= min;
-    decBtn.addEventListener('click', _decrease);
+  function _updateButtons() {
+    if (decBtn) {decBtn.disabled = disabled || _value <= min;}
+    if (incBtn) {incBtn.disabled = disabled || _value >= max;}
   }
 
-  if (incBtn) {
-    incBtn.disabled = disabled || _value >= max;
-    incBtn.addEventListener('click', _increase);
+  function _handleChange(e) {
+    const val = Number(e.target.value);
+    if (!Number.isFinite(val)) {return;}
+    _value = normalizeValue(val);
+    e.target.value = _value;
+    _updateButtons();
+    onChange?.(_value);
   }
 
-  return {
+  function _increase() {
+    if (disabled || destroyed || _value >= max) {return;}
+    _value = normalizeValue(_value + step);
+    inputEl.value = _value;
+    _updateButtons();
+    onChange?.(_value);
+  }
+
+  function _decrease() {
+    if (disabled || destroyed || _value <= min) {return;}
+    _value = normalizeValue(_value - step);
+    inputEl.value = _value;
+    _updateButtons();
+    onChange?.(_value);
+  }
+
+  function getValue() {
+    return _value;
+  }
+
+  function setValue(val) {
+    if (destroyed) {return;}
+    _value = normalizeValue(val);
+    inputEl.value = _value;
+    _updateButtons();
+    onChange?.(_value);
+  }
+
+  _updateButtons();
+
+  listeners.on(inputEl, 'change', _handleChange);
+  listeners.on(decBtn, 'click', _decrease);
+  listeners.on(incBtn, 'click', _increase);
+
+  const api = {
     get element() { return container; },
     getValue,
     setValue,
-    destroy,
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      listeners.destroy();
+      instance.destroy();
+      Object.freeze(api);
+    },
   };
+
+  return api;
 }

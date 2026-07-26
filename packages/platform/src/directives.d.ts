@@ -3,6 +3,8 @@
  * @module @kupola/platform/directives
  */
 
+import type { Scheduler } from '@kupola/core';
+
 export type KupolaRefValue = Element | Element[];
 
 export function $(selector: string, context?: ParentNode): Element | null;
@@ -27,7 +29,7 @@ export interface ScopeContext {
   watch<T>(
     getter: () => T,
     callback: (value: T, oldValue: T | undefined) => void | (() => void),
-    options?: { immediate?: boolean }
+    options?: { immediate?: boolean; scheduler?: Scheduler | null }
   ): () => void;
   update<T>(name: string, updater: (value: T) => T): T;
   patch<T extends Record<string, unknown>>(name: string, partial: Partial<T>): T;
@@ -41,6 +43,8 @@ export type ScopeDefinition =
 export interface WalkOptions {
   autoDestroy?: boolean;
   sanitizer?: ((html: string, element: Element) => string) | null;
+  scheduler?: Scheduler | null;
+  customDirectives?: Map<string, DirectiveDefinition> | Record<string, DirectiveDefinition>;
 }
 
 /** Result of walking a DOM tree — call destroy() to clean up all effects and listeners. */
@@ -59,10 +63,27 @@ export interface WalkResult {
   watch<T>(
     getter: () => T,
     callback: (value: T, oldValue: T | undefined) => void | (() => void),
-    options?: { immediate?: boolean }
+    options?: { immediate?: boolean; scheduler?: Scheduler | null }
   ): () => void;
   /** Clean up all reactive effects and event listeners created by walk(). */
   destroy(): void;
+}
+
+export interface DirectiveBinding {
+  value: string;
+  arg: string | null;
+  modifiers: string[];
+}
+
+export interface DirectiveInstance {
+  destroy?(): void;
+  update?(binding: DirectiveBinding): void;
+}
+
+export interface DirectiveDefinition {
+  mount?(el: Element, binding: DirectiveBinding): DirectiveInstance | void;
+  update?(el: Element, binding: DirectiveBinding): void;
+  unmount?(el: Element): void;
 }
 
 /**
@@ -107,3 +128,8 @@ export function destroyWalk(root: Element | string): boolean;
  * Register a named data scope for use with `k-data="name"`.
  */
 export function defineScope(name: string, definition: ScopeDefinition): void;
+
+/**
+ * Register a custom directive for walk().
+ */
+export function registerDirective(name: string, definition: DirectiveDefinition): void;

@@ -21,6 +21,7 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a Tag component instance.
@@ -41,6 +42,7 @@ export function Tag(options = {}) {
   } = options;
 
   let _isDismissed = false;
+  const listeners = createListenerRegistry();
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -52,6 +54,7 @@ export function Tag(options = {}) {
   }
 
   function destroy() {
+    listeners.destroy();
     instance.destroy();
   }
 
@@ -75,7 +78,7 @@ export function Tag(options = {}) {
   // Bind close button after render
   const closeBtn = container.querySelector('.ds-tag__close');
   if (closeBtn) {
-    closeBtn.addEventListener('click', (e) => {
+    listeners.on(closeBtn, 'click', (e) => {
       e.stopPropagation();
       dismiss();
     });

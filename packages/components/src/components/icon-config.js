@@ -15,5 +15,5 @@ function clearIcons() {
 export {
   registerIcons,
   getIcon,
-  clearIcons
+  clearIcons,
 };

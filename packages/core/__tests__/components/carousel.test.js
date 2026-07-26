@@ -8,6 +8,8 @@ import { resetScheduler } from '../../src/scheduler.js';
 import { Carousel } from '@kupola/components';
 
 afterEach(() => {
+  jest.useRealTimers();
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   resetScheduler();
 });
@@ -92,6 +94,18 @@ describe('Carousel navigation', () => {
     view.goTo(2);
     const track = document.body.querySelector('.ds-carousel__track');
     expect(track.style.transform).toBe('translateX(-200%)');
+    expect(view.getCurrent()).toBe(2);
+  });
+
+  test('ignores non-finite indexes', () => {
+    const onChange = jest.fn();
+    const view = Carousel({ items: [ 'A', 'B' ], onChange });
+
+    view.goTo(NaN);
+
+    expect(view.getCurrent()).toBe(0);
+    expect(onChange).not.toHaveBeenCalled();
+    view.destroy();
   });
 
   test('next() wraps from last to first', () => {
@@ -192,7 +206,19 @@ describe('Carousel auto-play', () => {
     jest.advanceTimersByTime(1000);
     expect(track.style.transform).toBe('translateX(-200%)');
 
-    jest.useRealTimers();
+    view.destroy();
+  });
+
+  test('supports the autoplay option alias and normalizes an invalid interval', () => {
+    jest.useFakeTimers();
+    const view = Carousel({ items: [ 'A', 'B' ], autoplay: true, interval: 0 });
+
+    expect(jest.getTimerCount()).toBe(1);
+    jest.advanceTimersByTime(2999);
+    expect(view.getCurrent()).toBe(0);
+    jest.advanceTimersByTime(1);
+    expect(view.getCurrent()).toBe(1);
+    view.destroy();
   });
 
   test('destroy stops auto-play', () => {
@@ -201,10 +227,10 @@ describe('Carousel auto-play', () => {
     document.body.appendChild(view.element);
 
     view.destroy();
-    // Should not throw after destroy
-    expect(() => jest.advanceTimersByTime(5000)).not.toThrow();
-
-    jest.useRealTimers();
+    expect(jest.getTimerCount()).toBe(0);
+    expect(() => view.destroy()).not.toThrow();
+    view.next();
+    expect(view.getCurrent()).toBe(0);
   });
 });
 

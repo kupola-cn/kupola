@@ -9,6 +9,7 @@ import { resetScheduler } from '../../src/scheduler.js';
 import { Modal } from '@kupola/components';
 
 afterEach(() => {
+  jest.restoreAllMocks();
   document.body.innerHTML = '';
   document.body.style.overflow = '';
   resetScheduler();
@@ -126,6 +127,35 @@ describe('Modal open/close', () => {
     expect(container.querySelector('.ds-modal-mask').classList.contains('is-visible')).toBe(true);
 
     view.destroy();
+  });
+
+  test('reports its current visibility', () => {
+    const view = Modal({ title: 'Test' });
+    expect(view.isVisible()).toBe(false);
+    view.open();
+    expect(view.isVisible()).toBe(true);
+    view.close();
+    expect(view.isVisible()).toBe(false);
+    view.destroy();
+  });
+
+  test('keeps a lower modal open when Escape closes the topmost modal', () => {
+    const first = Modal({ title: 'First' });
+    const second = Modal({ title: 'Second' });
+    first.open();
+    second.open();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(first.isVisible()).toBe(true);
+    expect(second.isVisible()).toBe(false);
+    expect(document.body.style.overflow).toBe('hidden');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(first.isVisible()).toBe(false);
+    expect(document.body.style.overflow).toBe('');
+    first.destroy();
+    second.destroy();
   });
 });
 
@@ -272,6 +302,8 @@ describe('Modal destroy', () => {
 
     view.destroy();
     expect(document.body.style.overflow).toBe('');
+    view.open();
+    expect(view.isVisible()).toBe(false);
   });
 });
 

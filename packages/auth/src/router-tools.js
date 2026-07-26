@@ -14,20 +14,21 @@
  */
 
 export function requireAuth(authContext) {
-  if (!authContext) return false;
+  if (!authContext) {return false;}
   return authContext.isAuthenticated === true;
 }
 
 export function requirePermission(authContext, permission) {
-  if (!authContext) return false;
-  if (!permission) return true;
-  return authContext.hasPermission(permission);
+  if (!authContext) {return false;}
+  if (!permission) {return true;}
+  return typeof authContext.hasPermission === 'function'
+    && authContext.hasPermission(permission);
 }
 
 export function requireRole(authContext, role) {
-  if (!authContext) return false;
-  if (!role) return true;
-  return authContext.hasRole(role);
+  if (!authContext) {return false;}
+  if (!role) {return true;}
+  return typeof authContext.hasRole === 'function' && authContext.hasRole(role);
 }
 
 export function redirectTo(url, options = {}) {

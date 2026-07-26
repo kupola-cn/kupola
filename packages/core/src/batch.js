@@ -11,11 +11,10 @@
 
 import {
   batchDepth,
-  batchQueue,
   setBatchDepth,
   getBatchQueue,
 } from './signal.js';
-import { flushJobs } from './scheduler.js';
+import { flushJobs, queueJob, queuePostJob } from './scheduler.js';
 
 /**
  * Execute a function inside a batch scope.
@@ -42,25 +41,74 @@ import { flushJobs } from './scheduler.js';
  * @returns {*}           The return value of `fn`.
  */
 export function batch(fn) {
+  if (typeof fn !== 'function') {
+    throw new TypeError('[kupola] batch() expects a function.');
+  }
+
+  let result;
+  let callbackError;
+  let callbackFailed = false;
   setBatchDepth(batchDepth + 1);
   try {
-    return fn();
+    result = fn();
+  } catch (error) {
+    callbackError = error;
+    callbackFailed = true;
   } finally {
     setBatchDepth(batchDepth - 1);
 
     // Only flush when the outermost batch ends.
     if (batchDepth === 0) {
       const queue = getBatchQueue();
-      // Snapshot + clear so jobs queued *during* flush go to the scheduler.
       const jobs = [ ...queue ];
       queue.clear();
+      const schedulers = new Set();
 
       for (const job of jobs) {
-        job();
+        const scheduler = job._scheduler;
+        if (scheduler) {
+          schedulers.add(scheduler);
+          if (job._flush === 'post') {scheduler.queuePostJob(job);}
+          else {scheduler.queueJob(job);}
+        } else if (job._flush === 'post') {queuePostJob(job);}
+        else {queueJob(job);}
       }
 
-      // Also flush anything the scheduler picked up outside the batch.
-      flushJobs();
+      let flushError;
+      try {
+        flushJobs();
+      } catch (error) {
+        flushError = error;
+      }
+
+      // A batch is synchronous even when its effects use isolated schedulers.
+      // Flush each involved instance independently so one failing queue does
+      // not prevent unrelated application queues from being drained.
+      for (const scheduler of schedulers) {
+        if (typeof scheduler.flushJobs !== 'function') {continue;}
+        try {
+          scheduler.flushJobs();
+        } catch (error) {
+          if (!flushError) {flushError = error;}
+        }
+      }
+
+      // An isolated job may enqueue a default-scheduler job while running.
+      try {
+        flushJobs();
+      } catch (error) {
+        if (!flushError) {flushError = error;}
+      }
+
+      // Preserve an exception thrown by the batch callback when both paths
+      // fail. All independent queues have still been given a chance to drain.
+      if (!callbackFailed && flushError) {
+        callbackError = flushError;
+        callbackFailed = true;
+      }
     }
   }
+
+  if (callbackFailed) {throw callbackError;}
+  return result;
 }

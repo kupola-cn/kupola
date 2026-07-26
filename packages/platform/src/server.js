@@ -12,7 +12,7 @@
  * @module server
  */
 
-import { effect } from '@kupola/core';
+import { effect, runWithScheduler } from '@kupola/core';
 import {
   escapeHtml,
   isSignalLike,
@@ -282,19 +282,27 @@ export function renderToString(tpl) {
  *
  * @param {TemplateResult} tpl
  * @param {Element} container
+ * @param {{ scheduler?: Object|null }} [options]
  * @returns {TemplateInstance}
  */
-export function hydrate(tpl, container) {
-  const instance = new TemplateInstance();
+export function hydrate(tpl, container, options = {}) {
+  const hydrateTemplate = () => {
+    const instance = new TemplateInstance();
 
-  // Pre-compute which value index each text-marker comment maps to
-  // by replaying the same serialization logic as serializeSSR.
-  const commentToValueIdx = _computeTextMarkerIndices(tpl);
+    // Pre-compute which value index each text-marker comment maps to
+    // by replaying the same serialization logic as serializeSSR.
+    const commentToValueIdx = _computeTextMarkerIndices(tpl);
 
-  // Walk existing DOM and bind reactive effects
-  _hydrateChildren(container, tpl.values, instance, commentToValueIdx);
+    // Walk existing DOM and bind reactive effects
+    _hydrateChildren(container, tpl.values, instance, commentToValueIdx);
 
-  return instance;
+    return instance;
+  };
+
+  if (options && options.scheduler !== undefined) {
+    return runWithScheduler(options.scheduler, hydrateTemplate);
+  }
+  return hydrateTemplate();
 }
 
 // ─── Hydration DOM Walker ────────────────────────────────────────────────────

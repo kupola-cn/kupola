@@ -1,45 +1,34 @@
 // SPDX-License-Identifier: MIT
 /**
- * @kupola/ai-adapter — Action Engine (v1.1)
+ * @kupola/ai-adapter — Action Engine (v2.0)
  *
- * Enhancements:
- * - Batch operations (execute multiple actions at once)
- * - Audit log (who/when/what for every operation)
- * - Permission hooks (beforeExecute guard)
- * - Retry mechanism (configurable retry on failure)
+ * 重构改进：
+ * - 集成 EventBus 事件发布
+ * - 支持 UnitOfWork 批量事务操作
+ * - 更清晰的钩子机制
  */
 
+import { UnitOfWork } from './unit-of-work.js';
+
 export class ActionEngine {
-  constructor(options = {}) {
+  constructor(options = {}, bus = null) {
     this.handlers = new Map();
     this.undoStack = [];
     this.maxUndo = options.maxUndo || 10;
     this.requireConfirm = options.requireConfirm !== false;
     this.onConfirm = options.onConfirm || null;
 
-    // Retry
     this.defaultRetries = options.retries || 0;
 
-    // Audit log
     this.auditLog = [];
     this.maxAuditLog = options.maxAuditLog || 200;
 
-    // Permission hooks
     this.beforeHooks = [];
     this.afterHooks = [];
+
+    this.bus = bus;
   }
 
-  /**
-   * Register an action handler.
-   * @param {string} name
-   * @param {object} config
-   * @param {Function} config.handler
-   * @param {boolean}  [config.confirm]
-   * @param {Function} [config.undo]
-   * @param {string}   [config.label]
-   * @param {number}   [config.retries]
-   * @param {string[]} [config.dependsOn] — prerequisite action types that must have succeeded before this action runs
-   */
   register(name, config) {
     const { handler, confirm, undo, label, retries, dependsOn } = config;
     this.handlers.set(name, {
@@ -52,11 +41,6 @@ export class ActionEngine {
     });
   }
 
-  /**
-   * Add a before-execute hook (e.g. permission check).
-   * @param {Function} fn — async (actionName, params, context) => void (throw to block)
-   * @returns {Function} unsubscribe
-   */
   beforeExecute(fn) {
     this.beforeHooks.push(fn);
     return () => {
@@ -65,11 +49,6 @@ export class ActionEngine {
     };
   }
 
-  /**
-   * Add an after-execute hook (e.g. logging).
-   * @param {Function} fn — async (actionName, params, result, context) => void
-   * @returns {Function} unsubscribe
-   */
   afterExecute(fn) {
     this.afterHooks.push(fn);
     return () => {
@@ -78,9 +57,6 @@ export class ActionEngine {
     };
   }
 
-  /**
-   * Execute a parsed action command.
-   */
   async execute(command, callbacks = {}) {
     const { type, params, context } = command;
     const action = this.handlers.get(type);
@@ -93,36 +69,39 @@ export class ActionEngine {
       };
     }
 
-    // Dependency check: all dependsOn actions must have succeeded previously
+    this.bus?.emit('action:before', { type, params, context });
+
     const depError = this.checkDependencies(type);
     if (depError) {
       return { success: false, error: depError, dependenciesMet: false };
     }
 
-    // Permission hooks
     for (const hook of this.beforeHooks) {
       try {
         if (context === undefined) await hook(type, params);
         else await hook(type, params, context);
       } catch (err) {
         this._addAudit(type, params, 'blocked', err.message);
+        this.bus?.emit('action:denied', { type, params, error: err, context });
         return { success: false, error: `Permission denied: ${err.message}` };
       }
     }
 
-    // Confirmation step
     if (action.confirm) {
       const confirmFn = callbacks.onConfirm || this.onConfirm;
-      if (confirmFn) {
-        const confirmed = await confirmFn(action.label, params);
-        if (!confirmed) {
-          this._addAudit(type, params, 'cancelled');
-          return { success: false, cancelled: true };
-        }
+      if (!confirmFn) {
+        this._addAudit(type, params, 'cancelled');
+        this.bus?.emit('action:cancelled', { type, params, context });
+        return { success: false, cancelled: true };
+      }
+      const confirmed = await confirmFn(action.label, params);
+      if (!confirmed) {
+        this._addAudit(type, params, 'cancelled');
+        this.bus?.emit('action:cancelled', { type, params, context });
+        return { success: false, cancelled: true };
       }
     }
 
-    // Execute with retry
     let lastError;
     const maxAttempts = (action.retries || 0) + 1;
 
@@ -135,6 +114,7 @@ export class ActionEngine {
         if (result && result.success === false) {
           const message = result.error || result.message || 'Action failed.';
           this._addAudit(type, params, 'failed', message, attempt);
+          this.bus?.emit('action:error', { type, params, error: message, context });
           if (callbacks.onError) callbacks.onError(new Error(message));
           return {
             success: false,
@@ -146,7 +126,6 @@ export class ActionEngine {
           };
         }
 
-        // Store undo info
         if (action.undo) {
           this.undoStack.push({
             type,
@@ -159,16 +138,16 @@ export class ActionEngine {
           }
         }
 
-        // Audit log
         this._addAudit(type, params, 'success', null, attempt);
 
-        // After hooks
         for (const hook of this.afterHooks) {
           try {
             if (context === undefined) await hook(type, params, result);
             else await hook(type, params, result, context);
-          } catch { /* ignore hook errors */ }
+          } catch { /* ignore */ }
         }
+
+        this.bus?.emit('action:after', { type, params, result, context });
 
         if (callbacks.onSuccess) callbacks.onSuccess(result);
 
@@ -180,14 +159,13 @@ export class ActionEngine {
       } catch (err) {
         lastError = err;
         if (attempt < maxAttempts) {
-          // Wait before retry (exponential backoff: 100ms, 200ms, 400ms...)
           await new Promise(r => setTimeout(r, 100 * Math.pow(2, attempt - 1)));
         }
       }
     }
 
-    // All attempts failed
     this._addAudit(type, params, 'failed', lastError.message, maxAttempts);
+    this.bus?.emit('action:error', { type, params, error: lastError, context });
     if (callbacks.onError) callbacks.onError(lastError);
     return {
       success: false,
@@ -198,33 +176,18 @@ export class ActionEngine {
     };
   }
 
-  /**
-   * Execute multiple actions in batch.
-   * @param {Array<{type, params}>} commands
-   * @param {object} callbacks
-   * @returns {Promise<{success, results, failed}>}
-   */
-  async executeBatch(commands, callbacks = {}) {
-    const results = [];
-    let failed = 0;
-
-    for (const cmd of commands) {
-      const result = await this.execute(cmd, callbacks);
-      results.push({ type: cmd.type, ...result });
-      if (!result.success && !result.cancelled) failed++;
-    }
-
-    return {
-      success: failed === 0,
-      results,
-      failed,
-      total: commands.length,
-    };
+  createUnitOfWork() {
+    return new UnitOfWork(this);
   }
 
-  /**
-   * Undo the last action.
-   */
+  async executeBatch(commands, callbacks = {}) {
+    const uow = this.createUnitOfWork();
+    for (const cmd of commands) {
+      uow.add(cmd.type, cmd.params);
+    }
+    return uow.commit();
+  }
+
   async undo() {
     const last = this.undoStack.pop();
     if (!last) {
@@ -234,6 +197,7 @@ export class ActionEngine {
     try {
       await last.undoFn(last.params);
       this._addAudit(last.type, last.params, 'undone');
+      this.bus?.emit('action:undone', { type: last.type, params: last.params });
       return { success: true, message: `Undone: ${last.type}` };
     } catch (err) {
       return { success: false, error: err.message };
@@ -253,11 +217,6 @@ export class ActionEngine {
     }));
   }
 
-  /**
-   * Check whether all prerequisite actions for `type` have succeeded.
-   * Returns null if OK, or an error string if a dependency is unmet.
-   * Also detects circular dependencies.
-   */
   checkDependencies(type, _visited = new Set()) {
     if (_visited.has(type)) return `Circular dependency detected: ${type}`;
     _visited.add(type);
@@ -266,11 +225,9 @@ export class ActionEngine {
     if (!action || !action.dependsOn || action.dependsOn.length === 0) return null;
 
     for (const dep of action.dependsOn) {
-      // Recursive circular check
       const circularErr = this.checkDependencies(dep, new Set(_visited));
       if (circularErr && circularErr.startsWith('Circular')) return circularErr;
 
-      // Check audit log for at least one success record of this dep
       const satisfied = this.auditLog.some(e => e.action === dep && e.status === 'success');
       if (!satisfied) {
         return `Dependency not met: "${dep}" must succeed before "${type}"`;
@@ -279,10 +236,6 @@ export class ActionEngine {
     return null;
   }
 
-  /**
-   * Get audit log entries.
-   * @param {object} filter — { type?, status?, limit? }
-   */
   getAuditLog(filter = {}) {
     let log = [...this.auditLog];
     if (filter.type) log = log.filter(e => e.action === filter.type);
@@ -290,8 +243,6 @@ export class ActionEngine {
     if (filter.limit) log = log.slice(-filter.limit);
     return log;
   }
-
-  // ── Private ──
 
   _addAudit(action, params, status, error = null, attempts = 1) {
     this.auditLog.push({

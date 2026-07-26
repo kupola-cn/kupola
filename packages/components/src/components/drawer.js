@@ -20,7 +20,12 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
-import { getIconHtml } from './icon-helper';
+import { getIconTemplate } from './icon-helper';
+import { lockBodyScroll } from './body-scroll-lock';
+import { registerOverlayKeydown } from './overlay-stack';
+import { createListenerRegistry } from './listener-registry';
+
+let drawerId = 0;
 
 /**
  * Create a Drawer component instance.
@@ -35,34 +40,52 @@ import { getIconHtml } from './icon-helper';
  * @returns {{ element: DocumentFragment, open: Function, close: Function, toggle: Function, destroy: Function }}
  */
 export function Drawer(options = {}, children = null) {
-  const {
-    title = '',
-    placement = 'left',
-    width = '',
-    closableOnMask = true,
-    escClose = true,
-  } = options;
+  const config = options && typeof options === 'object' ? options : {};
+  const title = config.title ?? '';
+  const placement = config.placement === 'right' ? 'right' : 'left';
+  const width = typeof config.width === 'number' ? `${config.width}px` : (config.width ?? '');
+  const closable = config.closable ?? true;
+  const closableOnMask = config.closableOnMask ?? config.maskClosable ?? true;
+  const escClose = config.escClose ?? true;
+  const onClose = typeof config.onClose === 'function' ? config.onClose : null;
+  const bodyContent = children ?? config.content ?? null;
+  const titleId = `ds-drawer-title-${++drawerId}`;
 
   let _isOpen = false;
+  let _destroyed = false;
+  let releaseBodyScroll = null;
+  let releaseOverlay = null;
+  let previousFocus = null;
+  let maskEl = null;
+  let drawerEl = null;
+  let closeBtnEl = null;
+  const listeners = createListenerRegistry();
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
-    if (_isOpen) {return;}
+    if (_destroyed || _isOpen) {return;}
     _isOpen = true;
+    previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     if (maskEl) {maskEl.classList.add('is-visible');}
     if (drawerEl) {drawerEl.classList.add('is-visible');}
-    document.body.style.overflow = 'hidden';
-    // Focus management: focus the drawer panel
+    releaseBodyScroll ||= lockBodyScroll();
+    releaseOverlay ||= registerOverlayKeydown(onKeydown);
     if (drawerEl) {drawerEl.focus();}
   }
 
   function close() {
-    if (!_isOpen) {return;}
+    if (_destroyed || !_isOpen) {return;}
     _isOpen = false;
     if (maskEl) {maskEl.classList.remove('is-visible');}
     if (drawerEl) {drawerEl.classList.remove('is-visible');}
-    document.body.style.overflow = '';
+    releaseOverlay?.();
+    releaseOverlay = null;
+    releaseBodyScroll?.();
+    releaseBodyScroll = null;
+    if (previousFocus?.isConnected) {previousFocus.focus();}
+    previousFocus = null;
+    if (onClose) {onClose();}
   }
 
   function toggle() {
@@ -76,8 +99,6 @@ export function Drawer(options = {}, children = null) {
       close();
     }
   };
-  document.addEventListener('keydown', onKeydown);
-
   const onMaskClick = (e) => {
     if (closableOnMask && e.target === e.currentTarget) {
       close();
@@ -92,15 +113,18 @@ export function Drawer(options = {}, children = null) {
   const styleAttr = width ? `width: ${width}` : '';
 
   const tpl = html`
-    <div class="ds-drawer-mask" onclick="${onMaskClick}">
-      <div class="${drawerClass}" style="${styleAttr}" role="dialog" aria-modal="true" aria-labelledby="drawer-title" tabindex="-1">
+    <div class="ds-drawer-mask">
+      <div class="${drawerClass}" style="${styleAttr}" role="dialog" aria-modal="true"
+        aria-labelledby="${titleId}" tabindex="-1">
         <div class="ds-drawer__header">
-          <span class="ds-drawer__title" id="drawer-title">${title}</span>
-          <button class="ds-drawer__close" onclick="${close}" aria-label="Close" type="button">
-            ${getIconHtml('x')}
-          </button>
+          <span class="ds-drawer__title" id="${titleId}">${title}</span>
+          ${closable ? html`
+            <button class="ds-drawer__close" aria-label="Close" type="button">
+              ${getIconTemplate('x')}
+            </button>
+          ` : ''}
         </div>
-        <div class="ds-drawer__body">${children}</div>
+        <div class="ds-drawer__body">${bodyContent}</div>
       </div>
     </div>
   `;
@@ -108,19 +132,34 @@ export function Drawer(options = {}, children = null) {
   const container = document.createDocumentFragment();
   const instance = render(tpl, container);
 
-  // Grab references
-  const maskEl = container.querySelector('.ds-drawer-mask');
-  const drawerEl = container.querySelector('.ds-drawer');
+  maskEl = container.querySelector('.ds-drawer-mask');
+  drawerEl = container.querySelector('.ds-drawer');
+  closeBtnEl = container.querySelector('.ds-drawer__close');
 
-  return {
+  listeners.on(maskEl, 'click', onMaskClick);
+  listeners.on(closeBtnEl, 'click', close);
+
+  const api = {
     get element() { return container; },
     open,
     close,
     toggle,
+    isOpen: () => _isOpen,
     destroy() {
-      document.removeEventListener('keydown', onKeydown);
-      document.body.style.overflow = '';
+      if (_destroyed) {return;}
+      let closeError = null;
+      try {close();} catch (error) {closeError = error;}
+      _destroyed = true;
+      listeners.destroy();
+      releaseOverlay?.();
+      releaseOverlay = null;
+      releaseBodyScroll?.();
+      releaseBodyScroll = null;
       instance.destroy();
+      Object.freeze(api);
+      if (closeError) {throw closeError;}
     },
   };
+
+  return api;
 }

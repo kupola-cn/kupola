@@ -4,7 +4,6 @@
  * @jest-environment jsdom
  */
 
-import { html } from '../../../platform/src/template.js';
 import { resetScheduler } from '../../src/scheduler.js';
 import { Pagination } from '@kupola/components';
 
@@ -23,8 +22,7 @@ describe('Pagination rendering', () => {
     document.body.appendChild(container);
 
     // 5 pages for 50 items / 10 per page
-    const pageButtons = container.querySelectorAll('.ds-pagination__item:not([aria-label])');
-    // Should have at least the page numbers + prev/next
+    const pageButtons = container.querySelectorAll('.ds-pagination__item[data-page]');
     expect(pageButtons.length).toBeGreaterThanOrEqual(5);
     view.destroy();
   });
@@ -85,6 +83,29 @@ describe('Pagination rendering', () => {
     expect(nextBtn.hasAttribute('disabled')).toBe(true);
     view.destroy();
   });
+
+  test('clamps and normalizes invalid initial numeric options', () => {
+    const view = Pagination({ total: -10, pageSize: 0, current: 99, maxPages: 0 });
+    document.body.appendChild(view.element);
+
+    expect(view.getTotal()).toBe(0);
+    expect(view.getPageSize()).toBe(10);
+    expect(view.getCurrent()).toBe(1);
+    expect(document.querySelectorAll('[data-page]')).toHaveLength(1);
+    view.destroy();
+  });
+
+  test('renders semantic button types and pagination label', () => {
+    const view = Pagination({ total: 20 });
+    document.body.appendChild(view.element);
+
+    expect(document.querySelector('.ds-pagination').getAttribute('aria-label')).toBe('Pagination');
+    document.querySelectorAll('.ds-pagination button').forEach(button => {
+      expect(button.type).toBe('button');
+    });
+    expect(document.querySelector('[aria-current="page"]').textContent).toBe('1');
+    view.destroy();
+  });
 });
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
@@ -98,7 +119,7 @@ describe('Pagination navigation', () => {
     document.body.appendChild(container);
 
     // Click page 3
-    const pageButtons = container.querySelectorAll('.ds-pagination__item:not([aria-label])');
+    const pageButtons = container.querySelectorAll('.ds-pagination__item[data-page]');
     // Find button with text "3"
     const btn3 = [ ...pageButtons ].find((b) => b.textContent === '3');
     expect(btn3).toBeDefined();
@@ -213,6 +234,40 @@ describe('Pagination API methods', () => {
     expect(view.getCurrent()).toBe(1);
     view.destroy();
   });
+
+  test('showSizeChanger validates options and emits page-size changes', () => {
+    const onChange = jest.fn();
+    const view = Pagination({
+      total: 100,
+      pageSize: 10,
+      current: 4,
+      showSizeChanger: true,
+      pageSizeOptions: [ 0, 20, 20, 50, NaN ],
+      onChange,
+    });
+    document.body.appendChild(view.element);
+    const select = document.querySelector('.ds-pagination__size');
+
+    expect([ ...select.options ].map(option => option.value)).toEqual([ '10', '20', '50' ]);
+    select.value = '20';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(view.getPageSize()).toBe(20);
+    expect(view.getCurrent()).toBe(1);
+    expect(onChange).toHaveBeenCalledWith(1, 20);
+    view.destroy();
+  });
+
+  test('rejects non-finite API values without changing state', () => {
+    const view = Pagination({ total: 50, pageSize: 10, current: 2 });
+
+    expect(view.setCurrent(NaN)).toBe(false);
+    expect(view.setTotal(Infinity)).toBe(false);
+    expect(view.setPageSize(0)).toBe(false);
+    expect(view.getCurrent()).toBe(2);
+    expect(view.getTotal()).toBe(50);
+    expect(view.getPageSize()).toBe(10);
+    view.destroy();
+  });
 });
 
 // ─── Destroy ─────────────────────────────────────────────────────────────────
@@ -224,7 +279,10 @@ describe('Pagination destroy', () => {
     container.appendChild(view.element);
     document.body.appendChild(container);
 
-    // Should not throw
     view.destroy();
+    view.destroy();
+    expect(view.setCurrent(2)).toBe(false);
+    expect(view.setTotal(100)).toBe(false);
+    expect(view.setPageSize(20)).toBe(false);
   });
 });

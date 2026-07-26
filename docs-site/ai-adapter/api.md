@@ -188,7 +188,7 @@ adapter.capability.register({
 | `execute(name, data?, callbacks?, options?)` | `Promise<FlowResult>` | 执行流程 |
 | `resume(name, data, failedAt, callbacks?)` | `Promise<FlowResult>` | 断点恢复 |
 | `remove(name)` | `boolean` | 删除流程 |
-| `list()` | `FlowInfo[]` | 列出所有流程 |
+| `list()` | `FlowInfo[]` | 列出所有流程，每条包含 `name`、`createdAt`、`lastRunAt` |
 | `trackAction(command)` | `Suggestion` | 追踪操作模式（自动学习） |
 | `clearHistory()` | `void` | 清空执行历史 |
 
@@ -216,6 +216,7 @@ adapter.capability.register({
 | 选项 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `autoLearnThreshold` | `number` | `3` | 自动学习触发次数 |
+| `maxActionPatterns` | `number` | `100` | 自动学习记录的最大操作模式数 |
 | `storage` | `{ get, set }` | `localStorage` | 持久化适配器 |
 
 ---
@@ -359,6 +360,9 @@ new AIPanel(adapter, options?)
 | `resultViewer` | `boolean` | `true` | 查询结果是否显示“查看数据/复制 JSON/导出 CSV”操作 |
 | `resultPageSize` | `number` | `20` | 结果弹窗分页大小 |
 | `maxTableColumns` | `number` | `12` | 结果弹窗最多显示列数 |
+| `resizable` | `boolean` | `false` | 是否可拖拽调整宽度 |
+| `minWidth` | `string` | `'320px'` | 面板最小宽度 |
+| `maxWidth` | `string` | `'720px'` | 面板最大宽度 |
 
 ### 方法
 

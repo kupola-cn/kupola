@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Calendar module built on the 2.0 reactive core.
  *
@@ -21,8 +21,13 @@
  * @module components/calendar
  */
 
+import { createListenerRegistry } from './listener-registry';
+
 const DEFAULT_I18N = {
-  months: [ 'January','February','March','April','May','June','July','August','September','October','November','December' ],
+  months: [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ],
   shortMonths: [ 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' ],
   weekdays: [ 'Sun','Mon','Tue','Wed','Thu','Fri','Sat' ],
   today: 'Today',
@@ -51,33 +56,49 @@ function _eventsForDate(events, date) {
     const s = e.date || e.start;
     if (!s) {return false;}
     const startStr = typeof s === 'string' ? s : _fmtDate(s);
-    if (!e.end) {return startStr === ds;}
-    const endStr = typeof e.end === 'string' ? e.end : _fmtDate(e.end);
+    const end = e.end ?? e.endDate;
+    if (!end) {return startStr === ds;}
+    const endStr = typeof end === 'string' ? end : _fmtDate(end);
     return ds >= startStr && ds <= endStr;
   });
 }
 
-export function Calendar(options = {}) {
-  let currentDate = options.currentDate ? new Date(options.currentDate) : new Date();
-  let selectedDate = options.selectedDate ? new Date(options.selectedDate) : null;
-  let rangeStart = options.rangeStart ? new Date(options.rangeStart) : null;
-  let rangeEnd = options.rangeEnd ? new Date(options.rangeEnd) : null;
-  let isRangeMode = options.rangeMode || false;
-  let viewMode = options.viewMode || 'month';
-  let events = (options.events || []).map(e => ({ ...e }));
-  let i18n = { ...DEFAULT_I18N, ...options.i18n };
-  const onSelect = options.onSelect || null;
-  const onRangeSelect = options.onRangeSelect || null;
-  const onChange = options.onChange || null;
-  const onEventClick = options.onEventClick || null;
+function _validDate(value, fallback = null) {
+  if (value == null || value === '') {return fallback;}
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date : fallback;
+}
 
-  const _listeners = [];
+export function Calendar(options = {}) {
+  const config = options && typeof options === 'object' ? options : {};
+  let currentDate = _validDate(config.currentDate ?? config.date, new Date());
+  let selectedDate = _validDate(config.selectedDate);
+  let rangeStart = _validDate(config.rangeStart);
+  let rangeEnd = _validDate(config.rangeEnd);
+  let isRangeMode = config.rangeMode === true || config.selectionMode === 'range';
+  let viewMode = config.viewMode === 'week' ? 'week' : 'month';
+  let events = Array.isArray(config.events) ? config.events.map(e => ({ ...e })) : [];
+  const i18n = { ...DEFAULT_I18N, ...(config.i18n || {}) };
+  const onSelect = typeof config.onSelect === 'function' ? config.onSelect : null;
+  const onRangeSelect = typeof config.onRangeSelect === 'function' ? config.onRangeSelect : null;
+  const onChange = typeof config.onChange === 'function' ? config.onChange : null;
+  const onEventClick = typeof config.onEventClick === 'function' ? config.onEventClick : null;
+
+  const navListeners = createListenerRegistry();
+  const dayListeners = createListenerRegistry();
   let titleEl = null;
   let daysEl = null;
+  let destroyed = false;
 
   function _emitChange() {
     if (onChange) {
-      onChange({ date: new Date(currentDate), selectedDate, rangeStart, rangeEnd, viewMode });
+      onChange({
+        date: new Date(currentDate),
+        selectedDate: selectedDate ? new Date(selectedDate) : null,
+        rangeStart: rangeStart ? new Date(rangeStart) : null,
+        rangeEnd: rangeEnd ? new Date(rangeEnd) : null,
+        viewMode,
+      });
     }
   }
 
@@ -105,18 +126,17 @@ export function Calendar(options = {}) {
     const today = new Date();
     const todayStr = _fmtDate(today);
 
-    // Empty cells before first day
     for (let i = 0; i < firstDay; i++) {
       const empty = document.createElement('span');
       empty.className = 'ds-calendar__day ds-calendar__day--empty';
       daysEl.appendChild(empty);
     }
 
-    // Day cells
     for (let day = 1; day <= daysInMonth; day++) {
       const d = new Date(year, month, day);
       const ds = _fmtDate(d);
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'ds-calendar__day';
       btn.textContent = day;
 
@@ -139,8 +159,7 @@ export function Calendar(options = {}) {
       }
 
       const clickHandler = () => _handleDayClick(d, ds, dayEvents, btn);
-      btn.addEventListener('click', clickHandler);
-      _listeners.push({ el: btn, event: 'click', handler: clickHandler });
+      dayListeners.on(btn, 'click', clickHandler);
 
       daysEl.appendChild(btn);
     }
@@ -155,7 +174,9 @@ export function Calendar(options = {}) {
     endDate.setDate(monday.getDate() + 6);
 
     const year = currentDate.getFullYear();
-    titleEl.textContent = `${i18n.shortMonths[monday.getMonth()]} ${monday.getDate()} - ${i18n.shortMonths[endDate.getMonth()]} ${endDate.getDate()} ${year}`;
+    const startLabel = `${i18n.shortMonths[monday.getMonth()]} ${monday.getDate()}`;
+    const endLabel = `${i18n.shortMonths[endDate.getMonth()]} ${endDate.getDate()}`;
+    titleEl.textContent = `${startLabel} - ${endLabel} ${year}`;
 
     daysEl.innerHTML = '';
     const today = new Date();
@@ -167,6 +188,7 @@ export function Calendar(options = {}) {
       const ds = _fmtDate(d);
 
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'ds-calendar__day ds-calendar__day--week';
 
       const header = document.createElement('span');
@@ -196,15 +218,13 @@ export function Calendar(options = {}) {
       }
 
       const clickHandler = () => _handleDayClick(d, ds, dayEvents, btn);
-      btn.addEventListener('click', clickHandler);
-      _listeners.push({ el: btn, event: 'click', handler: clickHandler });
+      dayListeners.on(btn, 'click', clickHandler);
 
       daysEl.appendChild(btn);
     }
   }
 
   function _handleDayClick(d, ds, dayEvents, btn) {
-    // Clear selection
     if (daysEl) {
       daysEl.querySelectorAll('.ds-calendar__day').forEach(el => el.classList.remove('is-selected'));
     }
@@ -221,32 +241,25 @@ export function Calendar(options = {}) {
         } else {
           rangeEnd = d;
         }
-        if (onRangeSelect) {onRangeSelect({ start: rangeStart, end: rangeEnd });}
+        if (onRangeSelect) {
+          onRangeSelect({ start: new Date(rangeStart), end: new Date(rangeEnd) });
+        }
       }
     } else {
       selectedDate = d;
-      if (onSelect) {onSelect({ date: d, dateStr: ds });}
+      if (onSelect) {onSelect({ date: new Date(d), dateStr: ds });}
     }
 
     dayEvents.forEach(ev => {
-      if (onEventClick) {onEventClick(ev, d);}
+      if (onEventClick) {onEventClick(ev, new Date(d));}
     });
 
     _render();
   }
 
   function _render() {
-    // Remove old listeners from day buttons only (keep nav buttons)
-    const navEls = new Set([ titleEl, daysEl, prevBtn, nextBtn, todayBtn ]);
-    _listeners.forEach(({ el, event, handler }) => {
-      if (!navEls.has(el)) {
-        el.removeEventListener(event, handler);
-      }
-    });
-    // Only remove day button listeners from the array
-    const navListeners = _listeners.filter(({ el }) => navEls.has(el));
-    _listeners.length = 0;
-    navListeners.forEach(l => _listeners.push(l));
+    if (destroyed) {return;}
+    dayListeners.clear();
 
     if (viewMode === 'week') {
       _renderWeekView();
@@ -255,11 +268,9 @@ export function Calendar(options = {}) {
     }
   }
 
-  // Build DOM
   const root = document.createElement('div');
   root.className = 'ds-calendar';
 
-  // Header
   const header = document.createElement('div');
   header.className = 'ds-calendar__header';
 
@@ -271,14 +282,17 @@ export function Calendar(options = {}) {
   navGroup.className = 'ds-calendar__nav-group';
 
   const prevBtn = document.createElement('button');
+  prevBtn.type = 'button';
   prevBtn.className = 'ds-calendar__nav ds-calendar__nav--prev';
   prevBtn.textContent = '\u25C0';
 
   const nextBtn = document.createElement('button');
+  nextBtn.type = 'button';
   nextBtn.className = 'ds-calendar__nav ds-calendar__nav--next';
   nextBtn.textContent = '\u25B6';
 
   const todayBtn = document.createElement('button');
+  todayBtn.type = 'button';
   todayBtn.className = 'ds-calendar__nav ds-calendar__nav--today';
   todayBtn.textContent = i18n.today;
 
@@ -289,16 +303,13 @@ export function Calendar(options = {}) {
   header.appendChild(navGroup);
   root.appendChild(header);
 
-  // Weekday labels
   root.appendChild(_renderWeekdays());
 
-  // Days grid
   const days = document.createElement('div');
   days.className = 'ds-calendar__days';
   daysEl = days;
   root.appendChild(days);
 
-  // Event handlers
   const prevHandler = () => {
     if (viewMode === 'week') {
       currentDate.setDate(currentDate.getDate() - 7);
@@ -323,120 +334,116 @@ export function Calendar(options = {}) {
     _emitChange();
   };
 
-  prevBtn.addEventListener('click', prevHandler);
-  nextBtn.addEventListener('click', nextHandler);
-  todayBtn.addEventListener('click', todayHandler);
-  _listeners.push(
-    { el: prevBtn, event: 'click', handler: prevHandler },
-    { el: nextBtn, event: 'click', handler: nextHandler },
-    { el: todayBtn, event: 'click', handler: todayHandler },
-  );
+  navListeners.on(prevBtn, 'click', prevHandler);
+  navListeners.on(nextBtn, 'click', nextHandler);
+  navListeners.on(todayBtn, 'click', todayHandler);
 
-  // Initial render
   _render();
 
-  // API
-  function destroy() {
-    _listeners.forEach(({ el, event, handler }) => {
-      el.removeEventListener(event, handler);
-    });
-    _listeners.length = 0;
-    titleEl = null;
-    daysEl = null;
-    if (root.parentNode) {root.remove();}
-  }
-
-  function setDate(date) {
-    currentDate = new Date(date);
-    _render();
-    _emitChange();
-  }
-
-  function getDate() { return new Date(currentDate); }
-
-  function setSelectedDate(date) {
-    selectedDate = date ? new Date(date) : null;
-    _render();
-  }
-
-  function getSelectedDate() { return selectedDate; }
-
-  function setRange(start, end) {
-    rangeStart = start ? new Date(start) : null;
-    rangeEnd = end ? new Date(end) : null;
-    _render();
-    if (onRangeSelect && rangeStart && rangeEnd) {onRangeSelect({ start: rangeStart, end: rangeEnd });}
-  }
-
-  function getRange() { return { start: rangeStart, end: rangeEnd }; }
-
-  function setEvents(newEvents) {
-    events = (newEvents || []).map(e => ({ ...e }));
-    _render();
-  }
-
-  function addEvent(ev) {
-    events.push({ ...ev });
-    _render();
-  }
-
-  function removeEvent(id) {
-    events = events.filter(e => e.id !== id);
-    _render();
-  }
-
-  function setViewMode(mode) {
-    if (mode === 'month' || mode === 'week') {
-      viewMode = mode;
+  const api = {
+    element: root,
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      navListeners.destroy();
+      dayListeners.destroy();
+      titleEl = null;
+      daysEl = null;
+      if (root.parentNode) {root.remove();}
+      Object.freeze(api);
+    },
+    setDate(date) {
+      if (destroyed) {return;}
+      const parsed = _validDate(date);
+      if (!parsed) {return;}
+      currentDate = parsed;
       _render();
       _emitChange();
-    }
-  }
-
-  function getViewMode() { return viewMode; }
-
-  function goToToday() {
-    currentDate = new Date();
-    _render();
-    _emitChange();
-  }
-
-  function goToDate(date) {
-    currentDate = new Date(date);
-    _render();
-    _emitChange();
-  }
-
-  function prevMonth() {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    _render();
-    _emitChange();
-  }
-
-  function nextMonth() {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    _render();
-    _emitChange();
-  }
-
-  function toggleRangeMode() {
-    isRangeMode = !isRangeMode;
-    rangeStart = null;
-    rangeEnd = null;
-    _render();
-    _emitChange();
-  }
-
-  return {
-    element: root,
-    destroy,
-    setDate, getDate,
-    setSelectedDate, getSelectedDate,
-    setRange, getRange,
-    setEvents, addEvent, removeEvent,
-    setViewMode, getViewMode,
-    goToToday, goToDate,
-    prevMonth, nextMonth,
-    toggleRangeMode,
+    },
+    getDate() { return new Date(currentDate); },
+    setSelectedDate(date) {
+      if (destroyed) {return;}
+      selectedDate = _validDate(date);
+      _render();
+    },
+    getSelectedDate() { return selectedDate ? new Date(selectedDate) : null; },
+    setRange(start, end) {
+      if (destroyed) {return;}
+      rangeStart = _validDate(start);
+      rangeEnd = _validDate(end);
+      if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
+        [ rangeStart, rangeEnd ] = [ rangeEnd, rangeStart ];
+      }
+      _render();
+      if (onRangeSelect && rangeStart && rangeEnd) {
+        onRangeSelect({ start: new Date(rangeStart), end: new Date(rangeEnd) });
+      }
+    },
+    getRange() {
+      return {
+        start: rangeStart ? new Date(rangeStart) : null,
+        end: rangeEnd ? new Date(rangeEnd) : null,
+      };
+    },
+    setEvents(newEvents) {
+      if (destroyed) {return;}
+      events = Array.isArray(newEvents) ? newEvents.map(e => ({ ...e })) : [];
+      _render();
+    },
+    addEvent(ev) {
+      if (destroyed || !ev || typeof ev !== 'object') {return;}
+      events.push({ ...ev });
+      _render();
+    },
+    removeEvent(id) {
+      if (destroyed) {return;}
+      events = events.filter(e => e.id !== id);
+      _render();
+    },
+    setViewMode(mode) {
+      if (destroyed) {return;}
+      if (mode === 'month' || mode === 'week') {
+        viewMode = mode;
+        _render();
+        _emitChange();
+      }
+    },
+    getViewMode() { return viewMode; },
+    goToToday() {
+      if (destroyed) {return;}
+      currentDate = new Date();
+      _render();
+      _emitChange();
+    },
+    goToDate(date) {
+      if (destroyed) {return;}
+      const parsed = _validDate(date);
+      if (!parsed) {return;}
+      currentDate = parsed;
+      _render();
+      _emitChange();
+    },
+    prevMonth() {
+      if (destroyed) {return;}
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      _render();
+      _emitChange();
+    },
+    nextMonth() {
+      if (destroyed) {return;}
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      _render();
+      _emitChange();
+    },
+    toggleRangeMode() {
+      if (destroyed) {return;}
+      isRangeMode = !isRangeMode;
+      rangeStart = null;
+      rangeEnd = null;
+      _render();
+      _emitChange();
+    },
   };
+
+  return api;
 }

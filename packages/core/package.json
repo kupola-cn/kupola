@@ -1,25 +1,27 @@
 {
   "name": "@kupola/core",
-  "version": "3.2.4",
+  "version": "3.3.1",
   "description": "Kupola core reactivity engine — Signal, computed, effect, batch.",
   "type": "module",
+  "sideEffects": false,
   "main": "dist/kupola-core.cjs",
   "module": "dist/kupola-core.esm.js",
   "types": "src/index.d.ts",
   "exports": {
     ".": {
+      "types": "./src/index.d.ts",
       "import": "./dist/kupola-core.esm.js",
-      "require": "./dist/kupola-core.cjs",
-      "types": "./src/index.d.ts"
+      "require": "./dist/kupola-core.cjs"
     },
     "./devtools": {
+      "types": "./src/devtools.d.ts",
       "import": "./dist/kupola-core-devtools.esm.js",
       "require": "./dist/kupola-core-devtools.cjs"
     }
   },
   "files": [
     "dist/",
-    "src/"
+    "src/**/*.d.ts"
   ],
   "keywords": [
     "reactivity",

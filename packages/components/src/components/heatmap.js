@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 /**
  * @kupola/core — Heatmap module built on the 2.0 reactive core.
  *
@@ -21,6 +21,8 @@
  *
  * @module components/heatmap
  */
+
+import { createListenerRegistry } from './listener-registry';
 
 const MONTHS = [ '1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月' ];
 const WEEKDAYS = [ '', '一', '', '三', '', '五', '' ];
@@ -57,16 +59,30 @@ function _getOpacity(level) {
 }
 
 export function Heatmap(options = {}) {
-  const data = (options.data || []).map(d => ({ ...d }));
-  const startDate = options.startDate || _oneYearAgo();
-  const endDate = options.endDate || new Date();
-  const baseColor = options.color || '#22c55e';
-  const title = options.title || '';
-  const subtitle = options.subtitle || '';
-  const onCellClick = options.onCellClick || null;
+  const config = options && typeof options === 'object' ? options : {};
+  const data = Array.isArray(config.data) ? config.data.map(d => ({ ...d })) : [];
+  let startDate = _validDate(config.startDate, _oneYearAgo());
+  let endDate = _validDate(config.endDate, new Date());
+  if (startDate > endDate) {[ startDate, endDate ] = [ endDate, startDate ];}
+  const baseColor = config.color || '#22c55e';
+  const title = config.title || '';
+  const subtitle = config.subtitle || '';
+  const onCellClick = typeof config.onCellClick === 'function' ? config.onCellClick : null;
 
-  const _listeners = [];
+  let listeners = createListenerRegistry();
   let tooltip = null;
+  let destroyed = false;
+  let dataByDate = _createDataMap(data);
+
+  function _validDate(value, fallback) {
+    const date = value == null ? fallback : new Date(value);
+    if (!date || !Number.isFinite(date.getTime())) {return new Date(fallback);}
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  function _createDataMap(items) {
+    return new Map(items.map(item => [ item.date, Math.max(0, Number(item.value) || 0) ]));
+  }
 
   function _oneYearAgo() {
     const d = new Date();
@@ -75,8 +91,7 @@ export function Heatmap(options = {}) {
   }
 
   function _dataByDate(dateStr) {
-    const item = data.find(d => d.date === dateStr);
-    return item ? item.value : 0;
+    return dataByDate.get(dateStr) || 0;
   }
 
   function _cellColor(level) {
@@ -90,7 +105,7 @@ export function Heatmap(options = {}) {
     let currentWeek = [];
     const first = new Date(startDate);
     const firstDay = first.getDay();
-    for (let i = 1; i < firstDay; i++) {
+    for (let i = 0; i < firstDay; i++) {
       currentWeek.push(null);
     }
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -103,12 +118,9 @@ export function Heatmap(options = {}) {
     return weeks;
   }
 
-  function _monthLabels(weeks) {
+  function _monthLabels() {
     const result = [];
     let currentMonth = -1;
-    const start = new Date(startDate);
-    const dayOffset = Math.floor((start - new Date(start.getFullYear(), 0, 1)) / 86400000);
-
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const month = d.getMonth();
       if (d.getDate() === 1 && month !== currentMonth) {
@@ -124,13 +136,10 @@ export function Heatmap(options = {}) {
   function _render() {
     const weeks = _buildWeeks();
     const maxValue = Math.max(...data.map(d => d.value), 1);
-    const rgb = _hexToRgb(baseColor);
 
-    // Root
     const root = document.createElement('div');
     root.className = 'ds-heatmap';
 
-    // Header
     if (title || subtitle) {
       const header = document.createElement('div');
       header.className = 'ds-heatmap__header';
@@ -151,7 +160,6 @@ export function Heatmap(options = {}) {
       root.appendChild(header);
     }
 
-    // Body
     const body = document.createElement('div');
     body.className = 'ds-heatmap__body';
 
@@ -161,7 +169,6 @@ export function Heatmap(options = {}) {
     const labelsAndGrid = document.createElement('div');
     labelsAndGrid.className = 'ds-heatmap__labels-and-grid';
 
-    // Weekday labels
     const weekdayLabels = document.createElement('div');
     weekdayLabels.className = 'ds-heatmap__weekday-labels';
     WEEKDAYS.forEach(label => {
@@ -172,14 +179,12 @@ export function Heatmap(options = {}) {
     });
     labelsAndGrid.appendChild(weekdayLabels);
 
-    // Grid container
     const gridContainer = document.createElement('div');
     gridContainer.className = 'ds-heatmap__grid-container';
 
-    // Month labels
     const monthLabelsEl = document.createElement('div');
     monthLabelsEl.className = 'ds-heatmap__month-labels';
-    const monthInfo = _monthLabels(weeks);
+    const monthInfo = _monthLabels();
     monthInfo.forEach((item, index) => {
       const el = document.createElement('div');
       el.className = 'ds-heatmap__month-label';
@@ -191,7 +196,6 @@ export function Heatmap(options = {}) {
     });
     gridContainer.appendChild(monthLabelsEl);
 
-    // Grid
     const grid = document.createElement('div');
     grid.className = 'ds-heatmap__grid';
 
@@ -216,32 +220,6 @@ export function Heatmap(options = {}) {
           cell.dataset.value = String(value);
           cell.style.backgroundColor = _cellColor(level);
 
-          const mouseenterHandler = (e) => {
-            if (tooltip) {
-              const rect = e.target.getBoundingClientRect();
-              tooltip.innerHTML = `<div class="ds-heatmap__tooltip-date">${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日</div><div class="ds-heatmap__tooltip-value">${value} contributions</div>`;
-              tooltip.style.left = `${rect.left + rect.width / 2 - 75}px`;
-              tooltip.style.top = `${rect.top - 50}px`;
-              tooltip.classList.add('is-visible');
-            }
-          };
-          const mouseleaveHandler = () => {
-            if (tooltip) {tooltip.classList.remove('is-visible');}
-          };
-          const clickHandler = () => {
-            if (onCellClick) {onCellClick({ date: dateStr, value });}
-          };
-
-          cell.addEventListener('mouseenter', mouseenterHandler);
-          cell.addEventListener('mouseleave', mouseleaveHandler);
-          cell.addEventListener('click', clickHandler);
-
-          _listeners.push(
-            { el: cell, event: 'mouseenter', handler: mouseenterHandler },
-            { el: cell, event: 'mouseleave', handler: mouseleaveHandler },
-            { el: cell, event: 'click', handler: clickHandler },
-          );
-
           weekCol.appendChild(cell);
         }
       });
@@ -249,11 +227,44 @@ export function Heatmap(options = {}) {
       grid.appendChild(weekCol);
     });
 
+    const getCell = event => event.target.closest?.('.ds-heatmap__cell[data-date]');
+    const mouseoverHandler = event => {
+      const cell = getCell(event);
+      if (!cell || cell.contains(event.relatedTarget) || !tooltip) {return;}
+      const date = new Date(`${cell.dataset.date}T00:00:00`);
+      const rect = cell.getBoundingClientRect();
+      const dateEl = document.createElement('div');
+      dateEl.className = 'ds-heatmap__tooltip-date';
+      dateEl.textContent = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+      const valueEl = document.createElement('div');
+      valueEl.className = 'ds-heatmap__tooltip-value';
+      valueEl.textContent = `${cell.dataset.value} contributions`;
+      tooltip.replaceChildren(dateEl, valueEl);
+      tooltip.style.left = `${rect.left + rect.width / 2 - 75}px`;
+      tooltip.style.top = `${rect.top - 50}px`;
+      tooltip.classList.add('is-visible');
+    };
+    const mouseoutHandler = event => {
+      const cell = getCell(event);
+      if (cell && !cell.contains(event.relatedTarget) && tooltip) {
+        tooltip.classList.remove('is-visible');
+      }
+    };
+    const clickHandler = event => {
+      const cell = getCell(event);
+      if (cell && onCellClick) {
+        onCellClick({ date: cell.dataset.date, value: Number(cell.dataset.value) });
+      }
+    };
+
+    listeners.on(grid, 'mouseover', mouseoverHandler);
+    listeners.on(grid, 'mouseout', mouseoutHandler);
+    listeners.on(grid, 'click', clickHandler);
+
     gridContainer.appendChild(grid);
     labelsAndGrid.appendChild(gridContainer);
     container.appendChild(labelsAndGrid);
 
-    // Legend
     const legend = document.createElement('div');
     legend.className = 'ds-heatmap__legend';
     const lessLabel = document.createElement('span');
@@ -278,7 +289,6 @@ export function Heatmap(options = {}) {
     body.appendChild(container);
     root.appendChild(body);
 
-    // Tooltip (appended to body)
     tooltip = document.createElement('div');
     tooltip.className = 'ds-heatmap__tooltip';
     root.appendChild(tooltip);
@@ -288,37 +298,32 @@ export function Heatmap(options = {}) {
 
   const element = _render();
 
-  function updateData(newData) {
-    _listeners.forEach(({ el, event, handler }) => {
-      el.removeEventListener(event, handler);
-    });
-    _listeners.length = 0;
+  const api = {
+    element,
+    updateData(newData) {
+      if (destroyed) {return;}
+      listeners.destroy();
+      listeners = createListenerRegistry();
 
-    // Replace data
-    data.length = 0;
-    newData.forEach(d => data.push({ ...d }));
+      data.length = 0;
+      if (Array.isArray(newData)) {newData.forEach(d => data.push({ ...d }));}
+      dataByDate = _createDataMap(data);
 
-    // Re-render in-place
-    const newEl = _render();
-    element.innerHTML = newEl.innerHTML;
-    // Copy attributes
-    for (const attr of newEl.attributes) {
-      if (!element.hasAttribute(attr.name)) {
-        element.setAttribute(attr.name, attr.value);
+      const newEl = _render();
+      element.replaceChildren(...newEl.childNodes);
+      element.className = newEl.className;
+    },
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      listeners.destroy();
+      tooltip = null;
+      if (element && element.parentNode) {
+        element.remove();
       }
-    }
-  }
+      Object.freeze(api);
+    },
+  };
 
-  function destroy() {
-    _listeners.forEach(({ el, event, handler }) => {
-      el.removeEventListener(event, handler);
-    });
-    _listeners.length = 0;
-    tooltip = null;
-    if (element && element.parentNode) {
-      element.remove();
-    }
-  }
-
-  return { element, updateData, destroy };
+  return api;
 }

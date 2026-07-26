@@ -1,6 +1,4 @@
-import { defineConfig } from 'vitepress'
-
-export default defineConfig({
+export default {
   title: 'Kupola 3.0',
   description: '现代模块化 UI 组件库',
   lang: 'zh-CN',
@@ -190,4 +188,4 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/kupola-cn/kupola' },
     ],
   },
-})
+}

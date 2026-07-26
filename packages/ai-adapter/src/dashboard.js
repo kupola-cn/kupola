@@ -91,9 +91,10 @@ export class AIDashboard {
     this._renderAll();
 
     for (const [name, card] of this.cards) {
-      watch(() => ({ data: card.lastData, error: card.lastError }), () => {
+      const stopWatch = watch(() => ({ data: card.lastData, error: card.lastError }), () => {
         this._renderCard(name);
       });
+      this._unsubscribers.push(stopWatch);
     }
 
     const unsub = this.adapter.bus.on('result', ({ command, result }) => {

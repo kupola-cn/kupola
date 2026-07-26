@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+/* global __DEV__ */
 /**
  * @kupola/core — Computed: lazy derived signal.
  *
@@ -8,7 +9,19 @@
  * @module computed
  */
 
-import { Signal, track, trigger, pushEffect, popEffect } from './signal.js';
+import {
+  Signal,
+  track,
+  trigger,
+  getTriggerContext,
+  pushEffect,
+  popEffect,
+  unsubscribe,
+} from './signal.js';
+import { isProfilerEnabled, profileComputedRun } from './devtools.js';
+import { registerScopeCleanup } from './effect.js';
+
+const profilerInstrumentationEnabled = typeof __DEV__ === 'undefined' || __DEV__;
 
 /**
  * Create a computed (derived) signal.
@@ -25,9 +38,13 @@ import { Signal, track, trigger, pushEffect, popEffect } from './signal.js';
  *
  * @template T
  * @param {() => T} fn  Computation function. All signal reads inside are tracked.
- * @returns {{ readonly value: T, peek: () => T }}
+ * @returns {{ readonly value: T, peek: () => T, dispose: () => void }}
  */
 export function computed(fn) {
+  if (typeof fn !== 'function') {
+    throw new TypeError('[kupola] computed() expects a function.');
+  }
+
   /** @type {Signal<T>} Underlying signal that holds the cached result. */
   const sig = new Signal(undefined);
 
@@ -36,6 +53,7 @@ export function computed(fn) {
 
   /** @type {Set<Signal>} Signals this computed depends on. */
   let deps = new Set();
+  let computing = false;
 
   /**
    * Internal tracking record for dependency collection.
@@ -47,14 +65,24 @@ export function computed(fn) {
     _sync: true,
     _run: null,
     _disposed: false,
+    _isComputed: true,
   };
 
-  // Synchronous callback: when a dep changes, mark dirty and propagate.
+  // Invalidate synchronously. If there are consumers, recompute now so a
+  // downstream effect is notified only when the derived value changed.
   tracker._run = () => {
-    if (!dirty) {
-      dirty = true;
-      // Propagate to downstream effects/computed that subscribe to `sig`.
-      trigger(sig);
+    if (tracker._disposed) {return;}
+    // A failed recomputation leaves the value dirty. Consumers still need a
+    // later source change to retry it; only unobserved computeds can defer
+    // repeated invalidations until their next read.
+    if (dirty && sig._subscribers.size === 0) {return;}
+    dirty = true;
+    if (sig._subscribers.size === 0) {return;}
+
+    const previous = sig._value;
+    recompute();
+    if (!Object.is(previous, sig._value)) {
+      trigger(sig, getTriggerContext());
     }
   };
 
@@ -62,28 +90,38 @@ export function computed(fn) {
    * Re-evaluate the computation and cache the result.
    */
   function recompute() {
+    if (computing) {
+      throw new Error('[kupola] Circular computed dependency detected.');
+    }
+    computing = true;
+
     // Unsubscribe from old deps.
     for (const d of deps) {
-      d._subscribers.delete(tracker);
+      unsubscribe(d, tracker);
     }
     deps.clear();
     tracker._deps = deps;
 
-    pushEffect(tracker);
     try {
-      const result = fn();
-      if (!Object.is(sig._value, result)) {
-        sig._value = result;
+      pushEffect(tracker);
+      try {
+        const result = profilerInstrumentationEnabled && isProfilerEnabled()
+          ? profileComputedRun(tracker, fn)
+          : fn();
+        if (!Object.is(sig._value, result)) {
+          sig._value = result;
+        }
+      } finally {
+        popEffect();
       }
     } finally {
-      popEffect();
+      computing = false;
     }
 
     dirty = false;
   }
 
-  // Return a read-only signal-like object.
-  return {
+  const result = {
     /**
      * Read the computed value. Recomputes if dirty.
      * Also registers a dependency if read inside another effect/computed.
@@ -107,12 +145,37 @@ export function computed(fn) {
       return sig._value;
     },
 
+    /** Permanently stop dependency tracking for this computed value. */
+    dispose() {
+      if (tracker._disposed) {return;}
+      tracker._disposed = true;
+      for (const dep of deps) {
+        unsubscribe(dep, tracker);
+      }
+      deps.clear();
+      for (const subscriber of sig._subscribers) {
+        if (subscriber._deps) {subscriber._deps.delete(sig);}
+      }
+      sig._subscribers.clear();
+      sig._disposed = true;
+      dirty = false;
+    },
+
     toString() {
       return String(this.value);
     },
 
     toJSON() {
-      return JSON.stringify(this.value);
+      return this.value;
     },
   };
+
+  const unregisterScopeCleanup = registerScopeCleanup(() => result.dispose());
+  const originalDispose = result.dispose;
+  result.dispose = () => {
+    if (unregisterScopeCleanup) {unregisterScopeCleanup();}
+    originalDispose();
+  };
+
+  return result;
 }

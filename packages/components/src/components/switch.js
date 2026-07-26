@@ -20,6 +20,7 @@
 
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
+import { createListenerRegistry } from './listener-registry';
 
 /**
  * Create a Switch component instance.
@@ -38,11 +39,13 @@ export function Switch(options = {}) {
   } = options;
 
   let _checked = initialChecked;
+  let destroyed = false;
+  const listeners = createListenerRegistry();
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function toggle() {
-    if (disabled) {return;}
+    if (disabled || destroyed) {return;}
     _checked = !_checked;
     _syncInput();
     _syncAria();
@@ -54,14 +57,11 @@ export function Switch(options = {}) {
   }
 
   function setChecked(val) {
-    if (disabled) {return;}
+    if (disabled || destroyed) {return;}
     _checked = !!val;
     _syncInput();
     _syncAria();
-  }
-
-  function destroy() {
-    instance.destroy();
+    if (onChange) {onChange(_checked);}
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
@@ -97,16 +97,23 @@ export function Switch(options = {}) {
   const labelEl = container.querySelector('.ds-switch');
   const inputEl = container.querySelector('input[type="checkbox"]');
 
-  // Bind click on the label (prevent default checkbox toggle, use our own logic)
   if (labelEl) {
-    labelEl.addEventListener('click', onSwitchClick);
+    listeners.on(labelEl, 'click', onSwitchClick);
   }
 
-  return {
+  const api = {
     get element() { return container; },
     toggle,
     isChecked,
     setChecked,
-    destroy,
+    destroy() {
+      if (destroyed) {return;}
+      destroyed = true;
+      listeners.destroy();
+      instance.destroy();
+      Object.freeze(api);
+    },
   };
+
+  return api;
 }
