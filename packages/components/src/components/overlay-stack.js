@@ -9,7 +9,9 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
-const states = new WeakMap();
+const OVERLAY_STATES_KEY = Symbol.for('kupola.components.overlayStates');
+const states = globalThis[OVERLAY_STATES_KEY]
+  || (globalThis[OVERLAY_STATES_KEY] = new WeakMap());
 
 function getFocusable(container) {
   return Array.from(container?.querySelectorAll?.(FOCUSABLE_SELECTOR) || [])

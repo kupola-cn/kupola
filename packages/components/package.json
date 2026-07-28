@@ -1,6 +1,6 @@
 {
   "name": "@kupola/components",
-  "version": "3.3.6",
+  "version": "3.3.7",
   "description": "Kupola UI components — 48+ accessible, responsive components for building modern web interfaces.",
   "type": "module",
   "sideEffects": [
@@ -301,7 +301,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@kupola/core": "^3.3.3",
-    "@kupola/platform": "^3.3.3"
+    "@kupola/core": "^3.3.7",
+    "@kupola/platform": "^3.3.7"
   }
 }

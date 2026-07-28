@@ -1,6 +1,6 @@
 {
   "name": "@kupola/ai-adapter",
-  "version": "3.3.6",
+  "version": "3.3.7",
   "description": "AI operation engine for Kupola — natural language → structured commands with Query/Action/Flow engines",
   "type": "module",
   "main": "dist/ai-adapter.cjs",
@@ -42,10 +42,10 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@kupola/core": "^3.3.3"
+    "@kupola/core": "^3.3.7"
   },
   "devDependencies": {
-    "@kupola/core": "^3.3.3"
+    "@kupola/core": "^3.3.7"
   },
   "scripts": {
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.mjs",

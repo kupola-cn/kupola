@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 3.3.7 (2026-07-28)
+
+### Bug Fixes
+
+- Share overlay stack state across the package root and subpath entry points
+  when both are loaded in the same document.
+
 ## 3.3.6 (2026-07-28)
 
 ### Bug Fixes

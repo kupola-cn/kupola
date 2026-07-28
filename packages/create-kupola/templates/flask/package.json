@@ -4,7 +4,7 @@
   "private": true,
   "description": "Flask + Kupola UI project",
   "dependencies": {
-    "@kupola/core": "^3.3.3",
-    "@kupola/platform": "^3.3.3"
+    "@kupola/core": "^3.3.7",
+    "@kupola/platform": "^3.3.7"
   }
 }
