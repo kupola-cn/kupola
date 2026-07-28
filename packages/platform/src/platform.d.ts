@@ -221,7 +221,6 @@ export type Component<Props extends Record<string, any> = Record<string, any>> =
 
 export interface ComponentFactory {
   (initialProps?: Record<string, any>, children?: ViewChild): ComponentInstance;
-  readonly _isKupolaComponent?: true;
 }
 
 /** Define a reusable component. Returns a factory: (initialProps?, children?) => ComponentInstance. */

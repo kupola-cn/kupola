@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 3.3.6 (2026-07-28)
+
+### Bug Fixes
+
+- Use shared symbols for cross-entry component lifecycle and schema form event
+  protocols.
+
 ## 3.3.5 (2026-07-28)
 
 ### Bug Fixes

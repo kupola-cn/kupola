@@ -17,7 +17,10 @@ import {
   runWithProvideContext,
 } from './context.js';
 
+const KUPOLA_COMPONENT_FACTORY = Symbol.for('kupola.component.factory');
 const KUPOLA_COMPONENT_INSTANCE = Symbol.for('kupola.component.instance');
+const KUPOLA_COMPONENT_NOTIFY_MOUNTED = Symbol.for('kupola.component.notifyMounted');
+const KUPOLA_EVENT_MOUNT = Symbol.for('kupola.event.mount');
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 /** Minimal HTML entity escaping for text content. */
@@ -315,7 +318,7 @@ export class TextPart {
       const inserted = this._replaceDynamicFragment(fragment, instances);
       if (inserted) {
         for (const instance of instances) {
-          instance?._notifyMounted?.();
+          instance?.[KUPOLA_COMPONENT_NOTIFY_MOUNTED]?.();
         }
       } else {
         destroyTemplateInstances(instances);
@@ -551,7 +554,7 @@ export class EventPart {
         }
       };
       this.element.addEventListener(this.eventName, this._bound);
-      const mount = this.handler._kupolaEventMount;
+      const mount = this.handler[KUPOLA_EVENT_MOUNT];
       if (typeof mount === 'function') {
         const cleanup = runWithProvideContext(
           this._provideContext,
@@ -711,7 +714,7 @@ export function createApp(tpl, options = {}) {
     : runWithScheduler(scheduler, () => withAppContext(fn));
   const runAppHook = hook => withAppScheduler(hook);
   const resolveRoot = () => {
-    if (typeof tpl === 'function' && tpl._isKupolaComponent === true) {
+    if (typeof tpl === 'function' && tpl[KUPOLA_COMPONENT_FACTORY] === true) {
       return tpl();
     }
     return tpl;
@@ -1108,7 +1111,7 @@ function renderTemplate(tpl, container) {
 export function render(tpl, container, options = {}) {
   if (isComponentInstanceLike(tpl)) {
     container.appendChild(tpl.element);
-    tpl._notifyMounted?.();
+  tpl[KUPOLA_COMPONENT_NOTIFY_MOUNTED]?.();
     return tpl;
   }
   if (options && options.scheduler !== undefined) {

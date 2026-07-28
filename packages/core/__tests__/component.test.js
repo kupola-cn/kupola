@@ -27,7 +27,7 @@ describe('defineComponent', () => {
     });
 
     expect(typeof Comp).toBe('function');
-    expect(Comp._isKupolaComponent).toBe(true);
+    expect(Comp[Symbol.for('kupola.component.factory')]).toBe(true);
   });
 
   test('factory returns element, destroy, and update', () => {

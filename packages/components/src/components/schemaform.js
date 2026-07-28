@@ -8,6 +8,8 @@
 import { defineComponent } from '@kupola/platform/component';
 import { registerDirective } from '@kupola/platform/directives';
 import { html, htmlString } from '@kupola/platform/template';
+
+const KUPOLA_EVENT_MOUNT = Symbol.for('kupola.event.mount');
 import { Form } from './form.js';
 import { Input } from './input.js';
 import { Message } from './message.js';
@@ -1706,7 +1708,7 @@ export function schemaSubmit(schemaDefinition, onSubmit, options = {}) {
     onSubmit?.(runtime.getData(), runtime, event);
   };
 
-  handler._kupolaEventMount = element => {
+  handler[KUPOLA_EVENT_MOUNT] = element => {
     const formElement = resolveFormElement(element);
     if (!formElement) {
       return null;

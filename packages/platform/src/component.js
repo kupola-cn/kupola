@@ -21,7 +21,9 @@ import {
   runWithProvideContext,
 } from './context.js';
 
+const KUPOLA_COMPONENT_FACTORY = Symbol.for('kupola.component.factory');
 const KUPOLA_COMPONENT_INSTANCE = Symbol.for('kupola.component.instance');
+const KUPOLA_COMPONENT_NOTIFY_MOUNTED = Symbol.for('kupola.component.notifyMounted');
 
 /** Observer state is isolated per ownerDocument for iframe/micro-frontend use. */
 const observerStates = new WeakMap();
@@ -439,7 +441,7 @@ export function defineComponent(definition) {
 
     return {
       [KUPOLA_COMPONENT_INSTANCE]: true,
-      _notifyMounted() {
+      [KUPOLA_COMPONENT_NOTIFY_MOUNTED]() {
         checkMounted();
       },
       get element() { return fragment; },
@@ -479,7 +481,7 @@ export function defineComponent(definition) {
     };
   }
 
-  component._isKupolaComponent = true;
+  component[KUPOLA_COMPONENT_FACTORY] = true;
   component._propNames = propNames;
 
   return component;
