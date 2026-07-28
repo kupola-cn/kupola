@@ -33,5 +33,4 @@
 # Root configuration
 /package.json                @kupola-cn/maintainers
 /rollup.config.cjs           @kupola-cn/maintainers
-/vite.config.js              @kupola-cn/maintainers
 /.size-limit.json            @kupola-cn/maintainers

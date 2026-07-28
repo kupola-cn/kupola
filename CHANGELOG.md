@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 3.3.3 (2026-07-28)
+
+### Bug Fixes
+
+- Preserve external imports for Kupola package subpaths so components and the
+  platform share one runtime when installed from npm.
+- Remove obsolete root Vite configuration from the package workspace.
+
 ## 3.3.2 (2026-07-28)
 
 ### Features

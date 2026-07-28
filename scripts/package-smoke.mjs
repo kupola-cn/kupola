@@ -119,6 +119,18 @@ for (const [name, value] of Object.entries({
 
 // ── @kupola/components ──────────────────────────────────────────────────────
 const components = await testPackage('packages/components', '@kupola/components');
+const componentsViews = await readFile(
+  resolvePackagePath('packages/components', components.pkg.exports['./views'].import),
+  'utf8',
+);
+
+for (const dependency of [ '@kupola/platform/component', '@kupola/platform/template' ]) {
+  if (!componentsViews.includes(dependency)) {
+    throw new Error(
+      `Expected @kupola/components/views to preserve its external ${dependency} import.`,
+    );
+  }
+}
 
 // ── @kupola/ai-adapter ──────────────────────────────────────────────────────
 const aiAdapter = await testPackage('packages/ai-adapter', '@kupola/ai-adapter');

@@ -1,6 +1,6 @@
 {
   "name": "@kupola/auth",
-  "version": "3.3.2",
+  "version": "3.3.3",
   "description": "Kupola auth — RBAC-based permission guard system with ABAC attribute filtering support.",
   "type": "module",
   "sideEffects": false,
@@ -57,12 +57,12 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@kupola/core": "^3.1.0",
-    "@kupola/platform": "^3.1.0"
+    "@kupola/core": "^3.3.3",
+    "@kupola/platform": "^3.3.3"
   },
   "devDependencies": {
-    "@kupola/core": "^3.1.0",
-    "@kupola/platform": "^3.1.0"
+    "@kupola/core": "^3.3.3",
+    "@kupola/platform": "^3.3.3"
   },
   "scripts": {
     "test": "jest",

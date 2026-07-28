@@ -63,7 +63,7 @@ function bundle(input, outputBase, include, options = {}, resolveOptions = {}, e
       },
     ],
     plugins: plugins(include, resolveOptions),
-    external: externalPkgs,
+    external: id => externalPkgs.some(pkg => id === pkg || id.startsWith(`${pkg}/`)),
   };
 }
 

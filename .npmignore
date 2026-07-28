@@ -8,10 +8,8 @@ node_modules/
 .prettierrc
 jest.config.cjs
 rollup.config.cjs
-vite.config.js
 tsconfig.json
 .size-limit.json
-.browserslistrc
 babel.config.json
 
 # IDE / tools

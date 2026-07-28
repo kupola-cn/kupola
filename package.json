@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "3.3.2",
+  "version": "3.3.3",
   "description": "A zero-framework interaction layer and optional native component library for server-rendered HTML.",
   "private": true,
   "type": "module",
@@ -20,7 +20,6 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "dev": "vite",
     "clean": "node scripts/clean-build.mjs",
     "build": "npm run clean && rollup -c && npm run build:css",
     "build:rollup": "rollup -c",
