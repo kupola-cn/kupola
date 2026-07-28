@@ -1854,8 +1854,10 @@ const KNOWN_DIRECTIVES = new Set([
   'k-else', 'k-for', 'k-key', 'k-once', 'k-pre',
 ]);
 
+const CUSTOM_DIRECTIVES_KEY = Symbol.for('kupola.platform.customDirectives');
 /** @type {Map<string, Object>} */
-const customDirectives = new Map();
+const customDirectives = globalThis[CUSTOM_DIRECTIVES_KEY]
+  || (globalThis[CUSTOM_DIRECTIVES_KEY] = new Map());
 
 export function registerDirective(name, definition) {
   customDirectives.set(name, definition);

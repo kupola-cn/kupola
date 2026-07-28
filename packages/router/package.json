@@ -1,6 +1,6 @@
 {
   "name": "@kupola/router",
-  "version": "3.3.4",
+  "version": "3.3.5",
   "description": "Kupola router — Complete lightweight SPA routing with nested routes, guards, transitions, and auth integration.",
   "type": "module",
   "sideEffects": false,

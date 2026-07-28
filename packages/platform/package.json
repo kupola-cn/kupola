@@ -1,6 +1,6 @@
 {
   "name": "@kupola/platform",
-  "version": "3.3.4",
+  "version": "3.3.5",
   "description": "Kupola platform — Template rendering, component system, directives, theme, lazy loading, SSR, i18n.",
   "type": "module",
   "sideEffects": [
