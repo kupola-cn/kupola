@@ -21,6 +21,8 @@ import {
   runWithProvideContext,
 } from './context.js';
 
+const KUPOLA_COMPONENT_INSTANCE = Symbol.for('kupola.component.instance');
+
 /** Observer state is isolated per ownerDocument for iframe/micro-frontend use. */
 const observerStates = new WeakMap();
 
@@ -436,7 +438,7 @@ export function defineComponent(definition) {
     }
 
     return {
-      _isKupolaComponentInstance: true,
+      [KUPOLA_COMPONENT_INSTANCE]: true,
       _notifyMounted() {
         checkMounted();
       },

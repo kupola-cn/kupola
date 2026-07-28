@@ -206,7 +206,6 @@ export interface ComponentLifecycleContext {
 }
 
 export interface ComponentInstance {
-  readonly _isKupolaComponentInstance: true;
   readonly element: DocumentFragment;
   readonly _instance: TemplateInstance;
   destroy: () => void;

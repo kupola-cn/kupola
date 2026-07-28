@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 3.3.4 (2026-07-28)
+
+### Bug Fixes
+
+- Use a global symbol for component instance recognition across independently
+  bundled platform entry points.
+
 ## 3.3.3 (2026-07-28)
 
 ### Bug Fixes

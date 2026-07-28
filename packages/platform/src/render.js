@@ -16,6 +16,8 @@ import {
   provideInContext,
   runWithProvideContext,
 } from './context.js';
+
+const KUPOLA_COMPONENT_INSTANCE = Symbol.for('kupola.component.instance');
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 /** Minimal HTML entity escaping for text content. */
@@ -57,7 +59,7 @@ export function isComponentInstanceLike(v) {
   return !!(
     v
     && typeof v === 'object'
-    && v._isKupolaComponentInstance === true
+    && v[KUPOLA_COMPONENT_INSTANCE] === true
     && v.element
     && typeof v.destroy === 'function'
   );
