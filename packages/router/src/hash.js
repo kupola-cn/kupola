@@ -94,6 +94,12 @@ export class HashHistory {
 }
 
 function createFullPath(path, query) {
-  const search = new URLSearchParams(query || {}).toString();
+  const params = new URLSearchParams();
+  for (const [ key, value ] of Object.entries(query || {})) {
+    for (const item of (Array.isArray(value) ? value : [ value ])) {
+      if (item !== undefined && item !== null) {params.append(key, String(item));}
+    }
+  }
+  const search = params.toString();
   return search ? `${path}?${search}` : path;
 }

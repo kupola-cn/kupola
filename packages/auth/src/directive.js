@@ -33,9 +33,22 @@ function validateStore(store) {
 
 function _permissionKey(permission, mode, disabledClass) {
   try {
-    return JSON.stringify([permission, mode, disabledClass]);
+    return JSON.stringify([ permission, mode, disabledClass ]);
   } catch (e) {
     return `fallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  }
+}
+
+function _authSnapshot(auth) {
+  if (!auth || typeof auth !== 'object') {return 'none';}
+  try {
+    return JSON.stringify({
+      permissions: auth.permissions,
+      role: auth.role,
+      userPermissions: auth.user?.permissions,
+    });
+  } catch {
+    return null;
   }
 }
 
@@ -61,32 +74,39 @@ function _clearCacheForElement(element) {
  * @note Permission checks must return a strict boolean `true` to be considered granted.
  *       Values like `1`, `"true"`, or other truthy values will be treated as `false`.
  */
-function _checkPermission(permission, handler, auth) {
+function _checkPermission(permission, handler, auth, match = 'any') {
   try {
-    let result;
-    if (handler && typeof handler.check === 'function') {
-      result = handler.check(permission);
-    } else if (!auth) {
-      return false;
-    } else if (Array.isArray(permission)) {
-      result = typeof auth.hasAnyPermission === 'function'
-        && auth.hasAnyPermission(permission);
-    } else if (typeof permission === 'string' && permission.startsWith('role:')) {
-      result = typeof auth.hasRole === 'function' && auth.hasRole(permission.slice(5));
-    } else {
-      result = typeof permission === 'string'
-        && typeof auth.hasPermission === 'function'
-        && auth.hasPermission(permission);
-    }
+    const checkOne = value => {
+      let result;
+      if (handler && typeof handler.check === 'function') {
+        result = handler.check(value);
+      } else if (!auth) {
+        return false;
+      } else if (typeof value === 'string' && value.startsWith('role:')) {
+        result = typeof auth.hasRole === 'function' && auth.hasRole(value.slice(5));
+      } else {
+        result = typeof value === 'string'
+          && typeof auth.hasPermission === 'function'
+          && auth.hasPermission(value);
+      }
 
-    if (result && typeof result.then === 'function') {
-      throw new TypeError(
-        '[kupola/auth] Permission checks must return a boolean synchronously. ' +
-        'Async permission checks are not supported. Consider using synchronous checks ' +
-        'or handling async logic before passing to the permission directive.'
-      );
+      if (result && typeof result.then === 'function') {
+        throw new TypeError(
+          '[kupola/auth] Permission checks must return a boolean synchronously. ' +
+          'Async permission checks are not supported. Consider using synchronous checks ' +
+          'or handling async logic before passing to the permission directive.',
+        );
+      }
+      return result === true;
+    };
+
+    if (!Array.isArray(permission)) {
+      return checkOne(permission);
     }
-    return result === true;
+    if (permission.length === 0) {return false;}
+    return match === 'all'
+      ? permission.every(checkOne)
+      : permission.some(checkOne);
   } catch (error) {
     if (typeof console !== 'undefined' && typeof console.error === 'function') {
       console.error('[kupola/auth] Permission check failed closed:', error);
@@ -109,6 +129,7 @@ export class PermissionDirective {
     this.element = element;
     this.authStore = validateStore(options.authStore);
     this.permission = null;
+    this.match = 'any';
     this.mode = null;
     this.disabledClass = null;
     this.fallbackContent = null;
@@ -151,6 +172,7 @@ export class PermissionDirective {
   parse() {
     const el = this.element;
     this.permission = this._parsePermission(el.getAttribute('k-permission'));
+    this.match = el.getAttribute('k-permission-match') === 'all' ? 'all' : 'any';
     this.handler = this._getPermissionHandler();
     this.mode = el.getAttribute('k-permission-mode') || this.handler?.defaultMode || 'hide';
     this.disabledClass = el.getAttribute('k-permission-class')
@@ -173,7 +195,7 @@ export class PermissionDirective {
       if (typeof parsed === 'string') {
         return parsed;
       }
-    } catch (e) {
+    } catch {
       // A plain permission string is the normal form.
     }
 
@@ -183,8 +205,14 @@ export class PermissionDirective {
   check() {
     if (this.permission === null) {return true;}
 
-    const cacheKey = _permissionKey(this.permission, this.mode, this.disabledClass);
-    if (this.useCache) {
+    const auth = this._getAuthContext();
+    const snapshot = _authSnapshot(auth);
+    const cacheKey = _permissionKey(
+      this.permission,
+      `${this.mode}:${this.match}:${snapshot}`,
+      this.disabledClass,
+    );
+    if (this.useCache && snapshot !== null) {
       const cached = _getElementCache(this.element).get(cacheKey);
       if (
         cached &&
@@ -194,10 +222,9 @@ export class PermissionDirective {
       }
     }
 
-    const auth = this._getAuthContext();
-    const result = _checkPermission(this.permission, this.handler, auth);
+    const result = _checkPermission(this.permission, this.handler, auth, this.match);
 
-    if (this.useCache) {
+    if (this.useCache && snapshot !== null) {
       _getElementCache(this.element).set(cacheKey, {
         handler: this.handler,
         result,
@@ -241,7 +268,7 @@ export class PermissionDirective {
         child.remove();
       }
       if (this.fallbackContent) {
-        el.innerHTML = this.fallbackContent;
+        el.textContent = this.fallbackContent;
       } else if (this.handler?.fallback) {
         this.handler.fallback(el, this.permission);
       } else {
@@ -382,6 +409,7 @@ export class PermissionDirective {
       if (this.destroyed) {return;}
       const nextPermission = this._parsePermission(this.element.getAttribute('k-permission'));
       const nextMode = this.element.getAttribute('k-permission-mode') || this.handler?.defaultMode || 'hide';
+      const nextMatch = this.element.getAttribute('k-permission-match') === 'all' ? 'all' : 'any';
       const nextClass = this.element.getAttribute('k-permission-class')
         || this.handler?.disabledClass
         || 'k-permission-disabled';
@@ -391,6 +419,7 @@ export class PermissionDirective {
       if (
         JSON.stringify(nextPermission) !== JSON.stringify(this.permission) ||
         nextMode !== this.mode ||
+        nextMatch !== this.match ||
         nextClass !== this.disabledClass ||
         nextFallback !== this.fallbackContent ||
         nextUseCache !== this.useCache
@@ -409,6 +438,7 @@ export class PermissionDirective {
       attributeFilter: [
         'k-permission',
         'k-permission-mode',
+        'k-permission-match',
         'k-permission-class',
         'k-permission-fallback',
         'k-permission-cache',

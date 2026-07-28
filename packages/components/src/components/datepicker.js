@@ -63,6 +63,7 @@ export function Datepicker(options = {}) {
     viewYear: now.getFullYear(),
     viewMonth: now.getMonth(),
     selectedDate: null,
+    focusDate: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
   };
 
   let _minDate = _parseDate(config.minDate);
@@ -73,6 +74,7 @@ export function Datepicker(options = {}) {
   const parsedInitialValue = _parseDate(initialValue);
   if (parsedInitialValue && !_isDisabled(parsedInitialValue)) {
     state.selectedDate = parsedInitialValue;
+    state.focusDate = new Date(parsedInitialValue);
     state.viewYear = parsedInitialValue.getFullYear();
     state.viewMonth = parsedInitialValue.getMonth();
   }
@@ -130,6 +132,13 @@ export function Datepicker(options = {}) {
       && date.getDate() === today.getDate();
   }
 
+  function _sameDay(left, right) {
+    return Boolean(left && right)
+      && left.getFullYear() === right.getFullYear()
+      && left.getMonth() === right.getMonth()
+      && left.getDate() === right.getDate();
+  }
+
   function _isSelected(date) {
     if (!state.selectedDate) {return false;}
     return date.getFullYear() === state.selectedDate.getFullYear()
@@ -141,7 +150,16 @@ export function Datepicker(options = {}) {
     if (disabled) {return true;}
     if (_minDate && date < _minDate) {return true;}
     if (_maxDate && date > _maxDate) {return true;}
-    if (disabledDates && disabledDates(new Date(date.getTime()))) {return true;}
+    if (disabledDates) {
+      try {
+        if (disabledDates(new Date(date.getTime()))) {return true;}
+      } catch (error) {
+        if (typeof console !== 'undefined' && typeof console.error === 'function') {
+          console.error('[kupola/components] Datepicker disabledDates failed:', error);
+        }
+        return true;
+      }
+    }
     return false;
   }
 
@@ -228,6 +246,7 @@ export function Datepicker(options = {}) {
     const parsed = _parseDate(val);
     state.selectedDate = parsed && !_isDisabled(parsed) ? parsed : null;
     if (state.selectedDate) {
+      state.focusDate = new Date(state.selectedDate);
       state.viewYear = state.selectedDate.getFullYear();
       state.viewMonth = state.selectedDate.getMonth();
     }
@@ -245,6 +264,7 @@ export function Datepicker(options = {}) {
     if (destroyed) {return;}
     if (_isDisabled(date)) {return;}
     state.selectedDate = date;
+    state.focusDate = new Date(date);
     state.viewYear = date.getFullYear();
     state.viewMonth = date.getMonth();
     _updateInput();
@@ -306,6 +326,9 @@ export function Datepicker(options = {}) {
       if (outside) {btn.classList.add('is-outside');}
       if (_isToday(date)) {btn.classList.add('is-today');}
       if (_isSelected(date)) {btn.classList.add('is-selected');}
+      btn.tabIndex = _sameDay(date, state.focusDate) ? 0 : -1;
+      btn.setAttribute('aria-label', _formatDate(date));
+      btn.setAttribute('aria-selected', String(_isSelected(date)));
       if (_isDisabled(date)) {
         btn.disabled = true;
         btn.style.opacity = '0.3';
@@ -334,8 +357,31 @@ export function Datepicker(options = {}) {
     }
   };
   const onKeydown = (e) => {
-    if (e.key === 'Escape' && state.isOpen) {
+    if (!state.isOpen) {return;}
+    if (e.key === 'Escape') {
       close();
+      return;
+    }
+    const deltas = {
+      ArrowLeft: -1,
+      ArrowRight: 1,
+      ArrowUp: -7,
+      ArrowDown: 7,
+    };
+    if (deltas[e.key] !== undefined) {
+      e.preventDefault();
+      const next = new Date(state.focusDate);
+      next.setDate(next.getDate() + deltas[e.key]);
+      state.focusDate = next;
+      state.viewYear = next.getFullYear();
+      state.viewMonth = next.getMonth();
+      _rerenderCalendar();
+      wrapEl?.querySelector(`[data-date="${next.getTime()}"]`)?.focus();
+      return;
+    }
+    if ((e.key === 'Enter' || e.key === ' ') && state.focusDate) {
+      e.preventDefault();
+      _selectDate(new Date(state.focusDate));
     }
   };
   // ── Render ─────────────────────────────────────────────────────────────────

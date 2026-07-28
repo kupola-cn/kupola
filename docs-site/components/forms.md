@@ -11,6 +11,7 @@ import { Form } from '@kupola/components/form'
 | 组件 | 导入 | 说明 |
 | --- | --- | --- |
 | Form | `@kupola/components/form` | 表单收集、校验和提交处理 |
+| SchemaForm | `@kupola/components/schemaform` | schema 定义与 HTML 自由布局绑定 |
 | Input | `@kupola/components/input` | 文本输入框 |
 | Select | `@kupola/components/select` | 下拉选择器 |
 | Checkbox | `@kupola/components/checkbox` | 复选框 |
@@ -25,4 +26,5 @@ import { Form } from '@kupola/components/form'
 ## 重点
 
 - `Form` 负责把原生表单读写和校验统一起来。
+- `SchemaForm` 适合需要字段规则、typed data 或自定义 HTML 布局的业务表单，详见 [SchemaForm](/components/schemaform)。
 - `Validation` 是独立校验引擎，可单独接入非表单场景。

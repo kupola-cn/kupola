@@ -58,6 +58,7 @@ export function FileUpload(options = {}) {
   const acceptRules = accept.split(',').map(rule => rule.trim().toLowerCase()).filter(Boolean);
 
   let _files = [];
+  let dragDepth = 0;
   let destroyed = false;
   const listeners = createListenerRegistry();
 
@@ -148,15 +149,39 @@ export function FileUpload(options = {}) {
     dropzoneEl.classList.add('is-dragging');
   }
 
+  function _onDragEnter(e) {
+    e.preventDefault();
+    if (disabled) {return;}
+    dragDepth++;
+    dropzoneEl.classList.add('is-dragging');
+  }
+
   function _onDragLeave() {
-    dropzoneEl.classList.remove('is-dragging');
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) {dropzoneEl.classList.remove('is-dragging');}
   }
 
   function _onDrop(e) {
     e.preventDefault();
+    dragDepth = 0;
     dropzoneEl.classList.remove('is-dragging');
     if (disabled) {return;}
     if (e.dataTransfer.files) {_addFiles(e.dataTransfer.files);}
+  }
+
+  function _openFilePicker() {
+    if (!disabled) {inputEl?.click();}
+  }
+
+  function _onDropzoneClick(e) {
+    if (e.target === inputEl) {return;}
+    _openFilePicker();
+  }
+
+  function _onDropzoneKeydown(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') {return;}
+    e.preventDefault();
+    _openFilePicker();
   }
 
   function _onRemoveClick(e) {
@@ -241,7 +266,13 @@ export function FileUpload(options = {}) {
 
   // Drag & drop events
   if (dropzoneEl) {
+    dropzoneEl.setAttribute('role', 'button');
+    dropzoneEl.setAttribute('tabindex', disabled ? '-1' : '0');
+    dropzoneEl.setAttribute('aria-disabled', String(disabled));
+    listeners.on(dropzoneEl, 'click', _onDropzoneClick);
+    listeners.on(dropzoneEl, 'keydown', _onDropzoneKeydown);
     listeners.on(dropzoneEl, 'dragover', _onDragOver);
+    listeners.on(dropzoneEl, 'dragenter', _onDragEnter);
     listeners.on(dropzoneEl, 'dragleave', _onDragLeave);
     listeners.on(dropzoneEl, 'drop', _onDrop);
   }

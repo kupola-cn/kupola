@@ -21,11 +21,8 @@ import {
   runWithProvideContext,
 } from './context.js';
 
-/** Components waiting for their fragment to be inserted into the document. */
-const pendingMountChecks = new Set();
-/** Mounted components whose root nodes are watched for external removal. */
-const activeComponents = new Set();
-let mountObserver = null;
+/** Observer state is isolated per ownerDocument for iframe/micro-frontend use. */
+const observerStates = new WeakMap();
 
 function reportLifecycleError(error, phase) {
   const handler = getErrorHandler();
@@ -46,25 +43,40 @@ function reportLifecycleError(error, phase) {
   }
 }
 
-function stopMountObserverIfUnused() {
-  if (pendingMountChecks.size !== 0 || activeComponents.size !== 0 || !mountObserver) {return;}
-  mountObserver.disconnect();
-  mountObserver = null;
+function stopMountObserverIfUnused(state) {
+  if (!state || state.pending.size !== 0 || state.active.size !== 0 || !state.observer) {
+    return;
+  }
+  state.observer.disconnect();
+  observerStates.delete(state.document);
 }
 
-function ensureMountObserver() {
-  if (mountObserver || typeof MutationObserver !== 'function') {return;}
+function ensureMountObserver(ownerDocument) {
+  if (!ownerDocument || typeof MutationObserver !== 'function') {return null;}
+  const existing = observerStates.get(ownerDocument);
+  if (existing) {return existing;}
 
-  mountObserver = new MutationObserver(records => {
-    for (const check of [ ...pendingMountChecks ]) {
+  const state = {
+    document: ownerDocument,
+    pending: new Set(),
+    active: new Set(),
+    observer: null,
+  };
+  state.observer = new MutationObserver(records => {
+    for (const check of [ ...state.pending ]) {
       try {
         check(records);
       } catch (error) {
         reportLifecycleError(error, 'component-mounted');
       }
     }
-    for (const entry of [ ...activeComponents ]) {
-      if (entry.rootNodes.length > 0 && entry.rootNodes.every(node => !node.isConnected)) {
+    const removedNodes = records.flatMap(record => [ ...record.removedNodes ]);
+    for (const entry of [ ...state.active ]) {
+      const removed = removedNodes.some(removedNode => entry.rootNodes.some(root =>
+        removedNode === root || removedNode.contains?.(root),
+      ));
+      if (removed && entry.rootNodes.length > 0
+        && entry.rootNodes.every(node => !node.isConnected)) {
         try {
           entry.destroy();
         } catch (error) {
@@ -72,35 +84,42 @@ function ensureMountObserver() {
         }
       }
     }
-    stopMountObserverIfUnused();
+    stopMountObserverIfUnused(state);
   });
-  mountObserver.observe(document, { childList: true, subtree: true });
+  state.observer.observe(ownerDocument, { childList: true, subtree: true });
+  observerStates.set(ownerDocument, state);
+  return state;
 }
 
-function watchForMount(check) {
+function watchForMount(check, rootNodes) {
   if (typeof MutationObserver !== 'function') {return () => {};}
-  pendingMountChecks.add(check);
-  ensureMountObserver();
+  const ownerDocument = rootNodes.find(node => node.ownerDocument)?.ownerDocument;
+  const state = ensureMountObserver(ownerDocument);
+  if (!state) {return () => {};}
+  state.pending.add(check);
   return () => {
-    pendingMountChecks.delete(check);
-    stopMountObserverIfUnused();
+    state.pending.delete(check);
+    stopMountObserverIfUnused(state);
   };
 }
 
 function watchForRemoval(rootNodes, destroy) {
   if (typeof MutationObserver !== 'function' || rootNodes.length === 0) {return () => {};}
+  const ownerDocument = rootNodes.find(node => node.ownerDocument)?.ownerDocument;
+  const state = ensureMountObserver(ownerDocument);
+  if (!state) {return () => {};}
   const entry = { rootNodes, destroy };
-  activeComponents.add(entry);
+  state.active.add(entry);
   try {
-    ensureMountObserver();
+    if (!state.observer) {throw new Error('Unable to create component observer.');}
   } catch (error) {
-    activeComponents.delete(entry);
-    stopMountObserverIfUnused();
+    state.active.delete(entry);
+    stopMountObserverIfUnused(state);
     throw error;
   }
   return () => {
-    activeComponents.delete(entry);
-    stopMountObserverIfUnused();
+    state.active.delete(entry);
+    stopMountObserverIfUnused(state);
   };
 }
 
@@ -120,7 +139,7 @@ export function inject(key, defaultValue = undefined) {
  * ```js
  * const Dialog = defineComponent({
  *   props: ['open', 'title'],
- *   setup(props, children) {
+ *   setup({ props, children }) {
  *     const localOpen = signal(props.open?.value ?? false);
  *     const close = () => { localOpen.value = false; };
  *     return () => html`
@@ -205,15 +224,66 @@ export function defineComponent(definition) {
 
     let fragment;
     let instance;
-    let rootNodes;
+    let renderFactory = null;
+    let rootNodes = [];
+    let mountedCalled = false;
+    let disposed = false;
+    let destroyedCalled = false;
+    let stopWatchingMount = null;
+    let stopWatchingRemoval = null;
+    const mountedCallbacks = new Set();
+    const cleanupCallbacks = new Set();
+    const lifecycleController = typeof AbortController === 'function'
+      ? new AbortController()
+      : null;
+    const lifecycleContext = {
+      props: propSignals,
+      get element() {
+        return rootNodes.find(node => node.nodeType === 1) || rootNodes[0] || null;
+      },
+      get elements() {
+        return rootNodes.slice();
+      },
+      signal: lifecycleController?.signal,
+      onMounted(callback) {
+        if (typeof callback !== 'function') {
+          throw new TypeError('[kupola] onMounted() expects a function.');
+        }
+        if (disposed) {return () => {};}
+        if (mountedCalled) {
+          callback(lifecycleContext);
+          return () => {};
+        }
+        mountedCallbacks.add(callback);
+        return () => mountedCallbacks.delete(callback);
+      },
+      onCleanup(callback) {
+        if (typeof callback !== 'function') {
+          throw new TypeError('[kupola] onCleanup() expects a function.');
+        }
+        if (disposed) {
+          callback();
+          return () => {};
+        }
+        cleanupCallbacks.add(callback);
+        return () => cleanupCallbacks.delete(callback);
+      },
+    };
+    const setupContext = Object.freeze({
+      props: propSignals,
+      children,
+      emit,
+      lifecycle: lifecycleContext,
+    });
     try {
       const renderFn = runWithProvideContext(
         componentContext,
-        () => setup(propSignals, children, emit),
+        () => setup(setupContext),
       );
+      renderFactory = typeof renderFn === 'function' ? renderFn : null;
       const template = runWithProvideContext(
         componentContext,
-        () => typeof renderFn === 'function' ? renderFn() : renderFn,
+        () => renderFactory ? renderFactory() : renderFn,
       );
 
       fragment = document.createDocumentFragment();
@@ -227,12 +297,6 @@ export function defineComponent(definition) {
       throw error;
     }
 
-    let mountedCalled = false;
-    let disposed = false;
-    let destroyedCalled = false;
-    let stopWatchingMount = null;
-    let stopWatchingRemoval = null;
-
     const disconnectMountObserver = () => {
       stopWatchingMount?.();
       stopWatchingMount = null;
@@ -243,7 +307,7 @@ export function defineComponent(definition) {
     const runDestroyedHook = () => {
       if (destroyedCalled) {return;}
       destroyedCalled = true;
-      const result = runWithProvideContext(componentContext, () => destroyed?.());
+      const result = runWithProvideContext(componentContext, () => destroyed?.(lifecycleContext));
       if (result && typeof result.then === 'function') {
         result.catch(error => reportLifecycleError(error, 'component-destroyed'));
       }
@@ -253,8 +317,17 @@ export function defineComponent(definition) {
       if (disposed) {return;}
       disposed = true;
       disconnectMountObserver();
+      lifecycleController?.abort();
 
       let firstError;
+      for (const cleanup of [ ...cleanupCallbacks ].reverse()) {
+        try {
+          cleanup();
+        } catch (error) {
+          if (!firstError) {firstError = error;}
+        }
+      }
+      cleanupCallbacks.clear();
       try {
         instance.destroy();
       } catch (error) {
@@ -296,7 +369,7 @@ export function defineComponent(definition) {
       disconnectMountObserver();
       try {
         stopWatchingRemoval = watchForRemoval(rootNodes, dispose);
-        const result = runWithProvideContext(componentContext, () => mounted?.());
+        const result = runWithProvideContext(componentContext, () => mounted?.(lifecycleContext));
         if (result && typeof result.then === 'function') {
           result.catch(error => {
             if (disposed) {return;}
@@ -308,13 +381,43 @@ export function defineComponent(definition) {
             reportLifecycleError(error, 'component-mounted');
           });
         }
+        for (const callback of [ ...mountedCallbacks ]) {
+          runWithProvideContext(componentContext, () => callback(lifecycleContext));
+        }
+        mountedCallbacks.clear();
       } catch (error) {
         abortInitialization(error);
       }
     };
 
+    const rerenderStructuralTemplate = () => {
+      if (!renderFactory || disposed) {return;}
+      const nextTemplate = runWithProvideContext(componentContext, () => renderFactory());
+      const nextFragment = document.createDocumentFragment();
+      const nextInstance = runWithProvideContext(
+        componentContext,
+        () => render(nextTemplate, nextFragment),
+      );
+      const nextNodes = [ ...nextFragment.childNodes ];
+      const oldNodes = [ ...rootNodes ];
+      const parent = oldNodes.find(node => node.parentNode)?.parentNode || null;
+      const nextSibling = oldNodes[oldNodes.length - 1]?.nextSibling || null;
+      stopWatchingRemoval?.();
+      stopWatchingRemoval = null;
+      oldNodes.forEach(node => node.remove());
+      if (parent) {
+        nextNodes.forEach(node => parent.insertBefore(node, nextSibling));
+      } else {
+        nextNodes.forEach(node => fragment.appendChild(node));
+      }
+      instance.destroy();
+      instance = nextInstance;
+      rootNodes = nextNodes;
+      if (mountedCalled) {stopWatchingRemoval = watchForRemoval(rootNodes, dispose);}
+    };
+
     try {
-      const createdResult = runWithProvideContext(componentContext, () => created?.());
+      const createdResult = runWithProvideContext(componentContext, () => created?.(lifecycleContext));
       if (createdResult && typeof createdResult.then === 'function') {
         createdResult.catch(error => {
           if (disposed) {return;}
@@ -326,13 +429,17 @@ export function defineComponent(definition) {
           reportLifecycleError(error, 'component-created');
         });
       }
-      stopWatchingMount = watchForMount(checkMounted);
+      stopWatchingMount = watchForMount(checkMounted, rootNodes);
       checkMounted();
     } catch (error) {
       abortInitialization(error);
     }
 
     return {
+      _isKupolaComponentInstance: true,
+      _notifyMounted() {
+        checkMounted();
+      },
       get element() { return fragment; },
 
       _instance: instance,
@@ -357,6 +464,13 @@ export function defineComponent(definition) {
         for (const name of propNames) {
           if (name in newProps && propSignals[name]) {
             propSignals[name].value = newProps[name];
+          }
+        }
+        if (renderFactory) {
+          try {
+            rerenderStructuralTemplate();
+          } catch (error) {
+            reportLifecycleError(error, 'component-updated');
           }
         }
       },

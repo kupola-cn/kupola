@@ -219,7 +219,7 @@ describe('Select item selection', () => {
     container.appendChild(view.element);
     document.body.appendChild(container);
 
-    const items = container.querySelectorAll('.ds-select__item');
+    const items = document.querySelectorAll('.ds-select__item');
     items[1].click();
 
     expect(onChange).toHaveBeenCalledWith(
@@ -242,7 +242,7 @@ describe('Select item selection', () => {
     view.open();
     expect(wrap.classList.contains('is-open')).toBe(true);
 
-    const items = container.querySelectorAll('.ds-select__item');
+    const items = document.querySelectorAll('.ds-select__item');
     items[0].click();
     expect(wrap.classList.contains('is-open')).toBe(false);
     view.destroy();
@@ -307,11 +307,11 @@ describe('Select search filter', () => {
 
     view.open();
 
-    const searchInput = container.querySelector('.ds-select__search-input');
+    const searchInput = document.querySelector('.ds-select__search-input');
     searchInput.value = 'bet';
     searchInput.dispatchEvent(new Event('input'));
 
-    const menuItems = container.querySelectorAll('.ds-select__item');
+    const menuItems = document.querySelectorAll('.ds-select__item');
     expect(menuItems.length).toBe(1);
     expect(menuItems[0].textContent).toBe('Beta');
     view.destroy();
@@ -325,14 +325,14 @@ describe('Select search filter', () => {
 
     view.open();
 
-    const searchInput = container.querySelector('.ds-select__search-input');
+    const searchInput = document.querySelector('.ds-select__search-input');
     searchInput.value = 'bet';
     searchInput.dispatchEvent(new Event('input'));
-    expect(container.querySelectorAll('.ds-select__item').length).toBe(1);
+    expect(document.querySelectorAll('.ds-select__item').length).toBe(1);
 
     searchInput.value = '';
     searchInput.dispatchEvent(new Event('input'));
-    expect(container.querySelectorAll('.ds-select__item').length).toBe(3);
+    expect(document.querySelectorAll('.ds-select__item').length).toBe(3);
     view.destroy();
   });
 });
@@ -351,6 +351,21 @@ describe('Select setValue and clear', () => {
 
     const valueEl = container.querySelector('.ds-select__value');
     expect(valueEl.textContent).toBe('Gamma');
+    view.destroy();
+  });
+
+  test('setValue notifies onChange unless explicitly silent', () => {
+    const onChange = jest.fn();
+    const view = Select({ items: ITEMS, onChange });
+    document.body.appendChild(view.element);
+
+    view.setValue('b');
+    expect(onChange).toHaveBeenCalledWith({ value: 'b', text: 'Beta', values: [ 'b' ] });
+
+    onChange.mockClear();
+    view.setValue('c', { silent: true });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(view.getValue()).toBe('c');
     view.destroy();
   });
 
@@ -387,7 +402,7 @@ describe('Select keyboard navigation', () => {
     view.open();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
 
-    const menuItems = container.querySelectorAll('.ds-select__item');
+    const menuItems = document.querySelectorAll('.ds-select__item');
     expect(menuItems[0].classList.contains('is-focused')).toBe(true);
     view.destroy();
   });

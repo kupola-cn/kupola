@@ -64,3 +64,5 @@ export {
   requireRole,
   redirectTo,
 } from './router-tools.js';
+
+export { AUTH_PROVIDER_KEY, createAuthPlugin, useAuth } from './plugin.js';

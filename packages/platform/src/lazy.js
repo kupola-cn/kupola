@@ -33,6 +33,8 @@
  * @module lazy
  */
 
+import { getCurrentProvideContext, runWithProvideContext } from './context.js';
+
 // ── Component cache ─────────────────────────────────────────────────────────
 
 /**
@@ -220,8 +222,9 @@ export function lazyComponent(loader, exportName = 'default', options = {}) {
    * @returns {Promise<any>} The component result (same as direct call).
    */
   async function lazyFactory(...args) {
+    const provideContext = getCurrentProvideContext();
     const factory = await resolve();
-    return factory(...args);
+    return runWithProvideContext(provideContext, () => factory(...args));
   }
 
   // Attach metadata for debugging and preload support

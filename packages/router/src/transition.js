@@ -204,6 +204,24 @@ export class TransitionManager {
     };
   }
 
+  getOverrides() {
+    const modifiers = this.binding.modifiers || {};
+    const config = {};
+    const names = {
+      enterClass: 'enter',
+      enterActiveClass: 'enterActive',
+      enterToClass: 'enterTo',
+      leaveClass: 'leave',
+      leaveActiveClass: 'leaveActive',
+      leaveToClass: 'leaveTo',
+      duration: 'duration',
+    };
+    for (const [ modifier, property ] of Object.entries(names)) {
+      if (modifiers[modifier] !== undefined) {config[property] = modifiers[modifier];}
+    }
+    return config;
+  }
+
   async run(type, done) {
     this.controller?.abort();
     const controller = createAbortController();

@@ -220,6 +220,21 @@ describe('render reactive signals', () => {
     expect(instance).toBeDefined();
   });
 
+  test('createApp mounts a component factory as the application root', async () => {
+    const container = document.createElement('div');
+    const AppShell = defineComponent({
+      setup() {
+        return html`<main class="app-shell">Ready</main>`;
+      },
+    });
+
+    const app = createApp(AppShell);
+    await app.mountAsync(container);
+
+    expect(container.querySelector('.app-shell').textContent).toBe('Ready');
+    app.destroy();
+  });
+
   test('createApp.mountAsync rolls back when async init fails', async () => {
     const container = document.createElement('div');
     const source = signal(0);
@@ -735,6 +750,46 @@ describe('render attributes', () => {
     cls.value = 'inactive';
     flushJobs();
     expect(container.firstElementChild.getAttribute('class')).toBe('inactive');
+  });
+
+  test('merges multiple dynamic attribute segments', () => {
+    const container = document.createElement('div');
+    const prefix = signal('one');
+    const suffix = signal('two');
+    render(html`<div class="static-${prefix}-${suffix}">content</div>`, container);
+
+    expect(container.firstElementChild.className).toBe('static-one-two');
+    prefix.value = 'next';
+    suffix.value = 'value';
+    flushJobs();
+    expect(container.firstElementChild.className).toBe('static-next-value');
+  });
+
+  test('synchronizes dynamic DOM properties', () => {
+    const container = document.createElement('div');
+    const value = signal('initial');
+    const checked = signal(false);
+    const disabled = signal(false);
+    render(html`<input value="${value}" checked="${checked}" disabled="${disabled}">`, container);
+
+    const input = container.querySelector('input');
+    expect(input.value).toBe('initial');
+    expect(input.checked).toBe(false);
+    expect(input.disabled).toBe(false);
+
+    value.value = 'updated';
+    checked.value = true;
+    disabled.value = true;
+    flushJobs();
+    expect(input.value).toBe('updated');
+    expect(input.checked).toBe(true);
+    expect(input.disabled).toBe(true);
+  });
+
+  test('escapes apostrophes in attribute values', () => {
+    const container = document.createElement('div');
+    render(html`<div title="${'a\'b'}"></div>`, container);
+    expect(container.firstElementChild.getAttribute('title')).toBe('a\'b');
   });
 
   test('removes attribute when signal becomes null', () => {

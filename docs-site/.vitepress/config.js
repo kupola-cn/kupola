@@ -73,6 +73,7 @@ export default {
             { text: '覆盖层', link: '/components/overlay' },
             { text: '导航', link: '/components/navigation' },
             { text: '表单', link: '/components/forms' },
+            { text: 'SchemaForm', link: '/components/schemaform' },
             { text: '反馈', link: '/components/feedback' },
             { text: '展示', link: '/components/display' },
             { text: '交互', link: '/components/interaction' },
@@ -105,6 +106,7 @@ export default {
           text: '表单',
           items: [
             { text: 'Form', link: '/components/form' },
+            { text: 'SchemaForm', link: '/components/schemaform' },
             { text: 'Input', link: '/components/input' },
             { text: 'Select', link: '/components/select' },
             { text: 'Checkbox', link: '/components/checkbox' },

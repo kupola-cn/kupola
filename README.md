@@ -6,6 +6,8 @@
 [![npm version](https://img.shields.io/npm/v/@kupola/platform)](https://www.npmjs.com/package/@kupola/platform)
 [![License](https://img.shields.io/npm/l/@kupola/platform)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
 
+**Example application:** [Kupola App](https://github.com/kupola-cn/kupola-app) demonstrates a complete administration console built with Kupola.
+
 Kupola is a zero-framework interaction layer for server-rendered HTML. Use its
 directive runtime for small interactive islands, its signal/template APIs for
 JavaScript-owned views, and its optional native component library where a

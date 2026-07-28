@@ -34,6 +34,7 @@ export function Countdown(options = {}) {
     ? config.onComplete
     : (typeof config.onFinish === 'function' ? config.onFinish : null);
   const onTick = typeof config.onTick === 'function' ? config.onTick : null;
+  const onError = typeof config.onError === 'function' ? config.onError : null;
 
   let _timer = null;
   let _target = _normalizeTarget(config.target);
@@ -79,7 +80,19 @@ export function Countdown(options = {}) {
     const seconds = Math.floor(diff / 1000);
 
     _updateDisplay(days, hours, minutes, seconds);
-    if (onTick) {onTick(remaining);}
+    if (onTick) {
+      try {
+        onTick(remaining);
+      } catch (error) {
+        stop();
+        if (onError) {
+          onError(error);
+        } else if (typeof console !== 'undefined' && typeof console.error === 'function') {
+          console.error('[kupola/components] Countdown onTick failed:', error);
+        }
+        return true;
+      }
+    }
 
     if (_target - now <= 0 && !_completed) {
       _completed = true;

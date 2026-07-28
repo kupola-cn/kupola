@@ -57,7 +57,7 @@ const BUILT_IN = {
   required: (v) => v !== null && v !== undefined && v !== false
     && (!Array.isArray(v) || v.length > 0)
     && String(v).trim() !== '',
-  email: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v)),
+  email: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v)),
   url: (v) => { try { new URL(String(v)); return true; } catch { return false; } },
   minLength: (v, [ min ]) => String(v).length >= parseInt(min),
   maxLength: (v, [ max ]) => String(v).length <= parseInt(max),
@@ -181,6 +181,8 @@ export function Validation(options = {}) {
   }
 
   function _validateInputSync(input) {
+    const previous = inputRuns.get(input);
+    previous?.controller?.abort();
     const token = {};
     inputRuns.set(input, token);
     const result = input.disabled
@@ -256,7 +258,11 @@ export function Validation(options = {}) {
   }
 
   async function _validateInputAsync(input) {
+    const previous = inputRuns.get(input);
+    previous?.controller?.abort();
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
     const token = {};
+    token.controller = controller;
     inputRuns.set(input, token);
     if (input.disabled) {
       const result = { valid: true, message: '' };
@@ -283,7 +289,7 @@ export function Validation(options = {}) {
         const fn = customAsyncValidators.get(rule);
         if (!fn) {continue;}
         try {
-          const ok = await fn(value, params, input);
+          const ok = await fn(value, params, input, controller?.signal);
           if (destroyed || inputRuns.get(input) !== token) {
             return { valid: Boolean(ok), message: '', stale: true };
           }
@@ -315,9 +321,22 @@ export function Validation(options = {}) {
   // Validate a specific group within a form
   async function validateGroup(form, groupName) {
     if (destroyed || !form?.querySelectorAll) {return false;}
+    const run = {};
+    formRuns.set(form, run);
+    managedForms.add(form);
     const inputs = _getInputs(form, groupName);
     const results = await Promise.all(inputs.map(_validateInputAsync));
-    return results.every(result => result.valid);
+    const groupState = _createState(inputs, results);
+    if (!destroyed && formRuns.get(form) === run) {
+      const allInputs = _getInputs(form);
+      const allResults = allInputs.map(input => inputs.includes(input)
+        ? results[inputs.indexOf(input)]
+        : _validateInputSync(input));
+      const state = _createState(allInputs, allResults);
+      formStates.set(form, state);
+      _updateFormClasses(form, state.valid);
+    }
+    return groupState.valid;
   }
 
   // Get form validation state
@@ -408,6 +427,7 @@ export function Validation(options = {}) {
     if (destroyed) {return;}
     destroyed = true;
     for (const [ input, attributes ] of inputAttributes) {
+      inputRuns.get(input)?.controller?.abort();
       errorElements.get(input)?.remove();
       input.classList.remove('ds-input--error', 'ds-input--success');
       if (attributes.ariaInvalid === null) {input.removeAttribute('aria-invalid');}

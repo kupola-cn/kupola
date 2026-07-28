@@ -81,31 +81,45 @@ export function Tooltip(options = {}) {
     if (!_tooltipEl || !target) {return;}
     const rect = target.getBoundingClientRect();
     const tipRect = _tooltipEl.getBoundingClientRect();
+    const ownerDocument = target.ownerDocument || document;
+    const viewportWidth = ownerDocument.documentElement.clientWidth || window.innerWidth || 0;
+    const viewportHeight = ownerDocument.documentElement.clientHeight || window.innerHeight || 0;
+    const gap = 8;
+    let effectivePlacement = placement;
+    if (placement === 'top' && rect.top < tipRect.height + gap && rect.bottom > viewportHeight / 2) {
+      effectivePlacement = 'bottom';
+    } else if (placement === 'bottom'
+      && viewportHeight - rect.bottom < tipRect.height + gap && rect.top > viewportHeight / 2) {
+      effectivePlacement = 'top';
+    } else if (placement === 'left' && rect.left < tipRect.width + gap && rect.right > viewportWidth / 2) {
+      effectivePlacement = 'right';
+    } else if (placement === 'right'
+      && viewportWidth - rect.right < tipRect.width + gap && rect.left > viewportWidth / 2) {
+      effectivePlacement = 'left';
+    }
     let top, left;
 
-    switch (placement) {
+    switch (effectivePlacement) {
     case 'bottom':
-      top = rect.bottom + 8;
+      top = rect.bottom + gap;
       left = rect.left + rect.width / 2 - tipRect.width / 2;
       break;
     case 'left':
       top = rect.top + rect.height / 2 - tipRect.height / 2;
-      left = rect.left - tipRect.width - 8;
+      left = rect.left - tipRect.width - gap;
       break;
     case 'right':
       top = rect.top + rect.height / 2 - tipRect.height / 2;
-      left = rect.right + 8;
+      left = rect.right + gap;
       break;
     case 'top':
     default:
-      top = rect.top - tipRect.height - 8;
+      top = rect.top - tipRect.height - gap;
       left = rect.left + rect.width / 2 - tipRect.width / 2;
       break;
     }
 
     _tooltipEl.style.position = 'fixed';
-    const viewportWidth = document.documentElement.clientWidth || window.innerWidth || 0;
-    const viewportHeight = document.documentElement.clientHeight || window.innerHeight || 0;
     if (viewportWidth > 0) {
       left = Math.min(Math.max(8, left), Math.max(8, viewportWidth - tipRect.width - 8));
     }
@@ -183,6 +197,8 @@ export function Tooltip(options = {}) {
   if (trigger === 'hover') {
     listeners.on(target, 'mouseenter', _onMouseEnter);
     listeners.on(target, 'mouseleave', _onMouseLeave);
+    listeners.on(target, 'focus', _onFocus);
+    listeners.on(target, 'blur', _onBlur);
   } else if (trigger === 'click') {
     listeners.on(target, 'click', _onClick);
     listeners.on(document, 'click', _onDocumentClick);

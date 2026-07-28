@@ -1,6 +1,6 @@
 {
   "name": "@kupola/create-kupola",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Scaffold a new Kupola project with one command",
   "type": "module",
   "bin": {
@@ -29,14 +29,16 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kupola-cn/kupola",
+    "url": "git+https://github.com/kupola-cn/kupola.git",
     "directory": "packages/create-kupola"
   },
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "prompts": "^2.4.2",
     "kleur": "^4.1.5"

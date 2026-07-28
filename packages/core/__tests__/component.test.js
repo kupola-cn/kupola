@@ -8,6 +8,7 @@ import { setErrorHandler, signal } from '../src/index.js';
 import { html } from '../../platform/src/template.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
 import { defineComponent, register, getComponent, hasComponent, clearRegistry } from '../../platform/src/component.js';
+import { render } from '../../platform/src/render.js';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -42,6 +43,83 @@ describe('defineComponent', () => {
     expect(typeof view.update).toBe('function');
   });
 
+  test('renders a component instance as a template child and destroys it with its parent', async () => {
+    const destroyed = jest.fn();
+    const Child = defineComponent({
+      setup() { return html`<span class="child">Child</span>`; },
+      destroyed,
+    });
+    const parent = render(html`<div>${Child()}</div>`, document.body);
+
+    expect(document.querySelector('.child').textContent).toBe('Child');
+    parent.destroy();
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(destroyed).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.child')).toBeNull();
+  });
+
+  test('provides lifecycle context and runs registered cleanup', async () => {
+    const cleanup = jest.fn();
+    const mounted = jest.fn();
+    const Comp = defineComponent({
+      setup() { return html`<div class="root">Value</div>`; },
+      mounted(context) {
+        mounted(context.element);
+        context.onCleanup(cleanup);
+      },
+    });
+    const view = Comp();
+    document.body.appendChild(view.element);
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(mounted).toHaveBeenCalledWith(document.querySelector('.root'));
+    view.destroy();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  test('runs setup lifecycle onMounted callbacks after insertion', async () => {
+    const mounted = jest.fn();
+    const cleanup = jest.fn();
+    const Comp = defineComponent({
+      setup({ lifecycle }) {
+        lifecycle.onMounted(context => mounted(context.element));
+        lifecycle.onCleanup(cleanup);
+        return html`<div class="setup-root">Value</div>`;
+      },
+    });
+    const view = Comp();
+    document.body.appendChild(view.element);
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(mounted).toHaveBeenCalledWith(document.querySelector('.setup-root'));
+    view.destroy();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  test('provides setup capabilities through named context fields', () => {
+    const saved = jest.fn();
+    let setupContext;
+    const Comp = defineComponent({
+      props: [ 'name' ],
+      setup(context) {
+        setupContext = context;
+        return html`<button onclick=${() => context.emit('save', context.props.name.value)}>${context.children}</button>`;
+      },
+    });
+    const view = Comp({ name: 'Kupola' }, html`Save`);
+    view.on('save', saved);
+    document.body.appendChild(view.element);
+
+    document.querySelector('button').click();
+
+    expect(setupContext.props.name.value).toBe('Kupola');
+    expect(setupContext.children).toBeDefined();
+    expect(setupContext.lifecycle.onCleanup).toEqual(expect.any(Function));
+    expect(saved).toHaveBeenCalledWith('Kupola');
+    view.destroy();
+  });
+
   test('supports setup functions that return a TemplateResult directly', () => {
     const Comp = defineComponent({
       setup() {
@@ -60,7 +138,7 @@ describe('defineComponent', () => {
   test('renders component with props', () => {
     const Greeting = defineComponent({
       props: [ 'name' ],
-      setup(props) {
+      setup({ props }) {
         return () => html`<span>Hello ${props.name}</span>`;
       },
     });
@@ -104,7 +182,7 @@ describe('defineComponent', () => {
 
   test('renders children slot content', () => {
     const Wrapper = defineComponent({
-      setup(props, children) {
+      setup({ children }) {
         return () => html`<div class="wrapper">${children}</div>`;
       },
     });
@@ -121,7 +199,7 @@ describe('defineComponent', () => {
   test('update changes props reactively', () => {
     const Label = defineComponent({
       props: [ 'text' ],
-      setup(props) {
+      setup({ props }) {
         return () => html`<span>${props.text}</span>`;
       },
     });
@@ -142,7 +220,7 @@ describe('defineComponent', () => {
   test('destroy cleans up reactive effects', () => {
     const Label = defineComponent({
       props: [ 'text' ],
-      setup(props) {
+      setup({ props }) {
         return () => html`<span>${props.text}</span>`;
       },
     });
@@ -382,7 +460,7 @@ describe('defineComponent', () => {
   test('component with multiple props', () => {
     const Card = defineComponent({
       props: [ 'title', 'body' ],
-      setup(props) {
+      setup({ props }) {
         return () => html`
           <div class="card">
             <h2>${props.title}</h2>

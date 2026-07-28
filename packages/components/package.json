@@ -1,6 +1,6 @@
 {
   "name": "@kupola/components",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Kupola UI components — 48+ accessible, responsive components for building modern web interfaces.",
   "type": "module",
   "sideEffects": [
@@ -110,6 +110,11 @@
       "require": "./dist/kupola-components-form.cjs",
       "types": "./src/components/types.d.ts"
     },
+    "./schemaform": {
+      "import": "./dist/kupola-components-schemaform.esm.js",
+      "require": "./dist/kupola-components-schemaform.cjs",
+      "types": "./src/components/types.d.ts"
+    },
     "./heatmap": {
       "import": "./dist/kupola-components-heatmap.esm.js",
       "require": "./dist/kupola-components-heatmap.cjs",
@@ -119,6 +124,11 @@
       "import": "./dist/kupola-components-icons.esm.js",
       "require": "./dist/kupola-components-icons.cjs",
       "types": "./src/components/types.d.ts"
+    },
+    "./ui": {
+      "import": "./dist/kupola-components-ui.esm.js",
+      "require": "./dist/kupola-components-ui.cjs",
+      "types": "./src/components/ui.d.ts"
     },
     "./imagepreview": {
       "import": "./dist/kupola-components-imagepreview.esm.js",
@@ -149,6 +159,11 @@
       "import": "./dist/kupola-components-modal.esm.js",
       "require": "./dist/kupola-components-modal.cjs",
       "types": "./src/components/types.d.ts"
+    },
+    "./overlay": {
+      "import": "./dist/kupola-components-overlay.esm.js",
+      "require": "./dist/kupola-components-overlay.cjs",
+      "types": "./src/components/overlay.d.ts"
     },
     "./notification": {
       "import": "./dist/kupola-components-notification.esm.js",
@@ -208,6 +223,11 @@
     "./table": {
       "import": "./dist/kupola-components-table.esm.js",
       "require": "./dist/kupola-components-table.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./views": {
+      "import": "./dist/kupola-components-views.esm.js",
+      "require": "./dist/kupola-components-views.cjs",
       "types": "./src/components/types.d.ts"
     },
     "./tabs": {
@@ -270,14 +290,16 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kupola-cn/kupola",
+    "url": "git+https://github.com/kupola-cn/kupola.git",
     "directory": "packages/components"
   },
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "@kupola/core": "^3.1.0",
     "@kupola/platform": "^3.1.0"

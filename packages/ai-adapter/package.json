@@ -1,6 +1,6 @@
 {
   "name": "@kupola/ai-adapter",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "AI operation engine for Kupola — natural language → structured commands with Query/Action/Flow engines",
   "type": "module",
   "main": "dist/ai-adapter.cjs",
@@ -31,14 +31,16 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kupola-cn/kupola",
+    "url": "git+https://github.com/kupola-cn/kupola.git",
     "directory": "packages/ai-adapter"
   },
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "@kupola/core": "^3.1.0"
   },

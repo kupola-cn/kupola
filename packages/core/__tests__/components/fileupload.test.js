@@ -51,6 +51,22 @@ describe('FileUpload rendering', () => {
     expect(input.type).toBe('file');
   });
 
+  test('opens the file picker from click and keyboard activation', () => {
+    const view = FileUpload();
+    document.body.appendChild(view.element);
+    const dropzone = document.querySelector('.ds-fileupload__dropzone');
+    const input = document.querySelector('.ds-fileupload__input');
+    const click = jest.spyOn(input, 'click');
+
+    dropzone.click();
+    dropzone.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    dropzone.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+
+    expect(dropzone.getAttribute('role')).toBe('button');
+    expect(dropzone.getAttribute('tabindex')).toBe('0');
+    expect(click).toHaveBeenCalledTimes(3);
+  });
+
   test('sets accept attribute', () => {
     const view = FileUpload({ accept: '.png,.jpg' });
     document.body.appendChild(view.element);

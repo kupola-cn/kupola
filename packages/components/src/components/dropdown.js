@@ -22,6 +22,7 @@ import { render } from '@kupola/platform/render';
 import { getIconHtml, getIconTemplate } from './icon-helper';
 import { createListenerRegistry } from './listener-registry';
 import { registerOverlayKeydown } from './overlay-stack';
+import { createPopupPortal, positionPopup } from './popup-position';
 
 let dropdownId = 0;
 
@@ -57,15 +58,23 @@ export function Dropdown(options = {}) {
   let destroyed = false;
   const listeners = createListenerRegistry();
   const openListeners = createListenerRegistry();
+  let popupPortal = null;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   function open() {
     if (destroyed || state.isOpen) {return;}
     state.isOpen = true;
+    popupPortal?.mount();
     if (menuEl) {menuEl.classList.add('is-open');}
+    positionPopup(menuEl, triggerEl);
     if (triggerEl) {triggerEl.setAttribute('aria-expanded', 'true');}
-    if (trigger === 'click') {openListeners.on(document, 'click', onDocumentClick);}
+    if (trigger === 'click') {
+      const ownerDocument = triggerEl?.ownerDocument || document;
+      openListeners.on(ownerDocument, 'click', onDocumentClick);
+      openListeners.on(ownerDocument.defaultView || window, 'resize', () => positionPopup(menuEl, triggerEl));
+      openListeners.on(ownerDocument.defaultView || window, 'scroll', () => positionPopup(menuEl, triggerEl), true);
+    }
     releaseKeydown = registerOverlayKeydown(onKeydown);
   }
 
@@ -75,6 +84,7 @@ export function Dropdown(options = {}) {
     state.focusIndex = -1;
     _clearFocus();
     if (menuEl) {menuEl.classList.remove('is-open');}
+    popupPortal?.restore();
     if (triggerEl) {triggerEl.setAttribute('aria-expanded', 'false');}
     openListeners.clear();
     releaseKeydown?.();
@@ -134,7 +144,7 @@ export function Dropdown(options = {}) {
 
   const onDocumentClick = (e) => {
     if (!state.isOpen) {return;}
-    if (wrapperEl && !wrapperEl.contains(e.target)) {
+    if (wrapperEl && !wrapperEl.contains(e.target) && !menuEl?.contains(e.target)) {
       close();
     }
   };
@@ -194,6 +204,7 @@ export function Dropdown(options = {}) {
   wrapperEl = container.querySelector('.ds-dropdown');
   menuEl = container.querySelector('.ds-dropdown__menu');
   triggerEl = container.querySelector('.ds-dropdown__trigger');
+  popupPortal = createPopupPortal(menuEl, wrapperEl);
 
   if (menuEl) {
     items.forEach((item, index) => {
@@ -255,6 +266,7 @@ export function Dropdown(options = {}) {
       openListeners.destroy();
       listeners.destroy();
       instance.destroy();
+      popupPortal?.destroy();
       Object.freeze(api);
     },
   };

@@ -17,6 +17,7 @@ import {
   escapeHtml,
   isSignalLike,
   isTemplateResultLike,
+  isHtmlString,
   AttrPart,
   EventPart,
   TemplateInstance,
@@ -54,23 +55,17 @@ function attrNameAtCursor(parts) {
  * Serialize a nested TemplateResult to static HTML (no markers).
  */
 function serializeNested(tpl) {
-  const p = [];
-  for (let i = 0; i < tpl.strings.length; i++) {
-    p.push(tpl.strings[i]);
-    if (i < tpl.values.length) {
-      const v = tpl.values[i];
-      if (isTemplateResultLike(v)) {
-        p.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
-        p.push(v.map(t => serializeNested(t)).join(''));
-      } else if (isSignalLike(v)) {
-        p.push(escapeHtml(v.value));
-      } else if (typeof v !== 'function') {
-        p.push(escapeHtml(v ?? ''));
-      }
-    }
-  }
-  return p.join('');
+  return serializeSSR(tpl);
+}
+
+function nestedBoundary(kind, valueIndex, itemIndex = null) {
+  const suffix = itemIndex == null ? '' : `:${itemIndex}`;
+  return `<!--kp-nested-${kind}:${valueIndex}${suffix}-->`;
+}
+
+function serializeServerValue(value) {
+  if (isHtmlString(value)) {return value.content;}
+  return escapeHtml(value ?? '');
 }
 
 // ─── SSR Serialization ───────────────────────────────────────────────────────
@@ -109,31 +104,39 @@ function serializeSSR(tpl) {
       const v = tpl.values[i];
 
       if (isTemplateResultLike(v)) {
+        out.push(nestedBoundary('start', i));
         out.push(serializeNested(v));
+        out.push(nestedBoundary('end', i));
       } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
-        out.push(v.map(t => serializeNested(t)).join(''));
+        v.forEach((item, itemIndex) => {
+          out.push(nestedBoundary('start', i, itemIndex));
+          out.push(serializeNested(item));
+          out.push(nestedBoundary('end', i, itemIndex));
+        });
       } else if (typeof v === 'function') {
         if (inTag) {
           const name = attrNameAtCursor(out);
           tagKp.push(`${i}:e:${name || ''}`);
+        } else {
+          out.push(serializeServerValue(v()));
+          out.push('<!---->');
         }
-        // Functions produce no HTML on the server
       } else if (isSignalLike(v)) {
         if (inTag) {
           const name = attrNameAtCursor(out);
           tagKp.push(`${i}:a:${name || ''}`);
           // Output the signal's current value in the attribute
           const val = v.value;
-          out.push(val != null ? escapeHtml(val) : '');
+          out.push(serializeServerValue(val));
         } else {
           // Dynamic text: inline current value + hydration marker
           const val = v.value;
-          out.push(val != null ? escapeHtml(val) : '');
+          out.push(serializeServerValue(val));
           out.push('<!---->');
         }
       } else {
         // Static primitive
-        out.push(escapeHtml(v ?? ''));
+        out.push(serializeServerValue(v));
       }
     }
   }
@@ -311,10 +314,59 @@ export function hydrate(tpl, container, options = {}) {
  * Walk child nodes of a parent, binding reactive effects.
  */
 function _hydrateChildren(parent, values, instance, commentMap) {
-  const children = [ ...parent.childNodes ];
+  _hydrateNodes(parent, [ ...parent.childNodes ], values, instance, commentMap);
+}
 
-  for (const child of children) {
+function parseNestedBoundary(data) {
+  const match = String(data || '').match(/^kp-nested-(start|end):(\d+)(?::(\d+))?$/);
+  if (!match) {return null;}
+  return {
+    kind: match[1],
+    valueIndex: Number(match[2]),
+    itemIndex: match[3] == null ? null : Number(match[3]),
+  };
+}
+
+function sameNestedBoundary(start, end) {
+  return !!end
+    && end.kind === 'end'
+    && end.valueIndex === start.valueIndex
+    && end.itemIndex === start.itemIndex;
+}
+
+function _hydrateNodes(parent, nodes, values, instance, commentMap) {
+  for (let index = 0; index < nodes.length; index++) {
+    const child = nodes[index];
     if (child.nodeType === 8 /* COMMENT_NODE */) {
+      const nested = parseNestedBoundary(child.data);
+      if (nested?.kind === 'start') {
+        const endIndex = nodes.findIndex((candidate, candidateIndex) => (
+          candidateIndex > index
+          && candidate.nodeType === 8
+          && sameNestedBoundary(nested, parseNestedBoundary(candidate.data))
+        ));
+        if (endIndex !== -1) {
+          const nestedValue = nested.itemIndex == null
+            ? values[nested.valueIndex]
+            : values[nested.valueIndex]?.[nested.itemIndex];
+          if (isTemplateResultLike(nestedValue)) {
+            const nestedInstance = new TemplateInstance();
+            _hydrateNodes(
+              parent,
+              nodes.slice(index + 1, endIndex),
+              nestedValue.values,
+              nestedInstance,
+              _computeTextMarkerIndices(nestedValue),
+            );
+            instance.parts.push({ destroy() {nestedInstance.destroy();} });
+          }
+          if (child.parentNode === parent) {parent.removeChild(child);}
+          const end = nodes[endIndex];
+          if (end.parentNode === parent) {parent.removeChild(end);}
+          index = endIndex;
+          continue;
+        }
+      }
       // <!----> hydration marker for a dynamic text value
       _hydrateComment(child, values, parent, instance, commentMap);
     } else if (child.nodeType === 1 /* ELEMENT_NODE */) {
@@ -355,20 +407,23 @@ function _computeTextMarkerIndices(tpl) {
       } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
         out.push(v.map(t => serializeNested(t)).join(''));
       } else if (typeof v === 'function') {
-        // No marker
+        if (!inTag) {
+          indices.push(i);
+          out.push(serializeServerValue(v()));
+        }
       } else if (isSignalLike(v)) {
         if (inTag) {
           // Attribute binding — no text marker
           const val = v.value;
-          out.push(val != null ? escapeHtml(val) : '');
+          out.push(serializeServerValue(val));
         } else {
           // Text binding — produces a <!----> marker
           indices.push(i);
           const val = v.value;
-          out.push(val != null ? escapeHtml(val) : '');
+          out.push(serializeServerValue(val));
         }
       } else {
-        out.push(escapeHtml(v ?? ''));
+        out.push(serializeServerValue(v));
       }
     }
   }
@@ -404,9 +459,10 @@ function _hydrateComment(comment, values, parent, instance, commentMap) {
 
   if (valueIdx >= 0 && valueIdx < values.length) {
     const raw = values[valueIdx];
-    if (isSignalLike(raw)) {
+    if (isSignalLike(raw) || typeof raw === 'function') {
       const dispose = effect(() => {
-        node.textContent = raw.value != null ? String(raw.value) : '';
+        const value = isSignalLike(raw) ? raw.value : raw();
+        node.textContent = value != null ? String(value) : '';
       });
       instance.parts.push({
         destroy() { dispose(); node.remove(); },

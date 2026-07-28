@@ -25,10 +25,10 @@ export function createListenerRegistry() {
 
   function clear() {
     for (const entry of listeners) {
-        entry.target.removeEventListener(entry.eventName, entry.handler, entry.options);
+      entry.target.removeEventListener(entry.eventName, entry.handler, entry.options);
     }
     listeners.clear();
-}
+  }
 
   function destroy() {
     if (destroyed) {return;}

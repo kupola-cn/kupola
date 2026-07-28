@@ -362,6 +362,23 @@ describe('Table', () => {
       expect(renderedRows[0].querySelector('td').textContent).toBe('User1');
       expect(table.element.querySelector('.ds-table-virtual-spacer')).toBeTruthy();
     });
+
+    test('reuses virtual row elements for stable row keys', () => {
+      const bigData = Array.from({ length: 100 }, (_, i) => ({
+        id: i + 1, name: `User${i + 1}`, age: 20 + i, city: 'City',
+      }));
+      const table = Table({
+        data: bigData,
+        columns,
+        virtualScroll: { rowHeight: 30, visibleRows: 5, overscan: 1 },
+      });
+      const firstRow = table.element.querySelector('tbody tr[data-row-key="1"]');
+
+      table.setData(bigData.map(row => ({ ...row, name: `${row.name} updated` })));
+
+      expect(table.element.querySelector('tbody tr[data-row-key="1"]')).toBe(firstRow);
+      expect(firstRow.querySelector('td').textContent).toBe('User1 updated');
+    });
   });
 
   // === Pagination ===
@@ -565,6 +582,18 @@ describe('Table', () => {
       expect(getRows(table).length).toBe(5);
     });
 
+    test('reuses the table shell when data is refreshed', () => {
+      const table = Table({ data: sampleData, columns });
+      const tableElement = table.element.querySelector('table');
+      const containerElement = table.element.querySelector('.ds-table-container');
+
+      table.setData(sampleData.slice(0, 2));
+
+      expect(table.element.querySelector('table')).toBe(tableElement);
+      expect(table.element.querySelector('.ds-table-container')).toBe(containerElement);
+      expect(getRows(table).length).toBe(2);
+    });
+
     test('getData returns current data', () => {
       const table = Table({ data: sampleData, columns });
       const data = table.getData();
@@ -576,6 +605,26 @@ describe('Table', () => {
       const table = Table({ data: sampleData, columns });
       table.setData([]);
       expect(table.element.querySelector('.ds-table-empty')).toBeTruthy();
+    });
+
+    test('clamps the current page when refreshed data has fewer pages', () => {
+      const data = Array.from({ length: 25 }, (_, index) => ({
+        id: index + 1,
+        name: `User ${index + 1}`,
+        age: index,
+        city: 'NYC',
+      }));
+      const table = Table({ data, columns, pageSize: 10 });
+      table.setPage(3);
+      table.setData(sampleData);
+      expect(getRows(table).length).toBe(5);
+    });
+
+    test('clears selection keys that are absent after refresh', () => {
+      const table = Table({ data: sampleData, columns, selection: 'checkbox' });
+      table.selectRow(1);
+      table.setData(sampleData.slice(1));
+      expect(table.getSelectedKeys()).toEqual([]);
     });
 
     test('throws on non-object options', () => {
@@ -607,6 +656,18 @@ describe('Table', () => {
       const csv = table.exportCSV();
       expect(csv).toContain('"A ""quoted"" value"');
       expect(csv).toContain('"Line\nBreak"');
+    });
+
+    test('exports the complete filtered and sorted result, not only the current page', () => {
+      const data = Array.from({ length: 25 }, (_, index) => ({
+        id: index + 1,
+        name: `User ${index + 1}`,
+        age: index,
+        city: 'NYC',
+      }));
+      const table = Table({ data, columns, pageSize: 10 });
+      table.setPage(2);
+      expect(table.exportCSV().split('\n')).toHaveLength(26);
     });
   });
 

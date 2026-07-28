@@ -5,7 +5,7 @@
  * @module router
  */
 
-import { flattenRoutes, matchRoute, resolvePath } from './matcher.js';
+import { flattenRoutes, matchRoute, resolvePath, stringifyQuery } from './matcher.js';
 import { registerRouterLinkDirective } from './link.js';
 import { registerRouterViewDirective } from './view.js';
 import { setupAuthGuard } from './auth.js';
@@ -42,6 +42,7 @@ export function createRouter(options) {
     base = '',
     scrollBehavior = 'auto',
     transition = {},
+    initialLocation = '/',
   } = options;
 
   if (![ 'history', 'hash', 'memory' ].includes(mode)) {
@@ -49,7 +50,7 @@ export function createRouter(options) {
   }
 
   const flattenedRecords = flattenRoutes(routes);
-  const historyManager = new HistoryManager(mode, base);
+  const historyManager = new HistoryManager(mode, base, initialLocation);
   const guardPipeline = new GuardPipeline();
   const scrollManager = new ScrollManager();
   const eventEmitter = new EventEmitter();
@@ -68,7 +69,11 @@ export function createRouter(options) {
     const query = {};
     if (queryString) {
       new URLSearchParams(queryString).forEach((value, key) => {
-        query[key] = value;
+        if (Object.prototype.hasOwnProperty.call(query, key)) {
+          query[key] = Array.isArray(query[key]) ? [ ...query[key], value ] : [ query[key], value ];
+        } else {
+          query[key] = value;
+        }
       });
     }
     return { path: path || '/', query };
@@ -76,13 +81,13 @@ export function createRouter(options) {
 
   function appendQuery(path, query) {
     if (typeof path !== 'string') {return '/';}
-    const search = new URLSearchParams(query || {}).toString();
+    const search = stringifyQuery(query);
     if (!search) {return path;}
     return path.includes('?') ? `${path}&${search}` : `${path}?${search}`;
   }
 
   function formatFullPath(path, query) {
-    const search = new URLSearchParams(query || {}).toString();
+    const search = stringifyQuery(query);
     return search ? `${path}?${search}` : path;
   }
 
@@ -243,8 +248,7 @@ export function createRouter(options) {
             `[kupola/router] Navigation exceeded the maximum of ${MAX_REDIRECTS} redirects.`,
           );
           navigation.status = 'error';
-          eventEmitter.emit('navigation:error', navigation, error);
-          return false;
+          throw error;
         }
         return await navigate(
           resolveLocation(navigation.redirectLocation),
@@ -281,8 +285,10 @@ export function createRouter(options) {
       return true;
 
     } catch (error) {
-      eventEmitter.emit('navigation:error', navigation, error);
-      return false;
+      if (redirectDepth === 0) {
+        eventEmitter.emit('navigation:error', navigation, error);
+      }
+      throw error;
     } finally {
       if (currentNavigation === navigation) {
         currentNavigation = null;
@@ -358,7 +364,11 @@ export function createRouter(options) {
       isDestroyed = false;
       unlistenHistory = historyManager.on(async (fullPath) => {
         if (isUpdatingHistory || historyManager.getIsGuardRestoring()) {return;}
-        await navigate(fullPath, true, { shouldRestoreHash: true, fromHistory: true });
+        try {
+          await navigate(fullPath, true, { shouldRestoreHash: true, fromHistory: true });
+        } catch {
+          // navigate() already emits navigation:error and the caller can use onError().
+        }
       });
       historyManager.start();
       scrollManager.start();
@@ -392,7 +402,7 @@ export function createRouter(options) {
     },
 
     get options() {
-      return { mode, routes, base, scrollBehavior, transition };
+      return { mode, routes, base, scrollBehavior, transition, initialLocation };
     },
 
     get records() {

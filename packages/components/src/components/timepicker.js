@@ -64,8 +64,9 @@ export function Timepicker(options = {}) {
     : 1;
   const minTime = parseTime(config.minTime);
   const maxTime = parseTime(config.maxTime);
-  const useRange = !minTime || !maxTime || minTime.total <= maxTime.total;
-
+  if (minTime && maxTime && minTime.total > maxTime.total) {
+    throw new RangeError('[kupola/components] Timepicker minTime must not be after maxTime.');
+  }
   const parsedInitial = parseTime(config.value);
   let _value = parsedInitial && isAllowed(parsedInitial.total)
     ? formatTime(parsedInitial.hours, parsedInitial.minutes)
@@ -77,8 +78,9 @@ export function Timepicker(options = {}) {
   const openListeners = createListenerRegistry();
 
   function isAllowed(total) {
-    if (!useRange) {return true;}
-    return (!minTime || total >= minTime.total) && (!maxTime || total <= maxTime.total);
+    return total % minuteStep === 0
+      && (!minTime || total >= minTime.total)
+      && (!maxTime || total <= maxTime.total);
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────

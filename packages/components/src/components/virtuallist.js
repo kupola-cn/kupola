@@ -25,7 +25,7 @@
  */
 
 import { html } from '@kupola/platform/template';
-import { render } from '@kupola/platform/render';
+import { isTemplateResultLike, render } from '@kupola/platform/render';
 import { createListenerRegistry } from './listener-registry';
 
 /**
@@ -65,6 +65,8 @@ export function VirtualList(options = {}) {
   let _frame = null;
   let _destroyed = false;
   const listeners = createListenerRegistry();
+  const itemInstances = new Map();
+  const itemElements = new Map();
 
   // Determine if virtual scroll should be used
   let useVirtual = items.length > virtualThreshold;
@@ -96,11 +98,15 @@ export function VirtualList(options = {}) {
       _frame = null;
     }
     listeners.destroy();
+    for (const itemInstance of itemInstances.values()) {itemInstance?.destroy?.();}
+    itemInstances.clear();
+    itemElements.clear();
     instance.destroy();
   }
 
   function setData(data) {
     if (_destroyed) {return;}
+    _clearRenderedItems();
     items = Array.isArray(data) ? [ ...data ] : [];
     useVirtual = items.length > virtualThreshold;
     _scrollTop = 0;
@@ -136,7 +142,9 @@ export function VirtualList(options = {}) {
 
     if (renderItem) {
       const rendered = renderItem(item, index);
-      if (rendered instanceof HTMLElement) {
+      if (isTemplateResultLike(rendered)) {
+        itemInstances.set(index, render(rendered, el));
+      } else if (rendered?.nodeType === 1 || rendered?.nodeType === 11) {
         el.appendChild(rendered);
       } else {
         el.textContent = rendered != null ? String(rendered) : '';
@@ -162,22 +170,36 @@ export function VirtualList(options = {}) {
     }
 
     el.dataset.index = String(index);
+    itemElements.set(index, el);
 
     return el;
+  }
+
+  function _clearRenderedItem(index) {
+    itemInstances.get(index)?.destroy?.();
+    itemInstances.delete(index);
+    itemElements.get(index)?.remove();
+    itemElements.delete(index);
+  }
+
+  function _clearRenderedItems() {
+    for (const index of [ ...itemElements.keys() ]) {_clearRenderedItem(index);}
   }
 
   function _renderVisible() {
     if (_destroyed || !containerEl) {return;}
 
-    const existing = containerEl.querySelectorAll('.ds-virtual-list__item');
-    existing.forEach((el) => el.remove());
-
     // For small data sets, render all items directly without virtualization
     if (!useVirtual) {
+      const desired = new Set(items.map((_, index) => index));
+      for (const index of [ ...itemElements.keys() ]) {
+        if (!desired.has(index)) {_clearRenderedItem(index);}
+      }
       if (spacerEl) {spacerEl.style.height = '';}
-      items.forEach((item, i) => {
-        containerEl.appendChild(_createItemElement(item, i));
+      items.forEach((item, index) => {
+        if (!itemElements.has(index)) {_createItemElement(item, index);}
       });
+      _orderRenderedItems(0, items.length);
       return;
     }
 
@@ -190,9 +212,28 @@ export function VirtualList(options = {}) {
     const visibleCount = Math.ceil(height / itemHeight) + overscan * 2;
     const endIdx = Math.min(items.length, startIdx + visibleCount);
 
-    // Render visible items
+    const desired = new Set();
     for (let i = startIdx; i < endIdx; i++) {
-      containerEl.appendChild(_createItemElement(items[i], i));
+      desired.add(i);
+      if (!itemElements.has(i)) {_createItemElement(items[i], i);}
+    }
+    for (const index of [ ...itemElements.keys() ]) {
+      if (!desired.has(index)) {_clearRenderedItem(index);}
+    }
+    _orderRenderedItems(startIdx, endIdx);
+  }
+
+  function _orderRenderedItems(start, end) {
+    if (!containerEl || !spacerEl) {return;}
+    if (containerEl.firstChild !== spacerEl) {containerEl.prepend(spacerEl);}
+    let reference = spacerEl.nextSibling;
+    for (let index = start; index < end; index++) {
+      const itemElement = itemElements.get(index);
+      if (!itemElement) {continue;}
+      if (itemElement !== reference) {
+        containerEl.insertBefore(itemElement, reference);
+      }
+      reference = itemElement.nextSibling;
     }
   }
 

@@ -338,8 +338,8 @@ export function attachBrandColorPicker(trigger, options = {}) {
   function open() {
     if (isOpen) { return; }
     isOpen = true;
-    _positionBrandPicker(panel, trigger);
     panel.classList.add('is-open');
+    _positionBrandPicker(panel, trigger);
     _syncSelected(getPreferredBrandColor());
     document.addEventListener('click', onOutsideClick);
     document.addEventListener('keydown', onKeydown);
@@ -491,10 +491,18 @@ function _applyBrandColor(brand, target) {
 
 function _positionBrandPicker(panel, trigger) {
   const rect = trigger.getBoundingClientRect();
+  const gap = 8;
   const panelWidth = Math.min(280, window.innerWidth - 16);
-  const top = Math.min(rect.bottom + 8, window.innerHeight - 16);
-  const left = Math.max(8, Math.min(rect.right - panelWidth, window.innerWidth - panelWidth - 8));
   panel.style.width = `${panelWidth}px`;
+  const panelHeight = panel.offsetHeight;
+  const preferredTop = rect.bottom + gap;
+  const top = preferredTop + panelHeight <= window.innerHeight - gap
+    ? preferredTop
+    : Math.max(gap, rect.top - panelHeight - gap);
+  const preferredLeft = rect.right + gap;
+  const left = preferredLeft + panelWidth <= window.innerWidth - gap
+    ? preferredLeft
+    : Math.max(gap, Math.min(rect.right - panelWidth, window.innerWidth - panelWidth - gap));
   panel.style.top = `${top}px`;
   panel.style.left = `${left}px`;
 }

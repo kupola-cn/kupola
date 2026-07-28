@@ -9,12 +9,15 @@
  * Memory mode history manager for SSR and testing.
  */
 export class MemoryHistory {
-  constructor(router) {
+  constructor(router = {}) {
     this.router = router;
     this.listeners = [];
-    this.stack = [ '/' ];
+    const initialPath = typeof router.initialLocation === 'string' && router.initialLocation
+      ? router.initialLocation
+      : '/';
+    this.stack = [ initialPath ];
     this.index = 0;
-    this.currentPath = '/';
+    this.currentPath = initialPath;
   }
 
   getPath() {
@@ -81,6 +84,12 @@ export class MemoryHistory {
 }
 
 function createFullPath(path, query) {
-  const search = new URLSearchParams(query || {}).toString();
+  const params = new URLSearchParams();
+  for (const [ key, value ] of Object.entries(query || {})) {
+    for (const item of (Array.isArray(value) ? value : [ value ])) {
+      if (item !== undefined && item !== null) {params.append(key, String(item));}
+    }
+  }
+  const search = params.toString();
   return search ? `${path}?${search}` : path;
 }

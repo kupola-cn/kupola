@@ -10,7 +10,27 @@
  */
 
 import { t } from '@kupola/platform/i18n';
+import { render } from '@kupola/platform/render';
 import { createListenerRegistry } from './listener-registry';
+
+function appendSanitizedHtml(container, value) {
+  const template = document.createElement('template');
+  template.innerHTML = String(value);
+  template.content.querySelectorAll('script, iframe, object, embed, link, style')
+    .forEach(element => element.remove());
+  template.content.querySelectorAll('*').forEach(element => {
+    for (const attribute of [ ...element.attributes ]) {
+      const name = attribute.name.toLowerCase();
+      const value = attribute.value.trim();
+      if (name.startsWith('on') || name === 'style'
+        || ((name === 'href' || name === 'src' || name === 'xlink:href')
+          && /^javascript:/i.test(value))) {
+        element.removeAttribute(attribute.name);
+      }
+    }
+  });
+  container.append(...template.content.childNodes);
+}
 
 /**
  * @typedef {Object} TableColumn
@@ -91,7 +111,7 @@ export function Table(options = {}) {
   const _columnsMap = new Map(columns.map(col => [ col.key, col ]));
 
   // State
-  let _data = Array.isArray(options.data) ? [ ...options.data ] : [];
+  let _data = normalizeData(options.data);
   let _loading = false;
   let _sorts = []; // [{ key, order }]
   let _currentPage = 1;
@@ -109,6 +129,13 @@ export function Table(options = {}) {
   let _virtualScrollTop = 0;
   let _virtualFrame = null;
   let _destroyed = false;
+  const rendererInstances = new Set();
+  const resizeCleanups = new Set();
+  let toolbarElement = null;
+  let tableContainerElement = null;
+  let tableElement = null;
+  let paginationElement = null;
+  let virtualRowElements = new Map();
   const _requestFrame = globalThis.requestAnimationFrame || (fn => setTimeout(fn, 16));
   const _cancelFrame = globalThis.cancelAnimationFrame || clearTimeout;
 
@@ -167,9 +194,9 @@ export function Table(options = {}) {
   }
 
   // === Data processing: sort → filter → paginate ===
-  function getProcessedData() {
+  function getProcessedData(includePagination = true) {
     // Check if cache is valid
-    if (_processedCache) {
+    if (includePagination && _processedCache) {
       return _processedCache;
     }
 
@@ -198,15 +225,77 @@ export function Table(options = {}) {
 
     // Paginate
     let pageData = flatData;
-    if (_shouldPaginate()) {
+    if (includePagination && _shouldPaginate()) {
       const start = (_currentPage - 1) * _pageSize;
       pageData = flatData.slice(start, start + _pageSize);
     }
 
     // Cache result for current render cycle
-    _processedCache = { pageData, total };
+    const result = { pageData, total };
+    if (includePagination) {_processedCache = result;}
 
-    return _processedCache;
+    return result;
+  }
+
+  function cloneRow(row) {
+    if (!row || typeof row !== 'object') {return row;}
+    const clone = { ...row };
+    const childrenKey = treeConfig?.childrenKey || 'children';
+    if (treeConfig && Array.isArray(row[childrenKey])) {
+      clone[childrenKey] = row[childrenKey].map(cloneRow);
+    }
+    return clone;
+  }
+
+  function validateData(data) {
+    const seen = new Set();
+    const visit = rows => {
+      if (!Array.isArray(rows)) {return;}
+      for (const row of rows) {
+        if (!row || typeof row !== 'object' || Array.isArray(row)) {
+          throw new TypeError(`Table: each row must be an object with a unique ${rowKey}.`);
+        }
+        const key = row[rowKey];
+        if (key === null || key === undefined
+          || (typeof key !== 'string' && typeof key !== 'number')) {
+          throw new TypeError(`Table: each row must provide a unique ${rowKey}.`);
+        }
+        const normalizedKey = `${typeof key}:${String(key)}`;
+        if (seen.has(normalizedKey)) {
+          throw new TypeError(`Table: duplicate rowKey "${String(key)}".`);
+        }
+        seen.add(normalizedKey);
+        if (treeConfig) {visit(row[treeConfig.childrenKey || 'children']);}
+      }
+    };
+    visit(data);
+    return data;
+  }
+
+  function normalizeData(data) {
+    if (data === undefined) {return [];}
+    if (!Array.isArray(data)) {throw new TypeError('Table: data must be an array.');}
+    validateData(data);
+    return data.map(cloneRow);
+  }
+
+  function normalizePageAndSelection() {
+    const { total } = getProcessedData();
+    const totalPages = Math.ceil(total / _pageSize) || 1;
+    _currentPage = Math.min(Math.max(1, _currentPage), totalPages);
+    const validKeys = new Set();
+    const visit = rows => {
+      for (const row of rows) {
+        if (!row || typeof row !== 'object') {continue;}
+        validKeys.add(row[rowKey]);
+        const childrenKey = treeConfig?.childrenKey || 'children';
+        if (treeConfig && Array.isArray(row[childrenKey])) {visit(row[childrenKey]);}
+      }
+    };
+    visit(_data);
+    _selectedKeys = new Set([ ..._selectedKeys ].filter(key => validKeys.has(key)));
+    _expandedKeys = new Set([ ..._expandedKeys ].filter(key => validKeys.has(key)));
+    _clearProcessedCache();
   }
 
   // Clear caches when data/state changes
@@ -292,6 +381,10 @@ export function Table(options = {}) {
   // === Render ===
   function _render() {
     if (_destroyed) {return;}
+    for (const renderer of [ ...rendererInstances ]) {
+      try {renderer.destroy?.();} catch { /* continue rebuilding the table */ }
+    }
+    rendererInstances.clear();
     _cancelFilterDebounce();
     _runInteractionCleanups();
 
@@ -300,36 +393,50 @@ export function Table(options = {}) {
       ? _getVirtualState(pageData)
       : null;
     element.classList.toggle('ds-table-virtual-wrapper', !!virtualState);
-    element.innerHTML = '';
 
     // Toolbar
+    toolbarElement?.remove();
+    toolbarElement = null;
     if (options.showFilter || options.showToolbar) {
-      element.appendChild(_renderToolbar());
+      toolbarElement = _renderToolbar();
+      element.insertBefore(toolbarElement, tableContainerElement || null);
     }
 
-    // Table container
-    const tableContainer = document.createElement('div');
-    tableContainer.className = 'ds-table-container';
+    // Keep the table shell stable across data/state updates. Rebuilding only
+    // the changed sections avoids invalidating the host layout and focus tree.
+    if (!tableContainerElement) {
+      tableContainerElement = document.createElement('div');
+      tableContainerElement.className = 'ds-table-container';
+      tableElement = document.createElement('table');
+      element.appendChild(tableContainerElement);
+    }
+    const tableContainer = tableContainerElement;
     if (virtualState) {
       tableContainer.style.height = virtualState.heightStyle;
       tableContainer.style.overflowY = 'auto';
       interactionListeners.on(tableContainer, 'scroll', _handleVirtualScroll);
+    } else {
+      tableContainer.style.removeProperty('height');
+      tableContainer.style.removeProperty('overflow-y');
     }
 
-    const table = document.createElement('table');
-    table.className = _getTableClass();
+    tableElement.className = _getTableClass();
 
-    table.appendChild(_renderThead());
-    table.appendChild(_renderTbody(virtualState ? virtualState.rows : pageData, virtualState));
-    tableContainer.appendChild(table);
-    element.appendChild(tableContainer);
+    tableElement.replaceChildren(
+      _renderThead(),
+      _renderTbody(virtualState ? virtualState.rows : pageData, virtualState),
+    );
+    tableContainer.replaceChildren(tableElement);
     if (virtualState) {
       tableContainer.scrollTop = _virtualScrollTop;
     }
 
     // Pagination
+    paginationElement?.remove();
+    paginationElement = null;
     if (_shouldPaginate() && total > _pageSize) {
-      element.appendChild(_renderPagination(total));
+      paginationElement = _renderPagination(total);
+      element.appendChild(paginationElement);
     }
 
     // Post-render
@@ -338,6 +445,7 @@ export function Table(options = {}) {
   }
 
   function _runInteractionCleanups() {
+    for (const cleanup of [ ...resizeCleanups ]) {cleanup();}
     interactionListeners.clear();
   }
 
@@ -366,8 +474,20 @@ export function Table(options = {}) {
       return configured;
     }
     if (typeof configured === 'string') {
-      const parsed = Number.parseFloat(configured);
-      if (Number.isFinite(parsed) && parsed > 0) {return parsed;}
+      const value = configured.trim();
+      const parsed = Number.parseFloat(value);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        if (value.endsWith('px')) {return parsed;}
+        if (value.endsWith('vh') && typeof window !== 'undefined') {
+          return (window.innerHeight || 0) * parsed / 100;
+        }
+        if (value.endsWith('rem') && typeof window !== 'undefined') {
+          const rootSize = Number.parseFloat(
+            window.getComputedStyle?.(document.documentElement)?.fontSize,
+          ) || 16;
+          return parsed * rootSize;
+        }
+      }
     }
 
     const visibleRows = Math.max(1, Number(virtualScroll.visibleRows) || _pageSize || 10);
@@ -524,6 +644,7 @@ export function Table(options = {}) {
 
   function _renderTbody(data, virtualState = null) {
     const tbody = document.createElement('tbody');
+    const nextVirtualRowElements = new Map();
 
     if (_loading) {
       const tr = document.createElement('tr');
@@ -556,7 +677,16 @@ export function Table(options = {}) {
         const isSelected = _selectedKeys.has(key);
         const isExpanded = _expandedKeys.has(key);
 
-        const tr = document.createElement('tr');
+        const tr = virtualState && virtualRowElements.get(key)
+          ? virtualRowElements.get(key)
+          : document.createElement('tr');
+        if (virtualState && virtualRowElements.has(key)) {
+          tr.replaceChildren();
+          tr.className = '';
+          tr.removeAttribute('data-row-key');
+          tr.removeAttribute('draggable');
+        }
+        if (virtualState) {nextVirtualRowElements.set(key, tr);}
         tr.setAttribute('data-row-key', key);
         if (isSelected) {tr.classList.add('ds-table-row-selected');}
         if (draggable) { tr.draggable = true; tr.classList.add('ds-table-draggable'); }
@@ -600,8 +730,7 @@ export function Table(options = {}) {
             _renderCellValue(td, col, value, row);
           } else if (col.render) {
             const result = col.render(value, row);
-            if (typeof result === 'string') {td.innerHTML = result;}
-            else if (result instanceof HTMLElement) {td.appendChild(result);}
+            _appendRenderResult(td, result);
           } else {
             td.textContent = value != null ? String(value) : '';
           }
@@ -618,8 +747,7 @@ export function Table(options = {}) {
           const expandTd = document.createElement('td');
           expandTd.colSpan = _getTotalColCount();
           const content = expandable(row);
-          if (typeof content === 'string') {expandTd.innerHTML = content;}
-          else if (content instanceof HTMLElement) {expandTd.appendChild(content);}
+          _appendRenderResult(expandTd, content);
           expandTr.appendChild(expandTd);
           tbody.appendChild(expandTr);
         }
@@ -629,6 +757,7 @@ export function Table(options = {}) {
         _appendVirtualSpacer(tbody, virtualState.bottomHeight);
       }
     }
+    virtualRowElements = virtualState ? nextVirtualRowElements : new Map();
     return tbody;
   }
 
@@ -648,10 +777,24 @@ export function Table(options = {}) {
   function _renderCellValue(td, col, value, row) {
     if (col.render) {
       const result = col.render(value, row);
-      if (typeof result === 'string') {td.innerHTML = result;}
-      else if (result instanceof HTMLElement) {td.appendChild(result);}
+      _appendRenderResult(td, result);
     } else {
       td.textContent = value != null ? String(value) : '';
+    }
+  }
+
+  function _appendRenderResult(container, result) {
+    if (typeof result === 'string') {
+      appendSanitizedHtml(container, result);
+      return;
+    }
+    if (result && typeof result === 'object' && typeof result.nodeType === 'number') {
+      container.appendChild(result);
+      return;
+    }
+    if (result && typeof result === 'object') {
+      const child = render(result, container);
+      rendererInstances.add(child);
     }
   }
 
@@ -667,6 +810,39 @@ export function Table(options = {}) {
     });
     td.appendChild(input);
     tr.appendChild(td);
+  }
+
+  function _syncSelectionDOM() {
+    if (!selection) {return;}
+    element.querySelectorAll('tbody tr[data-row-key]').forEach(row => {
+      const key = row.getAttribute('data-row-key');
+      const selected = [ ..._selectedKeys ].some(value => String(value) === key);
+      row.classList.toggle('ds-table-row-selected', selected);
+      const input = row.querySelector('.ds-table-col-selection input');
+      if (input) {input.checked = selected;}
+    });
+    const header = element.querySelector('thead .ds-table-col-selection input');
+    if (header) {
+      const { pageData } = getProcessedData();
+      header.checked = pageData.length > 0
+        && pageData.every(row => _selectedKeys.has(row[rowKey]));
+    }
+    const info = element.querySelector('.ds-table-selection-info');
+    if (info) {
+      if (_selectedKeys.size > 0) {
+        info.textContent = `Selected ${_selectedKeys.size} items`;
+      } else {
+        info.remove();
+      }
+    } else if (_selectedKeys.size > 0 && (options.showFilter || options.showToolbar)) {
+      const left = element.querySelector('.ds-table-toolbar > div:first-child');
+      if (left) {
+        const next = document.createElement('span');
+        next.className = 'ds-table-selection-info';
+        next.textContent = `Selected ${_selectedKeys.size} items`;
+        left.appendChild(next);
+      }
+    }
   }
 
   function _renderExpandCell(tr, key, isExpanded) {
@@ -896,16 +1072,19 @@ export function Table(options = {}) {
           th.style.width = newWidth + 'px';
         };
         const onMouseUp = () => {
-          resizeListeners.destroy();
+          cleanupDocumentListeners?.();
           if (col && options.onColumnResize) {
             options.onColumnResize(col.key, th.offsetWidth);
           }
         };
         cleanupDocumentListeners?.();
-        cleanupDocumentListeners = () => {
+        const cleanup = () => {
           resizeListeners.destroy();
-          cleanupDocumentListeners = null;
+          resizeCleanups.delete(cleanup);
+          if (cleanupDocumentListeners === cleanup) {cleanupDocumentListeners = null;}
         };
+        cleanupDocumentListeners = cleanup;
+        resizeCleanups.add(cleanup);
         resizeListeners.on(document, 'mousemove', onMouseMove);
         resizeListeners.on(document, 'mouseup', onMouseUp);
       };
@@ -971,11 +1150,12 @@ export function Table(options = {}) {
     _dataSubscription = null;
 
     if (data && typeof data === 'object' && 'value' in data) {
-      _data = Array.isArray(data.value) ? [ ...data.value ] : [];
+      _data = normalizeData(data.value);
       if (data.subscribe) {
         _dataSubscription = data.subscribe((newVal) => {
           _clearCaches();
-          _data = Array.isArray(newVal) ? [ ...newVal ] : [];
+          _data = normalizeData(newVal);
+          normalizePageAndSelection();
           _render();
         });
         if (typeof _dataSubscription === 'function') {
@@ -985,7 +1165,7 @@ export function Table(options = {}) {
         }
       }
     } else if (Array.isArray(data)) {
-      _data = [ ...data ];
+      _data = normalizeData(data);
     } else {
       _data = [];
     }
@@ -993,6 +1173,7 @@ export function Table(options = {}) {
       _treeExpandedKeys.clear();
       _treeExpandAll(_data);
     }
+    normalizePageAndSelection();
     _render();
   }
 
@@ -1033,26 +1214,26 @@ export function Table(options = {}) {
     } else {
       _selectedKeys.add(key);
     }
-    _render();
+    _syncSelectionDOM();
     if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function deselectRow(key) {
     _selectedKeys.delete(key);
-    _render();
+    _syncSelectionDOM();
     if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function selectAll() {
     const { pageData } = getProcessedData();
     pageData.forEach(r => _selectedKeys.add(r[rowKey]));
-    _render();
+    _syncSelectionDOM();
     if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function deselectAll() {
     _selectedKeys.clear();
-    _render();
+    _syncSelectionDOM();
     if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
@@ -1123,7 +1304,7 @@ export function Table(options = {}) {
 
   function exportCSV() {
     const headers = columns.map(c => _escapeCSV(c.title || c.key)).join(',');
-    const { pageData } = getProcessedData();
+    const { pageData } = getProcessedData(false);
     const rows = pageData.map(row =>
       columns.map(col => {
         const val = row[col.key];
@@ -1144,6 +1325,8 @@ export function Table(options = {}) {
     if (_destroyed) {return;}
     _destroyed = true;
     _cancelVirtualFrame();
+    for (const cleanup of [ ...resizeCleanups ]) {cleanup();}
+    resizeCleanups.clear();
     listeners.destroy();
     interactionListeners.destroy();
     _reactiveCleanups.forEach(fn => fn());
@@ -1151,6 +1334,10 @@ export function Table(options = {}) {
     _dataSubscription = null;
     _loadingSubscription = null;
     _cancelFilterDebounce();
+    for (const renderer of [ ...rendererInstances ]) {
+      try {renderer.destroy?.();} catch { /* preserve table teardown */ }
+    }
+    rendererInstances.clear();
     element.remove();
   }
 

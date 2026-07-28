@@ -34,6 +34,16 @@ export class TemplateResult {
   }
 }
 
+const HTML_STRING_BRAND = Symbol.for('kupola.HtmlString');
+
+function isTrustedHtml(value) {
+  if (value == null || typeof value !== 'object') {return false;}
+  if (typeof globalThis.TrustedHTML === 'function' && value instanceof globalThis.TrustedHTML) {
+    return true;
+  }
+  return Object.prototype.toString.call(value) === '[object TrustedHTML]';
+}
+
 /**
  * Wrapper for raw HTML strings that should NOT be escaped.
  * Use this for SVG icons, third-party icon library output, or any trusted HTML content.
@@ -50,12 +60,14 @@ export class TemplateResult {
  * @returns {HtmlString}
  */
 export class HtmlString {
-  /** @type {string} */
+  /** @type {string|object} */
   #content;
 
-  /** @param {string} content */
+  [HTML_STRING_BRAND] = true;
+
+  /** @param {string|object} content */
   constructor(content) {
-    this.#content = String(content ?? '');
+    this.#content = isTrustedHtml(content) ? content : String(content ?? '');
   }
 
   /** @returns {string} */

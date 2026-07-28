@@ -57,6 +57,9 @@ export function Message(options = {}) {
     if (!container || !container.parentNode) {
       container = document.createElement('div');
       container.className = `ds-message ds-message--${defaultPosition}`;
+      container.setAttribute('role', 'status');
+      container.setAttribute('aria-live', 'polite');
+      container.setAttribute('aria-atomic', 'true');
       document.body.appendChild(container);
     }
     return container;
@@ -75,6 +78,8 @@ export function Message(options = {}) {
 
     const msg = document.createElement('div');
     msg.className = `ds-message__item ds-message__item--${msgType}`;
+    msg.setAttribute('role', msgType === 'error' ? 'alert' : 'status');
+    msg.setAttribute('aria-live', msgType === 'error' ? 'assertive' : 'polite');
     msg.innerHTML = `
       <div class="ds-message__icon ds-message__icon--${msgType}">${getIconHtml(ICON_NAMES[msgType])}</div>
       <div class="ds-message__content"></div>

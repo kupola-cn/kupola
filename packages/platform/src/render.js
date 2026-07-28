@@ -24,7 +24,8 @@ export function escapeHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /** Check if a value is a reactive signal-like (has a .value getter). */
@@ -51,9 +52,25 @@ export function isTemplateResultLike(v) {
   );
 }
 
+/** Check whether a value is a Kupola component instance. */
+export function isComponentInstanceLike(v) {
+  return !!(
+    v
+    && typeof v === 'object'
+    && v._isKupolaComponentInstance === true
+    && v.element
+    && typeof v.destroy === 'function'
+  );
+}
+
 /** Check if a value is an HtmlString (raw HTML that should not be escaped). */
 export function isHtmlString(v) {
-  return v instanceof HtmlString;
+  return v instanceof HtmlString || Boolean(
+    v
+    && typeof v === 'object'
+    && v[Symbol.for('kupola.HtmlString')] === true
+    && 'content' in v,
+  );
 }
 
 // ─── Marker ──────────────────────────────────────────────────────────────────
@@ -78,7 +95,9 @@ function serialize(tpl) {
     if (i < tpl.values.length) {
       const v = tpl.values[i];
       if (isTemplateResultLike(v)
-        || (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0]))) {
+        || isComponentInstanceLike(v)
+        || (Array.isArray(v) && v.length > 0
+          && (isTemplateResultLike(v[0]) || isComponentInstanceLike(v[0])))) {
         // Keep nested templates behind the parent value marker so their
         // reactive parts are owned by a TemplateInstance instead of being
         // flattened into the parent's HTML string.
@@ -161,6 +180,7 @@ function createMountedTemplate(tpl) {
     for (const part of instance.parts) {
       part.mount();
     }
+    reconcileSelectState(fragment);
   } catch (error) {
     try {
       instance.destroy();
@@ -170,6 +190,19 @@ function createMountedTemplate(tpl) {
     throw error;
   }
   return { fragment, instance };
+}
+
+function reconcileSelectState(root) {
+  for (const select of root.querySelectorAll?.('select') || []) {
+    const marked = [ ...select.options ].filter(option => option.hasAttribute('selected'));
+    if (marked.length === 0) {continue;}
+    if (select.multiple) {
+      for (const option of select.options) {option.selected = marked.includes(option);}
+    } else {
+      for (const option of select.options) {option.selected = false;}
+      marked[marked.length - 1].selected = true;
+    }
+  }
 }
 
 function destroyTemplateInstances(instances) {
@@ -230,11 +263,11 @@ export class TextPart {
   }
 
   _setValue(value) {
-    if (isTemplateResultLike(value)) {
-      this._setTemplate(value);
+    if (isTemplateResultLike(value) || isComponentInstanceLike(value)) {
+      this._setRenderable(value);
     } else if (Array.isArray(value) && value.length > 0
-      && value.every(isTemplateResultLike)) {
-      this._setTemplates(value);
+      && value.every(item => isTemplateResultLike(item) || isComponentInstanceLike(item))) {
+      this._setRenderables(value);
     } else if (isHtmlString(value)) {
       this._setHtml(value.content);
     } else {
@@ -253,18 +286,23 @@ export class TextPart {
     this._replaceDynamicFragment(parseHTML(content));
   }
 
-  _setTemplate(tpl) {
-    this._setTemplates([ tpl ]);
+  _setRenderable(renderable) {
+    this._setRenderables([ renderable ]);
   }
 
-  _setTemplates(templates) {
+  _setRenderables(renderables) {
     const fragments = [];
     const instances = [];
     try {
-      for (const tpl of templates) {
-        const mounted = createMountedTemplate(tpl);
-        fragments.push(mounted.fragment);
-        instances.push(mounted.instance);
+      for (const renderable of renderables) {
+        if (isComponentInstanceLike(renderable)) {
+          fragments.push(renderable.element);
+          instances.push(renderable);
+        } else {
+          const mounted = createMountedTemplate(renderable);
+          fragments.push(mounted.fragment);
+          instances.push(mounted.instance);
+        }
       }
 
       const fragment = document.createDocumentFragment();
@@ -273,7 +311,11 @@ export class TextPart {
       }
 
       const inserted = this._replaceDynamicFragment(fragment, instances);
-      if (!inserted) {
+      if (inserted) {
+        for (const instance of instances) {
+          instance?._notifyMounted?.();
+        }
+      } else {
         destroyTemplateInstances(instances);
       }
     } catch (error) {
@@ -364,37 +406,108 @@ export class AttrPart {
     this._provideContext = getCurrentProvideContext();
   }
 
+  _readValue() {
+    const segments = Array.isArray(this.rawValue) ? this.rawValue : [ this.rawValue ];
+    const values = segments.map(segment => {
+      if (isSignalLike(segment)) {return segment.value;}
+      if (typeof segment === 'function') {return segment();}
+      return segment;
+    });
+    const hasLiteralContent = values.some((value, index) => (
+      typeof segments[index] === 'string' && value !== ''
+    ));
+    const hasMeaningfulValue = values.some((value, index) => (
+      value !== null
+      && value !== undefined
+      && value !== false
+      && !(typeof segments[index] === 'string' && value === '')
+    ));
+    return {
+      remove: !hasLiteralContent && !hasMeaningfulValue,
+      value: values.map(value => (
+        value == null || value === false ? '' : String(value)
+      )).join(''),
+    };
+  }
+
+  _applyValue() {
+    const { remove, value } = this._readValue();
+    const attrName = this.attrName.toLowerCase();
+    const booleanProperty = {
+      allowfullscreen: 'allowFullscreen',
+      async: 'async',
+      autofocus: 'autofocus',
+      autoplay: 'autoplay',
+      checked: 'checked',
+      controls: 'controls',
+      default: 'default',
+      defer: 'defer',
+      disabled: 'disabled',
+      formnovalidate: 'formNoValidate',
+      hidden: 'hidden',
+      inert: 'inert',
+      ismap: 'isMap',
+      itemscope: 'itemScope',
+      loop: 'loop',
+      multiple: 'multiple',
+      muted: 'muted',
+      nomodule: 'noModule',
+      novalidate: 'noValidate',
+      open: 'open',
+      playsinline: 'playsInline',
+      readonly: 'readOnly',
+      required: 'required',
+      reversed: 'reversed',
+      selected: 'selected',
+    }[attrName];
+    const propertyName = booleanProperty || ({
+      class: 'className',
+      for: 'htmlFor',
+      tabindex: 'tabIndex',
+      value: 'value',
+    }[attrName]);
+
+    if (remove) {
+      this.element.removeAttribute(this.attrName);
+      if (attrName === 'selected') {
+        const select = this.element.parentElement?.closest('select');
+        const fallback = select && [ ...select.options ].find(option => (
+          option !== this.element && option.hasAttribute('selected')
+        ));
+        if (fallback) {
+          fallback.selected = true;
+          this.element.selected = false;
+        } else if (propertyName in this.element) {
+          this.element[propertyName] = false;
+        }
+      } else if (propertyName && propertyName in this.element) {
+        this.element[propertyName] = booleanProperty ? false : '';
+      }
+      return;
+    }
+
+    if (booleanProperty) {
+      this.element.setAttribute(this.attrName, '');
+      if (propertyName in this.element) {this.element[propertyName] = true;}
+    } else {
+      this.element.setAttribute(this.attrName, value);
+      if (propertyName && propertyName in this.element) {
+        this.element[propertyName] = value;
+      }
+    }
+  }
+
   mount() {
-    if (isSignalLike(this.rawValue)) {
-      const raw = this.rawValue;
+    const hasReactiveValue = (Array.isArray(this.rawValue) ? this.rawValue : [ this.rawValue ])
+      .some(value => isSignalLike(value) || typeof value === 'function');
+    if (hasReactiveValue) {
       this._dispose = effect(() => {
         runWithProvideContext(this._provideContext, () => {
-          const v = raw.value;
-          if (v == null || v === false) {
-            this.element.removeAttribute(this.attrName);
-          } else {
-            this.element.setAttribute(this.attrName, String(v));
-          }
-        });
-      });
-    } else if (typeof this.rawValue === 'function') {
-      const fn = this.rawValue;
-      this._dispose = effect(() => {
-        runWithProvideContext(this._provideContext, () => {
-          const v = fn();
-          if (v == null || v === false) {
-            this.element.removeAttribute(this.attrName);
-          } else {
-            this.element.setAttribute(this.attrName, String(v));
-          }
+          this._applyValue();
         });
       });
     } else {
-      if (this.rawValue == null || this.rawValue === false) {
-        this.element.removeAttribute(this.attrName);
-      } else {
-        this.element.setAttribute(this.attrName, String(this.rawValue));
-      }
+      this._applyValue();
     }
   }
 
@@ -417,24 +530,68 @@ export class EventPart {
     this.eventName = attrName.slice(2).toLowerCase(); // onclick → click
     this.handler = handler;
     this._bound = null;
+    this._eventMountCleanup = null;
     this._provideContext = getCurrentProvideContext();
   }
 
   mount() {
     if (typeof this.handler === 'function') {
-      this._bound = e => runWithProvideContext(
-        this._provideContext,
-        () => this.handler(e),
-      );
+      this._bound = e => {
+        let result;
+        try {
+          result = runWithProvideContext(this._provideContext, () => this.handler(e));
+        } catch (error) {
+          reportEventError(error);
+          return;
+        }
+        if (result && typeof result.then === 'function') {
+          result.catch(error => reportEventError(error));
+        }
+      };
       this.element.addEventListener(this.eventName, this._bound);
+      const mount = this.handler._kupolaEventMount;
+      if (typeof mount === 'function') {
+        const cleanup = runWithProvideContext(
+          this._provideContext,
+          () => mount(this.element, this.eventName),
+        );
+        if (typeof cleanup === 'function') {
+          this._eventMountCleanup = cleanup;
+        } else if (cleanup && typeof cleanup.destroy === 'function') {
+          this._eventMountCleanup = () => cleanup.destroy();
+        }
+      }
     }
   }
 
   destroy() {
+    if (this._eventMountCleanup) {
+      this._eventMountCleanup();
+      this._eventMountCleanup = null;
+    }
     if (this._bound) {
       this.element.removeEventListener(this.eventName, this._bound);
       this._bound = null;
     }
+  }
+}
+
+function reportEventError(error) {
+  const handler = getErrorHandler();
+  const context = { source: 'platform', phase: 'event' };
+  if (handler) {
+    try {
+      handler(error, context);
+      return;
+    } catch (handlerError) {
+      if (typeof console !== 'undefined' && typeof console.error === 'function') {
+        console.error('[kupola] Event error handler failed.', handlerError);
+      }
+      return;
+    }
+  }
+  if (typeof console !== 'undefined' && typeof console.error === 'function') {
+    console.error('[kupola] Event handler failed.', error);
   }
 }
 
@@ -551,6 +708,12 @@ export function createApp(tpl, options = {}) {
     ? withAppContext(fn)
     : runWithScheduler(scheduler, () => withAppContext(fn));
   const runAppHook = hook => withAppScheduler(hook);
+  const resolveRoot = () => {
+    if (typeof tpl === 'function' && tpl._isKupolaComponent === true) {
+      return tpl();
+    }
+    return tpl;
+  };
   const asyncPluginHook = Symbol('kupolaAsyncPluginHook');
   const runSyncPluginHook = (plugin, hookName, asyncMethod) => {
     const result = plugin[hookName]();
@@ -641,7 +804,7 @@ export function createApp(tpl, options = {}) {
             }
           }
 
-          instance = mount(tpl, container, options);
+          instance = mount(resolveRoot(), container, options);
           mountedInstance = instance;
           activePlugins = installedPlugins;
 
@@ -692,7 +855,7 @@ export function createApp(tpl, options = {}) {
             installedPlugins.push(plugin);
           }
 
-          instance = runAppHook(() => mount(tpl, container, options));
+          instance = runAppHook(() => mount(resolveRoot(), container, options));
           mountedInstance = instance;
           activePlugins = installedPlugins;
 
@@ -941,6 +1104,11 @@ function renderTemplate(tpl, container) {
  * the legacy global scheduler behavior.
  */
 export function render(tpl, container, options = {}) {
+  if (isComponentInstanceLike(tpl)) {
+    container.appendChild(tpl.element);
+    tpl._notifyMounted?.();
+    return tpl;
+  }
   if (options && options.scheduler !== undefined) {
     return runWithScheduler(options.scheduler, () => renderTemplate(tpl, container));
   }
@@ -1049,6 +1217,7 @@ function _processElement(element, values, htmlStr, instance) {
 
   const attrs = [ ...element.attributes ];
   for (const attr of attrs) {
+    let handled = false;
     for (let i = 0; i < values.length; i++) {
       const m = marker(i);
       if (!attr.value.includes(m)) {continue;}
@@ -1060,17 +1229,40 @@ function _processElement(element, values, htmlStr, instance) {
         element.removeAttribute(attr.name);
         const part = new EventPart(element, attr.name, values[i]);
         instance.parts.push(part);
+        handled = true;
+        break;
       } else if (cls.type === 'attr' && cls.attrName === attr.name) {
-        // Regular attribute with reactive value
-        // Remove the marker from the attribute value
-        const cleanVal = attr.value.replace(m, '');
-        if (cleanVal) {
-          element.setAttribute(attr.name, cleanVal);
-        } else {
-          element.removeAttribute(attr.name);
+        if (handled) {break;}
+        // A dynamic attribute may contain several values. Keep the literal
+        // pieces and bind the whole attribute once so they cannot overwrite
+        // one another.
+        const bindings = [];
+        for (let valueIndex = 0; valueIndex < values.length; valueIndex++) {
+          const valueMarker = marker(valueIndex);
+          if (!attr.value.includes(valueMarker)) {continue;}
+          const valueClass = classifyPosition(htmlStr, valueMarker);
+          if (valueClass.type === 'attr' && valueClass.attrName === attr.name) {
+            bindings.push({
+              index: valueIndex,
+              position: attr.value.indexOf(valueMarker),
+              marker: valueMarker,
+            });
+          }
         }
-        const part = new AttrPart(element, attr.name, values[i]);
+        bindings.sort((a, b) => a.position - b.position);
+        const segments = [];
+        let cursor = 0;
+        for (const binding of bindings) {
+          segments.push(attr.value.slice(cursor, binding.position));
+          segments.push(values[binding.index]);
+          cursor = binding.position + binding.marker.length;
+        }
+        segments.push(attr.value.slice(cursor));
+        element.removeAttribute(attr.name);
+        const part = new AttrPart(element, attr.name, segments);
         instance.parts.push(part);
+        handled = true;
+        break;
       }
       // If classification doesn't match, skip (marker is literal text)
     }

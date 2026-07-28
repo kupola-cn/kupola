@@ -122,6 +122,20 @@ describe('Timepicker value', () => {
     view.destroy();
   });
 
+  test('rejects an inverted time range', () => {
+    expect(() => Timepicker({ minTime: '18:00', maxTime: '09:00' }))
+      .toThrow(/minTime must not be after maxTime/);
+  });
+
+  test('setValue enforces the configured minute step', () => {
+    const view = Timepicker({ step: 15 });
+    view.setValue('09:10');
+    expect(view.getValue()).toBe('');
+    view.setValue('09:15');
+    expect(view.getValue()).toBe('09:15');
+    view.destroy();
+  });
+
   test('clear resets the value once and notifies onChange', () => {
     const onChange = jest.fn();
     const view = Timepicker({ value: '10:30', onChange });

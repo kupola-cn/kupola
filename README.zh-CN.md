@@ -6,6 +6,8 @@
 [![npm version](https://img.shields.io/npm/v/@kupola/platform)](https://www.npmjs.com/package/@kupola/platform)
 [![License](https://img.shields.io/npm/l/@kupola/platform)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
 
+**示例应用：** [Kupola App](https://github.com/kupola-cn/kupola-app) 展示了如何基于 Kupola 构建完整的管理后台。
+
 Kupola 是面向服务端渲染 HTML 的零框架交互层。小型局部交互使用指令运行时，JavaScript 主导的视图使用 signal / template API，需要复用的复杂交互再选择可选组件库。
 
 ## 安装

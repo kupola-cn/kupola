@@ -25,6 +25,19 @@ export interface AuthContext {
   isAuthenticated: boolean;
 }
 
+export interface AuthProvider {
+  restore(): Promise<AuthContext | null> | AuthContext | null;
+  login?(credentials: Record<string, any>): Promise<AuthContext> | AuthContext;
+  logout?(): Promise<void> | void;
+  changePassword?(credentials: Record<string, any>): Promise<unknown> | unknown;
+  getContext?(): AuthContext | null;
+  onChange?(listener: (context: AuthContext | null) => void): () => void;
+}
+
+export interface AuthPlugin {
+  install(): Promise<void> | void;
+}
+
 export interface AuthStore {
   createAuthContext(user: User): AuthContext;
   hydrateAuthContext(): AuthContext | null;
@@ -66,8 +79,21 @@ export interface RequestConfig {
   body?: BodyInit | null;
   headers?: Record<string, string>;
   fetchOptions?: RequestInit;
-  requiredPermission?: string;
+  requiredPermission?: string | string[];
+  permissionMatch?: 'any' | 'all';
+  timeout?: number;
+  retry?: number | RetryOptions;
+  responseType?: 'json' | 'text' | 'blob' | 'arrayBuffer';
+  throwOnHttpError?: boolean;
   [key: string]: any;
+}
+
+export interface RetryOptions {
+  retries?: number;
+  delay?: number;
+  factor?: number;
+  statuses?: number[];
+  methods?: string[];
 }
 
 export interface HttpGuardOptions {
@@ -75,6 +101,11 @@ export interface HttpGuardOptions {
   afterResponse?: (response: Response) => Response | void | Promise<Response | void>;
   onPermissionDenied?: (error: Error) => void;
   onUnauthorized?: (error: Error) => void;
+  authContext?: AuthContext | null | (() => AuthContext | null);
+  timeout?: number;
+  retry?: number | RetryOptions;
+  responseType?: 'json' | 'text' | 'blob' | 'arrayBuffer';
+  throwOnHttpError?: boolean;
   interceptors?: {
     request?: Array<(config: RequestConfig) => RequestConfig | void | Promise<RequestConfig | void>>;
     response?: Array<(response: Response) => Response | void | Promise<Response | void>>;
@@ -82,12 +113,12 @@ export interface HttpGuardOptions {
 }
 
 export interface HttpGuard {
-  get: (url: string, config?: RequestConfig) => Promise<Response>;
-  post: (url: string, data?: any, config?: RequestConfig) => Promise<Response>;
-  put: (url: string, data?: any, config?: RequestConfig) => Promise<Response>;
-  patch: (url: string, data?: any, config?: RequestConfig) => Promise<Response>;
-  delete: (url: string, config?: RequestConfig) => Promise<Response>;
-  request: (method: string, url: string, data?: any, config?: RequestConfig) => Promise<Response>;
+  get: (url: string, config?: RequestConfig) => Promise<Response | any>;
+  post: (url: string, data?: any, config?: RequestConfig) => Promise<Response | any>;
+  put: (url: string, data?: any, config?: RequestConfig) => Promise<Response | any>;
+  patch: (url: string, data?: any, config?: RequestConfig) => Promise<Response | any>;
+  delete: (url: string, config?: RequestConfig) => Promise<Response | any>;
+  request: (method: string, url: string, data?: any, config?: RequestConfig) => Promise<Response | any>;
 }
 
 export function createAuthContext(user: User): AuthContext;
@@ -98,6 +129,10 @@ export function setAuthContext(context: AuthContext | null): void;
 export function onAuthContextChange(listener: (context: AuthContext | null) => void): () => void;
 
 export const AUTH_KEY: unique symbol;
+export const AUTH_PROVIDER_KEY: unique symbol;
+
+export function createAuthPlugin(provider: AuthProvider): AuthPlugin;
+export function useAuth<T extends AuthProvider = AuthProvider>(): T;
 
 export function registerPermissionHandler(options: PermissionHandlerOptions): PermissionHandler;
 export function getPermissionHandler(): PermissionHandler | null;
@@ -138,6 +173,10 @@ export function clearCache(): void;
 export function createHttpGuard(options?: HttpGuardOptions): HttpGuard;
 
 export function requireAuth(authContext: AuthContext | null): boolean;
-export function requirePermission(authContext: AuthContext, permission: string): boolean;
+export function requirePermission(
+  authContext: AuthContext | null,
+  permission: string | string[],
+  options?: { match?: 'any' | 'all' } | 'any' | 'all'
+): boolean;
 export function requireRole(authContext: AuthContext, role: string): boolean;
 export function redirectTo(url: string, options?: { redirectUrl?: string }): void;

@@ -63,11 +63,49 @@ export function createRouteRecord(route, parentPath = '') {
     transition: route.transition,
     regex,
     paramNames,
+    specificity: normalizedPath.split('/').filter(Boolean).map(segment => {
+      if (segment === '*') {return 0;}
+      if (segment.startsWith(':')) {return 2;}
+      return 3;
+    }),
   };
 }
 
 function _escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function _decodeParam(value) {
+  try {return decodeURIComponent(value);}
+  catch {return value;}
+}
+
+function _compareSpecificity(left, right) {
+  const leftScore = left.specificity || [];
+  const rightScore = right.specificity || [];
+  const length = Math.max(leftScore.length, rightScore.length);
+  for (let index = 0; index < length; index++) {
+    const difference = (leftScore[index] || 0) - (rightScore[index] || 0);
+    if (difference !== 0) {return difference;}
+  }
+  return 0;
+}
+
+export function stringifyQuery(query = {}) {
+  const params = new URLSearchParams();
+  if (query instanceof URLSearchParams) {
+    query.forEach((value, key) => params.append(key, value));
+    return params.toString();
+  }
+  if (!query || typeof query !== 'object') {return '';}
+  for (const [ key, value ] of Object.entries(query)) {
+    if (value === undefined || value === null) {continue;}
+    const values = Array.isArray(value) ? value : [ value ];
+    for (const item of values) {
+      if (item !== undefined && item !== null) {params.append(key, String(item));}
+    }
+  }
+  return params.toString();
 }
 
 /**
@@ -124,7 +162,6 @@ function assertRouteConfig(route) {
  */
 export function matchRoute(records, path, query = {}) {
   let bestMatch = null;
-  let bestScore = -1;
   let bestDepth = -1;
 
   for (const record of records) {
@@ -132,25 +169,16 @@ export function matchRoute(records, path, query = {}) {
     if (match) {
       const params = {};
       record.paramNames.forEach((name, index) => {
-        params[name] = match[index + 1] || '';
+        params[name] = match[index + 1] ? _decodeParam(match[index + 1]) : '';
       });
-
-      let score = 0;
-      if (!record.path.includes(':') && !record.path.includes('*')) {
-        score = 2;
-      } else if (!record.path.includes('*')) {
-        score = 1;
-      } else {
-        score = 0;
-      }
 
       let depth = 0;
       for (let parent = record.parent; parent; parent = parent.parent) {
         depth++;
       }
 
-      if (score > bestScore || (score === bestScore && depth > bestDepth)) {
-        bestScore = score;
+      const specificity = _compareSpecificity(record, bestMatch || { specificity: [] });
+      if (specificity > 0 || (specificity === 0 && depth > bestDepth)) {
         bestDepth = depth;
         bestMatch = { ...record, params };
       }
@@ -171,7 +199,7 @@ export function matchRoute(records, path, query = {}) {
   const lastRecord = matchedRecords[matchedRecords.length - 1];
   const meta = Object.assign({}, ...matchedRecords.map(record => record.meta || {}));
 
-  const search = new URLSearchParams(query || {}).toString();
+  const search = stringifyQuery(query);
 
   return {
     path: path,
@@ -191,13 +219,18 @@ export function matchRoute(records, path, query = {}) {
  * @returns {string} Resolved path
  */
 export function resolvePath(records, to) {
+  if (!to || typeof to !== 'object') {return '/';}
+  const replaceParams = path => {
+    let resolvedPath = path;
+    for (const [ key, value ] of Object.entries(to.params || {})) {
+      const encoded = encodeURIComponent(String(value));
+      resolvedPath = resolvedPath.replace(new RegExp(`:${key}\\??`), encoded);
+    }
+    return resolvedPath;
+  };
   if (to.path) {
     if (to.params) {
-      let resolvedPath = to.path;
-      for (const [ key, value ] of Object.entries(to.params)) {
-        resolvedPath = resolvedPath.replace(`:${key}`, value);
-      }
-      return resolvedPath;
+      return replaceParams(to.path);
     }
     return to.path;
   }
@@ -208,7 +241,10 @@ export function resolvePath(records, to) {
       let resolvedPath = record.path;
       if (to.params) {
         for (const [ key, value ] of Object.entries(to.params)) {
-          resolvedPath = resolvedPath.replace(`:${key}`, value);
+          resolvedPath = resolvedPath.replace(
+            new RegExp(`:${key}\\??`),
+            encodeURIComponent(String(value)),
+          );
         }
       }
       return resolvedPath;

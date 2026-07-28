@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "A zero-framework interaction layer and optional native component library for server-rendered HTML.",
   "private": true,
   "type": "module",
@@ -83,7 +83,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kupola-cn/kupola"
+    "url": "git+https://github.com/kupola-cn/kupola.git"
   },
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"

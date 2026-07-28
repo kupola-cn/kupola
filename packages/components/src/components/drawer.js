@@ -22,7 +22,7 @@ import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
 import { getIconTemplate } from './icon-helper';
 import { lockBodyScroll } from './body-scroll-lock';
-import { registerOverlayKeydown } from './overlay-stack';
+import { registerOverlayKeydown, trapOverlayFocus } from './overlay-stack';
 import { createListenerRegistry } from './listener-registry';
 
 let drawerId = 0;
@@ -66,11 +66,11 @@ export function Drawer(options = {}, children = null) {
   function open() {
     if (_destroyed || _isOpen) {return;}
     _isOpen = true;
-    previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    previousFocus = document.activeElement?.nodeType === 1 ? document.activeElement : null;
     if (maskEl) {maskEl.classList.add('is-visible');}
     if (drawerEl) {drawerEl.classList.add('is-visible');}
     releaseBodyScroll ||= lockBodyScroll();
-    releaseOverlay ||= registerOverlayKeydown(onKeydown);
+    releaseOverlay ||= registerOverlayKeydown(onKeydown, { container: drawerEl });
     if (drawerEl) {drawerEl.focus();}
   }
 
@@ -95,6 +95,7 @@ export function Drawer(options = {}, children = null) {
   // ── Event handlers ─────────────────────────────────────────────────────────
 
   const onKeydown = (e) => {
+    trapOverlayFocus(drawerEl, e);
     if (escClose && e.key === 'Escape' && _isOpen) {
       close();
     }

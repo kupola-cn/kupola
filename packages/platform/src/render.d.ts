@@ -1,11 +1,30 @@
-import type { HtmlString, IconResolver, TemplateInstance, TemplateResult } from './platform.d.ts';
+import type { ComponentInstance, HtmlString, IconResolver, TemplateInstance, TemplateResult } from './platform.d.ts';
 
 export { createApp, mount, render, TemplateInstance } from './platform.d.ts';
-export type { AppInstance, AppPlugin, AppPluginFactory, MountOptions, RenderOptions } from './platform.d.ts';
+export type {
+  AppInstance,
+  AppPlugin,
+  AppPluginFactory,
+  AsyncEventHandler,
+  EventHandler,
+  MaybePromise,
+  MaybeSignal,
+  MountOptions,
+  PageView,
+  ReactiveValue,
+  Renderable,
+  RenderInstance,
+  RenderOptions,
+  TemplateChild,
+  TemplatePrimitive,
+  View,
+  ViewChild,
+} from './platform.d.ts';
 
 export declare function escapeHtml(value: unknown): string;
 export declare function isSignalLike(value: unknown): boolean;
 export declare function isTemplateResultLike(value: unknown): value is TemplateResult;
+export declare function isComponentInstanceLike(value: unknown): value is ComponentInstance;
 export declare function isHtmlString(value: unknown): value is HtmlString;
 export declare function setIconResolver(resolver: IconResolver | null): void;
 

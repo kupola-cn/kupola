@@ -1,6 +1,16 @@
 import {
   $, $$, createApp, defineScope, destroyWalk, mount, setHtmlSanitizer, walkOnce,
-  type DirectiveDefinition, type MountOptions,
+  type AsyncEventHandler,
+  type DirectiveDefinition,
+  type EventHandler,
+  type MaybePromise,
+  type MaybeSignal,
+  type MountOptions,
+  type PageView,
+  type ReactiveValue,
+  type TemplateChild,
+  type View,
+  type ViewChild,
 } from '@kupola/platform';
 import { walkAuto } from '@kupola/platform/directives';
 import {
@@ -55,10 +65,33 @@ import {
   PermissionDirective,
   processPermissionDirectives,
 } from '@kupola/auth/directive';
+import {
+  SchemaForm,
+  email,
+  schema as schemaFormSchema,
+  schemaSubmit,
+  select,
+  text,
+  validateSchema,
+  type SchemaFormApi,
+  type SchemaSubmit,
+  type SchemaValidationResult,
+} from '@kupola/components/schemaform';
+import type {
+  NavigationGuardResult,
+  RouteLocationInput,
+  RouteParams,
+  RouteQuery,
+} from '@kupola/router';
 
 const typedSignal = signal(1);
 const typedComputed = computed(() => typedSignal.value + 1);
 const typedState = reactive({ value: 1 });
+const typedMaybeSignal: MaybeSignal<number> = typedSignal;
+const typedReactiveValue: ReactiveValue<number> = () => typedComputed.value;
+const typedMaybePromise: MaybePromise<number> = Promise.resolve(typedReactiveValue());
+void typedMaybeSignal;
+void typedMaybePromise;
 const typedScheduler = createScheduler({ name: 'types', maxJobs: 100 });
 const stopTypedEffect = effect(() => { typedState.value; }, { scheduler: typedScheduler });
 const stopTypedWatch = watch(() => typedState.value, () => {}, { flush: 'post' });
@@ -80,6 +113,50 @@ void createSubpathHttpGuard;
 void registerPermissionDirective;
 void PermissionDirective;
 void processPermissionDirectives;
+const typedTemplateChild: TemplateChild = [ templateHtml`<span>child</span>` ];
+const typedViewChild: ViewChild = () => typedTemplateChild;
+const typedView: View<{ title: string; content: ViewChild }> = ({ title, content }) => templateHtml`<h1>${title}</h1>${content}`;
+const typedPageView: PageView<{ title: string; content: ViewChild }> = typedView;
+const typedClickHandler: EventHandler<MouseEvent> = event => event.preventDefault();
+const typedSubmitHandler: AsyncEventHandler<SubmitEvent> = async event => { event.preventDefault(); };
+void typedPageView({ title: 'Typed view', content: typedViewChild });
+void typedClickHandler;
+void typedSubmitHandler;
+type CreateUserInput = {
+  name: string;
+  email: string;
+  role: string;
+  status: 'active' | 'inactive';
+};
+const typedUserSchema = schemaFormSchema<CreateUserInput>({
+  name: text('Name').required(),
+  email: email('Email').required(),
+  role: select('Role', [ 'Admin', 'User' ]).activateIndex(1),
+  status: select('Status', { Active: 'active', Inactive: 'inactive' }).activate('active'),
+});
+const typedUserSubmit: SchemaSubmit<CreateUserInput> = (data, form, event) => {
+  data.email.toLowerCase();
+  form.setData({ status: 'active' });
+  event.preventDefault();
+};
+const typedSchemaSubmit = schemaSubmit(typedUserSchema, typedUserSubmit);
+const typedSchemaResult: SchemaValidationResult<CreateUserInput> = validateSchema(typedUserSchema, {
+  name: 'Ada',
+  email: 'ada@example.com',
+  role: 'User',
+  status: 'active',
+});
+const typedSchemaApiConsumer = (form: SchemaFormApi<CreateUserInput>) => form.getData().status;
+void typedSchemaSubmit;
+void typedSchemaResult.firstError?.name;
+void typedSchemaApiConsumer;
+SchemaForm<CreateUserInput>({ schema: typedUserSchema, onSubmit: typedUserSubmit }).destroy();
+const typedRouteParams: RouteParams = { id: '1' };
+const typedRouteQuery: RouteQuery = { tab: 'profile' };
+const typedRouteLocation: RouteLocationInput = { name: 'user.detail', params: typedRouteParams, query: typedRouteQuery };
+const typedGuardResult: NavigationGuardResult = { path: '/login', query: typedRouteQuery };
+void typedRouteLocation;
+void typedGuardResult;
 const typedNotification = Notification.info({ title: 'Typed', message: 'Ready', duration: 0 });
 typedNotification.element.remove();
 typedNotification.close();

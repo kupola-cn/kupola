@@ -82,7 +82,13 @@ export class HistoryHistory {
 }
 
 function createFullPath(path, query) {
-  const search = new URLSearchParams(query || {}).toString();
+  const params = new URLSearchParams();
+  for (const [ key, value ] of Object.entries(query || {})) {
+    for (const item of (Array.isArray(value) ? value : [ value ])) {
+      if (item !== undefined && item !== null) {params.append(key, String(item));}
+    }
+  }
+  const search = params.toString();
   if (!search) {return path;}
   return path.includes('?') ? `${path}&${search}` : `${path}?${search}`;
 }

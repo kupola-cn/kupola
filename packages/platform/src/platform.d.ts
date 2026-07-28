@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { Signal } from '@kupola/core';
+import type { ReadonlySignal, Signal } from '@kupola/core';
 import type { DirectiveDefinition } from './directives.d.ts';
 /**
  * @kupola/platform — Full-featured platform with reactivity + rendering +
@@ -62,13 +62,52 @@ export declare function html(
 
 /** Wrapper for raw HTML strings that should NOT be escaped during template rendering. */
 export declare class HtmlString {
-  constructor(content: string);
-  readonly content: string;
+  constructor(content: string | object);
+  readonly content: string | object;
   toString(): string;
 }
 
 /** Create a raw HTML string that will not be escaped during template rendering. */
-export declare function htmlString(html: string): HtmlString;
+export declare function htmlString(html: string | object): HtmlString;
+
+/** Primitive values that Kupola template text/attribute parts can render. */
+export type TemplatePrimitive = string | number | boolean | bigint | symbol | null | undefined;
+
+/** A non-reactive value that can be interpolated inside `html`` templates. */
+export type TemplateChild =
+  | TemplateResult
+  | ComponentInstance
+  | HtmlString
+  | readonly (TemplateResult | ComponentInstance)[]
+  | TemplatePrimitive;
+
+/** A value accepted by `html`` interpolations, including signal/function bindings. */
+export type ViewChild =
+  | TemplateChild
+  | Signal<TemplateChild>
+  | ReadonlySignal<TemplateChild>
+  | (() => TemplateChild);
+
+/** Accept either a plain value or a Kupola signal/computed signal. */
+export type MaybeSignal<T> = T | Signal<T> | ReadonlySignal<T>;
+
+/** Accept either a plain value, signal/computed signal, or function binding. */
+export type ReactiveValue<T> = MaybeSignal<T> | (() => T);
+
+/** Accept either a direct value or a promise. */
+export type MaybePromise<T> = T | Promise<T>;
+
+/** A Kupola view function that returns an `html`` template. */
+export type View<Props = Record<string, unknown>> = (props: Props) => TemplateResult;
+
+/** Semantic alias for route/page-level views. */
+export type PageView<Props = Record<string, unknown>> = View<Props>;
+
+/** Event callback type for `on*="${handler}"` template bindings. */
+export type EventHandler<E extends Event = Event> = (event: E) => void;
+
+/** Event callback type when a handler may perform async work. */
+export type AsyncEventHandler<E extends Event = Event> = (event: E) => MaybePromise<void>;
 
 /** Manages all Parts created from a single template render. */
 export declare class TemplateInstance {
@@ -79,11 +118,14 @@ export declare class TemplateInstance {
 }
 
 /** Render a template into a DOM container with reactive bindings. */
+export type Renderable = TemplateResult | ComponentInstance;
+export type RenderInstance = TemplateInstance | ComponentInstance;
+
 export declare function render(
-  tpl: TemplateResult,
+  tpl: Renderable,
   container: Element,
   options?: RenderOptions
-): TemplateInstance;
+): RenderInstance;
 
 export interface RenderOptions {
   scheduler?: Scheduler | null;
@@ -96,10 +138,10 @@ export interface MountOptions extends RenderOptions {
 
 /** Render a template and activate directives in one app-local scheduler context. */
 export declare function mount(
-  tpl: TemplateResult,
+  tpl: Renderable,
   container: Element | string,
   options?: MountOptions
-): TemplateInstance;
+): RenderInstance;
 
 export interface AppPlugin {
   install: () => void | Promise<void>;
@@ -125,7 +167,7 @@ export interface AppInstance {
 }
 
 export declare function createApp(
-  tpl: TemplateResult,
+  tpl: Renderable | ComponentFactory,
   options?: MountOptions
 ): AppInstance;
 
@@ -141,17 +183,30 @@ export declare function setIconResolver(resolver: IconResolver | null): void;
 
 export interface ComponentDefinition {
   props?: readonly string[];
-  setup: (
-    props: Record<string, Signal>,
-    children?: TemplateResult | string | null,
-    emit?: (event: string, ...args: any[]) => void
-  ) => (() => TemplateResult) | TemplateResult;
-  created?: () => void;
-  mounted?: () => void;
-  destroyed?: () => void;
+  setup: (context: ComponentSetupContext) => (() => TemplateResult) | TemplateResult;
+  created?: (context: ComponentLifecycleContext) => void | Promise<void>;
+  mounted?: (context: ComponentLifecycleContext) => void | Promise<void>;
+  destroyed?: (context: ComponentLifecycleContext) => void | Promise<void>;
+}
+
+export interface ComponentSetupContext {
+  readonly props: Record<string, Signal>;
+  readonly children: ViewChild;
+  readonly emit: (event: string, ...args: any[]) => void;
+  readonly lifecycle: ComponentLifecycleContext;
+}
+
+export interface ComponentLifecycleContext {
+  readonly props: Record<string, Signal>;
+  readonly element: Node | null;
+  readonly elements: Node[];
+  readonly signal?: AbortSignal;
+  onMounted(callback: (context: ComponentLifecycleContext) => void): () => void;
+  onCleanup(callback: () => void): () => void;
 }
 
 export interface ComponentInstance {
+  readonly _isKupolaComponentInstance: true;
   readonly element: DocumentFragment;
   readonly _instance: TemplateInstance;
   destroy: () => void;
@@ -159,13 +214,21 @@ export interface ComponentInstance {
   on: (event: string, handler: (...args: any[]) => void) => () => void;
 }
 
+/** A component factory with typed props and Kupola-compatible children. */
+export type Component<Props extends Record<string, any> = Record<string, any>> = (
+  initialProps?: Props,
+  children?: ViewChild
+) => ComponentInstance;
+
+export interface ComponentFactory {
+  (initialProps?: Record<string, any>, children?: ViewChild): ComponentInstance;
+  readonly _isKupolaComponent?: true;
+}
+
 /** Define a reusable component. Returns a factory: (initialProps?, children?) => ComponentInstance. */
 export declare function defineComponent(
   definition: ComponentDefinition
-): (
-  initialProps?: Record<string, any>,
-  children?: TemplateResult | string
-) => ComponentInstance;
+): ComponentFactory;
 
 /** Register a component factory in the global registry. */
 export declare function register(name: string, factory: Function): void;

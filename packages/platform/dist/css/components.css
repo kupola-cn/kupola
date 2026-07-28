@@ -27,8 +27,27 @@ img, svg, video, canvas { max-width: 100%; }
   gap: var(--spacer-6); padding: 0 var(--spacer-12); height: 28px;
   border-radius: var(--radius-4); border: 1px solid transparent;
   cursor: pointer; user-select: none; white-space: nowrap;
-  font-size: var(--body-sm-font-size); font-weight: var(--font-weight-medium);
+  font-size: var(--body-sm-font-size); font-weight: var(--font-weight-medium); line-height: 1;
   transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.ds-btn > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+.ds-btn > icon,
+.ds-btn > .ds-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+.ds-btn > icon svg,
+.ds-btn > .ds-icon svg,
+.ds-btn > svg {
+  display: block;
+  flex: 0 0 auto;
 }
 .ds-btn--sm { height: 24px; padding: 0 var(--spacer-8); font-size: var(--body-xs-font-size); }
 .ds-btn--lg { height: 32px; padding: 0 var(--spacer-16); font-size: var(--body-base-font-size); }
@@ -219,6 +238,224 @@ img, svg, video, canvas { max-width: 100%; }
 .ds-form-label { font-size: var(--body-sm-font-size); font-weight: var(--font-weight-medium); color: var(--text-default); }
 .ds-form__error { font-size: var(--body-xs-font-size); color: var(--status-error-default); }
 .ds-form__actions { display: flex; justify-content: flex-end; gap: var(--spacer-8); margin-top: var(--spacer-16); }
+
+.ds-schema-form {
+  --ds-schema-form-section-gap: var(--spacer-16);
+  --ds-schema-form-field-gap: var(--spacer-16);
+  --ds-schema-form-control-height: 36px;
+  --ds-schema-form-control-padding-x: var(--spacer-12);
+  --ds-schema-form-control-padding-y: var(--spacer-8);
+  display: grid;
+  gap: var(--ds-schema-form-section-gap);
+  min-width: 0;
+}
+
+.ds-schema-form__fields {
+  display: grid;
+  gap: var(--ds-schema-form-field-gap);
+  min-width: 0;
+}
+
+.ds-schema-form__field {
+  min-width: 0;
+  color: var(--text-default);
+}
+
+.ds-schema-form__label {
+  color: var(--text-default);
+}
+
+.ds-schema-form__control {
+  width: 100%;
+  min-height: var(--ds-schema-form-control-height);
+  padding: var(--ds-schema-form-control-padding-y) var(--ds-schema-form-control-padding-x);
+  background: var(--bg-overlay-l1);
+  border: 1px solid var(--border-neutral-l1);
+  border-radius: var(--radius-4);
+  color: var(--text-default);
+  font: inherit;
+  font-size: var(--body-sm-font-size);
+}
+
+.ds-schema-form__control:focus {
+  border-color: var(--bg-brand);
+  outline: none;
+}
+
+.ds-schema-form__control::placeholder {
+  color: var(--text-tertiary);
+}
+
+.ds-schema-form__control.ds-form-field--error,
+.ds-schema-form__field.ds-form-field--error .ds-schema-form__control {
+  border-color: var(--status-error-default);
+}
+
+.ds-schema-form__textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+
+.ds-schema-form__select,
+.ds-schema-form select {
+  color-scheme: inherit;
+  background: var(--bg-overlay-l1);
+  color: var(--text-default);
+}
+
+.ds-schema-form__select option,
+.ds-schema-form select option,
+select.ds-schema-form__select option {
+  background: var(--bg-base-secondary);
+  color: var(--text-default);
+}
+
+.ds-schema-form__select option:checked,
+.ds-schema-form select option:checked,
+select.ds-schema-form__select option:checked {
+  background: var(--bg-brand);
+  color: var(--text-onbrand);
+}
+
+.ds-schema-form__select option:disabled,
+.ds-schema-form select option:disabled,
+select.ds-schema-form__select option:disabled {
+  color: var(--text-disabled);
+}
+
+.ds-schema-form__choice-list {
+  display: grid;
+  gap: var(--spacer-8);
+}
+
+.ds-schema-form__choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacer-8);
+  color: var(--text-default);
+  font-size: var(--body-sm-font-size);
+}
+
+.ds-schema-form__choice-input {
+  accent-color: var(--bg-brand);
+}
+
+.ds-schema-form__switch-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacer-12);
+}
+
+.ds-schema-form__switch-label {
+  min-width: 0;
+}
+
+.ds-schema-form__switch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.ds-schema-form__switch-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ds-schema-form__switch-track {
+  width: 36px;
+  height: 20px;
+  background: var(--bg-overlay-l3);
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast);
+}
+
+.ds-schema-form__switch-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: var(--radius-full);
+  transition: transform var(--transition-fast);
+}
+
+.ds-schema-form__switch-input:checked + .ds-schema-form__switch-track {
+  background: var(--bg-brand);
+}
+
+.ds-schema-form__switch-input:checked + .ds-schema-form__switch-track::after {
+  transform: translateX(16px);
+}
+
+.ds-schema-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacer-8);
+  min-width: 0;
+}
+
+.ds-schema-form--dialog {
+  --ds-schema-form-section-gap: var(--spacer-16);
+}
+
+.ds-schema-form--drawer {
+  min-height: 100%;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.ds-schema-form--drawer .ds-schema-form__fields {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.ds-schema-form--drawer .ds-schema-form__actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: var(--spacer-12);
+  background: var(--bg-base-secondary);
+  border-top: 1px solid var(--border-neutral-l1);
+}
+
+.ds-schema-form--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacer-12);
+}
+
+.ds-schema-form--inline .ds-schema-form__fields {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacer-12);
+}
+
+.ds-schema-form--inline .ds-schema-form__field {
+  flex: 1 1 180px;
+}
+
+.ds-schema-form--inline .ds-schema-form__actions {
+  flex: 0 0 auto;
+}
+
+.ds-schema-form--dense,
+.ds-schema-form--density-dense {
+  --ds-schema-form-section-gap: var(--spacer-12);
+  --ds-schema-form-field-gap: var(--spacer-10);
+  --ds-schema-form-control-height: 30px;
+  --ds-schema-form-control-padding-x: var(--spacer-8);
+  --ds-schema-form-control-padding-y: var(--spacer-6);
+}
 
 /* ── Alert ────────────────────────────────────────────────── */
 .ds-alert {

@@ -1,6 +1,6 @@
 {
   "name": "@kupola/auth",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Kupola auth — RBAC-based permission guard system with ABAC attribute filtering support.",
   "type": "module",
   "sideEffects": false,
@@ -46,19 +46,23 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kupola-cn/kupola",
+    "url": "git+https://github.com/kupola-cn/kupola.git",
     "directory": "packages/auth"
   },
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
-    "@kupola/core": "^3.1.0"
+    "@kupola/core": "^3.1.0",
+    "@kupola/platform": "^3.1.0"
   },
   "devDependencies": {
-    "@kupola/core": "^3.1.0"
+    "@kupola/core": "^3.1.0",
+    "@kupola/platform": "^3.1.0"
   },
   "scripts": {
     "test": "jest",

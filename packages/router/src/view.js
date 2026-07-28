@@ -7,7 +7,13 @@
 
 import { useRouter } from './router-context.js';
 import { applyTransition, createTransitionManager } from './transition.js';
-import { render, registerDirective } from '@kupola/platform';
+import {
+  getCurrentProvideContext,
+  render,
+  registerDirective,
+  runWithProvideContext,
+  walk,
+} from '@kupola/platform';
 
 /**
  * Router view directive class.
@@ -18,12 +24,21 @@ export class RouterViewDirective {
     this.binding = binding || {};
     this.router = useRouter();
     this.viewName = this.binding.value || 'default';
+    const parentElement = el.parentElement?.closest?.('[k-router-view]');
+    const parentView = parentElement?._routerViewInstance;
+    this.depth = parentView?.router === this.router
+      ? parentView.depth + 1
+      : Number.isInteger(Number(this.binding.depth))
+        ? Math.max(0, Number(this.binding.depth))
+        : 0;
     this.transitionManager = createTransitionManager(el, this.binding);
     this.unsubscribe = null;
     this.currentView = null;
     this.renderToken = 0;
     this.destroyed = false;
     this.transitionController = null;
+    this.nestedWalks = [];
+    this.provideContext = getCurrentProvideContext();
 
     this.init();
   }
@@ -45,6 +60,35 @@ export class RouterViewDirective {
     });
   }
 
+  destroyNestedWalks() {
+    let firstError;
+    for (const walkInstance of this.nestedWalks.splice(0)) {
+      try {
+        walkInstance.destroy();
+      } catch (error) {
+        if (!firstError) {firstError = error;}
+      }
+    }
+    if (firstError) {throw firstError;}
+  }
+
+  mountNestedWalks() {
+    const walks = [];
+    try {
+      for (const child of [ ...this.el.children ]) {
+        const walkInstance = runWithProvideContext(
+          this.provideContext,
+          () => walk(child),
+        );
+        walks.push(walkInstance);
+      }
+      this.nestedWalks = walks;
+    } catch (error) {
+      for (const walkInstance of walks) {walkInstance.destroy();}
+      throw error;
+    }
+  }
+
   async render() {
     if (this.destroyed || !this.router || !this.router.currentRoute) {return;}
     const token = ++this.renderToken;
@@ -56,12 +100,25 @@ export class RouterViewDirective {
 
     if (matched.length === 0) {return;}
 
-    const lastRecord = matched[matched.length - 1];
-    const routeTransition = lastRecord.transition || this.router.options?.transition || {};
+    const record = matched[this.depth];
+    if (!record) {
+      this.destroyNestedWalks();
+      this.currentView?.destroy?.();
+      this.currentView = null;
+      this.el.textContent = '';
+      return;
+    }
+    const routeTransition = {
+      ...(this.router.options?.transition || {}),
+      ...(record.transition || {}),
+      ...this.transitionManager.getOverrides(),
+    };
 
-    let component = lastRecord.component;
-    if (lastRecord.components && this.viewName !== 'default') {
-      component = lastRecord.components[this.viewName];
+    let component = record.component;
+    if (record.components) {
+      component = record.components[this.viewName] || (
+        this.viewName === 'default' ? record.components.default : component
+      );
     }
 
     if (!component) {return;}
@@ -69,7 +126,7 @@ export class RouterViewDirective {
     // Resolve async components before removing the current view. A failed or
     // superseded load must not leave the outlet blank.
     const componentFn = component.default || component;
-    const templateResult = await componentFn();
+    const templateResult = await runWithProvideContext(this.provideContext, () => componentFn());
     if (this.destroyed || token !== this.renderToken) {return;}
 
     const transitionController = typeof AbortController === 'function'
@@ -79,9 +136,12 @@ export class RouterViewDirective {
     const transitionSignal = transitionController?.signal;
 
     try {
+      this.destroyNestedWalks();
       while (this.el.firstChild) {
         const currentContent = this.el.firstChild;
-        await applyTransition(currentContent, 'leave', routeTransition, transitionSignal);
+        if (currentContent.nodeType === 1) {
+          await applyTransition(currentContent, 'leave', routeTransition, transitionSignal);
+        }
         if (this.destroyed || token !== this.renderToken) {return;}
         currentContent.remove();
       }
@@ -90,10 +150,15 @@ export class RouterViewDirective {
       this.currentView = null;
 
       if (templateResult && typeof templateResult === 'object') {
-        this.currentView = render(templateResult, this.el);
+        this.currentView = runWithProvideContext(
+          this.provideContext,
+          () => render(templateResult, this.el),
+        );
       } else if (typeof templateResult === 'string') {
         this.el.innerHTML = templateResult;
       }
+
+      this.mountNestedWalks();
 
       if (this.destroyed || token !== this.renderToken) {return;}
       await Promise.all([ ...this.el.children ].map(element => {
@@ -111,6 +176,7 @@ export class RouterViewDirective {
     this.renderToken += 1;
     this.transitionController?.abort();
     this.transitionController = null;
+    this.destroyNestedWalks();
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;

@@ -1,6 +1,6 @@
 {
   "name": "@kupola/router",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Kupola router — Complete lightweight SPA routing with nested routes, guards, transitions, and auth integration.",
   "type": "module",
   "sideEffects": false,
@@ -42,14 +42,24 @@
     "build": "rollup -c ../../rollup.config.cjs",
     "test": "jest --testPathPattern='packages/router'"
   },
-  "keywords": ["kupola", "router", "spa", "routing", "nested-routes", "guards", "transitions"],
+  "keywords": [
+    "kupola",
+    "router",
+    "spa",
+    "routing",
+    "nested-routes",
+    "guards",
+    "transitions"
+  ],
   "author": "Kupola Team",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kupola-cn/kupola.git"
   },
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "@kupola/core": "^3.0.0",
     "@kupola/platform": "^3.0.0"

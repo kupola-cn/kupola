@@ -91,10 +91,10 @@ describe('Dropdown open/close', () => {
     container.appendChild(view.element);
     document.body.appendChild(container);
 
+    const menu = container.querySelector('.ds-dropdown__menu');
     const trigger = container.querySelector('.ds-dropdown__trigger');
     trigger.click();
 
-    const menu = container.querySelector('.ds-dropdown__menu');
     expect(menu.classList.contains('is-open')).toBe(true);
 
     view.destroy();
@@ -106,11 +106,11 @@ describe('Dropdown open/close', () => {
     container.appendChild(view.element);
     document.body.appendChild(container);
 
+    const menu = container.querySelector('.ds-dropdown__menu');
     const trigger = container.querySelector('.ds-dropdown__trigger');
     trigger.click();
     trigger.click();
 
-    const menu = container.querySelector('.ds-dropdown__menu');
     expect(menu.classList.contains('is-open')).toBe(false);
 
     view.destroy();
@@ -159,11 +159,11 @@ describe('Dropdown click outside', () => {
     document.body.appendChild(container);
 
     view.open();
-    expect(container.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(true);
+    expect(document.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(true);
 
     // Click outside the dropdown
     document.body.click();
-    expect(container.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(false);
+    expect(document.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(false);
 
     view.destroy();
   });
@@ -175,7 +175,7 @@ describe('Dropdown click outside', () => {
     document.body.appendChild(container);
 
     view.open();
-    const menu = container.querySelector('.ds-dropdown__menu');
+    const menu = document.querySelector('.ds-dropdown__menu');
 
     // Click on the menu itself (inside the dropdown)
     menu.click();
@@ -195,7 +195,7 @@ describe('Dropdown item selection', () => {
     container.appendChild(view.element);
     document.body.appendChild(container);
 
-    const items = container.querySelectorAll('.ds-dropdown__item');
+    const items = document.querySelectorAll('.ds-dropdown__item');
     items[1].click();
 
     expect(onSelect).toHaveBeenCalledWith({
@@ -225,10 +225,10 @@ describe('Dropdown item selection', () => {
     document.body.appendChild(container);
 
     view.open();
-    const items = container.querySelectorAll('.ds-dropdown__item');
+    const items = document.querySelectorAll('.ds-dropdown__item');
     items[0].click();
 
-    expect(container.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(false);
+    expect(document.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(false);
 
     view.destroy();
   });
@@ -240,10 +240,10 @@ describe('Dropdown item selection', () => {
     document.body.appendChild(container);
 
     view.open();
-    const items = container.querySelectorAll('.ds-dropdown__item');
+    const items = document.querySelectorAll('.ds-dropdown__item');
     items[0].click();
 
-    expect(container.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(true);
+    expect(document.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(true);
 
     view.destroy();
   });
@@ -259,7 +259,7 @@ describe('Dropdown keyboard navigation', () => {
     document.body.appendChild(container);
 
     view.open();
-    const items = container.querySelectorAll('.ds-dropdown__item');
+    const items = document.querySelectorAll('.ds-dropdown__item');
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
     expect(items[0].classList.contains('is-focused')).toBe(true);
@@ -277,7 +277,7 @@ describe('Dropdown keyboard navigation', () => {
     document.body.appendChild(container);
 
     view.open();
-    const items = container.querySelectorAll('.ds-dropdown__item');
+    const items = document.querySelectorAll('.ds-dropdown__item');
 
     // Move to index 2 first
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
@@ -298,7 +298,7 @@ describe('Dropdown keyboard navigation', () => {
     document.body.appendChild(container);
 
     view.open();
-    const items = container.querySelectorAll('.ds-dropdown__item');
+    const items = document.querySelectorAll('.ds-dropdown__item');
 
     // Navigate past the last item
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
@@ -319,10 +319,10 @@ describe('Dropdown keyboard navigation', () => {
     document.body.appendChild(container);
 
     view.open();
-    expect(container.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(true);
+    expect(document.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(true);
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    expect(container.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(false);
+    expect(document.querySelector('.ds-dropdown__menu').classList.contains('is-open')).toBe(false);
 
     view.destroy();
   });

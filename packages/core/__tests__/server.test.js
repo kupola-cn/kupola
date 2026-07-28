@@ -5,7 +5,7 @@
  */
 
 import { createScheduler, signal, computed } from '../src/index.js';
-import { html } from '../../platform/src/template.js';
+import { html, htmlString } from '../../platform/src/template.js';
 import { flushJobs, resetScheduler } from '../src/scheduler.js';
 import { renderToString, hydrate } from '../../platform/src/server.js';
 
@@ -119,6 +119,34 @@ describe('renderToString', () => {
     // Should have two hydration markers
     const markerCount = (result.match(/<!---->/g) || []).length;
     expect(markerCount).toBe(2);
+  });
+
+  test('preserves trusted HtmlString content', () => {
+    const result = renderToString(html`<div>${htmlString('<strong>raw</strong>')}</div>`);
+    expect(result).toContain('<strong>raw</strong>');
+    expect(result).not.toContain('&lt;strong&gt;');
+  });
+
+  test('renders text functions with hydration markers', () => {
+    const value = signal('server');
+    const result = renderToString(html`<span>${() => value.value}</span>`);
+    expect(result).toMatch(/<span>server<!----><\/span>/);
+  });
+
+  test('hydrates nested templates and their reactive values', () => {
+    const value = signal('before');
+    const nested = html`<span>${value}</span>`;
+    const tpl = html`<section>${nested}</section>`;
+    const container = document.createElement('div');
+    container.innerHTML = renderToString(tpl);
+    document.body.appendChild(container);
+
+    const view = hydrate(tpl, container);
+    expect(container.querySelector('span').textContent).toBe('before');
+    value.value = 'after';
+    flushJobs();
+    expect(container.querySelector('span').textContent).toBe('after');
+    view.destroy();
   });
 });
 

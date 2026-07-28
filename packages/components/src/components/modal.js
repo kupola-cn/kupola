@@ -22,7 +22,7 @@ import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
 import { getIconTemplate } from './icon-helper';
 import { lockBodyScroll } from './body-scroll-lock';
-import { registerOverlayKeydown } from './overlay-stack';
+import { registerOverlayKeydown, trapOverlayFocus } from './overlay-stack';
 import { createListenerRegistry } from './listener-registry';
 
 let modalId = 0;
@@ -63,11 +63,13 @@ export function Modal(options = {}, children = null) {
   function open() {
     if (destroyed || isOpen) {return;}
     isOpen = true;
-    previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    previousFocus = document.activeElement?.nodeType === 1 ? document.activeElement : null;
     if (maskEl) {
       maskEl.classList.add('is-visible');
       releaseBodyScroll ||= lockBodyScroll();
-      releaseOverlay ||= registerOverlayKeydown(onKeydown);
+      releaseOverlay ||= registerOverlayKeydown(onKeydown, {
+        container: maskEl.querySelector('.ds-modal'),
+      });
       const dialogEl = maskEl.querySelector('.ds-modal');
       if (dialogEl) {dialogEl.focus();}
     }
@@ -98,34 +100,13 @@ export function Modal(options = {}, children = null) {
 
   // ── Event handlers ─────────────────────────────────────────────────────────
 
-  const FOCUSABLE = [
-    'a[href]',
-    'button:not([disabled])',
-    'textarea:not([disabled])',
-    'input:not([disabled])',
-    'select:not([disabled])',
-    '[tabindex]:not([tabindex="-1"])',
-  ].join(',');
-
   const onKeydown = (e) => {
     if (!isOpen) {return;}
     if (escClose && e.key === 'Escape') {
       close();
       return;
     }
-    if (e.key === 'Tab' && maskEl) {
-      const dialogEl = maskEl.querySelector('.ds-modal');
-      if (!dialogEl) {return;}
-      const focusable = Array.from(dialogEl.querySelectorAll(FOCUSABLE));
-      if (focusable.length === 0) { e.preventDefault(); return; }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-      } else {
-        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
-      }
-    }
+    trapOverlayFocus(maskEl?.querySelector('.ds-modal'), e);
   };
   const onMaskClick = (e) => {
     if (closableOnMask && e.target === e.currentTarget) {

@@ -1,6 +1,6 @@
 {
   "name": "@kupola/core",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Kupola core reactivity engine — Signal, computed, effect, batch.",
   "type": "module",
   "sideEffects": false,
@@ -34,12 +34,14 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kupola-cn/kupola",
+    "url": "git+https://github.com/kupola-cn/kupola.git",
     "directory": "packages/core"
   },
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }

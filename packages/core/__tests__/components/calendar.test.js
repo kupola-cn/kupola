@@ -303,5 +303,20 @@ describe('Calendar', () => {
       expect(cal.getDate().getFullYear()).toBe(2024);
       cal.destroy();
     });
+
+    test('uses an explicit IANA time zone for timestamp event dates', () => {
+      const cal = Calendar({
+        timeZone: 'Asia/Shanghai',
+        currentDate: '2024-06-01',
+        events: [ { date: '2024-06-15T23:30:00Z', title: 'Late event' } ],
+      });
+      const eventDay = cal.element.querySelector('.ds-calendar__day.has-events');
+      expect(eventDay.textContent).toContain('16');
+      cal.destroy();
+    });
+
+    test('rejects an invalid time zone early', () => {
+      expect(() => Calendar({ timeZone: 'Mars/Phobos' })).toThrow(/Invalid Calendar timeZone/);
+    });
   });
 });

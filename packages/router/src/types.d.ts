@@ -1,10 +1,26 @@
+export type RouteParams = Record<string, string>;
+export type RouteQueryValue = string | number | boolean | null | undefined;
+export type RouteQuery = Record<string, RouteQueryValue | RouteQueryValue[]>;
+export type RouteMeta = Record<string, any>;
+export type RouteComponent = Function | { default: Function };
+export type RouteRedirect = { path: string; query?: RouteQuery };
+export type NavigationGuardResult = boolean | void | RouteRedirect;
+export type MaybePromise<T> = T | Promise<T>;
+
+export interface RouteLocationInput {
+  path?: string;
+  name?: string;
+  params?: RouteParams;
+  query?: RouteQuery;
+}
+
 export interface RouteConfig {
   path: string;
   name?: string;
-  component?: Function | { default: Function };
-  components?: Record<string, Function | { default: Function }>;
+  component?: RouteComponent;
+  components?: Record<string, RouteComponent>;
   children?: RouteConfig[];
-  meta?: Record<string, any>;
+  meta?: RouteMeta;
   beforeEnter?: NavigationGuard;
   beforeLeave?: NavigationGuard;
   transition?: TransitionConfig;
@@ -13,10 +29,10 @@ export interface RouteConfig {
 export interface RouteRecord {
   path: string;
   name: string | undefined;
-  component: Function | { default: Function } | undefined;
-  components: Record<string, Function | { default: Function }> | undefined;
+  component: RouteComponent | undefined;
+  components: Record<string, RouteComponent> | undefined;
   children: RouteConfig[];
-  meta: Record<string, any>;
+  meta: RouteMeta;
   beforeEnter?: NavigationGuard;
   beforeLeave?: NavigationGuard;
   transition?: TransitionConfig;
@@ -27,9 +43,9 @@ export interface RouteRecord {
 export interface RouteLocation {
   path: string;
   name: string | undefined;
-  params: Record<string, string>;
-  query: Record<string, string>;
-  meta: Record<string, any>;
+  params: RouteParams;
+  query: RouteQuery;
+  meta: RouteMeta;
   fullPath: string;
   matched: RouteRecord[];
   redirectedFrom?: string;
@@ -38,7 +54,7 @@ export interface RouteLocation {
 export type NavigationGuard = (
   to: RouteLocation,
   from: RouteLocation | null
-) => boolean | void | { path: string; query?: Record<string, string> } | Promise<boolean | void | { path: string; query?: Record<string, string> }>;
+) => MaybePromise<NavigationGuardResult>;
 
 export interface TransitionConfig {
   enterClass?: string;
@@ -58,6 +74,7 @@ export interface RouterOptions {
   base?: string;
   scrollBehavior?: 'auto' | 'smooth' | 'manual' | ScrollBehaviorFunction;
   transition?: TransitionConfig;
+  initialLocation?: string;
 }
 
 export interface AuthGuardOptions {
@@ -90,6 +107,27 @@ export function initRouter(
   destroy(): void;
 };
 
+export interface RouterPlugin {
+  install(): Promise<void> | void;
+  destroy(): void;
+}
+
+export interface RouterPluginAuthProvider {
+  getContext(): object | null;
+  onChange(listener: (context: object | null) => void): () => void;
+}
+
+export function createRouterPlugin(
+  router: Router,
+  options?: {
+    auth?: RouterPluginAuthProvider | null;
+    loginPath?: string;
+    forbiddenPath?: string;
+    notFoundPath?: string;
+    initialize?: boolean;
+  }
+): RouterPlugin;
+
 export type ScrollBehaviorFunction = (
   to: RouteLocation,
   from: RouteLocation | null,
@@ -97,13 +135,13 @@ export type ScrollBehaviorFunction = (
 ) => { x: number; y: number } | { selector: string; behavior?: ScrollBehavior } | null;
 
 export interface Router {
-  push(location: string | { path?: string; name?: string; params?: Record<string, string>; query?: Record<string, string> }, options?: { query?: Record<string, string> }): Promise<boolean>;
-  replace(location: string | { path?: string; name?: string; params?: Record<string, string>; query?: Record<string, string> }, options?: { query?: Record<string, string> }): Promise<boolean>;
+  push(location: string | RouteLocationInput, options?: { query?: RouteQuery }): Promise<boolean>;
+  replace(location: string | RouteLocationInput, options?: { query?: RouteQuery }): Promise<boolean>;
   back(): void;
   forward(): void;
   go(delta: number): void;
   match(path: string): RouteLocation | null;
-  resolve(to: { path?: string; name?: string; params?: Record<string, string> }): string;
+  resolve(to: RouteLocationInput): string;
   beforeEach(guard: NavigationGuard): () => void;
   beforeResolve(guard: NavigationGuard): () => void;
   afterEach(callback: (to: RouteLocation, from: RouteLocation | null) => void): () => void;

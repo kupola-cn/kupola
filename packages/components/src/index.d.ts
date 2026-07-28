@@ -19,3 +19,26 @@ export { Datepicker as DatePicker } from './components/types.d.ts';
 export { Statcard as StatCard } from './components/types.d.ts';
 export { Textarea as TextArea } from './components/types.d.ts';
 export { Timepicker as TimePicker } from './components/types.d.ts';
+export type {
+  IconProvider,
+  IconResolverOptions,
+  KupolaIconProviderOptions,
+  SetupUiOptions,
+} from './components/ui.d.ts';
+export { createIconResolver, createKupolaIconProvider, setupUi } from './components/ui.d.ts';
+
+export interface OverlayHandle {
+  readonly element: Element | null;
+  close(): void;
+  destroy(): void;
+}
+
+export interface OverlayService {
+  openModal(options?: Record<string, any>, children?: any): OverlayHandle;
+  destroy(): void;
+}
+
+export const OVERLAY_KEY: unique symbol;
+export function createOverlay(): OverlayService;
+export function createOverlayPlugin(): { install(): void; destroy(): void };
+export function useOverlay(): OverlayService;

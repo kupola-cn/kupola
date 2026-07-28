@@ -175,6 +175,34 @@ function registerIconProvider(prefix, resolver) {
   PROVIDERS[prefix] = resolver;
 }
 
+function createKupolaIconProvider(options = {}) {
+  if (!options || typeof options !== 'object' || Array.isArray(options)) {
+    throw new TypeError('[kupola/components] createKupolaIconProvider() expects an options object.');
+  }
+
+  const { prefix = 'kupola', groups = 'all' } = options;
+  if (typeof prefix !== 'string' || prefix.length === 0) {
+    throw new TypeError('[kupola/components] Icon provider prefix must be a non-empty string.');
+  }
+
+  const selectedGroups = groups === 'all' ? Object.keys(iconGroups) : groups;
+  if (!Array.isArray(selectedGroups) || selectedGroups.length === 0) {
+    throw new TypeError('[kupola/components] Icon groups must be "all" or a non-empty array.');
+  }
+  for (const group of selectedGroups) {
+    if (typeof group !== 'string' || !registerGroup(group)) {
+      throw new Error(`[kupola/components] Unknown icon group: ${String(group)}.`);
+    }
+  }
+
+  return Object.freeze({
+    prefix,
+    resolve(name, size) {
+      return svg(String(name).toLowerCase(), size);
+    },
+  });
+}
+
 function svg(name, size = 16, viewBox = '0 0 24 24') {
   const path = PATHS[name];
   if (!path) {return '';}
@@ -264,9 +292,10 @@ const Icons = {
   registerAllGroups,
   iconGroups,
   registerIconProvider,
+  createKupolaIconProvider,
   createIconComponent,
   setupIconResolver,
   plugin: iconPlugin,
 };
 
-export { Icons, svg, renderIcons as render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createIconComponent, setupIconResolver, iconPlugin };
+export { Icons, svg, renderIcons as render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createKupolaIconProvider, createIconComponent, setupIconResolver, iconPlugin };

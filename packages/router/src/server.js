@@ -5,7 +5,7 @@
  * @module server
  */
 
-import { flattenRoutes, matchRoute, resolvePath } from './matcher.js';
+import { flattenRoutes, matchRoute, resolvePath, stringifyQuery } from './matcher.js';
 
 /**
  * Match route on server side.
@@ -32,7 +32,7 @@ export function createServerRouter(options) {
 
     resolve(to) {
       const path = resolvePath(records, to);
-      const search = new URLSearchParams(to?.query || {}).toString();
+      const search = stringifyQuery(to?.query || {});
       return search ? `${path}?${search}` : path;
     },
 

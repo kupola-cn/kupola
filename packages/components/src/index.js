@@ -18,7 +18,8 @@ export { Empty } from './components/empty.js';
 export { FileUpload } from './components/fileupload.js';
 export { Form } from './components/form.js';
 export { Heatmap } from './components/heatmap.js';
-export { Icons, svg, render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createIconComponent, setupIconResolver } from './components/icons.js';
+export { Icons, svg, render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createKupolaIconProvider, createIconComponent, setupIconResolver } from './components/icons.js';
+export { createIconResolver, setupUi } from './components/ui.js';
 export { ImagePreview } from './components/imagepreview.js';
 export { Input } from './components/input.js';
 export { Kbd } from './components/kbd.js';
@@ -31,6 +32,31 @@ export { Pagination } from './components/pagination.js';
 export { Progress } from './components/progress.js';
 export { Radio } from './components/radio.js';
 export { Select } from './components/select.js';
+export {
+  FormDensity,
+  FormVariant,
+  SchemaForm,
+  checkbox,
+  bindSchemaForm,
+  createFormScope,
+  date,
+  email,
+  field,
+  getFormFieldRenderer,
+  number,
+  password,
+  radio,
+  registerFormField,
+  schema,
+  schemaSubmit,
+  select,
+  switchField,
+  switcher,
+  text,
+  textarea,
+  time,
+  validateSchema,
+} from './components/schemaform.js';
 export { Skeleton } from './components/skeleton.js';
 export { Slider } from './components/slider.js';
 export { Spin } from './components/spin.js';
@@ -46,3 +72,5 @@ export { Tooltip } from './components/tooltip.js';
 export { Tree } from './components/tree.js';
 export { Validation } from './components/validation.js';
 export { VirtualList } from './components/virtuallist.js';
+export { TableView, FormView } from './components/views.js';
+export { OVERLAY_KEY, createOverlay, createOverlayPlugin, useOverlay } from './components/overlay.js';

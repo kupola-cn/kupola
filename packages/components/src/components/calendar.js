@@ -33,51 +33,107 @@ const DEFAULT_I18N = {
   today: 'Today',
 };
 
-function _fmtDate(d) {
+function _fmtDate(d, timeZone = null) {
+  if (timeZone) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(d);
+    const values = Object.fromEntries(parts.map(part => [ part.type, part.value ]));
+    return `${values.year}-${values.month}-${values.day}`;
+  }
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${dd}`;
 }
 
-function _sameDay(a, b) {
-  return a && b && _fmtDate(a) === _fmtDate(b);
+function _sameDay(a, b, timeZone = null) {
+  return a && b && _fmtDate(a, timeZone) === _fmtDate(b, timeZone);
 }
 
-function _inRange(date, start, end) {
+function _inRange(date, start, end, timeZone = null) {
   if (!start || !end) {return false;}
-  const d = _fmtDate(date);
-  return d >= _fmtDate(start) && d <= _fmtDate(end);
+  const d = _fmtDate(date, timeZone);
+  return d >= _fmtDate(start, timeZone) && d <= _fmtDate(end, timeZone);
 }
 
-function _eventsForDate(events, date) {
-  const ds = _fmtDate(date);
-  return events.filter(e => {
-    const s = e.date || e.start;
-    if (!s) {return false;}
-    const startStr = typeof s === 'string' ? s : _fmtDate(s);
-    const end = e.end ?? e.endDate;
-    if (!end) {return startStr === ds;}
-    const endStr = typeof end === 'string' ? end : _fmtDate(end);
-    return ds >= startStr && ds <= endStr;
-  });
+function _dateFromKey(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {return null;}
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return _fmtDate(date) === value ? date : null;
 }
 
-function _validDate(value, fallback = null) {
+function _eventDate(value, timeZone = null) {
+  if (typeof value === 'string') {
+    const match = /^(\d{4}-\d{2}-\d{2})/.exec(value);
+    if (match && value.length === 10) {
+      return _dateFromKey(match[1]) ? match[1] : '';
+    }
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isFinite(date.getTime()) ? _fmtDate(date, timeZone) : '';
+}
+
+function _createEventIndex(events, timeZone = null) {
+  const exact = new Map();
+  const ranges = [];
+  for (const event of events) {
+    const start = _eventDate(event.date || event.start, timeZone);
+    if (!start) {continue;}
+    const end = _eventDate(event.end ?? event.endDate, timeZone);
+    if (!end) {
+      const list = exact.get(start) || [];
+      list.push(event);
+      exact.set(start, list);
+    } else {
+      ranges.push({ event, start, end });
+    }
+  }
+  return { exact, ranges };
+}
+
+function _eventsForDate(index, date, timeZone = null) {
+  const ds = _fmtDate(date, timeZone);
+  return [ ...(index.exact.get(ds) || []),
+    ...index.ranges.filter(range => ds >= range.start && ds <= range.end).map(range => range.event) ];
+}
+
+function _validDate(value, fallback = null, timeZone = null) {
   if (value == null || value === '') {return fallback;}
+  if (typeof value === 'string') {
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (dateOnly) {
+      const local = _dateFromKey(value);
+      return local || fallback;
+    }
+  }
   const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? date : fallback;
+  if (!Number.isFinite(date.getTime())) {return fallback;}
+  return timeZone ? _dateFromKey(_fmtDate(date, timeZone)) : date;
 }
 
 export function Calendar(options = {}) {
   const config = options && typeof options === 'object' ? options : {};
-  let currentDate = _validDate(config.currentDate ?? config.date, new Date());
-  let selectedDate = _validDate(config.selectedDate);
-  let rangeStart = _validDate(config.rangeStart);
-  let rangeEnd = _validDate(config.rangeEnd);
+  const timeZone = config.timeZone == null ? null : String(config.timeZone);
+  if (timeZone) {
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone }).format();
+    } catch {
+      throw new RangeError(`[kupola/components] Invalid Calendar timeZone: ${timeZone}`);
+    }
+  }
+  let currentDate = _validDate(config.currentDate ?? config.date, new Date(), timeZone);
+  let selectedDate = _validDate(config.selectedDate, null, timeZone);
+  let rangeStart = _validDate(config.rangeStart, null, timeZone);
+  let rangeEnd = _validDate(config.rangeEnd, null, timeZone);
   let isRangeMode = config.rangeMode === true || config.selectionMode === 'range';
   let viewMode = config.viewMode === 'week' ? 'week' : 'month';
   let events = Array.isArray(config.events) ? config.events.map(e => ({ ...e })) : [];
+  let eventIndex = _createEventIndex(events, timeZone);
   const i18n = { ...DEFAULT_I18N, ...(config.i18n || {}) };
   const onSelect = typeof config.onSelect === 'function' ? config.onSelect : null;
   const onRangeSelect = typeof config.onRangeSelect === 'function' ? config.onRangeSelect : null;
@@ -124,7 +180,7 @@ export function Calendar(options = {}) {
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
-    const todayStr = _fmtDate(today);
+    const todayStr = _fmtDate(today, timeZone);
 
     for (let i = 0; i < firstDay; i++) {
       const empty = document.createElement('span');
@@ -134,22 +190,22 @@ export function Calendar(options = {}) {
 
     for (let day = 1; day <= daysInMonth; day++) {
       const d = new Date(year, month, day);
-      const ds = _fmtDate(d);
+      const ds = _fmtDate(d, timeZone);
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'ds-calendar__day';
       btn.textContent = day;
 
       if (ds === todayStr) {btn.classList.add('is-today');}
-      if (_sameDay(d, selectedDate)) {btn.classList.add('is-selected');}
+      if (_sameDay(d, selectedDate, timeZone)) {btn.classList.add('is-selected');}
 
       if (isRangeMode) {
-        if (_sameDay(d, rangeStart)) {btn.classList.add('is-range-start');}
-        if (_sameDay(d, rangeEnd)) {btn.classList.add('is-range-end');}
-        if (_inRange(d, rangeStart, rangeEnd)) {btn.classList.add('is-in-range');}
+        if (_sameDay(d, rangeStart, timeZone)) {btn.classList.add('is-range-start');}
+        if (_sameDay(d, rangeEnd, timeZone)) {btn.classList.add('is-range-end');}
+        if (_inRange(d, rangeStart, rangeEnd, timeZone)) {btn.classList.add('is-in-range');}
       }
 
-      const dayEvents = _eventsForDate(events, d);
+      const dayEvents = _eventsForDate(eventIndex, d, timeZone);
       if (dayEvents.length > 0) {
         btn.classList.add('has-events');
         const dot = document.createElement('span');
@@ -180,12 +236,12 @@ export function Calendar(options = {}) {
 
     daysEl.innerHTML = '';
     const today = new Date();
-    const todayStr = _fmtDate(today);
+    const todayStr = _fmtDate(today, timeZone);
 
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      const ds = _fmtDate(d);
+      const ds = _fmtDate(d, timeZone);
 
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -202,9 +258,9 @@ export function Calendar(options = {}) {
       btn.appendChild(num);
 
       if (ds === todayStr) {btn.classList.add('is-today');}
-      if (_sameDay(d, selectedDate)) {btn.classList.add('is-selected');}
+      if (_sameDay(d, selectedDate, timeZone)) {btn.classList.add('is-selected');}
 
-      const dayEvents = _eventsForDate(events, d);
+      const dayEvents = _eventsForDate(eventIndex, d, timeZone);
       if (dayEvents.length > 0) {
         const evContainer = document.createElement('span');
         evContainer.className = 'ds-calendar__day-events';
@@ -231,7 +287,7 @@ export function Calendar(options = {}) {
     btn.classList.add('is-selected');
 
     if (isRangeMode) {
-      if (!rangeStart || (rangeEnd && !_sameDay(d, rangeEnd))) {
+      if (!rangeStart || (rangeEnd && !_sameDay(d, rangeEnd, timeZone))) {
         rangeStart = d;
         rangeEnd = null;
       } else if (rangeStart && !rangeEnd) {
@@ -354,7 +410,7 @@ export function Calendar(options = {}) {
     },
     setDate(date) {
       if (destroyed) {return;}
-      const parsed = _validDate(date);
+      const parsed = _validDate(date, null, timeZone);
       if (!parsed) {return;}
       currentDate = parsed;
       _render();
@@ -363,14 +419,14 @@ export function Calendar(options = {}) {
     getDate() { return new Date(currentDate); },
     setSelectedDate(date) {
       if (destroyed) {return;}
-      selectedDate = _validDate(date);
+      selectedDate = _validDate(date, null, timeZone);
       _render();
     },
     getSelectedDate() { return selectedDate ? new Date(selectedDate) : null; },
     setRange(start, end) {
       if (destroyed) {return;}
-      rangeStart = _validDate(start);
-      rangeEnd = _validDate(end);
+      rangeStart = _validDate(start, null, timeZone);
+      rangeEnd = _validDate(end, null, timeZone);
       if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
         [ rangeStart, rangeEnd ] = [ rangeEnd, rangeStart ];
       }
@@ -388,16 +444,19 @@ export function Calendar(options = {}) {
     setEvents(newEvents) {
       if (destroyed) {return;}
       events = Array.isArray(newEvents) ? newEvents.map(e => ({ ...e })) : [];
+      eventIndex = _createEventIndex(events, timeZone);
       _render();
     },
     addEvent(ev) {
       if (destroyed || !ev || typeof ev !== 'object') {return;}
       events.push({ ...ev });
+      eventIndex = _createEventIndex(events, timeZone);
       _render();
     },
     removeEvent(id) {
       if (destroyed) {return;}
       events = events.filter(e => e.id !== id);
+      eventIndex = _createEventIndex(events);
       _render();
     },
     setViewMode(mode) {
@@ -417,7 +476,7 @@ export function Calendar(options = {}) {
     },
     goToDate(date) {
       if (destroyed) {return;}
-      const parsed = _validDate(date);
+      const parsed = _validDate(date, null, timeZone);
       if (!parsed) {return;}
       currentDate = parsed;
       _render();

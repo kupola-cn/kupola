@@ -56,6 +56,9 @@ export function Notification(options = {}) {
 
     _container = document.createElement('div');
     _container.className = 'ds-notification';
+    _container.setAttribute('role', 'region');
+    _container.setAttribute('aria-live', 'polite');
+    _container.setAttribute('aria-atomic', 'false');
     const posClass = POSITION_CLASSES[_position];
     if (posClass) {_container.classList.add(posClass);}
     document.body.appendChild(_container);
@@ -88,6 +91,8 @@ export function Notification(options = {}) {
 
     const itemEl = document.createElement('div');
     itemEl.className = `ds-notification__item ds-notification__item--${type}`;
+    itemEl.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    itemEl.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
     itemEl.setAttribute('data-id', id);
 
     let html_content = '';

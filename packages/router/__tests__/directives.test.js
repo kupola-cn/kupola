@@ -1,7 +1,8 @@
 import { createRouter } from '../src/router.js';
 import { setCurrentRouter } from '../src/router-context.js';
 import { RouterLinkDirective } from '../src/link.js';
-import { RouterViewDirective } from '../src/view.js';
+import { RouterViewDirective, registerRouterViewDirective } from '../src/view.js';
+import { html } from '../../platform/src/template.js';
 
 describe('router directives', () => {
   beforeEach(() => {
@@ -81,6 +82,38 @@ describe('router directives', () => {
 
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(el.innerHTML).toBe('<p>async view</p>');
+
+    directive.destroy();
+    router.destroy();
+  });
+
+  it('renders nested route records into nested router views', async () => {
+    registerRouterViewDirective();
+    const router = createRouter({
+      mode: 'memory',
+      routes: [ {
+        path: '/layout',
+        name: 'layout',
+        component: () => html`<section data-layout><div k-router-view></div></section>`,
+        children: [ {
+          path: 'child',
+          name: 'child',
+          component: () => html`<p data-child>child</p>`,
+        } ],
+      } ],
+    });
+    await router.push('/layout/child');
+    setCurrentRouter(router);
+
+    const el = document.createElement('div');
+    el.setAttribute('k-router-view', '');
+    const directive = new RouterViewDirective(el, {});
+    el._routerViewInstance = directive;
+
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(el.querySelector('[data-layout]')).not.toBeNull();
+    expect(el.querySelector('[data-child]')?.textContent).toBe('child');
 
     directive.destroy();
     router.destroy();

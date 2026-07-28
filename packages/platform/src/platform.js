@@ -36,11 +36,11 @@ export {
 
 // ── Template & Render ──────────────────────────────────────────────────────────
 export { html, TemplateResult, htmlString, HtmlString } from './template.js';
-export { render, mount, createApp, setIconResolver } from './render.js';
+export { render, mount, createApp, setIconResolver, isComponentInstanceLike } from './render.js';
 
 // ── Component System ──────────────────────────────────────────────────────────
 export { defineComponent, register, getComponent, hasComponent, clearRegistry, provide, inject } from './component.js';
-export { hasProvideContext } from './context.js';
+export { getCurrentProvideContext, hasProvideContext, runWithProvideContext } from './context.js';
 
 // ── Directives ────────────────────────────────────────────────────────────────
 export {

@@ -17,11 +17,12 @@ export class HistoryManager {
    * @param {string} mode - History mode (hash, history, memory)
    * @param {string} [base=''] - Base path for history mode
    */
-  constructor(mode, base = '') {
+  constructor(mode, base = '', initialLocation = '/') {
     /** @type {string} History mode */
     this.mode = mode;
     /** @type {string} Base path */
     this.base = base;
+    this.initialLocation = initialLocation;
     /** @type {Array<Function>} Registered listeners */
     this.listeners = [];
     /** @type {Object} Internal history implementation */
@@ -39,7 +40,7 @@ export class HistoryManager {
       return new HashHistory({ base: this.base });
     }
     if (this.mode === 'memory') {
-      return new MemoryHistory({ base: this.base });
+      return new MemoryHistory({ base: this.base, initialLocation: this.initialLocation });
     }
     return new HistoryHistory({ base: this.base });
   }

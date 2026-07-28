@@ -1,6 +1,6 @@
 {
   "name": "@kupola/platform",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Kupola platform — Template rendering, component system, directives, theme, lazy loading, SSR, i18n.",
   "type": "module",
   "sideEffects": [
@@ -83,14 +83,16 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kupola-cn/kupola",
+    "url": "git+https://github.com/kupola-cn/kupola.git",
     "directory": "packages/platform"
   },
   "bugs": {
     "url": "https://github.com/kupola-cn/kupola/issues"
   },
   "homepage": "https://kupola-cn.github.io/kupola/",
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@kupola/core": "^3.1.0"
   }

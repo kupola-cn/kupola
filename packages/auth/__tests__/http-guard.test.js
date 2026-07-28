@@ -81,10 +81,27 @@ describe('http-guard', () => {
         method: 'POST',
         body: JSON.stringify({ name: 'Test' }),
         headers: {
+          'Content-Type': 'application/json',
           'X-Fetch': 'fetch',
           'X-Request': 'request',
         },
         credentials: 'include',
+      }));
+    });
+
+    it('preserves Headers instances when merging request headers', async () => {
+      global.fetch.mockResolvedValueOnce({ status: 200 });
+
+      await createHttpGuard().get('/api/users', {
+        fetchOptions: { headers: new Headers({ 'X-Fetch': 'yes' }) },
+        headers: new Headers({ 'X-Request': 'yes' }),
+      });
+
+      expect(fetch).toHaveBeenCalledWith('/api/users', expect.objectContaining({
+        headers: {
+          'x-fetch': 'yes',
+          'x-request': 'yes',
+        },
       }));
     });
 
@@ -239,6 +256,45 @@ describe('http-guard', () => {
       });
 
       await expect(guard.get('/api/users')).rejects.toThrow(/response object/);
+    });
+
+    it('can parse a JSON response when requested', async () => {
+      global.fetch.mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: jest.fn().mockResolvedValue({ data: [ 1, 2 ] }),
+      });
+
+      await expect(createHttpGuard().get('/api/users', { responseType: 'json' }))
+        .resolves.toEqual({ data: [ 1, 2 ] });
+    });
+
+    it('can reject non-2xx responses with the response attached', async () => {
+      const response = { status: 422, ok: false };
+      global.fetch.mockResolvedValueOnce(response);
+
+      await expect(createHttpGuard({ throwOnHttpError: true }).get('/api/users'))
+        .rejects.toMatchObject({ code: 'HTTP_ERROR', status: 422, response });
+    });
+
+    it('retries configured idempotent requests for retryable statuses', async () => {
+      global.fetch
+        .mockResolvedValueOnce({ status: 503, ok: false })
+        .mockResolvedValueOnce({ status: 200, ok: true });
+
+      const response = await createHttpGuard({ retry: { retries: 1 } }).get('/api/users');
+
+      expect(response.status).toBe(200);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not retry non-idempotent requests by default', async () => {
+      global.fetch.mockResolvedValueOnce({ status: 503, ok: false });
+
+      const response = await createHttpGuard({ retry: 2 }).post('/api/users', { name: 'Test' });
+
+      expect(response.status).toBe(503);
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
   });
 

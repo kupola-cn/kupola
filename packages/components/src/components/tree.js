@@ -30,70 +30,120 @@ export function Tree(options = {}) {
   const onCheck = typeof options.onCheck === 'function' ? options.onCheck : null;
   const onExpand = typeof options.onExpand === 'function' ? options.onExpand : null;
   const onToggle = typeof options.onToggle === 'function' ? options.onToggle : null;
-  const records = [];
-  const recordMap = new Map();
+  let records = [];
+  let recordMap = new Map();
   let destroyed = false;
 
-  const roots = Array.isArray(options.data) ? options.data : [];
-  const stack = roots
-    .map((node, index) => ({ node, parent: null, path: String(index), ancestor: null }))
-    .reverse();
+  function buildRecords(data) {
+    const nextRecords = [];
+    const nextRecordMap = new Map();
+    const roots = Array.isArray(data) ? data : [];
+    const stack = roots
+      .map((node, index) => ({ node, parent: null, path: String(index), ancestor: null }))
+      .reverse();
 
-  while (stack.length > 0) {
-    const entry = stack.pop();
-    const node = entry.node;
-    if (!node || typeof node !== 'object' || hasAncestor(entry.ancestor, node)) {continue;}
+    while (stack.length > 0) {
+      const entry = stack.pop();
+      const node = entry.node;
+      if (!node || typeof node !== 'object' || hasAncestor(entry.ancestor, node)) {continue;}
 
-    let key = isValidKey(node.key) && !recordMap.has(node.key) ? node.key : null;
-    if (key === null) {
-      key = `__tree_${id}_${entry.path}`;
-      while (recordMap.has(key)) {key += '_';}
+      if (isValidKey(node.key) && nextRecordMap.has(node.key)
+        && nextRecordMap.get(node.key).node !== node) {
+        throw new TypeError(`[kupola/components] Tree duplicate key: ${String(node.key)}`);
+      }
+      let key = isValidKey(node.key) && !nextRecordMap.has(node.key) ? node.key : null;
+      if (key === null) {
+        key = `__tree_${id}_${entry.path}`;
+        while (nextRecordMap.has(key)) {key += '_';}
+      }
+
+      const record = {
+        key,
+        node,
+        parent: entry.parent,
+        children: [],
+        element: null,
+        toggle: null,
+        checkbox: null,
+        childrenElement: null,
+      };
+      nextRecords.push(record);
+      nextRecordMap.set(key, record);
+      entry.parent?.children.push(record);
+
+      const children = node.isLeaf || !Array.isArray(node.children) ? [] : node.children;
+      const ancestor = { node, parent: entry.ancestor };
+      for (let index = children.length - 1; index >= 0; index--) {
+        stack.push({
+          node: children[index],
+          parent: record,
+          path: `${entry.path}.${index}`,
+          ancestor,
+        });
+      }
     }
-
-    const record = {
-      key,
-      node,
-      parent: entry.parent,
-      children: [],
-      element: null,
-      toggle: null,
-      checkbox: null,
-      childrenElement: null,
-    };
-    records.push(record);
-    recordMap.set(key, record);
-    entry.parent?.children.push(record);
-
-    const children = node.isLeaf || !Array.isArray(node.children) ? [] : node.children;
-    const ancestor = { node, parent: entry.ancestor };
-    for (let index = children.length - 1; index >= 0; index--) {
-      stack.push({
-        node: children[index],
-        parent: record,
-        path: `${entry.path}.${index}`,
-        ancestor,
-      });
-    }
+    return { records: nextRecords, recordMap: nextRecordMap };
   }
+
+  ({ records, recordMap } = buildRecords(options.data));
 
   const selectedKeys = new Set();
   const checkedKeys = new Set();
   const indeterminateKeys = new Set();
   const expandedKeys = new Set();
 
-  const initialSelectedKey = options.selectedKey
-    ?? (Array.isArray(options.defaultSelectedKeys) ? options.defaultSelectedKeys[0] : undefined);
-  const initialSelected = recordMap.get(initialSelectedKey);
-  if (initialSelected && !initialSelected.node.disabled) {selectedKeys.add(initialSelected.key);}
-
   const shouldExpandAll = options.expandAll === true || options.defaultExpandAll === true;
   const defaultExpandKeys = new Set(Array.isArray(options.defaultExpandKeys)
     ? options.defaultExpandKeys
     : []);
-  for (const record of records) {
-    if (record.children.length > 0 && !record.node.disabled
-      && (shouldExpandAll || defaultExpandKeys.has(record.key))) {
-      expandedKeys.add(record.key);
+
+  function initializeState(preserve = false, previous = {}) {
+    selectedKeys.clear();
+    checkedKeys.clear();
+    indeterminateKeys.clear();
+    expandedKeys.clear();
+
+    if (preserve) {
+      for (const key of previous.selectedKeys || []) {
+        const record = recordMap.get(key);
+        if (record && !record.node.disabled) {selectedKeys.add(key);}
+      }
+      for (const key of previous.checkedKeys || []) {
+        const record = recordMap.get(key);
+        if (record && !record.node.disabled) {checkedKeys.add(key);}
+      }
+      for (const key of previous.expandedKeys || []) {
+        const record = recordMap.get(key);
+        if (record && record.children.length > 0 && !record.node.disabled) {
+          expandedKeys.add(key);
+        }
+      }
+    } else {
+      const initialSelectedKey = options.selectedKey
+        ?? (Array.isArray(options.defaultSelectedKeys) ? options.defaultSelectedKeys[0] : undefined);
+      const initialSelected = recordMap.get(initialSelectedKey);
+      if (initialSelected && !initialSelected.node.disabled) {
+        selectedKeys.add(initialSelected.key);
+      }
+
+      for (const record of records) {
+        if (record.children.length > 0 && !record.node.disabled
+          && (shouldExpandAll || defaultExpandKeys.has(record.key))) {
+          expandedKeys.add(record.key);
+        }
+      }
+
+      const defaultCheckedKeys = Array.isArray(options.defaultCheckedKeys)
+        ? options.defaultCheckedKeys
+        : [];
+      defaultCheckedKeys.forEach(key => {
+        const record = recordMap.get(key);
+        if (record) {setSubtreeChecked(record, true);}
+      });
+    }
+
+    for (let index = records.length - 1; index >= 0; index--) {
+      recomputeRecordCheck(records[index]);
     }
   }
 
@@ -121,16 +171,7 @@ export function Tree(options = {}) {
     }
   }
 
-  const defaultCheckedKeys = Array.isArray(options.defaultCheckedKeys)
-    ? options.defaultCheckedKeys
-    : [];
-  defaultCheckedKeys.forEach(key => {
-    const record = recordMap.get(key);
-    if (record) {setSubtreeChecked(record, true);}
-  });
-  for (let index = records.length - 1; index >= 0; index--) {
-    recomputeRecordCheck(records[index]);
-  }
+  initializeState();
 
   const classes = [ 'ds-tree' ];
   if (options.lined) {classes.push('ds-tree--lined');}
@@ -141,82 +182,87 @@ export function Tree(options = {}) {
   const root = container.querySelector('.ds-tree');
   root.className = classes.join(' ');
 
-  for (const [ index, record ] of records.entries()) {
-    const label = record.node.title ?? record.node.label ?? '';
-    const itemId = `ds-tree-${id}-item-${index}`;
-    const childrenId = `ds-tree-${id}-group-${index}`;
-    const li = document.createElement('li');
-    li.setAttribute('role', 'none');
+  function renderRecords() {
+    root.replaceChildren();
+    for (const [ index, record ] of records.entries()) {
+      const label = record.node.title ?? record.node.label ?? '';
+      const itemId = `ds-tree-${id}-item-${index}`;
+      const childrenId = `ds-tree-${id}-group-${index}`;
+      const li = document.createElement('li');
+      li.setAttribute('role', 'none');
 
-    const item = document.createElement('div');
-    item.className = 'ds-tree__item';
-    item.id = itemId;
-    item.dataset.treeIndex = String(index);
-    item.setAttribute('role', 'treeitem');
-    item.setAttribute('aria-level', String(recordDepth(record) + 1));
-    item.setAttribute('aria-disabled', String(!!record.node.disabled));
-    record.element = item;
+      const item = document.createElement('div');
+      item.className = 'ds-tree__item';
+      item.id = itemId;
+      item.dataset.treeIndex = String(index);
+      item.setAttribute('role', 'treeitem');
+      item.setAttribute('aria-level', String(recordDepth(record) + 1));
+      item.setAttribute('aria-disabled', String(!!record.node.disabled));
+      record.element = item;
 
-    const toggle = document.createElement('button');
-    toggle.type = 'button';
-    toggle.className = 'ds-tree__toggle';
-    toggle.dataset.treeToggleIndex = String(index);
-    toggle.tabIndex = -1;
-    record.toggle = toggle;
-    if (record.children.length === 0) {
-      toggle.classList.add('is-leaf');
-      toggle.disabled = true;
-      toggle.setAttribute('aria-hidden', 'true');
-    } else {
-      toggle.setAttribute('aria-controls', childrenId);
-      toggle.setAttribute('aria-label', `Expand ${label}`);
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'ds-tree__toggle';
+      toggle.dataset.treeToggleIndex = String(index);
+      toggle.tabIndex = -1;
+      record.toggle = toggle;
+      if (record.children.length === 0) {
+        toggle.classList.add('is-leaf');
+        toggle.disabled = true;
+        toggle.setAttribute('aria-hidden', 'true');
+      } else {
+        toggle.setAttribute('aria-controls', childrenId);
+        toggle.setAttribute('aria-label', `Expand ${label}`);
+      }
+      item.appendChild(toggle);
+
+      if (options.checkable) {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'ds-tree__checkbox';
+        checkbox.dataset.treeCheckIndex = String(index);
+        checkbox.disabled = !!record.node.disabled;
+        checkbox.setAttribute('aria-label', `Select ${label}`);
+        record.checkbox = checkbox;
+        item.appendChild(checkbox);
+      }
+
+      if (record.node.icon) {
+        const icon = document.createElement('span');
+        icon.className = 'ds-tree__icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = getIconHtml(record.node.icon);
+        item.appendChild(icon);
+      }
+
+      const labelElement = document.createElement('span');
+      labelElement.className = 'ds-tree__label';
+      labelElement.textContent = String(label);
+      item.appendChild(labelElement);
+
+      if (record.node.badge !== undefined && record.node.badge !== null) {
+        const badge = document.createElement('span');
+        badge.className = 'ds-tree__badge';
+        badge.textContent = String(record.node.badge);
+        item.appendChild(badge);
+      }
+
+      li.appendChild(item);
+      if (record.children.length > 0) {
+        const children = document.createElement('ul');
+        children.className = 'ds-tree__children';
+        children.id = childrenId;
+        children.setAttribute('role', 'group');
+        record.childrenElement = children;
+        li.appendChild(children);
+      }
+
+      const parent = record.parent?.childrenElement ?? root;
+      parent.appendChild(li);
     }
-    item.appendChild(toggle);
-
-    if (options.checkable) {
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.className = 'ds-tree__checkbox';
-      checkbox.dataset.treeCheckIndex = String(index);
-      checkbox.disabled = !!record.node.disabled;
-      checkbox.setAttribute('aria-label', `Select ${label}`);
-      record.checkbox = checkbox;
-      item.appendChild(checkbox);
-    }
-
-    if (record.node.icon) {
-      const icon = document.createElement('span');
-      icon.className = 'ds-tree__icon';
-      icon.setAttribute('aria-hidden', 'true');
-      icon.innerHTML = getIconHtml(record.node.icon);
-      item.appendChild(icon);
-    }
-
-    const labelElement = document.createElement('span');
-    labelElement.className = 'ds-tree__label';
-    labelElement.textContent = String(label);
-    item.appendChild(labelElement);
-
-    if (record.node.badge !== undefined && record.node.badge !== null) {
-      const badge = document.createElement('span');
-      badge.className = 'ds-tree__badge';
-      badge.textContent = String(record.node.badge);
-      item.appendChild(badge);
-    }
-
-    li.appendChild(item);
-    if (record.children.length > 0) {
-      const children = document.createElement('ul');
-      children.className = 'ds-tree__children';
-      children.id = childrenId;
-      children.setAttribute('role', 'group');
-      record.childrenElement = children;
-      li.appendChild(children);
-    }
-
-    const parent = record.parent?.childrenElement ?? root;
-    parent.appendChild(li);
   }
+
+  renderRecords();
 
   let focusedKey = selectedKeys.values().next().value ?? records[0]?.key ?? null;
 
@@ -393,6 +439,25 @@ export function Tree(options = {}) {
     record.element.focus();
   }
 
+  function setData(data) {
+    if (destroyed) {return;}
+    const previous = {
+      selectedKeys: [ ...selectedKeys ],
+      checkedKeys: [ ...checkedKeys ],
+      expandedKeys: [ ...expandedKeys ],
+      focusedKey,
+    };
+    const next = buildRecords(data);
+    records = next.records;
+    recordMap = next.recordMap;
+    initializeState(true, previous);
+    focusedKey = recordMap.has(previous.focusedKey)
+      ? previous.focusedKey
+      : selectedKeys.values().next().value ?? records[0]?.key ?? null;
+    renderRecords();
+    syncDOM();
+  }
+
   listeners.on(root, 'click', event => {
     if (eventRecord(event.target, 'data-tree-check-index')) {return;}
     const toggleRecord = eventRecord(event.target, 'data-tree-toggle-index');
@@ -468,6 +533,7 @@ export function Tree(options = {}) {
     getSelectedKeys,
     getCheckedKeys,
     getExpandedKeys,
+    setData,
     selectKey,
     select: selectKey,
     checkKey,

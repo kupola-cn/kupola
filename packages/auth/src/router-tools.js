@@ -21,8 +21,32 @@ export function requireAuth(authContext) {
 export function requirePermission(authContext, permission) {
   if (!authContext) {return false;}
   if (!permission) {return true;}
-  return typeof authContext.hasPermission === 'function'
-    && authContext.hasPermission(permission);
+  const options = arguments[2];
+  const match = typeof options === 'string'
+    ? options
+    : options?.match || options?.mode || 'any';
+  const check = value => {
+    if (typeof value === 'string' && value.startsWith('role:')) {
+      return typeof authContext.hasRole === 'function'
+        && authContext.hasRole(value.slice(5));
+    }
+    return typeof authContext.hasPermission === 'function'
+      && authContext.hasPermission(value);
+  };
+  if (!Array.isArray(permission)) {
+    return check(permission);
+  }
+  if (permission.length === 0) {return false;}
+  if (match === 'all') {
+    if (typeof authContext.hasAllPermissions === 'function') {
+      return authContext.hasAllPermissions(permission);
+    }
+    return permission.every(check);
+  }
+  if (typeof authContext.hasAnyPermission === 'function') {
+    return authContext.hasAnyPermission(permission);
+  }
+  return permission.some(check);
 }
 
 export function requireRole(authContext, role) {
@@ -36,9 +60,22 @@ export function redirectTo(url, options = {}) {
     return;
   }
 
+  const origin = window.location.origin || null;
+  const isSafeUrl = value => {
+    if (typeof value !== 'string' || !value) {return false;}
+    if (!origin) {return !/^[a-z][a-z\d+.-]*:/i.test(value) && !value.startsWith('//');}
+    try {
+      return new URL(value, origin).origin === origin;
+    } catch {
+      return false;
+    }
+  };
+  if (!isSafeUrl(url)) {return;}
+
   const { redirectUrl } = options;
 
   if (redirectUrl) {
+    if (!isSafeUrl(redirectUrl)) {return;}
     const targetUrl = new URL(url, window.location.origin);
     targetUrl.searchParams.set('redirectUrl', redirectUrl);
     window.location.href = targetUrl.href;

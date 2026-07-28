@@ -6,6 +6,7 @@
  */
 
 export { createRouter, installRouter, initRouter } from './router.js';
+export { createRouterPlugin } from './plugin.js';
 export { useRouter, useRoute } from './router-context.js';
 export { registerRouterLinkDirective } from './link.js';
 export { registerRouterViewDirective } from './view.js';

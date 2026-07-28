@@ -26,7 +26,7 @@ import { t } from '@kupola/platform/i18n';
 import { getIconHtml } from './icon-helper';
 import { lockBodyScroll } from './body-scroll-lock';
 import { createListenerRegistry } from './listener-registry';
-import { registerOverlayKeydown } from './overlay-stack';
+import { registerOverlayKeydown, trapOverlayFocus } from './overlay-stack';
 
 const ICON_NAMES = {
   success: 'check-circle',
@@ -67,7 +67,7 @@ function confirm(options = {}) {
   return new Promise((resolve) => {
     const iconHtml = getIconHtml(ICON_NAMES[type] || ICON_NAMES.normal);
     const listeners = createListenerRegistry();
-    const previousFocus = document.activeElement instanceof HTMLElement
+    const previousFocus = document.activeElement?.nodeType === 1
       ? document.activeElement
       : null;
     let releaseOverlay = null;
@@ -91,8 +91,10 @@ function confirm(options = {}) {
     };
 
     const onKeydown = (e) => {
+      trapOverlayFocus(dialogEl, e);
       if (e.key === 'Escape') {onCancel();}
-      if (e.key === 'Enter') {onConfirm();}
+      if (e.key === 'Enter' && (e.target?.matches?.('[data-action="confirm"]')
+        || document.activeElement === dialogEl)) {onConfirm();}
     };
 
     const tpl = html`
@@ -136,7 +138,7 @@ function confirm(options = {}) {
     if (confirmBtn) {listeners.on(confirmBtn, 'click', onConfirm);}
     if (cancelBtn) {listeners.on(cancelBtn, 'click', onCancel);}
     if (maskEl) {listeners.on(maskEl, 'click', onMaskClick);}
-    releaseOverlay = registerOverlayKeydown(onKeydown);
+    releaseOverlay = registerOverlayKeydown(onKeydown, { container: dialogEl });
 
     function cleanup() {
       if (cleanedUp) {return;}

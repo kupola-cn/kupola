@@ -28,6 +28,7 @@ import { t } from '@kupola/platform/i18n';
 import { getIconTemplate } from './icon-helper';
 import { createListenerRegistry } from './listener-registry';
 import { registerOverlayKeydown } from './overlay-stack';
+import { createPopupPortal, positionPopup } from './popup-position';
 
 let selectId = 0;
 
@@ -92,6 +93,7 @@ export function Select(options = {}) {
   let destroyed = false;
   const listeners = createListenerRegistry();
   const openListeners = createListenerRegistry();
+  let popupPortal = null;
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -127,11 +129,16 @@ export function Select(options = {}) {
       searchEl.focus();
     }
     _renderOptions();
+    popupPortal?.mount();
+    positionPopup(menuEl, triggerEl);
     if (wrapEl) {
       wrapEl.classList.add('is-open');
     }
     triggerEl?.setAttribute('aria-expanded', 'true');
-    openListeners.on(document, 'click', onDocumentClick);
+    const ownerDocument = triggerEl?.ownerDocument || document;
+    openListeners.on(ownerDocument, 'click', onDocumentClick);
+    openListeners.on(ownerDocument.defaultView || window, 'resize', () => positionPopup(menuEl, triggerEl));
+    openListeners.on(ownerDocument.defaultView || window, 'scroll', () => positionPopup(menuEl, triggerEl), true);
     releaseKeydown = registerOverlayKeydown(onKeydown);
   }
 
@@ -145,6 +152,7 @@ export function Select(options = {}) {
       wrapEl.classList.remove('is-open');
     }
     triggerEl?.setAttribute('aria-expanded', 'false');
+    popupPortal?.restore();
     openListeners.clear();
     releaseKeydown?.();
     releaseKeydown = null;
@@ -162,10 +170,10 @@ export function Select(options = {}) {
 
   function getValue() {
     if (multiple) {return [ ...state.selectedValues ];}
-    return [ ...state.selectedValues ][0] || '';
+    return [ ...state.selectedValues ][0] ?? '';
   }
 
-  function setValue(val) {
+  function setValue(val, options = {}) {
     if (destroyed) {return;}
     state.selectedValues = [];
     if (multiple && Array.isArray(val)) {
@@ -175,6 +183,16 @@ export function Select(options = {}) {
     }
     _updateDisplay();
     _renderOptions();
+    if (options?.silent !== true && onChange) {
+      const values = [ ...state.selectedValues ];
+      const value = multiple ? (values[values.length - 1] ?? '') : (values[0] ?? '');
+      const selectedItem = items.find(item => Object.is(item.value, value));
+      onChange({
+        value,
+        text: selectedItem ? _itemText(selectedItem) : '',
+        values,
+      });
+    }
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────
@@ -288,7 +306,7 @@ export function Select(options = {}) {
 
   const onDocumentClick = (e) => {
     if (!state.isOpen) {return;}
-    if (wrapEl && !wrapEl.contains(e.target)) {
+    if (wrapEl && !wrapEl.contains(e.target) && !menuEl?.contains(e.target)) {
       close();
     }
   };
@@ -392,6 +410,7 @@ export function Select(options = {}) {
   valueEl = container.querySelector('.ds-select__value');
   menuEl = container.querySelector('.ds-select__menu');
   searchEl = container.querySelector('.ds-select__search-input');
+  popupPortal = createPopupPortal(menuEl, wrapEl);
 
   const triggerEl = container.querySelector('.ds-select__trigger');
   if (triggerEl) {listeners.on(triggerEl, 'click', onTriggerClick);}
@@ -422,6 +441,7 @@ export function Select(options = {}) {
       openListeners.destroy();
       listeners.destroy();
       instance.destroy();
+      popupPortal?.destroy();
     },
   };
 }

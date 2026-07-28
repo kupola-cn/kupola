@@ -48,6 +48,7 @@ export function Carousel(options = {}) {
 
   let _current = 0;
   let _timer = null;
+  let _paused = false;
   let _destroyed = false;
   const listeners = createListenerRegistry();
 
@@ -94,11 +95,12 @@ export function Carousel(options = {}) {
     const dots = indicatorsEl.querySelectorAll('.ds-carousel__indicator');
     dots.forEach((dot, i) => {
       dot.classList.toggle('is-active', i === _current);
+      dot.setAttribute('aria-current', i === _current ? 'true' : 'false');
     });
   }
 
   function _startAutoPlay() {
-    if (_destroyed || _timer !== null || !autoPlay || items.length <= 1) {return;}
+    if (_destroyed || _timer !== null || _paused || !autoPlay || items.length <= 1) {return;}
     _timer = setInterval(() => next(), interval);
   }
 
@@ -130,6 +132,7 @@ export function Carousel(options = {}) {
   const instance = render(tpl, container);
 
   const trackEl = container.querySelector('.ds-carousel__track');
+  const carouselEl = container.querySelector('.ds-carousel');
   const prevBtn = container.querySelector('.ds-carousel__prev');
   const nextBtn = container.querySelector('.ds-carousel__next');
   const indicatorsEl = container.querySelector('.ds-carousel__indicators');
@@ -145,9 +148,19 @@ export function Carousel(options = {}) {
   // Build indicators
   if (showIndicators) {
     items.forEach((_, i) => {
-      const dot = document.createElement('span');
+      const dot = document.createElement('button');
       dot.className = 'ds-carousel__indicator' + (i === 0 ? ' is-active' : '');
+      dot.type = 'button';
+      dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+      dot.setAttribute('aria-current', i === 0 ? 'true' : 'false');
       listeners.on(dot, 'click', () => { goTo(i); _restartAutoPlay(); });
+      listeners.on(dot, 'keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          goTo(i);
+          _restartAutoPlay();
+        }
+      });
       indicatorsEl.appendChild(dot);
     });
   } else {
@@ -163,6 +176,26 @@ export function Carousel(options = {}) {
   // Bind events
   if (prevBtn) {listeners.on(prevBtn, 'click', _onPrev);}
   if (nextBtn) {listeners.on(nextBtn, 'click', _onNext);}
+  if (carouselEl && autoPlay) {
+    listeners.on(carouselEl, 'mouseenter', () => {
+      _paused = true;
+      _stopAutoPlay();
+    });
+    listeners.on(carouselEl, 'mouseleave', () => {
+      _paused = false;
+      _startAutoPlay();
+    });
+    listeners.on(carouselEl, 'focusin', () => {
+      _paused = true;
+      _stopAutoPlay();
+    });
+    listeners.on(carouselEl, 'focusout', event => {
+      if (!carouselEl.contains(event.relatedTarget)) {
+        _paused = false;
+        _startAutoPlay();
+      }
+    });
+  }
 
   // Initial position
   _updatePosition();

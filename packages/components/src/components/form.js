@@ -25,6 +25,7 @@ import { createListenerRegistry } from './listener-registry';
 
 const FIELD_SELECTOR = 'input, select, textarea';
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+let formErrorId = 0;
 
 export function Form(options = {}) {
   const config = options && typeof options === 'object' ? options : {};
@@ -32,8 +33,10 @@ export function Form(options = {}) {
   if (typeof formEl === 'string') {
     formEl = typeof document === 'undefined' ? null : document.querySelector(formEl);
   }
-  if (!formEl || typeof formEl.querySelectorAll !== 'function'
-    || typeof formEl.addEventListener !== 'function') {
+  if (!formEl || formEl.tagName?.toLowerCase?.() !== 'form'
+    || typeof formEl.querySelectorAll !== 'function'
+    || typeof formEl.addEventListener !== 'function'
+    || typeof formEl.reset !== 'function') {
     throw new Error('Form: element must be a form element or a selector resolving to one');
   }
 
@@ -89,7 +92,12 @@ export function Form(options = {}) {
     max: (v, max) => !v || parseFloat(v) <= parseFloat(max),
     pattern: (v, pat) => {
       if (!v) {return true;}
-      try {return new RegExp(pat).test(v);} catch {return false;}
+      try {
+        const expression = pat instanceof RegExp
+          ? new RegExp(pat.source, pat.flags.replace(/[gy]/g, ''))
+          : new RegExp(pat);
+        return expression.test(v);
+      } catch {return false;}
     },
     equalTo: (v, targetId) => {
       const t = document.getElementById(targetId);
@@ -158,14 +166,20 @@ export function Form(options = {}) {
 
     const errEl = document.createElement('span');
     errEl.className = 'ds-form-error';
+    errEl.id = `ds-form-error-${++formErrorId}`;
     errEl.textContent = message;
 
-    const container = field.parentElement;
+    const container = field.closest?.('.ds-form-field') || field.parentElement;
     if (container && container.classList.contains('ds-form-field')) {
       container.appendChild(errEl);
     } else if (field.parentNode) {
       field.parentNode.insertBefore(errEl, field.nextSibling);
     }
+    const describedBy = new Set(
+      (field.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean),
+    );
+    describedBy.add(errEl.id);
+    field.setAttribute('aria-describedby', [ ...describedBy ].join(' '));
     errorElements.set(field, errEl);
   }
 
@@ -173,7 +187,18 @@ export function Form(options = {}) {
     if (!field?.classList) {return;}
     field.classList.remove('ds-form-field--error');
     field.setAttribute('aria-invalid', 'false');
-    errorElements.get(field)?.remove();
+    const errEl = errorElements.get(field);
+    if (errEl) {
+      const describedBy = (field.getAttribute('aria-describedby') || '')
+        .split(/\s+/)
+        .filter(value => value && value !== errEl.id);
+      if (describedBy.length > 0) {
+        field.setAttribute('aria-describedby', describedBy.join(' '));
+      } else {
+        field.removeAttribute('aria-describedby');
+      }
+      errEl.remove();
+    }
     errorElements.delete(field);
   }
 

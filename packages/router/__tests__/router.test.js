@@ -157,6 +157,19 @@ describe('router', () => {
       expect(router.currentRoute.query).toEqual({ page: '2', q: 'kupola' });
     });
 
+    it('should preserve repeated query values in memory history', async () => {
+      const router = createRouter({
+        mode: 'memory',
+        routes: [ { path: '/users', name: 'users' } ],
+      });
+
+      await router.push('/users', { query: { tag: [ 'a', 'b' ] } });
+
+      expect(router.currentRoute.fullPath).toBe('/users?tag=a&tag=b');
+      expect(router.currentRoute.query).toEqual({ tag: [ 'a', 'b' ] });
+      router.destroy();
+    });
+
     it('should not append a trailing question mark for empty query objects', async () => {
       const router = createRouter({
         mode: 'memory',
@@ -315,7 +328,7 @@ describe('router', () => {
       router.onError(error => errors.push(error));
       router.beforeEach(to => (to.path === '/a' ? { path: '/b' } : { path: '/a' }));
 
-      await expect(router.push('/a')).resolves.toBe(false);
+      await expect(router.push('/a')).rejects.toThrow(/maximum of 20 redirects/);
 
       expect(router.currentRoute).toBeNull();
       expect(errors).toHaveLength(1);

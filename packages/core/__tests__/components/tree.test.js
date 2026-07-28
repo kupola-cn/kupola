@@ -271,6 +271,51 @@ describe('Tree options', () => {
     view.destroy();
   });
 
+  test('setData rebuilds records and preserves state for stable keys', () => {
+    const view = Tree({
+      checkable: true,
+      data: [ {
+        key: 'root',
+        title: 'Root',
+        children: [ { key: 'child', title: 'Child' } ],
+      } ],
+      defaultExpandKeys: [ 'root' ],
+    });
+    document.body.appendChild(view.element);
+    view.selectKey('child');
+    view.checkKey('child');
+
+    view.setData([ {
+      key: 'root',
+      title: 'Updated root',
+      children: [ { key: 'child', title: 'Updated child' }, { key: 'new', title: 'New' } ],
+    } ]);
+
+    expect(view.getSelectedKeys()).toEqual([ 'child' ]);
+    expect(view.getCheckedKeys()).toEqual([ 'child' ]);
+    expect(view.getExpandedKeys()).toEqual([ 'root' ]);
+    expect(document.querySelector('.ds-tree__label').textContent).toBe('Updated root');
+    expect(document.querySelectorAll('.ds-tree__item')).toHaveLength(3);
+    view.destroy();
+  });
+
+  test('setData removes state for records no longer present', () => {
+    const view = Tree({
+      checkable: true,
+      data: [ { key: 'one', title: 'One' }, { key: 'two', title: 'Two' } ],
+    });
+    document.body.appendChild(view.element);
+    view.selectKey('two');
+    view.checkKey('two');
+
+    view.setData([ { key: 'one', title: 'One' } ]);
+
+    expect(view.getSelectedKeys()).toEqual([]);
+    expect(view.getCheckedKeys()).toEqual([]);
+    expect(document.querySelectorAll('.ds-tree__item')).toHaveLength(1);
+    view.destroy();
+  });
+
   test('checkable state cascades and reports checked keys and nodes', () => {
     const onCheck = jest.fn();
     const view = Tree({

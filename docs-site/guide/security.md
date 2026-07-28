@@ -102,3 +102,7 @@ instance = walk(container)
 ## 组件内容
 
 组件的 `content`、`render`、`formatter` 等选项如果接受字符串，默认应按文本或受控模板处理。需要传入 HTML 时，调用方必须明确知道该内容已经可信。
+
+模板中的 `htmlString()` 是同样的显式信任边界：它不会清洗标签、事件属性或 URL，不能直接包裹用户输入、接口返回值或 CMS 内容。启用了 Trusted Types 的应用应传入由应用策略创建的 `TrustedHTML`，而不是绕过策略把普通字符串标记为可信；Kupola 会保留该 TrustedHTML 值交给 DOM/SSR 层处理。跨 iframe 或重复 bundle 传递 `HtmlString` 时使用内置品牌识别，但品牌识别不等于内容清洗。
+
+表格列 `render` 和 `expandable` 的字符串输出也按可信 HTML 处理。外部数据请返回普通 DOM 节点、Kupola `TemplateResult`，或先通过项目统一 sanitizer 清洗后再返回字符串。
