@@ -19,6 +19,7 @@ import {
   getFormFieldRenderer,
   registerFormField,
 } from './schemaform-core.js';
+import { Select } from './select.js';
 
 function renderExtraAttrs(field, options = {}) {
   const includeRules = options.rules !== false;
@@ -174,21 +175,74 @@ const selectRenderer = {
     return html`
       <label class="${context.fieldClassName}"${context.rootAttrs}>
         ${renderLabel(field, context)}
-        <select
-          class="${cx(context.controlClassName, 'ds-schema-form__select')}"
+        <input
+          type="hidden"
           name="${field.name}"
           ${renderExtraAttrs(field)}
-        >
-          ${field.options.map(option => html`
-            <option
-              value="${option.domValue}"
-              selected="${isSelectedOption(field, option) ? 'selected' : false}"
-              disabled="${option.disabled ? 'disabled' : false}"
-            >${option.label}</option>
-          `)}
-        </select>
+        />
+        <div class="ds-schema-form__select-host"></div>
       </label>
     `;
+  },
+  mount({ field, root }) {
+    const host = root.querySelector('.ds-schema-form__select-host');
+    const hidden = root.querySelector(`input[name="${field.name}"]`);
+    if (!host || !hidden) {return null;}
+
+    const toDomValues = value => {
+      if (field.multiple) {
+        const list = Array.isArray(value) ? value : [];
+        return list
+          .map(item => field.options.find(option => Object.is(option.value, item))?.domValue)
+          .filter(item => item != null);
+      }
+      return field.options.find(option => Object.is(option.value, value))?.domValue ?? '';
+    };
+    const fromDomValues = domValue => {
+      if (field.multiple) {
+        const list = Array.isArray(domValue) ? domValue : [];
+        return list
+          .map(item => field.valueByDomValue?.get(item))
+          .filter(item => item !== undefined);
+      }
+      return field.valueByDomValue?.get(domValue) ?? '';
+    };
+    const syncHidden = value => {
+      const domValues = toDomValues(value);
+      hidden.value = field.multiple ? JSON.stringify(domValues) : String(domValues ?? '');
+    };
+
+    const select = Select({
+      items: field.options.map(option => ({
+        value: option.domValue,
+        text: option.label,
+        disabled: option.disabled,
+      })),
+      value: toDomValues(field.value),
+      multiple: field.multiple,
+      disabled: field.disabled,
+      placeholder: field.placeholder || field.label,
+      onChange: ({ value, values }) => {
+        const domValue = field.multiple ? values : value;
+        hidden.value = field.multiple ? JSON.stringify(domValue) : String(domValue ?? '');
+      },
+    });
+    host.appendChild(select.element);
+    syncHidden(field.value);
+
+    return {
+      getValue() {
+        return fromDomValues(select.getValue());
+      },
+      setValue(value) {
+        select.setValue(toDomValues(value), { silent: true });
+        syncHidden(value);
+      },
+      destroy() {
+        select.destroy();
+        host.remove();
+      },
+    };
   },
 };
 
