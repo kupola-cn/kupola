@@ -20,7 +20,7 @@ class KupolaWebpackPlugin {
 
   apply(compiler) {
     const { css, theme } = this.options;
-    if (!css) return;
+    if (!css) {return;}
 
     // Use NormalModule hook to inject CSS import
     compiler.hooks.compilation.tap('KupolaWebpackPlugin', (compilation) => {
@@ -31,7 +31,7 @@ class KupolaWebpackPlugin {
           'KupolaWebpackPlugin',
           (loaderContext) => {
             // No-op: we use the source hook below
-          }
+          },
         );
       }
     });
@@ -51,7 +51,7 @@ class KupolaWebpackPlugin {
               if (source.includes('@kupola/') && !source.includes('kupola.css')) {
                 const withCSS = source.replace(
                   '</head>',
-                  '  <link rel="stylesheet" href="node_modules/@kupola/platform/dist/css/index.css">\n</head>'
+                  '  <link rel="stylesheet" href="node_modules/@kupola/platform/dist/css/index.css">\n</head>',
                 );
                 compilation.assets[asset] = {
                   source: () => withCSS,
@@ -60,7 +60,7 @@ class KupolaWebpackPlugin {
               }
             }
           }
-        }
+        },
       );
     });
   }

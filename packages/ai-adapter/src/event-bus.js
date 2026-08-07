@@ -25,7 +25,7 @@ export class EventBus {
    * @returns {Function} unsubscribe
    */
   on(event, fn) {
-    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
+    if (!this.listeners.has(event)) {this.listeners.set(event, new Set());}
     this.listeners.get(event).add(fn);
     return () => this.off(event, fn);
   }
@@ -39,7 +39,7 @@ export class EventBus {
     const set = this.listeners.get(event);
     if (set) {
       set.delete(fn);
-      if (set.size === 0) this.listeners.delete(event);
+      if (set.size === 0) {this.listeners.delete(event);}
     }
   }
 
@@ -58,7 +58,7 @@ export class EventBus {
     }
 
     // Wildcard listeners: prefix match (e.g. 'flow:*' matches 'flow:step')
-    for (const [pattern, fns] of this.wildcardListeners) {
+    for (const [ pattern, fns ] of this.wildcardListeners) {
       const prefix = pattern.endsWith('*') ? pattern.slice(0, -1) : pattern;
       if (event.startsWith(prefix)) {
         for (const fn of fns) {
@@ -92,13 +92,13 @@ export class EventBus {
    * @returns {Function} unsubscribe
    */
   wildcard(pattern, fn) {
-    if (!this.wildcardListeners.has(pattern)) this.wildcardListeners.set(pattern, new Set());
+    if (!this.wildcardListeners.has(pattern)) {this.wildcardListeners.set(pattern, new Set());}
     this.wildcardListeners.get(pattern).add(fn);
     return () => {
       const set = this.wildcardListeners.get(pattern);
       if (set) {
         set.delete(fn);
-        if (set.size === 0) this.wildcardListeners.delete(pattern);
+        if (set.size === 0) {this.wildcardListeners.delete(pattern);}
       }
     };
   }
@@ -125,6 +125,6 @@ export class EventBus {
    * @returns {string[]}
    */
   eventNames() {
-    return [...this.listeners.keys()];
+    return [ ...this.listeners.keys() ];
   }
 }

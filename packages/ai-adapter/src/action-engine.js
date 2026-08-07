@@ -45,7 +45,7 @@ export class ActionEngine {
     this.beforeHooks.push(fn);
     return () => {
       const idx = this.beforeHooks.indexOf(fn);
-      if (idx >= 0) this.beforeHooks.splice(idx, 1);
+      if (idx >= 0) {this.beforeHooks.splice(idx, 1);}
     };
   }
 
@@ -53,7 +53,7 @@ export class ActionEngine {
     this.afterHooks.push(fn);
     return () => {
       const idx = this.afterHooks.indexOf(fn);
-      if (idx >= 0) this.afterHooks.splice(idx, 1);
+      if (idx >= 0) {this.afterHooks.splice(idx, 1);}
     };
   }
 
@@ -65,7 +65,7 @@ export class ActionEngine {
       return {
         success: false,
         error: `Unknown action: "${type}"`,
-        available: [...this.handlers.keys()],
+        available: [ ...this.handlers.keys() ],
       };
     }
 
@@ -78,8 +78,8 @@ export class ActionEngine {
 
     for (const hook of this.beforeHooks) {
       try {
-        if (context === undefined) await hook(type, params);
-        else await hook(type, params, context);
+        if (context === undefined) {await hook(type, params);}
+        else {await hook(type, params, context);}
       } catch (err) {
         this._addAudit(type, params, 'blocked', err.message);
         this.bus?.emit('action:denied', { type, params, error: err, context });
@@ -115,7 +115,7 @@ export class ActionEngine {
           const message = result.error || result.message || 'Action failed.';
           this._addAudit(type, params, 'failed', message, attempt);
           this.bus?.emit('action:error', { type, params, error: message, context });
-          if (callbacks.onError) callbacks.onError(new Error(message));
+          if (callbacks.onError) {callbacks.onError(new Error(message));}
           return {
             success: false,
             error: message,
@@ -142,14 +142,14 @@ export class ActionEngine {
 
         for (const hook of this.afterHooks) {
           try {
-            if (context === undefined) await hook(type, params, result);
-            else await hook(type, params, result, context);
+            if (context === undefined) {await hook(type, params, result);}
+            else {await hook(type, params, result, context);}
           } catch { /* ignore */ }
         }
 
         this.bus?.emit('action:after', { type, params, result, context });
 
-        if (callbacks.onSuccess) callbacks.onSuccess(result);
+        if (callbacks.onSuccess) {callbacks.onSuccess(result);}
 
         return {
           success: true,
@@ -166,7 +166,7 @@ export class ActionEngine {
 
     this._addAudit(type, params, 'failed', lastError.message, maxAttempts);
     this.bus?.emit('action:error', { type, params, error: lastError, context });
-    if (callbacks.onError) callbacks.onError(lastError);
+    if (callbacks.onError) {callbacks.onError(lastError);}
     return {
       success: false,
       error: lastError.message,
@@ -209,7 +209,7 @@ export class ActionEngine {
   }
 
   getActions() {
-    return [...this.handlers.keys()].map(name => ({
+    return [ ...this.handlers.keys() ].map(name => ({
       name,
       label: this.handlers.get(name).label,
       confirm: this.handlers.get(name).confirm,
@@ -218,15 +218,15 @@ export class ActionEngine {
   }
 
   checkDependencies(type, _visited = new Set()) {
-    if (_visited.has(type)) return `Circular dependency detected: ${type}`;
+    if (_visited.has(type)) {return `Circular dependency detected: ${type}`;}
     _visited.add(type);
 
     const action = this.handlers.get(type);
-    if (!action || !action.dependsOn || action.dependsOn.length === 0) return null;
+    if (!action || !action.dependsOn || action.dependsOn.length === 0) {return null;}
 
     for (const dep of action.dependsOn) {
       const circularErr = this.checkDependencies(dep, new Set(_visited));
-      if (circularErr && circularErr.startsWith('Circular')) return circularErr;
+      if (circularErr && circularErr.startsWith('Circular')) {return circularErr;}
 
       const satisfied = this.auditLog.some(e => e.action === dep && e.status === 'success');
       if (!satisfied) {
@@ -237,10 +237,10 @@ export class ActionEngine {
   }
 
   getAuditLog(filter = {}) {
-    let log = [...this.auditLog];
-    if (filter.type) log = log.filter(e => e.action === filter.type);
-    if (filter.status) log = log.filter(e => e.status === filter.status);
-    if (filter.limit) log = log.slice(-filter.limit);
+    let log = [ ...this.auditLog ];
+    if (filter.type) {log = log.filter(e => e.action === filter.type);}
+    if (filter.status) {log = log.filter(e => e.status === filter.status);}
+    if (filter.limit) {log = log.slice(-filter.limit);}
     return log;
   }
 

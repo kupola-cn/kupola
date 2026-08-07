@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 /**
  * Performance threshold checker for benchmark results.
- * 
+ *
  * Usage: node benchmark/reports/check-thresholds.js
- * 
+ *
  * Checks if any benchmark exceeds predefined thresholds and exits with non-zero
  * if thresholds are violated, causing CI to fail.
  */
@@ -29,7 +29,7 @@ const thresholds = {
   'create 1,000 effects': 5,
   'effect reaction latency 10,000 times': 1,
   'effect cleanup 1,000 times': 1,
-  
+
   // Components
   'VirtualList 100 items': 50,
   'VirtualList 1,000 items': 100,
@@ -49,7 +49,7 @@ const thresholds = {
 function checkResults(results, category) {
   let passed = true;
   const failures = [];
-  
+
   results.forEach(test => {
     const threshold = thresholds[test.test];
     if (threshold !== undefined && test.avgTime > threshold) {
@@ -62,28 +62,28 @@ function checkResults(results, category) {
       });
     }
   });
-  
+
   if (failures.length > 0) {
     console.log(`\n❌ ${category} Performance Threshold Exceeded:`);
     failures.forEach(f => {
       console.log(`  - ${f.test}: ${f.avgTime.toFixed(2)}ms > ${f.threshold}ms (${f.percentageOver}% over)`);
     });
   }
-  
+
   return { passed, failures };
 }
 
 try {
   const coreResults = JSON.parse(fs.readFileSync(path.join(reportsDir, 'core-results.json'), 'utf8'));
   const componentsResults = JSON.parse(fs.readFileSync(path.join(reportsDir, 'components-results.json'), 'utf8'));
-  
+
   console.log('🔍 Checking performance thresholds...');
-  
+
   const coreResult = checkResults(coreResults, 'Core Engine');
   const componentsResult = checkResults(componentsResults, 'Components');
-  
+
   const allPassed = coreResult.passed && componentsResult.passed;
-  
+
   if (allPassed) {
     console.log('\n✅ All performance thresholds passed!');
     process.exit(0);

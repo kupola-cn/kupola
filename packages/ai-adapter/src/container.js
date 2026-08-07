@@ -50,13 +50,13 @@ export class Container {
     this._onContainerDestroy.push(callback);
     return () => {
       const idx = this._onContainerDestroy.indexOf(callback);
-      if (idx >= 0) this._onContainerDestroy.splice(idx, 1);
+      if (idx >= 0) {this._onContainerDestroy.splice(idx, 1);}
     };
   }
 
   resolve(name, overrides = {}, _resolving = new Set()) {
     if (_resolving.has(name)) {
-      throw new Error(`Circular dependency detected: ${[..._resolving, name].join(' → ')}`);
+      throw new Error(`Circular dependency detected: ${[ ..._resolving, name ].join(' → ')}`);
     }
 
     if (overrides[name]) {
@@ -127,7 +127,7 @@ export class Container {
   }
 
   clear() {
-    for (const [name, instance] of this.instances) {
+    for (const [ name, instance ] of this.instances) {
       const entry = this.services.get(name);
       if (entry && entry.options) {
         this._invokeOnDestroy(name, instance, entry.options);

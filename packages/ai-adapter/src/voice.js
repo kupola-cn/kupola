@@ -90,7 +90,7 @@ export class VoiceController {
       console.warn('[VoiceController] Web Speech API not supported in this browser.');
       return this;
     }
-    if (this._isListening) return this;
+    if (this._isListening) {return this;}
 
     this._recognition = new this._SpeechRecognition();
     this._recognition.lang = this.options.lang;
@@ -145,7 +145,7 @@ export class VoiceController {
     this._wakeCallbacks.push(fn);
     return () => {
       const idx = this._wakeCallbacks.indexOf(fn);
-      if (idx >= 0) this._wakeCallbacks.splice(idx, 1);
+      if (idx >= 0) {this._wakeCallbacks.splice(idx, 1);}
     };
   }
 
@@ -158,7 +158,7 @@ export class VoiceController {
     this._resultCallbacks.push(fn);
     return () => {
       const idx = this._resultCallbacks.indexOf(fn);
-      if (idx >= 0) this._resultCallbacks.splice(idx, 1);
+      if (idx >= 0) {this._resultCallbacks.splice(idx, 1);}
     };
   }
 
@@ -171,7 +171,7 @@ export class VoiceController {
     this._errorCallbacks.push(fn);
     return () => {
       const idx = this._errorCallbacks.indexOf(fn);
-      if (idx >= 0) this._errorCallbacks.splice(idx, 1);
+      if (idx >= 0) {this._errorCallbacks.splice(idx, 1);}
     };
   }
 
@@ -181,7 +181,7 @@ export class VoiceController {
    * @param {object} [options]
    */
   speak(text, options = {}) {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    if (typeof window === 'undefined' || !window.speechSynthesis) {return;}
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = options.lang || this.options.lang;
     utterance.rate = options.rate || 1.0;
@@ -212,7 +212,7 @@ export class VoiceController {
       }
     }
 
-    if (!transcript.trim()) return;
+    if (!transcript.trim()) {return;}
 
     // Reset silence timer
     this._resetSilenceTimer();
@@ -244,7 +244,7 @@ export class VoiceController {
 
   _findCommand(text) {
     const { commandMap } = this.options;
-    for (const [phrase, mapped] of Object.entries(commandMap)) {
+    for (const [ phrase, mapped ] of Object.entries(commandMap)) {
       if (text.includes(phrase)) {
         return mapped;
       }
@@ -272,7 +272,7 @@ export class VoiceController {
     }
 
     // Auto-restart on certain errors
-    if (['no-speech', 'aborted'].includes(event.error) && this._isListening) {
+    if ([ 'no-speech', 'aborted' ].includes(event.error) && this._isListening) {
       // Will restart in _handleEnd
     }
   }
@@ -289,7 +289,7 @@ export class VoiceController {
   }
 
   _resetSilenceTimer() {
-    if (this._silenceTimer) clearTimeout(this._silenceTimer);
+    if (this._silenceTimer) {clearTimeout(this._silenceTimer);}
     if (this.options.silenceMs > 0 && this._isAwake) {
       this._silenceTimer = setTimeout(() => {
         this._isAwake = false; // go back to sleep on silence
@@ -301,6 +301,6 @@ export class VoiceController {
 // ── Helpers ───────────────────────────────────────────────
 
 function _getRecognitionAPI() {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') {return null;}
   return window.SpeechRecognition || window.webkitSpeechRecognition || null;
 }

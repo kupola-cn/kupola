@@ -1111,7 +1111,7 @@ function renderTemplate(tpl, container) {
 export function render(tpl, container, options = {}) {
   if (isComponentInstanceLike(tpl)) {
     container.appendChild(tpl.element);
-  tpl[KUPOLA_COMPONENT_NOTIFY_MOUNTED]?.();
+    tpl[KUPOLA_COMPONENT_NOTIFY_MOUNTED]?.();
     return tpl;
   }
   if (options && options.scheduler !== undefined) {

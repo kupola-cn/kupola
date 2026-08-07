@@ -10,7 +10,7 @@ export function createListenerRegistry() {
   let destroyed = false;
 
   function on(target, eventName, handler, options) {
-    if (destroyed) return;
+    if (destroyed) {return;}
     target.addEventListener(eventName, handler, options);
     listeners.add({ target, eventName, handler, options });
   }
@@ -36,7 +36,7 @@ export function createListenerRegistry() {
   }
 
   function destroy() {
-    if (destroyed) return;
+    if (destroyed) {return;}
     destroyed = true;
     clear();
   }

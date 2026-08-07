@@ -70,7 +70,7 @@ export class AIPanel {
     this._currentResultView = null;
     this._listeners = createListenerRegistry();
     this._resultKeydownHandler = (e) => {
-      if (e.key === 'Escape') this._closeResultViewer();
+      if (e.key === 'Escape') {this._closeResultViewer();}
     };
     this._timers = [];
     this._destroyed = false;
@@ -84,7 +84,7 @@ export class AIPanel {
    * @param {HTMLElement} parent
    */
   mount(parent) {
-    if (this._container) this.destroy();
+    if (this._container) {this.destroy();}
 
     const isFloating = this.options.layout === 'floating';
     this._container = document.createElement('div');
@@ -144,7 +144,7 @@ export class AIPanel {
     });
 
     const stopOpenEffect = effect(() => {
-      if (!this._container) return;
+      if (!this._container) {return;}
       const isOpen = this._isOpen.value;
       this._container.style.display = isOpen ? 'flex' : 'none';
       if (isOpen) {
@@ -166,7 +166,7 @@ export class AIPanel {
   /** Show the panel. */
   open() {
     this._isOpen.value = true;
-    if (!this._container) return;
+    if (!this._container) {return;}
     this._container.style.display = 'flex';
     this._container.classList.add('is-visible');
     this._scrollToBottom();
@@ -176,7 +176,7 @@ export class AIPanel {
   /** Hide the panel. */
   close() {
     this._isOpen.value = false;
-    if (!this._container) return;
+    if (!this._container) {return;}
     this._container.style.display = 'none';
     this._container.classList.remove('is-visible');
   }
@@ -213,14 +213,14 @@ export class AIPanel {
 
   /** Programmatically add a message to the panel. */
   addMessage(role, text, actions = null) {
-    this._messages.value = [...this._messages.value, { role, text, actions }];
+    this._messages.value = [ ...this._messages.value, { role, text, actions } ];
     this._renderMessages();
   }
 
   // ── Private ────────────────────────────────────────────
 
   _switchTab(tab) {
-    if (tab === this._currentTab) return;
+    if (tab === this._currentTab) {return;}
 
     this._currentTab = tab;
 
@@ -242,7 +242,7 @@ export class AIPanel {
   }
 
   _renderFlowsList() {
-    if (!this._flowsListEl) return;
+    if (!this._flowsListEl) {return;}
 
     const flows = this.adapter.flow.list();
 
@@ -287,19 +287,19 @@ export class AIPanel {
 
   async _handleFlowAction(action, name) {
     switch (action) {
-      case 'execute':
-        this._switchTab('chat');
-        await this._handleSend(`执行 ${name}`);
-        break;
-      case 'edit':
-        alert(`编辑流程 "${name}"（功能开发中）`);
-        break;
-      case 'delete':
-        if (confirm(`确定要删除流程 "${name}" 吗？`)) {
-          this.adapter.flow.remove(name);
-          this._renderFlowsList();
-        }
-        break;
+    case 'execute':
+      this._switchTab('chat');
+      await this._handleSend(`执行 ${name}`);
+      break;
+    case 'edit':
+      alert(`编辑流程 "${name}"（功能开发中）`);
+      break;
+    case 'delete':
+      if (confirm(`确定要删除流程 "${name}" 吗？`)) {
+        this.adapter.flow.remove(name);
+        this._renderFlowsList();
+      }
+      break;
     }
   }
 
@@ -308,10 +308,10 @@ export class AIPanel {
     const now = new Date();
     const diff = now - date;
 
-    if (diff < 60000) return '刚刚';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
-    if (diff < 604800000) return `${Math.floor(diff / 86400000)} 天前`;
+    if (diff < 60000) {return '刚刚';}
+    if (diff < 3600000) {return `${Math.floor(diff / 60000)} 分钟前`;}
+    if (diff < 86400000) {return `${Math.floor(diff / 3600000)} 小时前`;}
+    if (diff < 604800000) {return `${Math.floor(diff / 86400000)} 天前`;}
 
     return date.toLocaleDateString();
   }
@@ -362,22 +362,22 @@ export class AIPanel {
     const unsubResult = bus.on('result', ({ command, result }) => {
       const msg = this.adapter.getMessages().pop();
       if (msg) {
-        this._messages.value = [...this._messages.value, {
+        this._messages.value = [ ...this._messages.value, {
           role: msg.role,
           text: msg.text,
           actions: this._buildResultActions(command, result),
-        }];
+        } ];
       }
 
       if (result && result.suggestion && result.suggestion.suggest) {
-        this._messages.value = [...this._messages.value, {
+        this._messages.value = [ ...this._messages.value, {
           role: 'suggestion',
           text: result.suggestion.message,
           actions: [
             { label: '创建流程', action: () => this._handleSend(`创建流程 ${command.type}`) },
             { label: '忽略', action: () => {} },
           ],
-        }];
+        } ];
       }
     });
 
@@ -387,8 +387,8 @@ export class AIPanel {
 
     const unsubFlowComplete = bus.on('flow:complete', () => {
       const timer = setTimeout(() => {
-        if (this._destroyed) return;
-        if (this._timelineEl) this._timelineEl.classList.remove('is-visible');
+        if (this._destroyed) {return;}
+        if (this._timelineEl) {this._timelineEl.classList.remove('is-visible');}
       }, 3000);
       this._timers.push(timer);
     });
@@ -397,7 +397,7 @@ export class AIPanel {
   }
 
   _renderMessages() {
-    if (!this._messagesEl) return;
+    if (!this._messagesEl) {return;}
 
     const messages = this._messages.value;
     const total = messages.length;
@@ -447,15 +447,15 @@ export class AIPanel {
   }
 
   async _handleSend(overrideInput) {
-    if (this._isProcessing) return;
+    if (this._isProcessing) {return;}
 
     const input = overrideInput || this._inputEl.value.trim();
-    if (!input) return;
+    if (!input) {return;}
 
     this._isProcessing = true;
 
     this._inputEl.value = '';
-    this._messages.value = [...this._messages.value, { role: 'user', text: input, actions: null }];
+    this._messages.value = [ ...this._messages.value, { role: 'user', text: input, actions: null } ];
 
     try {
       const context = await this._resolveContext(input);
@@ -465,11 +465,11 @@ export class AIPanel {
         this._showProgress(result.result);
       }
     } catch (err) {
-      this._messages.value = [...this._messages.value, {
+      this._messages.value = [ ...this._messages.value, {
         role: 'system',
         text: `❌ Error: ${err.message}`,
         actions: null,
-      }];
+      } ];
     } finally {
       this._isProcessing = false;
     }
@@ -512,7 +512,7 @@ export class AIPanel {
   }
 
   _ensureResultViewer() {
-    if (this._resultViewerEl) return;
+    if (this._resultViewerEl) {return;}
 
     this._resultViewerEl = document.createElement('div');
     this._resultViewerEl.className = 'ds-ai-result-viewer';
@@ -521,7 +521,7 @@ export class AIPanel {
   }
 
   _renderResultViewer() {
-    if (!this._resultViewerEl || !this._currentResultView) return;
+    if (!this._resultViewerEl || !this._currentResultView) {return;}
 
     const view = this._currentResultView;
     const pageSize = Math.max(1, this.options.resultPageSize || 20);
@@ -623,11 +623,11 @@ export class AIPanel {
     this._resultViewerEl.querySelectorAll('[data-ds-ai-result-action]').forEach(el => {
       this._listeners.on(el, 'click', (e) => {
         const action = e.currentTarget.dataset.dsAiResultAction;
-        if (action === 'close') this._closeResultViewer();
-        if (action === 'copy') this._copyResultJSON(this._currentResultView.result);
-        if (action === 'csv') this._downloadResultCSV(this._currentResultView.command, this._currentResultView.result);
-        if (action === 'prev') this._changeResultPage(-1);
-        if (action === 'next') this._changeResultPage(1);
+        if (action === 'close') {this._closeResultViewer();}
+        if (action === 'copy') {this._copyResultJSON(this._currentResultView.result);}
+        if (action === 'csv') {this._downloadResultCSV(this._currentResultView.command, this._currentResultView.result);}
+        if (action === 'prev') {this._changeResultPage(-1);}
+        if (action === 'next') {this._changeResultPage(1);}
       });
     });
 
@@ -640,7 +640,7 @@ export class AIPanel {
   }
 
   _changeResultPage(delta) {
-    if (!this._currentResultView) return;
+    if (!this._currentResultView) {return;}
     this._currentResultView.page += delta;
     this._renderResultViewer();
   }
@@ -660,10 +660,10 @@ export class AIPanel {
   }
 
   _getResultRows(result) {
-    if (!result?.success) return [];
-    if (Array.isArray(result.table?.rows)) return result.table.rows;
-    if (Array.isArray(result.data)) return result.data;
-    if (result.data && typeof result.data === 'object') return [result.data];
+    if (!result?.success) {return [];}
+    if (Array.isArray(result.table?.rows)) {return result.table.rows;}
+    if (Array.isArray(result.data)) {return result.data;}
+    if (result.data && typeof result.data === 'object') {return [ result.data ];}
     return [];
   }
 
@@ -677,16 +677,16 @@ export class AIPanel {
     const fields = [];
     for (const row of rows.slice(0, 20)) {
       Object.keys(row || {}).forEach(key => {
-        if (!fields.includes(key)) fields.push(key);
+        if (!fields.includes(key)) {fields.push(key);}
       });
     }
     return fields.map(field => ({ field, title: field }));
   }
 
   _formatCellValue(value) {
-    if (value === null || value === undefined) return '';
-    if (Array.isArray(value)) return `[${value.length} items]`;
-    if (typeof value === 'object') return JSON.stringify(value);
+    if (value === null || value === undefined) {return '';}
+    if (Array.isArray(value)) {return `[${value.length} items]`;}
+    if (typeof value === 'object') {return JSON.stringify(value);}
     return String(value);
   }
 
@@ -714,16 +714,18 @@ export class AIPanel {
     textarea.className = 'ds-ai-clipboard-proxy';
     document.body.appendChild(textarea);
     textarea.select();
-    try { document.execCommand('copy'); } catch {}
+    try { document.execCommand('copy'); } catch {
+      // execCommand may be unavailable; the textarea fallback already exists.
+    }
     textarea.remove();
   }
 
   _downloadResultCSV(command, result) {
     const rows = this._getResultRows(result);
-    if (!rows.length) return;
+    if (!rows.length) {return;}
     const columns = this._getResultColumns(result, rows);
     const csv = this._toCSV(columns, rows);
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([ '\uFEFF' + csv ], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -737,7 +739,7 @@ export class AIPanel {
   _toCSV(columns, rows) {
     const header = columns.map(col => this._csvCell(col.title || col.field)).join(',');
     const body = rows.map(row => columns.map(col => this._csvCell(this._formatCellValue(row[col.field]))).join(','));
-    return [header, ...body].join('\n');
+    return [ header, ...body ].join('\n');
   }
 
   _csvCell(value) {
@@ -757,7 +759,7 @@ export class AIPanel {
   }
 
   _showProgress(batchResult) {
-    if (!this._progressEl) return;
+    if (!this._progressEl) {return;}
     this._progressEl.classList.add('is-visible');
     const fill = this._progressEl.querySelector('.ds-ai-progress-fill');
     const text = this._progressEl.querySelector('.ds-ai-progress-text');
@@ -768,15 +770,15 @@ export class AIPanel {
 
     if (done === batchResult.total) {
       const timer = setTimeout(() => {
-        if (this._destroyed) return;
-        if (this._progressEl) this._progressEl.classList.remove('is-visible');
+        if (this._destroyed) {return;}
+        if (this._progressEl) {this._progressEl.classList.remove('is-visible');}
       }, 2000);
       this._timers.push(timer);
     }
   }
 
   _updateTimeline(step, label, status) {
-    if (!this._timelineEl) return;
+    if (!this._timelineEl) {return;}
     this._timelineEl.classList.add('is-visible');
 
     const icons = { running: '🔄', success: '✅', error: '❌', skipped: '⏭️', done: '✅' };
@@ -797,7 +799,7 @@ export class AIPanel {
   }
 
   _setupResizeHandle() {
-    if (!this._container) return;
+    if (!this._container) {return;}
 
     this._resizeHandle = document.createElement('div');
     this._resizeHandle.className = 'ds-ai-resize-handle';
@@ -818,20 +820,20 @@ export class AIPanel {
     const startWidth = this._container.offsetWidth;
 
     const handleMove = (ev) => {
-      if (this._destroyed || !this._isResizing || !this._container) return;
+      if (this._destroyed || !this._isResizing || !this._container) {return;}
 
       const currentX = ev.type === 'touchmove' ? ev.touches[0].clientX : ev.clientX;
       const delta = startX - currentX;
       const newWidth = Math.max(
         this.options.minWidth,
-        Math.min(this.options.maxWidth, startWidth + delta)
+        Math.min(this.options.maxWidth, startWidth + delta),
       );
 
       this._container.style.width = `${newWidth}px`;
     };
 
     const handleEnd = () => {
-      if (!this._isResizing) return;
+      if (!this._isResizing) {return;}
 
       this._isResizing = false;
       if (this._container) {
@@ -866,7 +868,7 @@ function _esc(str) {
 }
 
 function _renderText(text) {
-  if (!text) return '';
+  if (!text) {return '';}
   let s = _esc(text);
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/`(.+?)`/g, '<code>$1</code>');

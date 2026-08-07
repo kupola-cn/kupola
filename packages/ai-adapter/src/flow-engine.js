@@ -43,8 +43,8 @@ export class FlowEngine {
     if (_visited.has(name)) {
       return {
         success: false,
-        error: `Circular flow detected: ${[..._visited, name].join(' → ')}`,
-        available: [...this.flows.keys()],
+        error: `Circular flow detected: ${[ ..._visited, name ].join(' → ')}`,
+        available: [ ...this.flows.keys() ],
       };
     }
 
@@ -53,7 +53,7 @@ export class FlowEngine {
       return {
         success: false,
         error: `Flow "${name}" not found.`,
-        available: [...this.flows.keys()],
+        available: [ ...this.flows.keys() ],
       };
     }
 
@@ -84,7 +84,7 @@ export class FlowEngine {
 
       if (step.parallel && Array.isArray(step.parallel)) {
         try {
-          if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'running');
+          if (callbacks.onStep) {callbacks.onStep(i, stepLabel, 'running');}
           this.bus?.emit('flow:step:running', { flow: name, step: i, label: stepLabel });
 
           const parallelResults = await Promise.all(
@@ -94,18 +94,18 @@ export class FlowEngine {
                 return await pStep.handler(subData, results, context);
               }
               return { skipped: true };
-            })
+            }),
           );
 
           results.push({ step: stepLabel, success: true, data: parallelResults });
           logs.push({ step: stepLabel, status: 'success', timestamp: Date.now() });
-          if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'done');
+          if (callbacks.onStep) {callbacks.onStep(i, stepLabel, 'done');}
           this.bus?.emit('flow:step:done', { flow: name, step: i, label: stepLabel, result: parallelResults });
           continue;
         } catch (err) {
           results.push({ step: stepLabel, success: false, error: err.message });
           logs.push({ step: stepLabel, status: 'error', error: err.message, timestamp: Date.now() });
-          if (callbacks.onError) callbacks.onError(i, stepLabel, err);
+          if (callbacks.onError) {callbacks.onError(i, stepLabel, err);}
           this.bus?.emit('flow:step:error', { flow: name, step: i, label: stepLabel, error: err });
           return { success: false, results, logs, failedAt: i };
         }
@@ -113,7 +113,7 @@ export class FlowEngine {
 
       if (step.flow) {
         try {
-          if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'running');
+          if (callbacks.onStep) {callbacks.onStep(i, stepLabel, 'running');}
           this.bus?.emit('flow:step:running', { flow: name, step: i, label: stepLabel });
 
           const subData = this._substituteVars(step.params || {}, data);
@@ -123,25 +123,25 @@ export class FlowEngine {
           logs.push({ step: stepLabel, status: subResult.success ? 'success' : 'error', timestamp: Date.now() });
 
           if (!subResult.success) {
-            if (callbacks.onError) callbacks.onError(i, stepLabel, new Error(subResult.error));
+            if (callbacks.onError) {callbacks.onError(i, stepLabel, new Error(subResult.error));}
             this.bus?.emit('flow:step:error', { flow: name, step: i, label: stepLabel, error: new Error(subResult.error) });
             return { success: false, results, logs, failedAt: i };
           }
 
-          if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'done');
+          if (callbacks.onStep) {callbacks.onStep(i, stepLabel, 'done');}
           this.bus?.emit('flow:step:done', { flow: name, step: i, label: stepLabel, result: subResult });
           continue;
         } catch (err) {
           results.push({ step: stepLabel, success: false, error: err.message });
           logs.push({ step: stepLabel, status: 'error', error: err.message, timestamp: Date.now() });
-          if (callbacks.onError) callbacks.onError(i, stepLabel, err);
+          if (callbacks.onError) {callbacks.onError(i, stepLabel, err);}
           this.bus?.emit('flow:step:error', { flow: name, step: i, label: stepLabel, error: err });
           return { success: false, results, logs, failedAt: i };
         }
       }
 
       try {
-        if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'running');
+        if (callbacks.onStep) {callbacks.onStep(i, stepLabel, 'running');}
         this.bus?.emit('flow:step:running', { flow: name, step: i, label: stepLabel });
 
         let result;
@@ -155,13 +155,13 @@ export class FlowEngine {
         results.push({ step: stepLabel, success: true, data: result });
         logs.push({ step: stepLabel, status: 'success', timestamp: Date.now() });
 
-        if (callbacks.onStep) callbacks.onStep(i, stepLabel, 'done');
+        if (callbacks.onStep) {callbacks.onStep(i, stepLabel, 'done');}
         this.bus?.emit('flow:step:done', { flow: name, step: i, label: stepLabel, result });
       } catch (err) {
         results.push({ step: stepLabel, success: false, error: err.message });
         logs.push({ step: stepLabel, status: 'error', error: err.message, timestamp: Date.now() });
 
-        if (callbacks.onError) callbacks.onError(i, stepLabel, err);
+        if (callbacks.onError) {callbacks.onError(i, stepLabel, err);}
         this.bus?.emit('flow:step:error', { flow: name, step: i, label: stepLabel, error: err });
         return { success: false, results, logs, failedAt: i };
       }
@@ -175,7 +175,7 @@ export class FlowEngine {
 
     this.bus?.emit('flow:after', { name, data, results, logs });
 
-    if (callbacks.onComplete) callbacks.onComplete(results);
+    if (callbacks.onComplete) {callbacks.onComplete(results);}
 
     return { success: true, results, logs };
   }
@@ -194,7 +194,7 @@ export class FlowEngine {
   }
 
   list() {
-    return [...this.flows.values()].map(f => ({
+    return [ ...this.flows.values() ].map(f => ({
       name: f.name,
       description: f.description,
       steps: f.steps.length,
@@ -239,14 +239,14 @@ export class FlowEngine {
   }
 
   _substituteVars(obj, data) {
-    if (!obj || typeof obj !== 'object') return obj;
+    if (!obj || typeof obj !== 'object') {return obj;}
 
     if (Array.isArray(obj)) {
       return obj.map(item => this._substituteVars(item, data));
     }
 
     const result = {};
-    for (const [key, value] of Object.entries(obj)) {
+    for (const [ key, value ] of Object.entries(obj)) {
       if (typeof value === 'string') {
         result[key] = value.replace(/\{\{([^}]+)\}\}/g, (_, path) => {
           const value = path.split('.').reduce((acc, part) => acc?.[part], data);
@@ -263,7 +263,7 @@ export class FlowEngine {
 
   _saveFlows() {
     const data = {};
-    for (const [name, flow] of this.flows) {
+    for (const [ name, flow ] of this.flows) {
       data[name] = {
         description: flow.description,
         variables: flow.variables,
@@ -284,8 +284,8 @@ export class FlowEngine {
 
   _loadFlows() {
     const data = this.storage.get('flows');
-    if (!data) return;
-    for (const [name, config] of Object.entries(data)) {
+    if (!data) {return;}
+    for (const [ name, config ] of Object.entries(data)) {
       this.flows.set(name, {
         ...config,
         name,
@@ -303,7 +303,7 @@ export class FlowEngine {
 
   _loadPatterns() {
     const data = this.storage.get('actionPatterns');
-    if (!data) return;
+    if (!data) {return;}
     this.actionPatterns = data.patterns || [];
     if (data.counts) {
       this.actionPatternCounts = new Map(data.counts);

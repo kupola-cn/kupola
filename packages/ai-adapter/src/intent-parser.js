@@ -123,7 +123,7 @@ export class IntentParser {
    * Get conversation history.
    */
   getHistory() {
-    return [...this.context];
+    return [ ...this.context ];
   }
 
   // ── Private ──
@@ -131,7 +131,7 @@ export class IntentParser {
   _checkSlots(command) {
     const key = `${command.engine}:${command.type}`;
     const def = this.slotDefs.get(key);
-    if (!def || !def.required) return [];
+    if (!def || !def.required) {return [];}
 
     return def.required.filter(slot => {
       const val = command.params[slot];
@@ -147,7 +147,7 @@ export class IntentParser {
   }
 
   _loadContext() {
-    if (!this.storage) return;
+    if (!this.storage) {return;}
     try {
       const data = this.storage.get();
       if (Array.isArray(data)) {
@@ -159,7 +159,7 @@ export class IntentParser {
   }
 
   _saveContext() {
-    if (!this.storage) return;
+    if (!this.storage) {return;}
     try {
       this.storage.set(this.context);
     } catch {
@@ -235,22 +235,22 @@ export class RuleBasedParser {
 
     // Chinese character substitutions (common OCR/voice mistakes)
     const zhSubs = [
-      [/查旬/g, '查询'],
-      [/察询/g, '查询'],
-      [/查寻/g, '查询'],
-      [/添家/g, '添加'],
-      [/天加/g, '添加'],
-      [/删处/g, '删除'],
-      [/删出/g, '删除'],
-      [/修该/g, '修改'],
-      [/休改/g, '修改'],
-      [/执形/g, '执行'],
-      [/执心/g, '执行'],
-      [/薪曾/g, '新增'],
-      [/建意/g, '建议'],
+      [ /查旬/g, '查询' ],
+      [ /察询/g, '查询' ],
+      [ /查寻/g, '查询' ],
+      [ /添家/g, '添加' ],
+      [ /天加/g, '添加' ],
+      [ /删处/g, '删除' ],
+      [ /删出/g, '删除' ],
+      [ /修该/g, '修改' ],
+      [ /休改/g, '修改' ],
+      [ /执形/g, '执行' ],
+      [ /执心/g, '执行' ],
+      [ /薪曾/g, '新增' ],
+      [ /建意/g, '建议' ],
     ];
 
-    for (const [from, to] of zhSubs) {
+    for (const [ from, to ] of zhSubs) {
       s = s.replace(from, to);
     }
 

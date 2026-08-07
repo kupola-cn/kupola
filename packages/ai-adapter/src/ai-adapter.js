@@ -166,7 +166,7 @@ export class AIAdapter {
     }
 
     if (command.engine === 'query') {
-      if (result.summary) return result.summary;
+      if (result.summary) {return result.summary;}
       if (Array.isArray(result.data)) {
         return `Found ${result.data.length} ${command.type} record(s).`;
       }
@@ -189,7 +189,7 @@ export class AIAdapter {
   }
 
   getMessages() {
-    return [...this.messages];
+    return [ ...this.messages ];
   }
 
   clearConversation() {
@@ -254,7 +254,7 @@ export class AIAdapter {
   }
 
   _buildPanelHTML() {
-    const messages = this.messages.length > 0 
+    const messages = this.messages.length > 0
       ? this.messages.map((msg, i) => `
           <div class="ds-ai-msg ds-ai-msg-${msg.role}" :key="${i}" k-class="{ 'is-active': ${i === this.messages.length - 1} }">
             <div class="ds-ai-msg-text">${this._esc(msg.text)}</div>

@@ -7,10 +7,10 @@ import '../packages/css/index.css';
 
 export default {
   title: 'Overlay/Drawer',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
   argTypes: {
     title: { control: 'text' },
-    placement: { control: 'select', options: ['right', 'left', 'top', 'bottom'] },
+    placement: { control: 'select', options: [ 'right', 'left', 'top', 'bottom' ] },
     width: { control: 'text' },
   },
 };

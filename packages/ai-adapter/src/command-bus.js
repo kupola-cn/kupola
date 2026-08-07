@@ -78,7 +78,7 @@ export class CommandBus {
     const exactHandlers = this.handlers.get(key) || [];
     const wildcardHandlers = this.handlers.get(wildcardKey) || [];
 
-    const allHandlers = [...exactHandlers, ...wildcardHandlers]
+    const allHandlers = [ ...exactHandlers, ...wildcardHandlers ]
       .sort((a, b) => a.priority - b.priority);
 
     if (allHandlers.length === 0) {
@@ -138,7 +138,7 @@ export class CommandBus {
   hasHandler(commandType) {
     const key = this._getKey(commandType);
     const exactList = this.handlers.get(key);
-    if (exactList && exactList.length > 0) return true;
+    if (exactList && exactList.length > 0) {return true;}
 
     const parts = key.split(':');
     const wildcardKey = `${parts[0]}:*`;
@@ -148,7 +148,7 @@ export class CommandBus {
 
   listHandlers() {
     const result = [];
-    for (const [key, handlers] of this.handlers) {
+    for (const [ key, handlers ] of this.handlers) {
       for (const { handler, priority } of handlers) {
         result.push({ key, priority, handler: handler.name || 'anonymous' });
       }

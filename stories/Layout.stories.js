@@ -11,7 +11,7 @@ import '../packages/css/index.css';
 
 export default {
   title: 'Layout',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
 };
 
 export const DividerBasic = {
@@ -129,7 +129,7 @@ export const AvatarBasic = {
     container.style.gap = '12px';
     container.style.alignItems = 'center';
 
-    const sizes = ['sm', 'md', 'lg', 'xl'];
+    const sizes = [ 'sm', 'md', 'lg', 'xl' ];
     sizes.forEach((size) => {
       const avatar = Avatar({
         size,
@@ -154,7 +154,7 @@ export const AvatarWithText = {
     const avatar3 = Avatar({ text: 'EF', type: 'warning' });
     const avatar4 = Avatar({ text: 'GH', type: 'danger' });
 
-    [avatar1, avatar2, avatar3, avatar4].forEach((av) => container.appendChild(av.element));
+    [ avatar1, avatar2, avatar3, avatar4 ].forEach((av) => container.appendChild(av.element));
 
     return container;
   },
@@ -162,7 +162,7 @@ export const AvatarWithText = {
 
 export const SpinBasic = {
   argTypes: {
-    size: { control: { type: 'select', options: ['sm', 'md', 'lg'] } },
+    size: { control: { type: 'select', options: [ 'sm', 'md', 'lg' ] } },
     text: { control: 'text' },
   },
   args: {

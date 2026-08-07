@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 /**
  * Playwright browser performance benchmark.
- * 
+ *
  * Usage: node benchmark/browser/browser.bench.js
- * 
+ *
  * Runs real browser performance tests using Playwright to measure:
  * - FCP (First Contentful Paint)
  * - LCP (Largest Contentful Paint)
@@ -33,15 +33,15 @@ function startServer() {
 
     const server = createServer((req, res) => {
       let filePath = path.join(__dirname, req.url === '/' ? 'test-page.html' : req.url);
-      
+
       // Allow access to packages directory for ESM imports
       if (req.url.startsWith('/packages/')) {
         filePath = path.join(path.dirname(__dirname), '..', req.url);
       }
-      
+
       const extname = path.extname(filePath);
       const contentType = mimeTypes[extname] || 'application/octet-stream';
-      
+
       fs.readFile(filePath, (error, content) => {
         if (error) {
           if (error.code === 'ENOENT') {
@@ -68,34 +68,34 @@ function startServer() {
 async function runBrowserBenchmark() {
   // Start HTTP server
   const server = await startServer();
-  
+
   const browser = await chromium.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: [ '--no-sandbox', '--disable-setuid-sandbox' ],
   });
-  
+
   const results = [];
-  
+
   try {
     // Test 1: Page Load Performance (FCP/LCP)
     console.log('[BROWSER BENCH] Test 1: Page Load Performance');
     const page = await browser.newPage({
       viewport: { width: 1920, height: 1080 },
-      permissions: ['clipboard-read'],
+      permissions: [ 'clipboard-read' ],
     });
-    
+
     // Wait for page to fully load with Kupola ESM modules
     await page.goto(`http://localhost:${PORT}/test-page.html`, {
       waitUntil: 'networkidle',
     });
-    
+
     // Wait for Kupola to be ready
     await page.waitForFunction(() => window.__KUPOLA_BENCHMARK_READY__ === true, { timeout: 10000 });
-    
+
     // Check if real Kupola was loaded
     const kupolaLoaded = await page.evaluate(() => window.__KUPOLA_LOADED__ === true);
     console.log(`[KUPOLA] Real Kupola loaded: ${kupolaLoaded ? 'Yes' : 'No (using fallback)'}`);
-    
+
     // Get FCP/LCP
     const loadMetrics = await page.evaluate(() => {
       return new Promise((resolve) => {
@@ -103,7 +103,7 @@ async function runBrowserBenchmark() {
           const entries = entryList.getEntries();
           const fcp = entries.find(e => e.entryType === 'paint' && e.name === 'first-contentful-paint');
           const lcp = entries.find(e => e.entryType === 'largest-contentful-paint');
-          
+
           if (fcp && lcp) {
             observer.disconnect();
             resolve({
@@ -112,10 +112,10 @@ async function runBrowserBenchmark() {
             });
           }
         });
-        
+
         observer.observe({ type: 'paint', buffered: true });
         observer.observe({ type: 'largest-contentful-paint', buffered: true });
-        
+
         // Fallback timeout
         setTimeout(() => {
           observer.disconnect();
@@ -123,7 +123,7 @@ async function runBrowserBenchmark() {
         }, 5000);
       });
     });
-    
+
     results.push({
       test: 'Page FCP (First Contentful Paint)',
       value: loadMetrics.fcp,
@@ -131,7 +131,7 @@ async function runBrowserBenchmark() {
       iterations: 1,
       status: loadMetrics.fcp > 0 ? 'OK' : 'TIMEOUT',
     });
-    
+
     results.push({
       test: 'Page LCP (Largest Contentful Paint)',
       value: loadMetrics.lcp,
@@ -139,7 +139,7 @@ async function runBrowserBenchmark() {
       iterations: 1,
       status: loadMetrics.lcp > 0 ? 'OK' : 'TIMEOUT',
     });
-    
+
     // Test 2: Run all tests via window.runAllTests
     console.log('[BROWSER BENCH] Test 2: Running all Kupola tests');
     const allResults = await page.evaluate(async () => {
@@ -153,9 +153,9 @@ async function runBrowserBenchmark() {
         return { error: err.message };
       }
     });
-    
+
     console.log(`[BROWSER BENCH] All tests results: ${allResults ? (allResults.error ? 'ERROR: ' + allResults.error : 'OK') : 'FAILED'}`);
-    
+
     if (allResults && allResults.signal) {
       // Add signal results
       allResults.signal.forEach(r => {
@@ -168,7 +168,7 @@ async function runBrowserBenchmark() {
         });
       });
     }
-    
+
     if (allResults && allResults.render) {
       // Add render results
       allResults.render.forEach(r => {
@@ -181,7 +181,7 @@ async function runBrowserBenchmark() {
         });
       });
     }
-    
+
     // Test 3: INP (Interaction to Next Paint) - using Playwright's click
     console.log('[BROWSER BENCH] Test 3: INP (Interaction to Next Paint)');
     const inpValue = await page.evaluate(() => {
@@ -195,9 +195,9 @@ async function runBrowserBenchmark() {
             }
           });
         });
-        
+
         observer.observe({ type: 'event', buffered: true });
-        
+
         // Simulate user interactions using Playwright will trigger this
         setTimeout(() => {
           observer.disconnect();
@@ -205,10 +205,10 @@ async function runBrowserBenchmark() {
         }, 1000);
       });
     });
-    
+
     // Trigger a real click
     await page.click('#run-all-tests');
-    
+
     results.push({
       test: 'INP (Interaction to Next Paint)',
       value: inpValue,
@@ -216,7 +216,7 @@ async function runBrowserBenchmark() {
       iterations: 1,
       status: inpValue < 200 ? 'OK' : 'SLOW',
     });
-    
+
     // Test 4: Memory Usage
     console.log('[BROWSER BENCH] Test 4: Memory Usage');
     const memoryUsage = await page.evaluate(() => {
@@ -229,7 +229,7 @@ async function runBrowserBenchmark() {
       }
       return null;
     });
-    
+
     if (memoryUsage) {
       results.push({
         test: 'Memory Used JS Heap',
@@ -238,7 +238,7 @@ async function runBrowserBenchmark() {
         iterations: 1,
         status: 'OK',
       });
-      
+
       results.push({
         test: 'Memory Total JS Heap',
         value: parseFloat(memoryUsage.totalJSHeapSize),
@@ -247,25 +247,25 @@ async function runBrowserBenchmark() {
         status: 'OK',
       });
     }
-    
+
     await page.close();
   } finally {
     await browser.close();
     server.close();
   }
-  
+
   // Save results
   const outputPath = path.join(__dirname, 'browser-results.json');
   fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
   console.log(`\n[BROWSER BENCH] Results saved to ${outputPath}`);
-  
+
   // Print summary
   console.log('\n=== Browser Benchmark Results ===');
   results.forEach(r => {
     const statusIcon = r.status === 'OK' ? '✅' : '⚠️';
     console.log(`${statusIcon} ${r.test}: ${r.value.toFixed(2)}${r.unit}`);
   });
-  
+
   return results;
 }
 

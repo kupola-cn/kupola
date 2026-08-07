@@ -78,7 +78,7 @@ export class SimpleStateMachine {
   }
 
   getHistory() {
-    return [...this.history];
+    return [ ...this.history ];
   }
 
   getPossibleEvents() {

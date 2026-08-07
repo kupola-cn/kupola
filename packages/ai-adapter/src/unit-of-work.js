@@ -39,7 +39,7 @@ export class UnitOfWork {
           engine: 'action',
         });
         this.results.push(result);
-        if (result.success) successCount++;
+        if (result.success) {successCount++;}
       } catch (error) {
         this.results.push({ success: false, error: error.message });
         await this.rollback();
@@ -63,7 +63,7 @@ export class UnitOfWork {
   }
 
   async rollback() {
-    if (this._rolledBack) return { success: true };
+    if (this._rolledBack) {return { success: true };}
 
     const undoResults = [];
     for (let i = this.results.length - 1; i >= 0; i--) {

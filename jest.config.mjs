@@ -2,7 +2,7 @@
 export default {
   testEnvironment: 'jsdom',
   testEnvironmentOptions: {
-    customExportConditions: ['node', 'node-addons'],
+    customExportConditions: [ 'node', 'node-addons' ],
   },
   globals: {
     __DEV__: true,

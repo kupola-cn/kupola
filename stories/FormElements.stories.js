@@ -12,7 +12,7 @@ import '../packages/css/index.css';
 
 export default {
   title: 'Form/Elements',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
 };
 
 export const InputBasic = {
@@ -20,7 +20,7 @@ export const InputBasic = {
     placeholder: { control: 'text' },
     disabled: { control: 'boolean' },
     error: { control: 'boolean' },
-    size: { control: { type: 'select', options: ['sm', 'md', 'lg'] } },
+    size: { control: { type: 'select', options: [ 'sm', 'md', 'lg' ] } },
   },
   args: {
     placeholder: 'Enter text...',
@@ -94,7 +94,7 @@ export const TextareaBasic = {
 export const SelectBasic = {
   argTypes: {
     disabled: { control: 'boolean' },
-    size: { control: { type: 'select', options: ['sm', 'md', 'lg'] } },
+    size: { control: { type: 'select', options: [ 'sm', 'md', 'lg' ] } },
   },
   args: {
     disabled: false,
@@ -143,7 +143,7 @@ export const CheckboxGroup = {
     container.style.display = 'grid';
     container.style.gap = '12px';
 
-    const fruits = ['Apple', 'Banana', 'Cherry', 'Date'];
+    const fruits = [ 'Apple', 'Banana', 'Cherry', 'Date' ];
     fruits.forEach((fruit, index) => {
       const checkbox = Checkbox({
         label: fruit,
@@ -163,7 +163,7 @@ export const RadioGroup = {
     container.style.display = 'grid';
     container.style.gap = '12px';
 
-    const options = ['Red', 'Green', 'Blue'];
+    const options = [ 'Red', 'Green', 'Blue' ];
     options.forEach((opt) => {
       const radio = Radio({
         name: 'color',
