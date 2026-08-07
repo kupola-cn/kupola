@@ -19,6 +19,59 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "knip": {
+    "include": [
+      "files",
+      "dependencies",
+      "exports",
+      "types",
+      "enumMembers",
+      "classMembers",
+      "unlisted",
+      "binaries",
+      "unresolved",
+      "nsExports",
+      "nsTypes",
+      "config"
+    ],
+    "workspaces": {
+      ".": {
+        "entry": [
+          "packages/core/src/index.js",
+          "packages/platform/src/{platform,template,render,component,directives,theme,lazy,server,i18n,errors}.js",
+          "packages/components/src/index.js",
+          "packages/components/src/components/*.js",
+          "packages/auth/src/*.js",
+          "packages/router/src/*.js",
+          "packages/ai-adapter/src/*.js",
+          "scripts/*.mjs",
+          "rollup.config.cjs",
+          "jest.config.mjs"
+        ],
+        "project": [
+          "**/*.js",
+          "**/*.mjs",
+          "**/*.cjs",
+          "!**/dist/**",
+          "!**/node_modules/**"
+        ],
+        "ignore": [
+          "benchmark/**",
+          "docs-site/**",
+          "packages/create-kupola/templates/**",
+          "stories/**",
+          "vscode-kupola/**",
+          "plugins/**",
+          "coverage/**"
+        ],
+        "ignoreDependencies": [
+          "@storybook/builder-vite",
+          "rollup-plugin-copy",
+          "vite"
+        ]
+      }
+    }
+  },
   "overrides": {
     "braces": "^3.0.3",
     "esbuild": "^0.25.0",
@@ -38,6 +91,7 @@
     "lint:platform": "eslint packages/platform/src packages/platform/__tests__ packages/components/__tests__ packages/core/__tests__",
     "lint:directives": "eslint packages/platform/src/directives.js packages/platform/__tests__/directives.test.js",
     "lint:fix": "npm run lint -- --fix",
+    "knip": "knip --no-progress",
     "format": "prettier --write .",
     "test": "jest --config jest.config.mjs",
     "test:watch": "jest --watch",

@@ -306,13 +306,9 @@ function removeRef(refs, name, el) {
 
 export {
   addRef,
-  assertMountedScope,
-  assertScopeKey,
   createDomContext,
   createScope,
   instantiateScopeDefinition,
-  isPatchableObject,
   isPrototypeKey,
   isSafeScopePropertyName,
-  removeRef,
 };

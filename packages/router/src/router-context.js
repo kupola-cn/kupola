@@ -9,7 +9,7 @@ import { hasProvideContext, inject, provide } from '@kupola/platform';
 
 let currentRouter = null;
 const ROUTER_NOT_FOUND = Symbol('kupola.router.not-found');
-export const ROUTER_KEY = Symbol('kupola.router');
+const ROUTER_KEY = Symbol('kupola.router');
 
 /**
  * Set the current router instance.

@@ -40,6 +40,9 @@ jobs:
       - name: Lint all source
         run: npm run lint:all
 
+      - name: Detect dead code
+        run: npm run knip
+
       - name: Check release metadata
         run: npm run release:metadata
 
@@ -64,6 +67,10 @@ jobs:
       - name: Check bundle size
         run: npm run size
         if: matrix.os != 'windows-latest'
+
+      - name: Build storybook
+        run: npm run storybook:build
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '22.x'
 
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '22.x'

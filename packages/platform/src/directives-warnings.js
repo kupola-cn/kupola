@@ -217,6 +217,6 @@ export {
   warnUnknownModifiers,
 };
 
-export function hasAnyAttribute(el, names) {
+function hasAnyAttribute(el, names) {
   return names.some(name => el.hasAttribute(name));
 }

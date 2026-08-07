@@ -44,6 +44,4 @@ function icon(name, attrs = {}) {
 export {
   getIconHtml,
   getIconTemplate,
-  icon,
-  DEFAULT_ICONS,
 };

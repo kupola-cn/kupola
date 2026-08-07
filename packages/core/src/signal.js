@@ -20,13 +20,13 @@ import {
 import { reportErrors } from './errors.js';
 
 /** @type {import('./effect.js').EffectRecord|null} */
-export let activeEffect = null;
+let activeEffect = null;
 
 const profilerInstrumentationEnabled = typeof __DEV__ === 'undefined' || __DEV__;
 const defaultTriggerMaxJobs = 10000;
 
 /** @type {import('./effect.js').EffectRecord[]} */
-export const effectStack = [];
+const effectStack = [];
 
 /** @type {{ root: Signal, pendingComputeds: Set<Object>, pendingEffects: Set<Object> }|null} */
 let activeTriggerContext = null;
@@ -74,7 +74,7 @@ export function withoutTracking(fn) {
 export let batchDepth = 0;
 
 /** @type {Set<Function>} */
-export const batchQueue = new Set();
+const batchQueue = new Set();
 
 /** @internal */
 export function setBatchDepth(depth) {
