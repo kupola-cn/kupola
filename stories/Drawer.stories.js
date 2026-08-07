@@ -1,8 +1,8 @@
 /**
  * @file Drawer component stories.
  */
-import { Drawer } from '../packages/core/src/components/drawer.js';
-import { html } from '../packages/core/src/template.js';
+import { Drawer } from '../packages/components/src/components/drawer.js';
+import { html } from '../packages/platform/src/template.js';
 import '../packages/css/index.css';
 
 export default {

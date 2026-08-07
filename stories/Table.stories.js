@@ -1,7 +1,7 @@
 /**
  * @file Table component stories.
  */
-import { Table } from '../packages/core/src/components/table.js';
+import { Table } from '../packages/components/src/components/table.js';
 import '../packages/css/index.css';
 
 const sampleData = [

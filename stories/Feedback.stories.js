@@ -1,8 +1,8 @@
 /**
  * @file Notification & Alert component stories.
  */
-import { Notification } from '../packages/core/src/components/notification.js';
-import { Alert } from '../packages/core/src/components/alert.js';
+import { Notification } from '../packages/components/src/components/notification.js';
+import { Alert } from '../packages/components/src/components/alert.js';
 import '../packages/css/index.css';
 
 export default {
