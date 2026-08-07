@@ -17,6 +17,7 @@ import { createListenerRegistry } from './listener-registry';
 import { getPageNumbers as getPageNumbersData } from './table-data.js';
 import { renderEditCell, startEdit } from './table-editing.js';
 import { computeVirtualState } from './table-virtual.js';
+import { Select } from './select.js';
 
 /**
  * Append HTML to a container with XSS sanitization.
@@ -273,6 +274,8 @@ export function renderTable(ctx) {
   }
 
   // Pagination
+  refs.pageSizeSelect?.destroy?.();
+  refs.pageSizeSelect = null;
   refs.paginationElement?.remove();
   refs.paginationElement = null;
   if (shouldPaginate() && total > state.pageSize) {
@@ -695,24 +698,23 @@ function renderPagination(ctx, total) {
   // Page size selector
   if (options.pageSizeOptions?.length > 1) {
     pagination.classList.add('ds-table-pagination--with-size');
-    const select = document.createElement('select');
-    select.className = 'ds-table-page-size';
-    options.pageSizeOptions.forEach(size => {
-      const opt = document.createElement('option');
-      opt.value = size;
-      opt.textContent = `${size} / page`;
-      if (size === state.pageSize) {opt.selected = true;}
-      select.appendChild(opt);
+    const select = Select({
+      items: options.pageSizeOptions.map(size => ({
+        value: String(size),
+        text: `${size} / page`,
+      })),
+      value: String(state.pageSize),
+      onChange: ({ value }) => {
+        state.pageSize = Number(value);
+        state.currentPage = 1;
+        clearProcessedCache();
+        renderTable(ctx);
+      },
     });
-    interactionListeners.on(select, 'change', () => {
-      state.pageSize = Number(select.value);
-      state.currentPage = 1;
-      clearProcessedCache();
-      renderTable(ctx);
-    });
+    ctx.refs.pageSizeSelect = select;
     pagination.appendChild(info);
     pagination.appendChild(pages);
-    pagination.appendChild(select);
+    pagination.appendChild(select.element);
   } else {
     pagination.appendChild(info);
     pagination.appendChild(pages);

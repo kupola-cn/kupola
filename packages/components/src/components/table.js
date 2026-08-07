@@ -133,6 +133,7 @@ export function Table(options = {}) {
     tableContainerElement: null,
     tableElement: null,
     paginationElement: null,
+    pageSizeSelect: null,
     virtualRowElements: new Map(),
   };
   const editing = { cell: null, buffer: {} }; // { rowKey, colKey } / per-column buffer
