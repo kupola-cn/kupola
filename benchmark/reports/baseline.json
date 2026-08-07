@@ -1,0 +1,31 @@
+{
+  "updatedAt": "2026-08-07T06:35:41.518Z",
+  "core": {
+    "create 10,000 signals": 3.1295000000000073,
+    "update signal 100,000 times": 0.0015912010000000009,
+    "batch update 10,000 signals": 3.634299999999712,
+    "signal nested reads 100,000 times": 0.00002056500000000142,
+    "create 1,000 computed": 1.8530000000000655,
+    "3-level computed chain update 10,000 times": 0.0038580799999999725,
+    "100 computed sharing signal update": 0.03949999999986176,
+    "computed with array filter/map/reduce": 0.28960000000006403,
+    "create 1,000 effects": 2.2631999999998698,
+    "effect reaction latency 10,000 times": 0.0018252300000000106,
+    "effect cleanup 1,000 times": 0.006188800000000356
+  },
+  "components": {
+    "VirtualList 100 items": 29.713400000000092,
+    "VirtualList 1,000 items": 8.22059999999965,
+    "VirtualList 10,000 items": 4.130700000000161,
+    "VirtualList add/remove 100 times": 1.5093679999999994,
+    "Table 100×10": 19.1871000000001,
+    "Table 1,000×5": 77.38930000000028,
+    "Table sorting 100 times": 100.900364,
+    "Table pagination 5,000 rows": 4.386600000000726,
+    "Form 50 fields": 39.63349999999991,
+    "Modal open/close 100 times": 1.0255089999999927,
+    "Tooltip creation 100 times": 0.01259700000000521,
+    "SSR renderToString 100 items": 0.9547000000002299,
+    "SSR renderToString 1,000 items": 3.0033999999996013
+  }
+}
