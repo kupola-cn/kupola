@@ -6,16 +6,21 @@
 [![npm version](https://img.shields.io/npm/v/@kupola/platform)](https://www.npmjs.com/package/@kupola/platform)
 [![License](https://img.shields.io/npm/l/@kupola/platform)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
 
-**Example application:** [Kupola App](https://github.com/kupola-cn/kupola-app) demonstrates a complete administration console built with Kupola.
+**Example application:** [Kupola App](https://github.com/kupola-cn/kupola-app) — a complete administration console built with Kupola.
 
-Kupola is a zero-framework interaction layer for server-rendered HTML. Use its
-directive runtime for small interactive islands, its signal/template APIs for
-JavaScript-owned views, and its optional native component library where a
-reusable component is the better boundary.
+Kupola is a zero-framework interaction layer for server-rendered HTML. Use the
+directive runtime for interactive islands, signal/template APIs for
+JavaScript-owned views, and the optional native component library where a
+reusable component is the better boundary. `@kupola/router` and `@kupola/auth`
+add client-side routing and permission management built for SSR apps.
 
-Kupola also provides `@kupola/router` for client-side routing and `@kupola/auth`
-for permission management, both designed to work seamlessly with server-rendered
-applications.
+## Features
+
+- `k-*` directives — reactive islands in server HTML (`k-data`, `k-show`, `k-model`, `k-for`, …)
+- Signals & template literals — state-driven views without a framework
+- Native components — table, form, tree, menu, select, and more
+- Router & auth — hash/history/memory modes, route guards, permissions
+- SSR-friendly — hydrates static markup; islands need no build step
 
 ## Install
 
@@ -28,39 +33,25 @@ npm install @kupola/platform
   <button @click="count++" k-text="count"></button>
 </div>
 <script type="module">
-  import { walk } from '@kupola/platform/directives'
-  walk(document.body)
+  import { walk } from '@kupola/platform/directives';
+  walk(document.body);
 </script>
 ```
 
-Directive expressions are for trusted application templates only. They use
-`new Function()` and therefore are not a sandbox. Use `k-text` for user content;
-provide an application sanitizer before using `k-html`.
+> Directive expressions are for trusted application templates only. They use
+> `new Function()` and are not a sandbox. Use `k-text` for user content, and
+> provide an application sanitizer before using `k-html`.
 
-## Application Lifecycle
+## Packages
 
-`createApp` supports synchronous and asynchronous plugin hooks. Use `mount()` /
-`destroy()` only when every plugin hook is synchronous. For asynchronous setup or
-cleanup, use the paired async lifecycle methods:
-
-```js
-import { createApp, html } from '@kupola/platform';
-
-const app = createApp(html`<main>Ready</main>`).use({
-  async install() {
-    await loadFeatureFlags();
-  },
-  async destroy() {
-    await closeFeatureConnection();
-  },
-});
-
-await app.mountAsync(document.querySelector('#app'));
-await app.destroyAsync();
-```
-
-Lifecycle transitions are serialized. While `mountAsync()` or `destroyAsync()`
-is pending, the app cannot be mounted again or receive additional plugins.
+| Package | Purpose |
+|---|---|
+| `@kupola/platform` | Directives, signals, templates, rendering |
+| `@kupola/components` | Optional native component library |
+| `@kupola/router` | Client-side routing |
+| `@kupola/auth` | Permission management |
+| `@kupola/ai-adapter` | AI/LLM integration adapter |
+| `@kupola/create-kupola` | Project scaffolding |
 
 ## Documentation
 
@@ -71,7 +62,9 @@ is pending, the app cannot be mounted again or receive additional plugins.
 - [Security policy integration](https://kupola-cn.github.io/kupola/guide/security-policy)
 - [Performance boundaries](https://kupola-cn.github.io/kupola/guide/performance)
 
-For development and release checks, use `npm run verify`. Kupola supports Node
-18, 20, and 22. See the [changelog](./CHANGELOG.md),
+## Development
+
+Run `npm run verify` for the full lint/type/test/build/size gate. Kupola supports
+Node 20 and newer. See the [changelog](./CHANGELOG.md),
 [contributing guide](./CONTRIBUTING.md), [security policy](./SECURITY.md),
 [code of conduct](./CODE_OF_CONDUCT.md), and [MIT license](./LICENSE).
