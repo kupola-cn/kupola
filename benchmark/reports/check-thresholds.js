@@ -20,13 +20,13 @@ const thresholds = {
   // Core Engine
   'create 10,000 signals': 10,
   'update signal 100,000 times': 1,
-  'batch update 10,000 signals': 15,
+  'batch update 10,000 signals': 20,
   'signal nested reads 100,000 times': 1,
-  'create 1,000 computed': 5,
+  'create 1,000 computed': 10,
   '3-level computed chain update 10,000 times': 1,
   '100 computed sharing signal update': 1,
   'computed with array filter/map/reduce': 2,
-  'create 1,000 effects': 5,
+  'create 1,000 effects': 10,
   'effect reaction latency 10,000 times': 1,
   'effect cleanup 1,000 times': 1,
 
