@@ -415,3 +415,100 @@ describe('Tree destroy', () => {
     view.collapseAll();
   });
 });
+
+describe('Tree checkable API', () => {
+  test('checkKey, uncheckKey, toggleCheck, and getCheckedKeys stay in sync', () => {
+    const view = Tree({
+      data: [ { key: 1, title: 'One' }, { key: 2, title: 'Two' } ],
+      checkable: true,
+    });
+    document.body.appendChild(view.element);
+    view.checkKey(1);
+    expect(view.getCheckedKeys()).toEqual([ 1 ]);
+    view.uncheckKey(1);
+    expect(view.getCheckedKeys()).toEqual([]);
+    view.toggleCheck(2);
+    expect(view.getCheckedKeys()).toEqual([ 2 ]);
+    view.toggleCheck(2);
+    expect(view.getCheckedKeys()).toEqual([]);
+    view.destroy();
+  });
+});
+
+describe('Tree expand/collapse APIs', () => {
+  test('expand and collapse work by key and fire onExpand', () => {
+    const onExpand = jest.fn();
+    const view = Tree({
+      data: [ { key: 'root', title: 'Root', children: [ { key: 'child', title: 'Child' } ] } ],
+      onExpand,
+    });
+    document.body.appendChild(view.element);
+    view.expand('root');
+    expect(view.getExpandedKeys()).toEqual([ 'root' ]);
+    view.collapse('root');
+    expect(view.getExpandedKeys()).toEqual([]);
+    view.expandAll();
+    expect(view.getExpandedKeys()).toEqual([ 'root' ]);
+    view.collapseAll();
+    expect(view.getExpandedKeys()).toEqual([]);
+    expect(onExpand).toHaveBeenCalled();
+    view.destroy();
+  });
+
+  test('disabled nodes cannot be expanded', () => {
+    const view = Tree({
+      data: [ { key: 'root', title: 'Root', disabled: true, children: [ { key: 'c', title: 'C' } ] } ],
+    });
+    document.body.appendChild(view.element);
+    view.expand('root');
+    expect(view.getExpandedKeys()).toEqual([]);
+    view.destroy();
+  });
+});
+
+describe('Tree keyboard navigation', () => {
+  test('arrow keys navigate visible nodes and Enter selects', () => {
+    const onSelect = jest.fn();
+    const view = Tree({
+      data: [ { key: 1, title: 'One' }, { key: 2, title: 'Two' } ],
+      onSelect,
+    });
+    document.body.appendChild(view.element);
+    const nodes = document.querySelectorAll('[data-tree-index]');
+    nodes[0].focus();
+    nodes[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement).toBe(nodes[1]);
+    nodes[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    expect(document.activeElement).toBe(nodes[0]);
+    nodes[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(onSelect).toHaveBeenCalled();
+    view.destroy();
+  });
+
+  test('ArrowRight expands and ArrowLeft collapses a parent', () => {
+    const view = Tree({
+      data: [ { key: 'root', title: 'Root', children: [ { key: 'c', title: 'C' } ] } ],
+    });
+    document.body.appendChild(view.element);
+    const nodes = document.querySelectorAll('[data-tree-index]');
+    nodes[0].focus();
+    nodes[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(view.getExpandedKeys()).toEqual([ 'root' ]);
+    expect(document.querySelectorAll('[data-tree-index]').length).toBe(2);
+    nodes[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    expect(view.getExpandedKeys()).toEqual([]);
+    view.destroy();
+  });
+
+  test('Space toggles a checkable node', () => {
+    const view = Tree({
+      data: [ { key: 1, title: 'One' } ],
+      checkable: true,
+    });
+    document.body.appendChild(view.element);
+    const nodes = document.querySelectorAll('[data-tree-index]');
+    nodes[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    expect(view.getCheckedKeys()).toEqual([ 1 ]);
+    view.destroy();
+  });
+});

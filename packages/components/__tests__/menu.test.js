@@ -196,3 +196,77 @@ describe('Menu destroy', () => {
     item.click();
   });
 });
+
+describe('Menu keyboard navigation', () => {
+  test('Home and End focus the first and last enabled items', () => {
+    const view = Menu({ items: [ { label: 'A' }, { label: 'B' }, { label: 'C' } ] });
+    document.body.appendChild(view.element);
+    const items = document.querySelectorAll('.ds-menu__item');
+    items[1].focus();
+    items[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    expect(document.activeElement).toBe(items[0]);
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    expect(document.activeElement).toBe(items[2]);
+    view.destroy();
+  });
+
+  test('Space activates the focused command', () => {
+    const onClick = jest.fn();
+    const view = Menu({ items: [ { label: 'A', onClick } ] });
+    document.body.appendChild(view.element);
+    const items = document.querySelectorAll('.ds-menu__item');
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    view.destroy();
+  });
+
+  test('Escape closes the submenu and returns focus to the parent', () => {
+    const view = Menu({ items: [ { label: 'File', children: [ { label: 'Open' } ] } ] });
+    document.body.appendChild(view.element);
+    const items = document.querySelectorAll('.ds-menu__item');
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(document.querySelector('.ds-menu__submenu').hidden).toBe(false);
+    items[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(document.querySelector('.ds-menu__submenu').hidden).toBe(true);
+    expect(document.activeElement).toBe(items[0]);
+    view.destroy();
+  });
+
+  test('horizontal mode moves between root items with arrow keys', () => {
+    const view = Menu({ mode: 'horizontal', items: [ { label: 'A' }, { label: 'B' } ] });
+    document.body.appendChild(view.element);
+    const items = document.querySelectorAll('.ds-menu__item');
+    items[0].focus();
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(document.activeElement).toBe(items[1]);
+    items[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    expect(document.activeElement).toBe(items[0]);
+    view.destroy();
+  });
+});
+
+describe('Menu edge cases', () => {
+  test('clicking a divider does not fire onSelect', () => {
+    const onSelect = jest.fn();
+    const view = Menu({
+      items: [ { label: 'A' }, { type: 'divider' }, { label: 'B' } ],
+      onSelect,
+    });
+    document.body.appendChild(view.element);
+    document.querySelector('.ds-menu__divider')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onSelect).not.toHaveBeenCalled();
+    view.destroy();
+  });
+
+  test('clicking a submenu item toggles it closed', () => {
+    const view = Menu({ items: [ { label: 'File', children: [ { label: 'Open' } ] } ] });
+    document.body.appendChild(view.element);
+    const items = document.querySelectorAll('.ds-menu__item');
+    items[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(document.querySelector('.ds-menu__submenu').hidden).toBe(false);
+    items[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(document.querySelector('.ds-menu__submenu').hidden).toBe(true);
+    view.destroy();
+  });
+});
