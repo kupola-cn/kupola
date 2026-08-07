@@ -10,8 +10,18 @@
  */
 
 import { t } from '@kupola/platform/i18n';
-import { render } from '@kupola/platform/render';
 import { createListenerRegistry } from './listener-registry';
+import {
+  appendRenderResult,
+  appendVirtualSpacer,
+  getTableClass,
+  getTotalColCount,
+  renderCellValue,
+  renderExpandCell,
+  renderSelectionCell,
+  syncSelectionDOM,
+} from './table-render.js';
+import { cancelEdit, renderEditCell, saveEdit, startEdit } from './table-editing.js';
 import {
   escapeCSV as escapeCSVData,
   filterTree as filterTreeData,
@@ -24,25 +34,6 @@ import {
   treeExpandAll as treeExpandAllData,
 } from './table-data.js';
 import { computeVirtualState, isVirtualEnabled } from './table-virtual.js';
-
-function appendSanitizedHtml(container, value) {
-  const template = document.createElement('template');
-  template.innerHTML = String(value);
-  template.content.querySelectorAll('script, iframe, object, embed, link, style')
-    .forEach(element => element.remove());
-  template.content.querySelectorAll('*').forEach(element => {
-    for (const attribute of [ ...element.attributes ]) {
-      const name = attribute.name.toLowerCase();
-      const value = attribute.value.trim();
-      if (name.startsWith('on') || name === 'style'
-        || ((name === 'href' || name === 'src' || name === 'xlink:href')
-          && /^javascript:/i.test(value))) {
-        element.removeAttribute(attribute.name);
-      }
-    }
-  });
-  container.append(...template.content.childNodes);
-}
 
 /**
  * @typedef {Object} TableColumn
@@ -132,8 +123,7 @@ export function Table(options = {}) {
   let _selectedKeys = new Set();
   let _expandedKeys = new Set();
   let _treeExpandedKeys = new Set();
-  let _editingCell = null; // { rowKey, colKey }
-  let _editBuffer = {};
+  const editing = { cell: null, buffer: {} }; // { rowKey, colKey } / per-column buffer
   let _reactiveCleanups = [];
   let _dataSubscription = null;
   let _loadingSubscription = null;
@@ -317,7 +307,7 @@ export function Table(options = {}) {
       tableContainer.style.removeProperty('overflow-y');
     }
 
-    tableElement.className = _getTableClass();
+    tableElement.className = getTableClass(options);
 
     tableElement.replaceChildren(
       _renderThead(),
@@ -375,15 +365,6 @@ export function Table(options = {}) {
     if (_filterDebounceTimer === null) {return;}
     clearTimeout(_filterDebounceTimer);
     _filterDebounceTimer = null;
-  }
-
-  function _getTableClass() {
-    const classes = [ 'ds-table' ];
-    if (options.striped) {classes.push('ds-table-striped');}
-    if (options.hoverable !== false) {classes.push('ds-table-hover');}
-    if (options.bordered) {classes.push('ds-table-bordered');}
-    if (options.compact) {classes.push('ds-table-compact');}
-    return classes.join(' ');
   }
 
   function _renderToolbar() {
@@ -502,7 +483,7 @@ export function Table(options = {}) {
     if (_loading) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = _getTotalColCount();
+      td.colSpan = getTotalColCount(columns, selection, expandable);
       td.className = 'ds-table-loading';
       td.textContent = options.loadingText || 'Loading...';
       tr.appendChild(td);
@@ -510,7 +491,7 @@ export function Table(options = {}) {
     } else if (data.length === 0) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = _getTotalColCount();
+      td.colSpan = getTotalColCount(columns, selection, expandable);
       td.className = 'ds-table-empty';
       td.textContent = options.emptyText || t('table.empty');
       tr.appendChild(td);
@@ -522,7 +503,7 @@ export function Table(options = {}) {
       const skipCells = new Set();
 
       if (virtualState?.topHeight) {
-        _appendVirtualSpacer(tbody, virtualState.topHeight);
+        appendVirtualSpacer(tbody, virtualState.topHeight, getTotalColCount(columns, selection, expandable));
       }
 
       data.forEach((row, rowIndex) => {
@@ -548,8 +529,10 @@ export function Table(options = {}) {
           interactionListeners.on(tr, 'click', () => options.onRowClick(row, key));
         }
 
-        if (selection) {_renderSelectionCell(tr, key, isSelected);}
-        if (expandable) {_renderExpandCell(tr, key, isExpanded);}
+        if (selection) {
+          renderSelectionCell(tr, key, isSelected, selection, interactionListeners, selectRow, deselectRow);
+        }
+        if (expandable) {renderExpandCell(tr, key, isExpanded, interactionListeners, toggleExpand);}
 
         // Data cells
         columns.forEach((col, colIndex) => {
@@ -575,15 +558,15 @@ export function Table(options = {}) {
           const value = row[col.key];
 
           // Inline edit
-          if (_editingCell && _editingCell.rowKey === key && _editingCell.colKey === col.key) {
-            td.appendChild(_renderEditCell(td, row, col, key));
+          if (editing.cell && editing.cell.rowKey === key && editing.cell.colKey === col.key) {
+            td.appendChild(renderEditCell(editing, td, row, col, key, interactionListeners, _saveEdit, _cancelEdit));
           } else if (col.editable && editable) {
             td.classList.add('ds-table-editable-cell');
-            interactionListeners.on(td, 'dblclick', () => _startEdit(key, col.key, value));
-            _renderCellValue(td, col, value, row);
+            interactionListeners.on(td, 'dblclick', () => startEdit(editing, key, col.key, value, _render));
+            renderCellValue(td, col, value, row, rendererInstances);
           } else if (col.render) {
             const result = col.render(value, row);
-            _appendRenderResult(td, result);
+            appendRenderResult(td, result, rendererInstances);
           } else {
             td.textContent = value != null ? String(value) : '';
           }
@@ -598,176 +581,28 @@ export function Table(options = {}) {
           const expandTr = document.createElement('tr');
           expandTr.className = 'ds-table-expand-row';
           const expandTd = document.createElement('td');
-          expandTd.colSpan = _getTotalColCount();
+          expandTd.colSpan = getTotalColCount(columns, selection, expandable);
           const content = expandable(row);
-          _appendRenderResult(expandTd, content);
+          appendRenderResult(expandTd, content, rendererInstances);
           expandTr.appendChild(expandTd);
           tbody.appendChild(expandTr);
         }
       });
 
       if (virtualState?.bottomHeight) {
-        _appendVirtualSpacer(tbody, virtualState.bottomHeight);
+        appendVirtualSpacer(tbody, virtualState.bottomHeight, getTotalColCount(columns, selection, expandable));
       }
     }
     virtualRowElements = virtualState ? nextVirtualRowElements : new Map();
     return tbody;
   }
 
-  function _appendVirtualSpacer(tbody, height) {
-    const tr = document.createElement('tr');
-    tr.className = 'ds-table-virtual-spacer';
-    tr.setAttribute('aria-hidden', 'true');
-    const td = document.createElement('td');
-    td.colSpan = _getTotalColCount();
-    td.style.height = `${height}px`;
-    td.style.padding = '0';
-    td.style.border = '0';
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-  }
-
-  function _renderCellValue(td, col, value, row) {
-    if (col.render) {
-      const result = col.render(value, row);
-      _appendRenderResult(td, result);
-    } else {
-      td.textContent = value != null ? String(value) : '';
-    }
-  }
-
-  function _appendRenderResult(container, result) {
-    if (typeof result === 'string') {
-      appendSanitizedHtml(container, result);
-      return;
-    }
-    if (result && typeof result === 'object' && typeof result.nodeType === 'number') {
-      container.appendChild(result);
-      return;
-    }
-    if (result && typeof result === 'object') {
-      const child = render(result, container);
-      rendererInstances.add(child);
-    }
-  }
-
-  function _renderSelectionCell(tr, key, isSelected) {
-    const td = document.createElement('td');
-    td.className = 'ds-table-col-selection';
-    const input = document.createElement('input');
-    input.type = selection === 'radio' ? 'radio' : 'checkbox';
-    input.checked = isSelected;
-    interactionListeners.on(input, 'change', () => {
-      if (input.checked) {selectRow(key);}
-      else {deselectRow(key);}
-    });
-    td.appendChild(input);
-    tr.appendChild(td);
-  }
-
-  function _syncSelectionDOM() {
-    if (!selection) {return;}
-    element.querySelectorAll('tbody tr[data-row-key]').forEach(row => {
-      const key = row.getAttribute('data-row-key');
-      const selected = [ ..._selectedKeys ].some(value => String(value) === key);
-      row.classList.toggle('ds-table-row-selected', selected);
-      const input = row.querySelector('.ds-table-col-selection input');
-      if (input) {input.checked = selected;}
-    });
-    const header = element.querySelector('thead .ds-table-col-selection input');
-    if (header) {
-      const { pageData } = getProcessedData();
-      header.checked = pageData.length > 0
-        && pageData.every(row => _selectedKeys.has(row[rowKey]));
-    }
-    const info = element.querySelector('.ds-table-selection-info');
-    if (info) {
-      if (_selectedKeys.size > 0) {
-        info.textContent = `Selected ${_selectedKeys.size} items`;
-      } else {
-        info.remove();
-      }
-    } else if (_selectedKeys.size > 0 && (options.showFilter || options.showToolbar)) {
-      const left = element.querySelector('.ds-table-toolbar > div:first-child');
-      if (left) {
-        const next = document.createElement('span');
-        next.className = 'ds-table-selection-info';
-        next.textContent = `Selected ${_selectedKeys.size} items`;
-        left.appendChild(next);
-      }
-    }
-  }
-
-  function _renderExpandCell(tr, key, isExpanded) {
-    const td = document.createElement('td');
-    td.className = 'ds-table-col-expand';
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'ds-table-expand-btn';
-    btn.textContent = isExpanded ? '\u25BC' : '\u25B6';
-    interactionListeners.on(btn, 'click', () => toggleExpand(key));
-    td.appendChild(btn);
-    tr.appendChild(td);
-  }
-
-  function _renderEditCell(td, row, col, key) {
-    const wrap = document.createElement('div');
-    wrap.className = 'ds-table-edit-cell';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'ds-table-edit-input';
-    input.value = _editBuffer[col.key] ?? row[col.key] ?? '';
-    interactionListeners.on(input, 'input', () => { _editBuffer[col.key] = input.value; });
-
-    const actions = document.createElement('div');
-    actions.className = 'ds-table-edit-actions';
-
-    const saveBtn = document.createElement('button');
-    saveBtn.type = 'button';
-    saveBtn.className = 'ds-table-edit-save';
-    saveBtn.textContent = '\u2713';
-    interactionListeners.on(saveBtn, 'click', () => _saveEdit(key, col.key));
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button';
-    cancelBtn.className = 'ds-table-edit-cancel';
-    cancelBtn.textContent = '\u2717';
-    interactionListeners.on(cancelBtn, 'click', _cancelEdit);
-
-    actions.appendChild(saveBtn);
-    actions.appendChild(cancelBtn);
-    wrap.appendChild(input);
-    wrap.appendChild(actions);
-    return wrap;
-  }
-
-  function _startEdit(key, colKey, value) {
-    _editingCell = { rowKey: key, colKey };
-    _editBuffer = { [colKey]: value != null ? String(value) : '' };
-    _render();
-  }
-
   function _saveEdit(rowKeyVal, colKey) {
-    const row = _data.find(r => r[rowKey] === rowKeyVal);
-    if (row && _editBuffer[colKey] !== undefined) {
-      row[colKey] = _editBuffer[colKey];
-      _clearCaches();
-    }
-    _editingCell = null;
-    _editBuffer = {};
-    if (options.onEditSave) {options.onEditSave(row, colKey);}
-    _render();
+    saveEdit(editing, _data, rowKey, rowKeyVal, colKey, _clearCaches, _render, options.onEditSave);
   }
 
   function _cancelEdit() {
-    _editingCell = null;
-    _editBuffer = {};
-    if (options.onEditCancel) {options.onEditCancel();}
-    _render();
-  }
-
-  function _getTotalColCount() {
-    return columns.length + (selection ? 1 : 0) + (expandable ? 1 : 0);
+    cancelEdit(editing, _render, options.onEditCancel);
   }
 
   // === Sort ===
@@ -1054,26 +889,26 @@ export function Table(options = {}) {
     } else {
       _selectedKeys.add(key);
     }
-    _syncSelectionDOM();
+    syncSelectionDOM({ element, selection, selectedKeys: _selectedKeys, getProcessedData, rowKey, options });
     if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function deselectRow(key) {
     _selectedKeys.delete(key);
-    _syncSelectionDOM();
+    syncSelectionDOM({ element, selection, selectedKeys: _selectedKeys, getProcessedData, rowKey, options });
     if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function selectAll() {
     const { pageData } = getProcessedData();
     pageData.forEach(r => _selectedKeys.add(r[rowKey]));
-    _syncSelectionDOM();
+    syncSelectionDOM({ element, selection, selectedKeys: _selectedKeys, getProcessedData, rowKey, options });
     if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
   function deselectAll() {
     _selectedKeys.clear();
-    _syncSelectionDOM();
+    syncSelectionDOM({ element, selection, selectedKeys: _selectedKeys, getProcessedData, rowKey, options });
     if (options.onSelect) {options.onSelect(getSelectedKeys(), getSelectedRows());}
   }
 
