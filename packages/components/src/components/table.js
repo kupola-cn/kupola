@@ -12,6 +12,18 @@
 import { t } from '@kupola/platform/i18n';
 import { render } from '@kupola/platform/render';
 import { createListenerRegistry } from './listener-registry';
+import {
+  escapeCSV as escapeCSVData,
+  filterTree as filterTreeData,
+  flattenVisible as flattenVisibleData,
+  getChildrenKey,
+  getPageNumbers as getPageNumbersData,
+  normalizeData as normalizeDataData,
+  rowMatchesFilter as rowMatchesFilterData,
+  sortData as sortDataData,
+  treeExpandAll as treeExpandAllData,
+} from './table-data.js';
+import { computeVirtualState, isVirtualEnabled } from './table-virtual.js';
 
 function appendSanitizedHtml(container, value) {
   const template = document.createElement('template');
@@ -157,36 +169,15 @@ export function Table(options = {}) {
 
   // === Tree helpers ===
   function _treeExpandAll(data, ck) {
-    const childrenKey = ck || treeConfig?.childrenKey || 'children';
-    data.forEach(row => {
-      const key = row[rowKey];
-      if (row[childrenKey]?.length) {
-        _treeExpandedKeys.add(key);
-        _treeExpandAll(row[childrenKey], childrenKey);
-      }
-    });
+    treeExpandAllData(data, ck || getChildrenKey(treeConfig), rowKey, _treeExpandedKeys);
   }
 
   function _flattenVisible(data, level, ck) {
-    const childrenKey = ck || treeConfig?.childrenKey || 'children';
-    const result = [];
-    for (const row of data) {
-      const key = row[rowKey];
-      result.push({ ...row, _level: level, _hasChildren: !!(row[childrenKey]?.length) });
-      if (row[childrenKey]?.length && _treeExpandedKeys.has(key)) {
-        result.push(..._flattenVisible(row[childrenKey], level + 1, childrenKey));
-      }
-    }
-    return result;
-  }
-
-  function _getFlatData(data) {
-    if (!treeConfig) {return data;}
-    return _flattenVisible(data, 0);
+    return flattenVisibleData(data, level, ck || getChildrenKey(treeConfig), rowKey, _treeExpandedKeys);
   }
 
   function _isVirtualEnabled() {
-    return !!virtualScroll && !expandable && !mergeCellsFn && !draggable;
+    return isVirtualEnabled(options);
   }
 
   function _shouldPaginate() {
@@ -237,46 +228,8 @@ export function Table(options = {}) {
     return result;
   }
 
-  function cloneRow(row) {
-    if (!row || typeof row !== 'object') {return row;}
-    const clone = { ...row };
-    const childrenKey = treeConfig?.childrenKey || 'children';
-    if (treeConfig && Array.isArray(row[childrenKey])) {
-      clone[childrenKey] = row[childrenKey].map(cloneRow);
-    }
-    return clone;
-  }
-
-  function validateData(data) {
-    const seen = new Set();
-    const visit = rows => {
-      if (!Array.isArray(rows)) {return;}
-      for (const row of rows) {
-        if (!row || typeof row !== 'object' || Array.isArray(row)) {
-          throw new TypeError(`Table: each row must be an object with a unique ${rowKey}.`);
-        }
-        const key = row[rowKey];
-        if (key === null || key === undefined
-          || (typeof key !== 'string' && typeof key !== 'number')) {
-          throw new TypeError(`Table: each row must provide a unique ${rowKey}.`);
-        }
-        const normalizedKey = `${typeof key}:${String(key)}`;
-        if (seen.has(normalizedKey)) {
-          throw new TypeError(`Table: duplicate rowKey "${String(key)}".`);
-        }
-        seen.add(normalizedKey);
-        if (treeConfig) {visit(row[treeConfig.childrenKey || 'children']);}
-      }
-    };
-    visit(data);
-    return data;
-  }
-
   function normalizeData(data) {
-    if (data === undefined) {return [];}
-    if (!Array.isArray(data)) {throw new TypeError('Table: data must be an array.');}
-    validateData(data);
-    return data.map(cloneRow);
+    return normalizeDataData(data, rowKey, treeConfig);
   }
 
   function normalizePageAndSelection() {
@@ -309,73 +262,17 @@ export function Table(options = {}) {
   }
 
   function _filterTree(data, text, ck) {
-    const childrenKey = ck || treeConfig?.childrenKey || 'children';
-    return data.reduce((acc, row) => {
-      const children = row[childrenKey] ? _filterTree(row[childrenKey], text, childrenKey) : [];
-      const selfMatch = _rowMatchesFilter(row, text);
-      if (selfMatch || children.length > 0) {
-        acc.push({ ...row, [childrenKey]: children });
-        if (children.length > 0) {_treeExpandedKeys.add(row[rowKey]);}
-      }
-      return acc;
-    }, []);
+    return filterTreeData(
+      data, text, ck || getChildrenKey(treeConfig), rowKey, _treeExpandedKeys, columns, _filterText,
+    );
   }
 
   function _rowMatchesFilter(row, text) {
-    return columns.some(col => {
-      const val = row[col.key];
-      if (col.filterFn) {return col.filterFn(val, _filterText);}
-      return val != null && String(val).toLowerCase().includes(text);
-    });
+    return rowMatchesFilterData(row, text, columns, _filterText);
   }
 
   function _sortData(data) {
-    const sortKey = JSON.stringify(_sorts.map(({ key, order }) => [ key, order ]));
-    let cacheForData = _sortCache.get(data);
-
-    if (cacheForData?.has(sortKey)) {
-      return cacheForData.get(sortKey);
-    }
-
-    const sorted = [ ...data ].sort((a, b) => {
-      for (const s of _sorts) {
-        // O(1) lookup using Map instead of O(n) find
-        const col = _columnsMap.get(s.key);
-        let va = a[s.key], vb = b[s.key];
-        let cmp = 0;
-        if (col?.sorter) {
-          cmp = col.sorter(va, vb, s.order);
-        } else {
-          if (va == null) {cmp = 1;}
-          else if (vb == null) {cmp = -1;}
-          else if (typeof va === 'number' && typeof vb === 'number') {
-            cmp = s.order === 'asc' ? va - vb : vb - va;
-          } else {
-            cmp = s.order === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
-          }
-        }
-        if (cmp !== 0) {return cmp;}
-      }
-      return 0;
-    });
-
-    let result = sorted;
-    if (treeConfig) {
-      const ck = treeConfig.childrenKey || 'children';
-      result = sorted.map(row => row[ck]?.length ? { ...row, [ck]: _sortData(row[ck]) } : row);
-    }
-
-    // Update cache (keep last 5 cache entries)
-    if (!cacheForData) {
-      cacheForData = new Map();
-      _sortCache.set(data, cacheForData);
-    } else if (cacheForData.size >= 5) {
-      const firstKey = cacheForData.keys().next().value;
-      cacheForData.delete(firstKey);
-    }
-    cacheForData.set(sortKey, result);
-
-    return result;
+    return sortDataData(data, _sorts, _columnsMap, treeConfig, _sortCache);
   }
 
   // === Render ===
@@ -450,53 +347,9 @@ export function Table(options = {}) {
   }
 
   function _getVirtualState(data) {
-    const rowHeight = Math.max(1, Number(virtualScroll.rowHeight) || 40);
-    const overscan = Math.max(0, Number(virtualScroll.overscan) || 5);
-    const viewportHeight = _getVirtualViewportHeight(rowHeight, data.length);
-    const maxScrollTop = Math.max(0, data.length * rowHeight - viewportHeight);
-    _virtualScrollTop = Math.max(0, Math.min(_virtualScrollTop, maxScrollTop));
-
-    const start = Math.max(0, Math.floor(_virtualScrollTop / rowHeight) - overscan);
-    const visibleCount = Math.ceil(viewportHeight / rowHeight) + overscan * 2;
-    const end = Math.min(data.length, start + visibleCount);
-
-    return {
-      rows: data.slice(start, end),
-      topHeight: start * rowHeight,
-      bottomHeight: Math.max(0, (data.length - end) * rowHeight),
-      heightStyle: _getVirtualHeightStyle(viewportHeight),
-    };
-  }
-
-  function _getVirtualViewportHeight(rowHeight, totalRows) {
-    const configured = virtualScroll.height ?? virtualScroll.viewportHeight;
-    if (typeof configured === 'number' && configured > 0) {
-      return configured;
-    }
-    if (typeof configured === 'string') {
-      const value = configured.trim();
-      const parsed = Number.parseFloat(value);
-      if (Number.isFinite(parsed) && parsed > 0) {
-        if (value.endsWith('px')) {return parsed;}
-        if (value.endsWith('vh') && typeof window !== 'undefined') {
-          return (window.innerHeight || 0) * parsed / 100;
-        }
-        if (value.endsWith('rem') && typeof window !== 'undefined') {
-          const rootSize = Number.parseFloat(
-            window.getComputedStyle?.(document.documentElement)?.fontSize,
-          ) || 16;
-          return parsed * rootSize;
-        }
-      }
-    }
-
-    const visibleRows = Math.max(1, Number(virtualScroll.visibleRows) || _pageSize || 10);
-    return rowHeight * Math.min(totalRows || visibleRows, visibleRows);
-  }
-
-  function _getVirtualHeightStyle(viewportHeight) {
-    const configured = virtualScroll.height ?? virtualScroll.viewportHeight;
-    return typeof configured === 'string' ? configured : `${viewportHeight}px`;
+    const state = computeVirtualState(data, virtualScroll, _pageSize, _virtualScrollTop);
+    _virtualScrollTop = state.scrollTop;
+    return state;
   }
 
   function _handleVirtualScroll(event) {
@@ -1035,20 +888,7 @@ export function Table(options = {}) {
   }
 
   function _getPageNumbers(current, total) {
-    if (total <= 7) {return Array.from({ length: total }, (_, i) => i + 1);}
-    const pages = [];
-    if (current <= 4) {
-      for (let i = 1; i <= 5; i++) {pages.push(i);}
-      pages.push('...', total);
-    } else if (current >= total - 3) {
-      pages.push(1, '...');
-      for (let i = total - 4; i <= total; i++) {pages.push(i);}
-    } else {
-      pages.push(1, '...');
-      for (let i = current - 1; i <= current + 1; i++) {pages.push(i);}
-      pages.push('...', total);
-    }
-    return pages;
+    return getPageNumbersData(current, total);
   }
 
   // === Column Resize ===
@@ -1315,8 +1155,7 @@ export function Table(options = {}) {
   }
 
   function _escapeCSV(value) {
-    const str = value != null ? String(value) : '';
-    return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+    return escapeCSVData(value);
   }
 
   function refresh() { _render(); }

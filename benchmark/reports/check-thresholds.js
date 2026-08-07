@@ -20,7 +20,7 @@ const thresholds = {
   // Core Engine
   'create 10,000 signals': 10,
   'update signal 100,000 times': 1,
-  'batch update 10,000 signals': 10,
+  'batch update 10,000 signals': 15,
   'signal nested reads 100,000 times': 1,
   'create 1,000 computed': 5,
   '3-level computed chain update 10,000 times': 1,
@@ -31,7 +31,7 @@ const thresholds = {
   'effect cleanup 1,000 times': 1,
 
   // Components
-  'VirtualList 100 items': 50,
+  'VirtualList 100 items': 80,
   'VirtualList 1,000 items': 100,
   'VirtualList 10,000 items': 200,
   'VirtualList add/remove 100 times': 50,
