@@ -2003,8 +2003,7 @@ body.ds-dashboard-page {
 .ds-number-input__input,
 .ds-color-picker__input,
 .ds-table-filter-input,
-.ds-table-edit-input,
-.ds-table-page-size {
+.ds-table-edit-input {
   width: 100%;
   min-width: 0;
   height: 28px;
@@ -2591,11 +2590,25 @@ body.ds-dashboard-page {
 }
 
 .ds-table-filter-input,
-.ds-table-page-size,
 .ds-table-edit-input {
   background: var(--bg-overlay-l1);
   border: 1px solid var(--border-neutral-l1);
   border-radius: var(--radius-4);
+}
+
+.ds-table-page-size {
+  width: auto;
+  height: 28px;
+  padding: 0 var(--spacer-8);
+  color: var(--text-default);
+  background: var(--bg-overlay-l1);
+  border: 1px solid var(--border-neutral-l1);
+  border-radius: var(--radius-4);
+  font: inherit;
+}
+
+.ds-table-pagination--with-size {
+  justify-content: space-between;
 }
 
 .ds-table-selection-info {
