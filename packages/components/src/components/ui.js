@@ -75,5 +75,3 @@ export function setupUi(options = {}) {
   const resolver = typeof icons === 'function' ? icons : createIconResolver(icons);
   setIconResolver(resolver);
 }
-
-export { createKupolaIconProvider };

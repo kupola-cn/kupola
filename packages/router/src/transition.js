@@ -184,7 +184,7 @@ async function applyCssTransition(el, type, config, signal) {
   }
 }
 
-export class TransitionManager {
+class TransitionManager {
   constructor(el, binding) {
     this.el = el;
     this.binding = binding || {};

@@ -65,7 +65,7 @@ export function flattenVisible(data, level, childrenKey, rowKey, expandedKeys) {
  * @param {Set} expandedKeys
  * @returns {Array}
  */
-export function getFlatData(data, treeConfig, rowKey, expandedKeys) {
+function getFlatData(data, treeConfig, rowKey, expandedKeys) {
   if (!treeConfig) {return data;}
   return flattenVisible(data, 0, getChildrenKey(treeConfig), rowKey, expandedKeys);
 }
@@ -179,7 +179,7 @@ export function sortData(data, sorts, columnsMap, treeConfig, sortCache) {
  * @param {object|null} treeConfig
  * @returns {object}
  */
-export function cloneRow(row, treeConfig) {
+function cloneRow(row, treeConfig) {
   if (!row || typeof row !== 'object') {return row;}
   const clone = { ...row };
   const childrenKey = getChildrenKey(treeConfig);
@@ -196,7 +196,7 @@ export function cloneRow(row, treeConfig) {
  * @param {object|null} treeConfig
  * @returns {Array}
  */
-export function validateData(data, rowKey, treeConfig) {
+function validateData(data, rowKey, treeConfig) {
   const seen = new Set();
   const visit = rows => {
     if (!Array.isArray(rows)) {return;}

@@ -8,7 +8,7 @@
 /**
  * Scroll position manager.
  */
-export class ScrollManager {
+class ScrollManager {
   constructor(router) {
     this.router = router;
     this.scrollHistory = new Map();

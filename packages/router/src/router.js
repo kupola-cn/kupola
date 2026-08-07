@@ -475,4 +475,3 @@ export function initRouter(options) {
   };
 }
 
-export { Navigation, GuardPipeline, HistoryManager, ScrollManager };

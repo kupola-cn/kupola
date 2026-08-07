@@ -298,4 +298,4 @@ const Icons = {
   plugin: iconPlugin,
 };
 
-export { Icons, svg, renderIcons as render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createKupolaIconProvider, createIconComponent, setupIconResolver, iconPlugin };
+export { Icons, svg, renderIcons as render, PATHS, registerIcons, registerGroup, registerAllGroups, iconGroups, registerIconProvider, createKupolaIconProvider, createIconComponent, setupIconResolver };

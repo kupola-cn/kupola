@@ -23,7 +23,7 @@ import { computeVirtualState } from './table-virtual.js';
  * @param {HTMLElement} container
  * @param {*} value
  */
-export function appendSanitizedHtml(container, value) {
+function appendSanitizedHtml(container, value) {
   const template = document.createElement('template');
   template.innerHTML = String(value);
   template.content.querySelectorAll('script, iframe, object, embed, link, style')
@@ -73,7 +73,7 @@ export function getTotalColCount(columns, selection, expandable) {
  * @param {number} height
  * @param {number} colCount
  */
-export function appendVirtualSpacer(tbody, height, colCount) {
+function appendVirtualSpacer(tbody, height, colCount) {
   const tr = document.createElement('tr');
   tr.className = 'ds-table-virtual-spacer';
   tr.setAttribute('aria-hidden', 'true');
@@ -92,7 +92,7 @@ export function appendVirtualSpacer(tbody, height, colCount) {
  * @param {*} result
  * @param {Set} rendererInstances
  */
-export function appendRenderResult(container, result, rendererInstances) {
+function appendRenderResult(container, result, rendererInstances) {
   if (typeof result === 'string') {
     appendSanitizedHtml(container, result);
     return;
@@ -115,7 +115,7 @@ export function appendRenderResult(container, result, rendererInstances) {
  * @param {object} row
  * @param {Set} rendererInstances
  */
-export function renderCellValue(td, col, value, row, rendererInstances) {
+function renderCellValue(td, col, value, row, rendererInstances) {
   if (col.render) {
     const result = col.render(value, row);
     appendRenderResult(td, result, rendererInstances);
@@ -134,7 +134,7 @@ export function renderCellValue(td, col, value, row, rendererInstances) {
  * @param {Function} onSelect
  * @param {Function} onDeselect
  */
-export function renderSelectionCell(tr, key, isSelected, selection, listeners, onSelect, onDeselect) {
+function renderSelectionCell(tr, key, isSelected, selection, listeners, onSelect, onDeselect) {
   const td = document.createElement('td');
   td.className = 'ds-table-col-selection';
   const input = document.createElement('input');
@@ -156,7 +156,7 @@ export function renderSelectionCell(tr, key, isSelected, selection, listeners, o
  * @param {object} listeners
  * @param {Function} onToggle
  */
-export function renderExpandCell(tr, key, isExpanded, listeners, onToggle) {
+function renderExpandCell(tr, key, isExpanded, listeners, onToggle) {
   const td = document.createElement('td');
   td.className = 'ds-table-col-expand';
   const btn = document.createElement('button');
@@ -289,7 +289,7 @@ export function renderTable(ctx) {
  * Run registered interaction cleanups before rebuilding the table.
  * @param {object} ctx
  */
-export function runInteractionCleanups(ctx) {
+function runInteractionCleanups(ctx) {
   const { resizeCleanups, interactionListeners } = ctx;
   for (const cleanup of [ ...resizeCleanups ]) {cleanup();}
   interactionListeners.clear();
@@ -301,7 +301,7 @@ export function runInteractionCleanups(ctx) {
  * @param {Array} data
  * @returns {object}
  */
-export function getVirtualState(ctx, data) {
+function getVirtualState(ctx, data) {
   const { state, virtualScroll } = ctx;
   const virtualState = computeVirtualState(data, virtualScroll, state.pageSize, state.virtualScrollTop);
   state.virtualScrollTop = virtualState.scrollTop;
@@ -313,7 +313,7 @@ export function getVirtualState(ctx, data) {
  * @param {object} ctx
  * @param {Event} event
  */
-export function handleVirtualScroll(ctx, event) {
+function handleVirtualScroll(ctx, event) {
   ctx.state.virtualScrollTop = event.currentTarget.scrollTop;
   scheduleRender(ctx);
 }
@@ -322,7 +322,7 @@ export function handleVirtualScroll(ctx, event) {
  * Schedule a render on the next animation frame (deduplicated).
  * @param {object} ctx
  */
-export function scheduleRender(ctx) {
+function scheduleRender(ctx) {
   const { state, requestFrame } = ctx;
   if (state.virtualFrame != null || state.destroyed) {return;}
   state.virtualFrame = requestFrame(() => {
@@ -358,7 +358,7 @@ export function cancelFilterDebounce(ctx) {
  * @param {object} ctx
  * @returns {HTMLElement}
  */
-export function renderToolbar(ctx) {
+function renderToolbar(ctx) {
   const { options, selection, interactionListeners, state, clearProcessedCache } = ctx;
   const toolbar = document.createElement('div');
   toolbar.className = 'ds-table-toolbar';
@@ -406,7 +406,7 @@ export function renderToolbar(ctx) {
  * @param {object} ctx
  * @returns {HTMLElement}
  */
-export function renderThead(ctx) {
+function renderThead(ctx) {
   const { columns, selection, expandable, multiSort, resizable, interactionListeners, state } = ctx;
   const thead = document.createElement('thead');
   const tr = document.createElement('tr');
@@ -464,7 +464,7 @@ export function renderThead(ctx) {
  * @param {object} ctx
  * @param {HTMLElement} tr
  */
-export function renderSelectionHeader(ctx, tr) {
+function renderSelectionHeader(ctx, tr) {
   const { selection, interactionListeners, state, rowKey, getProcessedData, selectAll, deselectAll } = ctx;
   const th = document.createElement('th');
   th.className = 'ds-table-col-selection';
@@ -488,7 +488,7 @@ export function renderSelectionHeader(ctx, tr) {
  * @param {object|null} virtualState
  * @returns {HTMLElement}
  */
-export function renderTbody(ctx, data, virtualState = null) {
+function renderTbody(ctx, data, virtualState = null) {
   const {
     options, rowKey, selection, expandable, editable, draggable, columns,
     mergeCellsFn, interactionListeners, rendererInstances, state, refs, editing,
@@ -622,7 +622,7 @@ export function renderTbody(ctx, data, virtualState = null) {
  * @param {number} total
  * @returns {HTMLElement}
  */
-export function renderPagination(ctx, total) {
+function renderPagination(ctx, total) {
   const { options, interactionListeners, state, clearProcessedCache } = ctx;
   const totalPages = Math.ceil(total / state.pageSize) || 1;
   const pagination = document.createElement('div');
@@ -725,7 +725,7 @@ export function renderPagination(ctx, total) {
  * @param {object} ctx
  * @param {string} key
  */
-export function handleSort(ctx, key) {
+function handleSort(ctx, key) {
   const { options, multiSort, state, clearProcessedCache } = ctx;
   clearProcessedCache();
 
@@ -748,7 +748,7 @@ export function handleSort(ctx, key) {
  * Initialize column resize handles.
  * @param {object} ctx
  */
-export function initColumnResize(ctx) {
+function initColumnResize(ctx) {
   const { element, columns, options, interactionListeners, resizeCleanups } = ctx;
   const handles = element.querySelectorAll('.ds-table-resize-handle');
   handles.forEach(handle => {
@@ -793,7 +793,7 @@ export function initColumnResize(ctx) {
  * Initialize row drag-and-drop handlers.
  * @param {object} ctx
  */
-export function initRowDrag(ctx) {
+function initRowDrag(ctx) {
   const { element, interactionListeners } = ctx;
   const rows = element.querySelectorAll('tbody tr[data-row-key]');
   rows.forEach(row => {
@@ -833,7 +833,7 @@ export function initRowDrag(ctx) {
  * @param {*} fromKey
  * @param {*} toKey
  */
-export function reorderRows(ctx, fromKey, toKey) {
+function reorderRows(ctx, fromKey, toKey) {
   const { state, rowKey, options, clearCaches } = ctx;
   const fromIdx = state.data.findIndex(r => String(r[rowKey]) === String(fromKey));
   const toIdx = state.data.findIndex(r => String(r[rowKey]) === String(toKey));

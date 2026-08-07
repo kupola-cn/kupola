@@ -29,7 +29,7 @@ export const NATIVE_INPUT_TYPES = new Set([
 export const FIELD_SELECTOR = 'input, select, textarea';
 export const ATTR_NAME_RE = /^[A-Za-z_:][A-Za-z0-9_:.-]*$/;
 export const CHECKBOX_TRUE_VALUE = '__kupola_checked__';
-export const FIELD_CONFIG_KEYS = new Set([
+const FIELD_CONFIG_KEYS = new Set([
   'type',
   'name',
   'label',
@@ -107,7 +107,7 @@ export function normalizeType(value) {
   return type || 'text';
 }
 
-export function normalizeRenderer(renderer) {
+function normalizeRenderer(renderer) {
   if (typeof renderer === 'function') {
     return { render: renderer };
   }

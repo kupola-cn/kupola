@@ -58,7 +58,7 @@ export function getVirtualViewportHeight(virtualScroll, pageSize, rowHeight, tot
  * @param {number} viewportHeight
  * @returns {string}
  */
-export function getVirtualHeightStyle(virtualScroll, viewportHeight) {
+function getVirtualHeightStyle(virtualScroll, viewportHeight) {
   const configured = virtualScroll.height ?? virtualScroll.viewportHeight;
   return typeof configured === 'string' ? configured : `${viewportHeight}px`;
 }

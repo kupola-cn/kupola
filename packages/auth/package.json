@@ -61,7 +61,6 @@
     "@kupola/platform": "^3.3.7"
   },
   "devDependencies": {
-    "@kupola/core": "^3.3.7",
     "@kupola/platform": "^3.3.7"
   },
   "scripts": {
