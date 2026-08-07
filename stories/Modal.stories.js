@@ -7,7 +7,7 @@ import '../packages/css/index.css';
 
 export default {
   title: 'Overlay/Modal',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
   argTypes: {
     title: { control: 'text', description: 'Modal title' },
     width: { control: 'text', description: 'Modal width (e.g. "480px")' },

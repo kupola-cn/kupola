@@ -32,6 +32,7 @@ storybook-static/
 # VitePress generated output
 docs-site/.vitepress/.temp/
 docs-site/.vitepress/dist/
+docs-site/.vitepress/cache/
 
 # Release scripts
 release.mjs

@@ -45,7 +45,7 @@ export class QueryEngine {
       return {
         success: false,
         error: `Unknown query type: "${type}"`,
-        available: [...this.handlers.keys()],
+        available: [ ...this.handlers.keys() ],
       };
     }
 
@@ -79,7 +79,7 @@ export class QueryEngine {
         summary: this._formatSummary(type, result),
         table: this._formatTable(result),
       };
-      if (pagination) output.pagination = pagination;
+      if (pagination) {output.pagination = pagination;}
 
       if (this.cacheEnabled) {
         this._setCache(cacheKey, output, cacheTTL);
@@ -157,7 +157,7 @@ export class QueryEngine {
   }
 
   _formatTable(result) {
-    if (!Array.isArray(result) || result.length === 0) return null;
+    if (!Array.isArray(result) || result.length === 0) {return null;}
 
     const columns = Object.keys(result[0]).map(key => ({
       field: key,
@@ -168,7 +168,7 @@ export class QueryEngine {
   }
 
   _paginate(result, params) {
-    if (!Array.isArray(result)) return { data: result, pagination: null };
+    if (!Array.isArray(result)) {return { data: result, pagination: null };}
 
     const page = params.page || 1;
     const pageSize = params.pageSize || 20;
@@ -185,7 +185,7 @@ export class QueryEngine {
 
   _getCache(key, ttl) {
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) {return null;}
     if (Date.now() - entry.timestamp > ttl) {
       this.cache.delete(key);
       return null;
@@ -208,9 +208,9 @@ export class QueryEngine {
   _safeStringify(value) {
     const seen = new WeakSet();
     return JSON.stringify(value || {}, (key, val) => {
-      if (typeof val === 'function' || typeof val === 'symbol') return undefined;
+      if (typeof val === 'function' || typeof val === 'symbol') {return undefined;}
       if (val && typeof val === 'object') {
-        if (seen.has(val)) return '[Circular]';
+        if (seen.has(val)) {return '[Circular]';}
         seen.add(val);
       }
       return val;

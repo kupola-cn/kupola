@@ -11,7 +11,7 @@ import '../packages/css/index.css';
 
 export default {
   title: 'Data Display',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
 };
 
 export const TableBasic = {
@@ -157,7 +157,7 @@ export const TagBasic = {
     container.style.gap = '8px';
     container.style.flexWrap = 'wrap';
 
-    const types = ['normal', 'success', 'warning', 'danger', 'info'];
+    const types = [ 'normal', 'success', 'warning', 'danger', 'info' ];
     types.forEach((type) => {
       const tag = Tag({
         type,
@@ -176,7 +176,7 @@ export const TagClosable = {
     container.style.display = 'flex';
     container.style.gap = '8px';
 
-    ['Tag 1', 'Tag 2', 'Tag 3', 'Tag 4'].forEach((label) => {
+    [ 'Tag 1', 'Tag 2', 'Tag 3', 'Tag 4' ].forEach((label) => {
       const tag = Tag({
         label,
         closable: true,
@@ -201,7 +201,7 @@ export const BadgeBasic = {
     const badge3 = Badge({ count: 99, max: 99 });
     const badge4 = Badge({ count: 100, max: 99 });
 
-    ['Notifications', 'Messages', 'Tasks', 'Alerts'].forEach((text, i) => {
+    [ 'Notifications', 'Messages', 'Tasks', 'Alerts' ].forEach((text, i) => {
       const div = document.createElement('div');
       div.style.display = 'flex';
       div.style.alignItems = 'center';
@@ -211,7 +211,7 @@ export const BadgeBasic = {
       span.textContent = text;
       div.appendChild(span);
 
-      const badges = [badge1, badge2, badge3, badge4];
+      const badges = [ badge1, badge2, badge3, badge4 ];
       div.appendChild(badges[i].element);
 
       container.appendChild(div);

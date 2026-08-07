@@ -243,12 +243,12 @@ CSS: `[k-cloak] { display: none !important; }` — hides elements until JS remov
 
 When creating a new component, update these files:
 
-1. **Source**: `packages/core/src/components/{name}.js`
-2. **Test**: `packages/core/__tests__/components/{name}.test.js`
+1. **Source**: `packages/components/src/components/{name}.js`
+2. **Test**: `packages/components/__tests__/{name}.test.js`
 3. **Build entry**: `rollup.config.cjs` — add input entry
 4. **Exports**: `packages/core/package.json` — add to `exports`
 5. **Size limit**: `.size-limit.json` — add limit entry
-6. **Types**: `packages/core/src/components/types.d.ts` — add interfaces
+6. **Types**: `packages/components/src/components/types.d.ts` — add interfaces
 
 ## File Structure
 
@@ -310,10 +310,10 @@ Avoid wasting tokens/credits:
 
 | Need | Read |
 |------|------|
-| Component source | `packages/core/src/components/{name}.js` |
-| Component test | `packages/core/__tests__/components/{name}.test.js` |
+| Component source | `packages/components/src/components/{name}.js` |
+| Component test | `packages/components/__tests__/{name}.test.js` |
 | Build config | `rollup.config.cjs` (line ~1600-1800 for component entries) |
-| Type definitions | `packages/core/src/components/types.d.ts` |
+| Type definitions | `packages/components/src/components/types.d.ts` |
 | Core API | `packages/core/src/index.js` (55 lines) |
 | Theme API | `packages/core/src/theme.js` |
 | Responsive CSS | `packages/css/responsive.css` |

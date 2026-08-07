@@ -61,7 +61,7 @@ export function createRateLimiter(options = {}) {
 export function createDevToolsLogger(options = {}) {
   const {
     maxEntries = 200,
-    redactFields = ['password', 'passwd', 'token', 'secret', 'authorization', 'accessToken', 'refreshToken'],
+    redactFields = [ 'password', 'passwd', 'token', 'secret', 'authorization', 'accessToken', 'refreshToken' ],
   } = options;
   const entries = [];
 
@@ -69,7 +69,7 @@ export function createDevToolsLogger(options = {}) {
 
   const getStore = () => {
     if (typeof window !== 'undefined') {
-      if (!window[DEVTOOLS_SYMBOL]) window[DEVTOOLS_SYMBOL] = [];
+      if (!window[DEVTOOLS_SYMBOL]) {window[DEVTOOLS_SYMBOL] = [];}
       return window[DEVTOOLS_SYMBOL];
     }
     return entries;
@@ -90,7 +90,7 @@ export function createDevToolsLogger(options = {}) {
 
     const store = getStore();
     store.push(record);
-    if (store.length > maxEntries) store.shift();
+    if (store.length > maxEntries) {store.shift();}
   };
 }
 
@@ -99,14 +99,14 @@ function _redactValue(value, redactFields) {
   const seen = new WeakMap();
 
   const visit = (item, key = '') => {
-    if (fields.has(String(key).toLowerCase())) return '[REDACTED]';
-    if (!item || typeof item !== 'object') return item;
-    if (seen.has(item)) return seen.get(item);
+    if (fields.has(String(key).toLowerCase())) {return '[REDACTED]';}
+    if (!item || typeof item !== 'object') {return item;}
+    if (seen.has(item)) {return seen.get(item);}
 
     const output = Array.isArray(item) ? [] : {};
     seen.set(item, output);
 
-    for (const [childKey, childValue] of Object.entries(item)) {
+    for (const [ childKey, childValue ] of Object.entries(item)) {
       output[childKey] = visit(childValue, childKey);
     }
     return output;
@@ -140,7 +140,7 @@ export function createAuthGuard(options = {}) {
     permissions = null,
     roleField = 'role',
     permissionsField = 'permissions',
-    allowedRoles = ['admin'],
+    allowedRoles = [ 'admin' ],
     message = null,
   } = options;
 
@@ -226,7 +226,7 @@ function _normalizeAuthRules(options) {
     normalized.push(rule);
   }
 
-  for (const [key, value] of Object.entries(options.permissions || {})) {
+  for (const [ key, value ] of Object.entries(options.permissions || {})) {
     const parts = key.split(':');
     const engine = parts[0];
     const type = parts[1];
@@ -239,8 +239,8 @@ function _normalizeAuthRules(options) {
 }
 
 function _matchesAuthRule(rule, command, ctx) {
-  if (!command) return false;
-  if (typeof rule.match === 'function') return !!rule.match(command, ctx);
+  if (!command) {return false;}
+  if (typeof rule.match === 'function') {return !!rule.match(command, ctx);}
 
   const typeRule = rule.types || rule.type;
   const nameRule = rule.names || rule.name;
@@ -251,10 +251,10 @@ function _matchesAuthRule(rule, command, ctx) {
 }
 
 function _matchesValue(ruleValue, actualValue) {
-  if (ruleValue === undefined || ruleValue === null) return true;
-  if (ruleValue === '*') return true;
-  if (typeof ruleValue === 'function') return !!ruleValue(actualValue);
-  if (Array.isArray(ruleValue)) return ruleValue.includes(actualValue) || ruleValue.includes('*');
+  if (ruleValue === undefined || ruleValue === null) {return true;}
+  if (ruleValue === '*') {return true;}
+  if (typeof ruleValue === 'function') {return !!ruleValue(actualValue);}
+  if (Array.isArray(ruleValue)) {return ruleValue.includes(actualValue) || ruleValue.includes('*');}
   return ruleValue === actualValue;
 }
 
@@ -270,21 +270,21 @@ function _hasAccess(userRoles, userPermissions, requiredRoles, requiredPermissio
 }
 
 function _asArray(value) {
-  if (value === undefined || value === null || value === '') return [];
-  return Array.isArray(value) ? value : [value];
+  if (value === undefined || value === null || value === '') {return [];}
+  return Array.isArray(value) ? value : [ value ];
 }
 
 function _formatRequired(roles, permissions) {
   const parts = [];
   const roleList = _asArray(roles);
   const permissionList = _asArray(permissions);
-  if (roleList.length > 0) parts.push(`角色：${roleList.join(' 或 ')}`);
-  if (permissionList.length > 0) parts.push(`权限：${permissionList.join(' 或 ')}`);
+  if (roleList.length > 0) {parts.push(`角色：${roleList.join(' 或 ')}`);}
+  if (permissionList.length > 0) {parts.push(`权限：${permissionList.join(' 或 ')}`);}
   return parts.join('，') || '授权';
 }
 
 function _formatCommand(command) {
-  if (!command) return 'Command';
+  if (!command) {return 'Command';}
   const suffix = command.engine === 'flow' && command.params && command.params.name
     ? `:${command.params.name}`
     : `:${command.type}`;
@@ -292,6 +292,6 @@ function _formatCommand(command) {
 }
 
 function _resolveMessage(message, payload) {
-  if (typeof message === 'function') return message(payload);
+  if (typeof message === 'function') {return message(payload);}
   return message;
 }

@@ -39,6 +39,9 @@ jobs:
       - name: Lint directives
         run: npm run lint:directives
 
+      - name: Lint all source
+        run: npm run lint:all
+
       - name: Check release metadata
         run: npm run release:metadata
 

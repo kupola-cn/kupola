@@ -7,7 +7,7 @@ import '../packages/css/index.css';
 
 export default {
   title: 'Feedback/Notification & Alert',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
 };
 
 export const NotificationTypes = {
@@ -17,7 +17,7 @@ export const NotificationTypes = {
     container.style.gap = '8px';
     container.style.flexWrap = 'wrap';
 
-    const types = ['normal', 'success', 'warning', 'error', 'info'];
+    const types = [ 'normal', 'success', 'warning', 'error', 'info' ];
     types.forEach(type => {
       const btn = document.createElement('button');
       btn.className = 'ds-btn ds-btn-primary';
@@ -44,7 +44,7 @@ export const NotificationPositions = {
     container.style.gap = '8px';
     container.style.flexWrap = 'wrap';
 
-    const positions = ['top-right', 'top-left', 'bottom-right', 'bottom-left', 'bottom'];
+    const positions = [ 'top-right', 'top-left', 'bottom-right', 'bottom-left', 'bottom' ];
     positions.forEach(pos => {
       const btn = document.createElement('button');
       btn.className = 'ds-btn ds-btn-ghost';

@@ -38,12 +38,12 @@ export class CapabilityBuilder {
   }
 
   roles(list) {
-    this.config.roles = Array.isArray(list) ? list : [list];
+    this.config.roles = Array.isArray(list) ? list : [ list ];
     return this;
   }
 
   permissions(list) {
-    this.config.permissions = Array.isArray(list) ? list : [list];
+    this.config.permissions = Array.isArray(list) ? list : [ list ];
     return this;
   }
 
@@ -73,7 +73,7 @@ export class CapabilityBuilder {
   }
 
   dependsOn(list) {
-    this.config.dependsOn = Array.isArray(list) ? list : [list];
+    this.config.dependsOn = Array.isArray(list) ? list : [ list ];
     return this;
   }
 

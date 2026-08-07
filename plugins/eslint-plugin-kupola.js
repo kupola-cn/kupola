@@ -215,7 +215,7 @@ module.exports = {
   },
   configs: {
     recommended: {
-      plugins: ['kupola'],
+      plugins: [ 'kupola' ],
       rules: {
         'kupola/no-invalid-directives': 'warn',
         'kupola/prefer-t-function': 'warn',

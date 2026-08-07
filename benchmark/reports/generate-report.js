@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 /**
  * HTML report generator for benchmark results.
- * 
+ *
  * Usage: node benchmark/reports/generate-report.js
- * 
+ *
  * Reads JSON results and generates a human-readable HTML report.
  */
 
@@ -16,7 +16,7 @@ const reportsDir = __dirname;
 const coreResults = JSON.parse(fs.readFileSync(path.join(reportsDir, 'core-results.json'), 'utf8'));
 const componentsResults = JSON.parse(fs.readFileSync(path.join(reportsDir, 'components-results.json'), 'utf8'));
 
-const allResults = [...coreResults, ...componentsResults];
+const allResults = [ ...coreResults, ...componentsResults ];
 
 const categories = {
   core: {
@@ -32,14 +32,14 @@ const categories = {
 };
 
 function formatTime(ms) {
-  if (ms < 1) return `${(ms * 1000).toFixed(2)}μs`;
-  if (ms < 1000) return `${ms.toFixed(2)}ms`;
+  if (ms < 1) {return `${(ms * 1000).toFixed(2)}μs`;}
+  if (ms < 1000) {return `${ms.toFixed(2)}ms`;}
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
 function generateChart(tests, color) {
   const maxTime = Math.max(...tests.map(t => t.avgTime));
-  
+
   return tests.map((test, index) => `
     <div class="chart-bar-container">
       <div class="chart-label">${test.test}</div>
@@ -61,7 +61,7 @@ function generateSummary(tests) {
   const avgTime = tests.reduce((sum, t) => sum + t.avgTime, 0) / total;
   const minTime = Math.min(...tests.map(t => t.avgTime));
   const maxTime = Math.max(...tests.map(t => t.avgTime));
-  
+
   return `
     <div class="summary-grid">
       <div class="summary-item">
@@ -144,7 +144,7 @@ const html = `<!DOCTYPE html>
     
     ${generateSummary(allResults)}
     
-    ${Object.entries(categories).map(([key, cat]) => `
+    ${Object.entries(categories).map(([ key, cat ]) => `
       <div class="section">
         <div class="section-title" style="--color: ${cat.color}">
           <span style="background: ${cat.color}; width: 4px; height: 1.25rem; border-radius: 2px; display: inline-block; margin-right: 0.5rem;"></span>
@@ -165,11 +165,11 @@ const html = `<!DOCTYPE html>
           </thead>
           <tbody>
             ${cat.tests.map(test => {
-              let badgeClass = 'badge-fast';
-              if (test.avgTime >= 100 && test.avgTime < 500) badgeClass = 'badge-normal';
-              if (test.avgTime >= 500) badgeClass = 'badge-slow';
-              
-              return `
+    let badgeClass = 'badge-fast';
+    if (test.avgTime >= 100 && test.avgTime < 500) {badgeClass = 'badge-normal';}
+    if (test.avgTime >= 500) {badgeClass = 'badge-slow';}
+
+    return `
                 <tr>
                   <td>${test.test}</td>
                   <td>${test.iterations}</td>
@@ -178,7 +178,7 @@ const html = `<!DOCTYPE html>
                   <td><span class="badge ${badgeClass}">${test.avgTime < 500 ? 'OK' : 'SLOW'}</span></td>
                 </tr>
               `;
-            }).join('')}
+  }).join('')}
           </tbody>
         </table>
       </div>

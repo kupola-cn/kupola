@@ -9,7 +9,7 @@ import '../packages/css/index.css';
 
 export default {
   title: 'Navigation',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
 };
 
 export const MenuVertical = {
@@ -24,7 +24,7 @@ export const MenuVertical = {
         { key: 'users', label: 'Users', icon: 'user', children: [
           { key: 'list', label: 'User List' },
           { key: 'add', label: 'Add User' },
-        ]},
+        ] },
         { key: 'settings', label: 'Settings', icon: 'settings' },
         { key: 'help', label: 'Help', icon: 'help-circle' },
       ],
@@ -48,7 +48,7 @@ export const MenuHorizontal = {
           { key: 'list', label: 'Product List' },
           { key: 'categories', label: 'Categories' },
           { key: 'add', label: 'Add Product' },
-        ]},
+        ] },
         { key: 'orders', label: 'Orders' },
         { key: 'reports', label: 'Reports' },
       ],
@@ -61,8 +61,8 @@ export const MenuHorizontal = {
 
 export const TabsBasic = {
   argTypes: {
-    type: { control: { type: 'select', options: ['line', 'card', 'border-card'] } },
-    size: { control: { type: 'select', options: ['sm', 'md', 'lg'] } },
+    type: { control: { type: 'select', options: [ 'line', 'card', 'border-card' ] } },
+    size: { control: { type: 'select', options: [ 'sm', 'md', 'lg' ] } },
   },
   args: {
     type: 'line',

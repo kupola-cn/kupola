@@ -8,7 +8,7 @@ import '../packages/css/index.css';
 
 export default {
   title: 'Form/Select & Input',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
 };
 
 export const SelectBasic = {
@@ -60,7 +60,7 @@ export const SelectSearchable = {
     container.style.maxWidth = '300px';
 
     const items = [];
-    const names = ['Alice', 'Bob', 'Carol', 'David', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
+    const names = [ 'Alice', 'Bob', 'Carol', 'David', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack' ];
     names.forEach(n => items.push({ label: n, value: n.toLowerCase() }));
 
     const select = Select({
@@ -79,7 +79,7 @@ export const SelectSearchable = {
 export const InputBasic = {
   argTypes: {
     placeholder: { control: 'text' },
-    type: { control: 'select', options: ['text', 'email', 'password', 'number'] },
+    type: { control: 'select', options: [ 'text', 'email', 'password', 'number' ] },
   },
   args: { placeholder: 'Enter text...', type: 'text' },
   render: (args) => {

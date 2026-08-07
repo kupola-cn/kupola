@@ -49,5 +49,11 @@ module.exports = {
       files: ['**/__tests__/**/*.js', '**/*.test.js'],
       env: { jest: true },
     },
+    {
+      // Benchmark files run through Jest (`npm run bench`), so the jest
+      // globals (test/expect/describe/...) are defined at runtime.
+      files: ['benchmark/**/*.js'],
+      env: { jest: true },
+    },
   ],
 };

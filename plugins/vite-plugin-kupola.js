@@ -24,17 +24,17 @@ export default function kupolaPlugin(options = {}) {
     enforce: 'pre',
 
     transform(code, id) {
-      if (!css || cssInjected) return null;
-      if (id.includes('node_modules')) return null;
+      if (!css || cssInjected) {return null;}
+      if (id.includes('node_modules')) {return null;}
 
       // Detect Kupola imports
       const hasKupolaImport = /from\s+['"]@kupola\//.test(code);
-      if (!hasKupolaImport) return null;
+      if (!hasKupolaImport) {return null;}
 
       cssInjected = true;
 
       // Inject CSS import at the top of the module
-      const cssImport = `import '@kupola/platform/css';\n`;
+      const cssImport = 'import \'@kupola/platform/css\';\n';
       const themeAttr = theme ? `\n// Auto-set theme: document.documentElement.dataset.theme = '${theme}';` : '';
 
       return {

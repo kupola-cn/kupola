@@ -90,14 +90,14 @@ export class CapabilityRegistry {
 
   canAccess(engine, type, context = {}) {
     const capability = this.get(engine, type);
-    if (!capability) return false;
+    if (!capability) {return false;}
     return this._checkAccess(capability, context).allowed;
   }
 
   list(filter = {}) {
-    return [...this.items.values()].filter(item => {
-      if (filter.engine && item.engine !== filter.engine) return false;
-      if (filter.resource && item.resource !== filter.resource) return false;
+    return [ ...this.items.values() ].filter(item => {
+      if (filter.engine && item.engine !== filter.engine) {return false;}
+      if (filter.resource && item.resource !== filter.resource) {return false;}
       return true;
     });
   }
@@ -108,8 +108,8 @@ export class CapabilityRegistry {
       .map(item => ({
         engine: item.engine,
         type: item.type,
-        roles: [...item.roles],
-        permissions: [...item.permissions],
+        roles: [ ...item.roles ],
+        permissions: [ ...item.permissions ],
         message: item.message,
       }));
   }
@@ -132,8 +132,8 @@ export class CapabilityRegistry {
         label: item.label,
         description: item.description,
         paramsSchema: describeParamsSchema(item.paramsSchema),
-        roles: [...item.roles],
-        permissions: [...item.permissions],
+        roles: [ ...item.roles ],
+        permissions: [ ...item.permissions ],
         confirm: !!item.confirm,
       }));
   }
@@ -187,7 +187,7 @@ export class CapabilityRegistry {
   }
 
   _installHandler(capability) {
-    if (!this.adapter || typeof capability.handler !== 'function') return;
+    if (!this.adapter || typeof capability.handler !== 'function') {return;}
 
     if (capability.engine === 'query') {
       this.adapter.query.register(capability.type, async (params, context) => {
@@ -261,7 +261,7 @@ function normalizeCapability(config) {
   if (!config.engine || !config.type) {
     throw new CapabilityError('Capability requires engine and type.', { code: 'INVALID_CAPABILITY' });
   }
-  if (!['query', 'action', 'flow'].includes(config.engine)) {
+  if (![ 'query', 'action', 'flow' ].includes(config.engine)) {
     throw new CapabilityError(`Unsupported capability engine: ${config.engine}`, { code: 'INVALID_CAPABILITY' });
   }
 
@@ -284,14 +284,14 @@ function getCapabilityKey(engine, type) {
 
 function validateParams(params, capability) {
   const schema = capability.paramsSchema;
-  if (!schema) return { ...params };
+  if (!schema) {return { ...params };}
 
   if (Array.isArray(schema)) {
     return pick(params, schema, capability.allowUnknownParams);
   }
 
   const output = capability.allowUnknownParams ? { ...params } : {};
-  for (const [key, ruleInput] of Object.entries(schema)) {
+  for (const [ key, ruleInput ] of Object.entries(schema)) {
     const rule = normalizeParamRule(ruleInput);
     let value = params[key];
 
@@ -304,7 +304,7 @@ function validateParams(params, capability) {
     }
 
     if (value === undefined || value === null || value === '') {
-      if (!capability.allowUnknownParams) output[key] = value;
+      if (!capability.allowUnknownParams) {output[key] = value;}
       continue;
     }
 
@@ -315,8 +315,8 @@ function validateParams(params, capability) {
 }
 
 function normalizeParamRule(rule) {
-  if (typeof rule === 'string') return { type: rule };
-  if (Array.isArray(rule)) return { type: 'string', enum: rule };
+  if (typeof rule === 'string') {return { type: rule };}
+  if (Array.isArray(rule)) {return { type: 'string', enum: rule };}
   return { type: 'any', ...(rule || {}) };
 }
 
@@ -326,36 +326,36 @@ function coerceParamValue(key, value, rule) {
   }
 
   switch (rule.type) {
-    case 'string': {
-      const next = String(value).trim();
-      if (rule.maxLength && next.length > rule.maxLength) {
-        throw new CapabilityError(`参数 ${key} 超过最大长度 ${rule.maxLength}。`, { code: 'INVALID_PARAMS' });
-      }
-      return next;
+  case 'string': {
+    const next = String(value).trim();
+    if (rule.maxLength && next.length > rule.maxLength) {
+      throw new CapabilityError(`参数 ${key} 超过最大长度 ${rule.maxLength}。`, { code: 'INVALID_PARAMS' });
     }
-    case 'number': {
-      const next = Number(value);
-      if (!Number.isFinite(next)) {
-        throw new CapabilityError(`参数 ${key} 必须是数字。`, { code: 'INVALID_PARAMS' });
-      }
-      return next;
+    return next;
+  }
+  case 'number': {
+    const next = Number(value);
+    if (!Number.isFinite(next)) {
+      throw new CapabilityError(`参数 ${key} 必须是数字。`, { code: 'INVALID_PARAMS' });
     }
-    case 'boolean':
-      return value === true || value === 'true' || value === 1 || value === '1';
-    case 'array':
-      return Array.isArray(value) ? value : [value];
-    case 'object':
-      if (!value || typeof value !== 'object' || Array.isArray(value)) {
-        throw new CapabilityError(`参数 ${key} 必须是对象。`, { code: 'INVALID_PARAMS' });
-      }
-      return value;
-    default:
-      return value;
+    return next;
+  }
+  case 'boolean':
+    return value === true || value === 'true' || value === 1 || value === '1';
+  case 'array':
+    return Array.isArray(value) ? value : [ value ];
+  case 'object':
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new CapabilityError(`参数 ${key} 必须是对象。`, { code: 'INVALID_PARAMS' });
+    }
+    return value;
+  default:
+    return value;
   }
 }
 
 function pick(params, fields, allowUnknown) {
-  if (allowUnknown) return { ...params };
+  if (allowUnknown) {return { ...params };}
   return fields.reduce((result, field) => {
     if (Object.prototype.hasOwnProperty.call(params, field)) {
       result[field] = params[field];
@@ -366,21 +366,21 @@ function pick(params, fields, allowUnknown) {
 
 function filterResult(result, capability, defaultSensitiveFields) {
   const fields = capability.resultFields;
-  const sensitiveFields = [...defaultSensitiveFields, ...capability.sensitiveFields];
+  const sensitiveFields = [ ...defaultSensitiveFields, ...capability.sensitiveFields ];
   const filtered = fields ? selectFields(result, fields) : cloneResult(result);
   return redactFields(filtered, sensitiveFields);
 }
 
 function selectFields(value, fields) {
-  if (Array.isArray(value)) return value.map(item => selectFields(item, fields));
-  if (!value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {return value.map(item => selectFields(item, fields));}
+  if (!value || typeof value !== 'object') {return value;}
   return pick(value, fields, false);
 }
 
 function cloneResult(value) {
-  if (Array.isArray(value)) return value.map(cloneResult);
-  if (!value || typeof value !== 'object') return value;
-  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cloneResult(item)]));
+  if (Array.isArray(value)) {return value.map(cloneResult);}
+  if (!value || typeof value !== 'object') {return value;}
+  return Object.fromEntries(Object.entries(value).map(([ key, item ]) => [ key, cloneResult(item) ]));
 }
 
 function redactFields(value, fields) {
@@ -388,13 +388,13 @@ function redactFields(value, fields) {
   const seen = new WeakMap();
 
   const visit = (item, key = '') => {
-    if (fieldSet.has(String(key).toLowerCase())) return '[REDACTED]';
-    if (!item || typeof item !== 'object') return item;
-    if (seen.has(item)) return seen.get(item);
+    if (fieldSet.has(String(key).toLowerCase())) {return '[REDACTED]';}
+    if (!item || typeof item !== 'object') {return item;}
+    if (seen.has(item)) {return seen.get(item);}
 
     const output = Array.isArray(item) ? [] : {};
     seen.set(item, output);
-    for (const [childKey, childValue] of Object.entries(item)) {
+    for (const [ childKey, childValue ] of Object.entries(item)) {
       output[childKey] = visit(childValue, childKey);
     }
     return output;
@@ -404,13 +404,13 @@ function redactFields(value, fields) {
 }
 
 function describeParamsSchema(schema) {
-  if (!schema) return null;
-  if (Array.isArray(schema)) return [...schema];
+  if (!schema) {return null;}
+  if (Array.isArray(schema)) {return [ ...schema ];}
   return Object.fromEntries(
-    Object.entries(schema).map(([key, rule]) => {
+    Object.entries(schema).map(([ key, rule ]) => {
       const normalized = normalizeParamRule(rule);
       const { default: _default, ...publicRule } = normalized;
-      return [key, publicRule];
+      return [ key, publicRule ];
     }),
   );
 }
@@ -432,12 +432,12 @@ function buildDeniedResult(capability, command, access) {
 
 function formatRequired(roles, permissions) {
   const parts = [];
-  if (roles.length > 0) parts.push(`角色：${roles.join(' 或 ')}`);
-  if (permissions.length > 0) parts.push(`权限：${permissions.join(' 或 ')}`);
+  if (roles.length > 0) {parts.push(`角色：${roles.join(' 或 ')}`);}
+  if (permissions.length > 0) {parts.push(`权限：${permissions.join(' 或 ')}`);}
   return parts.join('，') || '授权';
 }
 
 function asArray(value) {
-  if (value === undefined || value === null || value === '') return [];
-  return Array.isArray(value) ? value : [value];
+  if (value === undefined || value === null || value === '') {return [];}
+  return Array.isArray(value) ? value : [ value ];
 }

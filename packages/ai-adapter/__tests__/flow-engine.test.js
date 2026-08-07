@@ -6,7 +6,7 @@ function createMockStorage() {
   let data = {};
   return {
     get: (name) => {
-      if (name !== undefined) return data[name];
+      if (name !== undefined) {return data[name];}
       return data;
     },
     set: (name, value) => {

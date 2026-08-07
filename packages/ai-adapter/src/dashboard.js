@@ -72,7 +72,7 @@ export class AIDashboard {
   /** Remove a card by name. */
   removeCard(name) {
     this.cards.delete(name);
-    if (this._container) this._renderAll();
+    if (this._container) {this._renderAll();}
     return this;
   }
 
@@ -81,7 +81,7 @@ export class AIDashboard {
    * @param {HTMLElement} parent
    */
   mount(parent) {
-    if (this._container) this.destroy();
+    if (this._container) {this.destroy();}
 
     this._container = document.createElement('div');
     this._container.className = 'ds-ai-dashboard';
@@ -90,7 +90,7 @@ export class AIDashboard {
     parent.appendChild(this._container);
     this._renderAll();
 
-    for (const [name, card] of this.cards) {
+    for (const [ name, card ] of this.cards) {
       const stopWatch = watch(() => ({ data: card.lastData, error: card.lastError }), () => {
         this._renderCard(name);
       });
@@ -99,7 +99,7 @@ export class AIDashboard {
 
     const unsub = this.adapter.bus.on('result', ({ command, result }) => {
       if (command.engine === 'query') {
-        for (const [name, card] of this.cards) {
+        for (const [ name, card ] of this.cards) {
           if (card.queryType === command.type) {
             this._updateCard(name, result);
           }
@@ -118,7 +118,7 @@ export class AIDashboard {
   /** Refresh a specific card by re-executing its query. */
   async refresh(name) {
     const card = this.cards.get(name);
-    if (!card) return;
+    if (!card) {return;}
 
     try {
       const result = await this.adapter.query.execute({
@@ -144,7 +144,7 @@ export class AIDashboard {
 
   /** Destroy and clean up. */
   destroy() {
-    if (this._timer) clearInterval(this._timer);
+    if (this._timer) {clearInterval(this._timer);}
     this._unsubscribers.forEach(fn => fn());
     this._unsubscribers = [];
     if (this._container && this._container.parentNode) {
@@ -156,7 +156,7 @@ export class AIDashboard {
   // ── Private ────────────────────────────────────────────
 
   _renderAll() {
-    if (!this._container) return;
+    if (!this._container) {return;}
     this._container.innerHTML = '';
     for (const name of this.cards.keys()) {
       this._renderCard(name);
@@ -164,9 +164,9 @@ export class AIDashboard {
   }
 
   _renderCard(name) {
-    if (!this._container) return;
+    if (!this._container) {return;}
     const card = this.cards.get(name);
-    if (!card) return;
+    if (!card) {return;}
 
     let el = this._container.querySelector(`[data-card="${name}"]`);
     if (!el) {
@@ -189,12 +189,12 @@ export class AIDashboard {
   }
 
   _computeValue(card) {
-    if (!card.lastData) return '—';
+    if (!card.lastData) {return '—';}
     const data = card.lastData;
 
     if (card.aggregate === 'count') {
-      if (Array.isArray(data.data)) return data.data.length;
-      if (data.summary) return data.summary;
+      if (Array.isArray(data.data)) {return data.data.length;}
+      if (data.summary) {return data.summary;}
     }
 
     if (card.aggregate && card.aggregate.startsWith('sum:')) {
@@ -212,13 +212,13 @@ export class AIDashboard {
       }
     }
 
-    if (data.summary) return data.summary;
-    if (Array.isArray(data.data)) return data.data.length;
+    if (data.summary) {return data.summary;}
+    if (Array.isArray(data.data)) {return data.data.length;}
     return '—';
   }
 
   _renderMiniTable(table) {
-    if (!table || !table.rows || table.rows.length === 0) return '';
+    if (!table || !table.rows || table.rows.length === 0) {return '';}
     const maxRows = 5;
     const rows = table.rows.slice(0, maxRows);
 
@@ -244,7 +244,7 @@ export class AIDashboard {
 
   _updateCard(name, result) {
     const card = this.cards.get(name);
-    if (!card) return;
+    if (!card) {return;}
 
     if (result.success) {
       card.lastData = result;

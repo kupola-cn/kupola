@@ -41,7 +41,7 @@ async function testPackage(pkgDir, pkgName) {
   const pkg = await readJson(path.join(pkgDir, 'package.json'));
   const exportEntries = Object.entries(pkg.exports || {});
 
-  for (const [name, entry] of exportEntries) {
+  for (const [ name, entry ] of exportEntries) {
     if (typeof entry === 'string') {
       await assertFile(pkgDir, entry, `${pkgName}${name}`);
       continue;
@@ -75,7 +75,7 @@ async function testPackage(pkgDir, pkgName) {
 const core = await testPackage('packages/core', '@kupola/core');
 const coreRoot = await import(pathToFileURL(resolvePackagePath('packages/core', core.pkg.exports['.'].import)).href);
 
-for (const [name, value] of Object.entries({
+for (const [ name, value ] of Object.entries({
   signal: coreRoot.signal,
   computed: coreRoot.computed,
   effect: coreRoot.effect,
@@ -90,7 +90,7 @@ for (const [name, value] of Object.entries({
 const platform = await testPackage('packages/platform', '@kupola/platform');
 const platformRoot = await import(pathToFileURL(resolvePackagePath('packages/platform', platform.pkg.exports['.'].import)).href);
 
-for (const [name, value] of Object.entries({
+for (const [ name, value ] of Object.entries({
   html: platformRoot.html,
   render: platformRoot.render,
   walk: platformRoot.walk,
@@ -108,7 +108,7 @@ const directives = await import(
   pathToFileURL(resolvePackagePath('packages/platform', platform.pkg.exports['./directives'].import)).href
 );
 
-for (const [name, value] of Object.entries({
+for (const [ name, value ] of Object.entries({
   directivesWalk: directives.walk,
   directivesWalkOnce: directives.walkOnce,
 })) {
@@ -116,6 +116,25 @@ for (const [name, value] of Object.entries({
     throw new Error(`Expected @kupola/platform/directives to export ${name} as a function.`);
   }
 }
+
+// Cross-entry shared runtime: the root bundle and the /directives subpath
+// bundle must write into the same custom-directive registry when both are
+// loaded in one document. Otherwise directives registered through one entry
+// point silently disappear from the other (regression class fixed in 3.3.x).
+const sharedDirectivesKey = Symbol.for('kupola.platform.customDirectives');
+const sharedRegistry = globalThis[sharedDirectivesKey]
+  || (globalThis[sharedDirectivesKey] = new Map());
+const smokeSubpathDirective = '__kupola_smoke_subpath__';
+const smokeRootDirective = '__kupola_smoke_root__';
+directives.registerDirective(smokeSubpathDirective, {});
+platformRoot.registerDirective(smokeRootDirective, {});
+if (!sharedRegistry.has(smokeSubpathDirective) || !sharedRegistry.has(smokeRootDirective)) {
+  throw new Error(
+    'Platform root and /directives subpath bundles do not share the custom directive registry.',
+  );
+}
+sharedRegistry.delete(smokeSubpathDirective);
+sharedRegistry.delete(smokeRootDirective);
 
 // ── @kupola/components ──────────────────────────────────────────────────────
 const components = await testPackage('packages/components', '@kupola/components');

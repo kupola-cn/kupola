@@ -10,7 +10,7 @@ description: Kupola UI framework development standards and best practices. Enfor
 Kupola is a zero-dependency UI framework with modular architecture, split into a pure reactivity core and a platform layer:
 
 ### Core Package (`@kupola/core`)
-- **Pure reactivity (仅 4.4KB)**: `signal`, `computed`, `effect`, `batch`, `reactive`, `watch`, `withoutTracking`, `flushJobs`, `queueJob`
+- **Pure reactivity (约 5.5KB gzip)**: `signal`, `computed`, `effect`, `batch`, `reactive`, `watch`, `withoutTracking`, `flushJobs`, `queueJob`
 
 ### Platform Package (`@kupola/platform`, 按需加载)
 - **Template literals**: `html` tagged template
@@ -157,7 +157,7 @@ render(view(), document.getElementById('app'));
 ## Import Paths
 
 ```javascript
-// Core reactivity (仅 4.4KB)
+// Core reactivity (约 5.5KB gzip)
 import { signal, computed, effect, batch } from '@kupola/core';
 
 // Platform module - 一次性导入所有平台功能
@@ -240,7 +240,7 @@ CSS: `[k-cloak] { display: none !important; }` — hides elements until JS remov
 When creating a new component, update these files:
 
 1. **Source**: `packages/components/src/components/{name}.js`
-2. **Test**: `packages/core/__tests__/components/{name}.test.js`
+2. **Test**: `packages/components/__tests__/{name}.test.js`
 3. **Build entry**: `rollup.config.cjs` — add input entry
 4. **Exports**: `packages/components/package.json` — add to `exports`
 5. **Size limit**: `.size-limit.json` — add limit entry
@@ -249,7 +249,7 @@ When creating a new component, update these files:
 ## File Structure
 
 ```
-packages/core/                  # @kupola/core — pure reactivity (~4.4KB)
+packages/core/                  # @kupola/core — pure reactivity (约 5.5KB gzip)
 ├── src/
 │   ├── signal.js       # signal, reactive, withoutTracking
 │   ├── computed.js     # computed values
@@ -290,14 +290,14 @@ packages/ai-adapter/
 │   ├── ai-adapter.js     # Main orchestrator
 │   ├── types.d.ts        # TypeScript definitions
 │   └── index.js          # Public API entry
-├── __tests__/            # 97 tests
+├── __tests__/            # 180 个用例
 └── package.json          # peerDep: @kupola/core ^3.0.0
 ```
 
 ## Testing
 
 ```bash
-npm run test          # Run all 1019 tests
+npm run test          # Run all 1741 tests
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report
 ```
@@ -329,8 +329,8 @@ Avoid wasting tokens/credits:
 | Need | Read |
 |------|------|
 | Component source | `packages/components/src/components/{name}.js` |
-| Component test | `packages/core/__tests__/components/{name}.test.js` |
-| Build config | `rollup.config.cjs` (line ~1600-1800 for component entries) |
+| Component test | `packages/components/__tests__/{name}.test.js` |
+| Build config | `rollup.config.cjs` (218 行；组件入口由 `@kupola/components` 的 `exports` 自动生成，见文件头部 ~98-108 行) |
 | Type definitions | `packages/components/src/components/types.d.ts` |
 | Core API | `packages/core/src/index.js` (55 lines) |
 | Theme API | `packages/platform/src/theme.js` |

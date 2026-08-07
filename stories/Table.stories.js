@@ -22,7 +22,7 @@ const basicColumns = [
 
 export default {
   title: 'Data Display/Table',
-  tags: ['autodocs'],
+  tags: [ 'autodocs' ],
 };
 
 export const Basic = {
