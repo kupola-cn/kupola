@@ -36,8 +36,8 @@ if (!hasChangelogEntry) {
   throw new Error(`CHANGELOG.md has no release heading for ${pkg.version}.`);
 }
 
-if (pkg.engines?.node !== '>=18.0.0') {
-  throw new Error('package.json must declare the supported Node baseline as >=18.0.0.');
+if (pkg.engines?.node !== '>=20.0.0') {
+  throw new Error('package.json must declare the supported Node baseline as >=20.0.0.');
 }
 
 const normalizePackagePath = value => String(value || '').replace(/^\.\//, '');
