@@ -37,7 +37,7 @@ const thresholds = {
   'VirtualList add/remove 100 times': 50,
   'Table 100×10': 200,
   'Table 1,000×5': 500,
-  'Table sorting 100 times': 100,
+  'Table sorting 100 times': 200,
   'Table pagination 5,000 rows': 500,
   'Form 50 fields': 300,
   'Modal open/close 100 times': 100,

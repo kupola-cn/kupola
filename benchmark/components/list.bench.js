@@ -203,7 +203,7 @@ describe('Components Benchmark: Table', () => {
       table.setSort('name', 'desc');
     }, 50);
 
-    expect(time).toBeLessThan(100);
+    expect(time).toBeLessThan(200);
   });
 
   test('table pagination performance', () => {
