@@ -15,17 +15,18 @@
 | 性能文档 | ✅ 已完成 | `docs-site/guide/performance.md` |
 | 性能阈值告警 | ✅ 已完成 | CI 中性能下降检测 |
 | 浏览器端性能测试 | ✅ 已完成 | Playwright 真实浏览器测试（FCP/LCP/INP/Memory） |
-| 性能基线对比 | ✅ 已完成 | 与 baseline.json 对比，2x 回归失败、1.5x 告警 |
+| 性能基线对比 | ✅ 已完成 | 与 baseline.json 对比（信息性报告，不失败） |
 
 ---
 
 ## 性能基线（baseline）
 
-`benchmark/reports/baseline.json` 记录了最近一次基准运行的各测试平均耗时，
-`check-thresholds.js` 在绝对阈值之外增加了一层回归检测：
+`benchmark/reports/baseline.json` 记录了最近一次基准运行的各测试平均耗时。
+GitHub Actions 的 runner 之间速度差异可达 2-3 倍，所以基线对比**只做信息性
+报告，不会导致 CI 失败**——绝对阈值是唯一的硬门禁：
 
-- 当前结果超过基线 **2 倍** → CI 失败（捕获缓慢退化）
-- 超过基线 **1.5 倍** → 打印告警（不失败）
+- 超过基线 **2 倍** → 打印醒目的漂移告警（供人工关注）
+- 超过基线 **1.5 倍** → 打印告警
 - 低于基线 **75%** → 打印提升提示
 
 刷新基线：
@@ -34,8 +35,7 @@
 npm run bench:baseline   # node benchmark/reports/check-thresholds.js --update
 ```
 
-刷新后把 `baseline.json` 的变更提交到仓库。绝对阈值仍是硬门禁，基线只负责
-发现“还没越过宽松阈值但已经明显变慢”的回归，避免频繁调整绝对值。
+刷新后把 `baseline.json` 的变更提交到仓库（含 `runner` 字段记录生成环境）。
 
 ## 一、基准测试结果（实际数据）
 
