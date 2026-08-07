@@ -6,7 +6,7 @@ node_modules/
 # Config files
 .eslintrc.cjs
 .prettierrc
-jest.config.cjs
+jest.config.mjs
 rollup.config.cjs
 tsconfig.json
 .size-limit.json
