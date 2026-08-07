@@ -338,12 +338,6 @@ describe('devtools', () => {
     const handler = jest.fn();
     const unsubscribe = onDevToolsMessage('test', handler);
 
-    // Simulate message handling
-    const event = {
-      source: window,
-      data: { type: 'test', payload: { value: 42 } },
-    };
-
     // Trigger the internal handler (via window message event)
     window.dispatchEvent(new MessageEvent('message', {
       source: window,

@@ -180,7 +180,7 @@ export class ActionEngine {
     return new UnitOfWork(this);
   }
 
-  async executeBatch(commands, callbacks = {}) {
+  async executeBatch(commands, _callbacks = {}) {
     const uow = this.createUnitOfWork();
     for (const cmd of commands) {
       uow.add(cmd.type, cmd.params);

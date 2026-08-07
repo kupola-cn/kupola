@@ -124,7 +124,7 @@ describe('Core Benchmark: Computed', () => {
 
   test('100 computed sharing same signal', () => {
     const s = signal(0);
-    const comps = Array.from({ length: 100 }, (_, i) =>
+    Array.from({ length: 100 }, (_, i) =>
       computed(() => s.value * (i + 1)),
     );
 

@@ -19,7 +19,6 @@
  * @module errors
  */
 
-import { html } from './template.js';
 import { render } from './render.js';
 
 /**

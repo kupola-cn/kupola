@@ -6,8 +6,7 @@
  * Results are saved to benchmark/reports/components-results.json.
  */
 
-import { signal, computed, effect } from '../../packages/core/src/index.js';
-import { flushJobs, resetScheduler } from '../../packages/core/src/scheduler.js';
+import { signal } from '../../packages/core/src/index.js';
 import { Table, VirtualList, Input, Select, Modal, Tooltip } from '@kupola/components';
 import { renderToString } from '../../packages/platform/src/server.js';
 import { html } from '../../packages/platform/src/template.js';
@@ -45,7 +44,7 @@ describe('Components Benchmark: VirtualList', () => {
     }));
 
     const time = bench('VirtualList 100 items', () => {
-      const view = VirtualList({
+      VirtualList({
         items,
         itemHeight: 48,
         height: 400,
@@ -63,7 +62,7 @@ describe('Components Benchmark: VirtualList', () => {
     }));
 
     const time = bench('VirtualList 1,000 items', () => {
-      const view = VirtualList({
+      VirtualList({
         items,
         itemHeight: 48,
         height: 400,
@@ -81,7 +80,7 @@ describe('Components Benchmark: VirtualList', () => {
     }));
 
     const time = bench('VirtualList 10,000 items', () => {
-      const view = VirtualList({
+      VirtualList({
         items,
         itemHeight: 48,
         height: 400,
@@ -98,7 +97,7 @@ describe('Components Benchmark: VirtualList', () => {
     })));
 
     const time = bench('VirtualList add/remove 100 times', () => {
-      const view = VirtualList({
+      VirtualList({
         items: items.value,
         itemHeight: 48,
         height: 400,
@@ -137,7 +136,7 @@ describe('Components Benchmark: Table', () => {
     }));
 
     const time = bench('Table 100×10', () => {
-      const table = Table({
+      Table({
         data,
         columns,
         showPagination: false,
@@ -165,7 +164,7 @@ describe('Components Benchmark: Table', () => {
     ];
 
     const time = bench('Table 1,000×5', () => {
-      const table = Table({
+      Table({
         data,
         columns,
         showPagination: false,
@@ -220,7 +219,7 @@ describe('Components Benchmark: Table', () => {
     ];
 
     const time = bench('Table pagination 5,000 rows', () => {
-      const table = Table({
+      Table({
         data,
         columns,
         showPagination: true,
@@ -263,7 +262,7 @@ describe('Components Benchmark: Form', () => {
     const isOpen = signal(false);
 
     const time = bench('Modal open/close 100 times', () => {
-      const modal = Modal({
+      Modal({
         isOpen: isOpen.value,
         title: 'Test Modal',
         content: 'Content',
@@ -280,7 +279,7 @@ describe('Components Benchmark: Form', () => {
   test('tooltip creation', () => {
     const time = bench('Tooltip creation 100 times', () => {
       const element = document.createElement('div');
-      const tooltip = Tooltip({
+      Tooltip({
         target: element,
         content: 'Test tooltip',
       });
@@ -299,7 +298,7 @@ describe('Components Benchmark: SSR', () => {
 
     const time = bench('SSR renderToString 100 items', () => {
       const tpl = html`<ul>${items.map(i => html`<li>${i.name}: ${i.value}</li>`)}</ul>`;
-      const result = renderToString(tpl);
+      renderToString(tpl);
     });
 
     expect(time).toBeLessThan(100);
@@ -313,7 +312,7 @@ describe('Components Benchmark: SSR', () => {
 
     const time = bench('SSR renderToString 1,000 items', () => {
       const tpl = html`<ul>${items.map(i => html`<li>${i.name}: ${i.value}</li>`)}</ul>`;
-      const result = renderToString(tpl);
+      renderToString(tpl);
     });
 
     expect(time).toBeLessThan(500);
