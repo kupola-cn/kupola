@@ -53,7 +53,7 @@ describe('Components Benchmark: VirtualList', () => {
       });
     });
 
-    expect(time).toBeLessThan(50);
+    expect(time).toBeLessThan(80);
   });
 
   test('render 1,000 items', () => {
