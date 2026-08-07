@@ -30,10 +30,10 @@ instance.destroy()
 
 新增组件至少同步更新：
 
-- `packages/core/src/components/{name}.js`
-- `packages/core/__tests__/components/{name}.test.js`
-- `packages/core/src/components/types.d.ts`
+- `packages/components/src/components/{name}.js`
+- `packages/components/__tests__/{name}.test.js`
+- `packages/components/src/components/types.d.ts`
 - `package.json` exports
 - `docs-site/components/{name}.md`
 
-Rollup 会自动扫描 `packages/core/src/components/*.js` 生成组件构建入口，不需要再手工修改 `rollup.config.cjs`。
+Rollup 会自动扫描 `packages/components/src/components/*.js` 生成组件构建入口，不需要再手工修改 `rollup.config.cjs`。
