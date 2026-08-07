@@ -21,6 +21,8 @@ import {
   getVirtualViewportHeight,
   isVirtualEnabled,
 } from '../src/components/table-virtual.js';
+import { getTableClass, getTotalColCount } from '../src/components/table-render.js';
+import { cancelEdit, saveEdit, startEdit } from '../src/components/table-editing.js';
 
 describe('table-data: page numbers', () => {
   test('returns every page when total is small', () => {
@@ -166,5 +168,67 @@ describe('table-virtual: helpers', () => {
     expect(state.topHeight).toBeGreaterThan(0);
     expect(state.bottomHeight).toBe(0);
     expect(state.heightStyle).toBe('400px');
+  });
+});
+
+describe('table-render: helpers', () => {
+  test('getTableClass maps options to classes', () => {
+    expect(getTableClass({})).toBe('ds-table ds-table-hover');
+    expect(getTableClass({ striped: true, bordered: true, compact: true }))
+      .toBe('ds-table ds-table-striped ds-table-hover ds-table-bordered ds-table-compact');
+    expect(getTableClass({ hoverable: false })).toBe('ds-table');
+  });
+
+  test('getTotalColCount includes selection and expand columns', () => {
+    expect(getTotalColCount([ {}, {} ], null, null)).toBe(2);
+    expect(getTotalColCount([ {} ], 'checkbox', () => {})).toBe(3);
+  });
+});
+
+describe('table-editing: state machine', () => {
+  test('startEdit enters edit mode with a buffered value', () => {
+    const editing = { cell: null, buffer: {} };
+    const rerender = jest.fn();
+    startEdit(editing, 1, 'name', 'Alice', rerender);
+    expect(editing.cell).toEqual({ rowKey: 1, colKey: 'name' });
+    expect(editing.buffer).toEqual({ name: 'Alice' });
+    expect(rerender).toHaveBeenCalledTimes(1);
+  });
+
+  test('saveEdit writes the buffer into the row and resets state', () => {
+    const editing = { cell: { rowKey: 1, colKey: 'name' }, buffer: { name: 'Bob' } };
+    const data = [ { id: 1, name: 'Alice' } ];
+    const clearCaches = jest.fn();
+    const rerender = jest.fn();
+    const onEditSave = jest.fn();
+    saveEdit(editing, data, 'id', 1, 'name', clearCaches, rerender, onEditSave);
+    expect(data[0].name).toBe('Bob');
+    expect(clearCaches).toHaveBeenCalledTimes(1);
+    expect(editing.cell).toBeNull();
+    expect(editing.buffer).toEqual({});
+    expect(onEditSave).toHaveBeenCalledWith(data[0], 'name');
+    expect(rerender).toHaveBeenCalledTimes(1);
+  });
+
+  test('saveEdit without a matching row still resets state', () => {
+    const editing = { cell: { rowKey: 99, colKey: 'name' }, buffer: { name: 'Bob' } };
+    const data = [ { id: 1, name: 'Alice' } ];
+    const rerender = jest.fn();
+    saveEdit(editing, data, 'id', 99, 'name', jest.fn(), rerender, undefined);
+    expect(data[0].name).toBe('Alice');
+    expect(editing.cell).toBeNull();
+    expect(editing.buffer).toEqual({});
+    expect(rerender).toHaveBeenCalledTimes(1);
+  });
+
+  test('cancelEdit discards the buffer and fires onEditCancel', () => {
+    const editing = { cell: { rowKey: 1, colKey: 'name' }, buffer: { name: 'Bob' } };
+    const rerender = jest.fn();
+    const onEditCancel = jest.fn();
+    cancelEdit(editing, rerender, onEditCancel);
+    expect(editing.cell).toBeNull();
+    expect(editing.buffer).toEqual({});
+    expect(onEditCancel).toHaveBeenCalledTimes(1);
+    expect(rerender).toHaveBeenCalledTimes(1);
   });
 });
