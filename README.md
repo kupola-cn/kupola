@@ -29,14 +29,18 @@ npm install @kupola/platform
 ```
 
 ```html
-<div k-data="{ count: 0 }">
+<div id="counter" k-data="{ count: 0 }">
   <button @click="count++" k-text="count"></button>
 </div>
 <script type="module">
-  import { walk } from '@kupola/platform/directives';
-  walk(document.body);
+  import { walkOnce } from '@kupola/platform/directives';
+  walkOnce(document.getElementById('counter'));
 </script>
 ```
+
+Use `walkOnce` on the island root so repeated initialization returns the
+existing instance instead of double-binding. When external code removes the
+node (e.g. HTMX, Turbo, a modal library), use `walkAuto` for automatic cleanup.
 
 > Directive expressions are for trusted application templates only. They use
 > `new Function()` and are not a sandbox. Use `k-text` for user content, and

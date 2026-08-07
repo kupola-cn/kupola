@@ -28,14 +28,17 @@ npm install @kupola/platform
 ```
 
 ```html
-<div k-data="{ count: 0 }">
+<div id="counter" k-data="{ count: 0 }">
   <button @click="count++" k-text="count"></button>
 </div>
 <script type="module">
-  import { walk } from '@kupola/platform/directives';
-  walk(document.body);
+  import { walkOnce } from '@kupola/platform/directives';
+  walkOnce(document.getElementById('counter'));
 </script>
 ```
+
+对交互岛根节点使用 `walkOnce`：重复初始化会直接返回已有实例，不会重复绑定。
+当外部代码会移除该节点时（如 HTMX、Turbo、弹窗库），改用 `walkAuto` 自动清理。
 
 > 指令表达式只适用于可信应用模板。它们基于 `new Function()`，不是沙箱。
 > 用户内容使用 `k-text`；使用 `k-html` 前请接入应用 sanitizer。
