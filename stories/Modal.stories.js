@@ -1,8 +1,8 @@
 /**
  * @file Modal component stories for Storybook.
  */
-import { Modal } from '../packages/core/src/components/modal.js';
-import { html } from '../packages/core/src/template.js';
+import { Modal } from '../packages/components/src/components/modal.js';
+import { html } from '../packages/platform/src/template.js';
 import '../packages/css/index.css';
 
 export default {

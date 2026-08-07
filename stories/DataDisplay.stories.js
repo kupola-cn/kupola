@@ -4,7 +4,7 @@
 import { Table } from '../packages/components/src/components/table.js';
 import { Tree } from '../packages/components/src/components/tree.js';
 import { Tag } from '../packages/components/src/components/tag.js';
-import { StatCard } from '../packages/components/src/components/statcard.js';
+import { Statcard } from '../packages/components/src/components/statcard.js';
 import { Timeline } from '../packages/components/src/components/timeline.js';
 import { Badge } from '../packages/components/src/components/badge.js';
 import '../packages/css/index.css';
@@ -236,7 +236,7 @@ export const StatCardBasic = {
     ];
 
     stats.forEach((stat) => {
-      const card = StatCard({
+      const card = Statcard({
         title: stat.title,
         value: stat.value,
         icon: stat.icon,

@@ -1,9 +1,9 @@
 /**
  * @file Form components stories (Select, Input, Checkbox).
  */
-import { Select } from '../packages/core/src/components/select.js';
-import { Input } from '../packages/core/src/components/input.js';
-import { Checkbox } from '../packages/core/src/components/checkbox.js';
+import { Select } from '../packages/components/src/components/select.js';
+import { Input } from '../packages/components/src/components/input.js';
+import { Checkbox } from '../packages/components/src/components/checkbox.js';
 import '../packages/css/index.css';
 
 export default {
