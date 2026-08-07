@@ -694,6 +694,7 @@ function renderPagination(ctx, total) {
 
   // Page size selector
   if (options.pageSizeOptions?.length > 1) {
+    pagination.classList.add('ds-table-pagination--with-size');
     const select = document.createElement('select');
     select.className = 'ds-table-page-size';
     options.pageSizeOptions.forEach(size => {
