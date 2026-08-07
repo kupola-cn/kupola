@@ -545,4 +545,54 @@ describe('SchemaForm registry and scope', () => {
     expect(host.querySelector('button[type="button"]').textContent).toBe('取消');
     view.destroy();
   });
+
+  test('select fields use the themed Select and keep typed values', () => {
+    const scope = createFormScope({
+      fruit: select('Fruit', [
+        { label: 'Apple', value: 'apple' },
+        { label: 'Banana', value: 'banana' },
+      ]),
+    });
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    render(html`<form>${scope.field('fruit')}</form>`, host);
+    scope.mount(host.querySelector('form'));
+
+    const formEl = host.querySelector('form');
+    expect(formEl.querySelector('select')).toBeNull();
+    const dsSelect = formEl.querySelector('.ds-schema-form__select-host .ds-select');
+    expect(dsSelect).toBeTruthy();
+
+    dsSelect.querySelector('.ds-select__trigger')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    document.querySelectorAll('.ds-select__item')[1]
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(scope.getData().fruit).toBe('banana');
+
+    scope.setData({ fruit: 'apple' });
+    expect(scope.getData().fruit).toBe('apple');
+    scope.destroy();
+  });
+
+  test('multiple select keeps an array of typed values', () => {
+    const scope = createFormScope({
+      tags: select('Tags', [
+        { label: 'A', value: 1 },
+        { label: 'B', value: 2 },
+      ], { multiple: true }),
+    });
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    render(html`<form>${scope.field('tags')}</form>`, host);
+    scope.mount(host.querySelector('form'));
+
+    const dsSelect = host.querySelector('.ds-schema-form__select-host .ds-select');
+    dsSelect.querySelector('.ds-select__trigger')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const items = document.querySelectorAll('.ds-select__item');
+    items[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    items[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(scope.getData().tags).toEqual([ 1, 2 ]);
+    scope.destroy();
+  });
 });
