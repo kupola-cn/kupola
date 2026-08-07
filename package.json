@@ -101,6 +101,7 @@
     "bench:core": "jest --config jest.config.mjs --testMatch=\"**/benchmark/core/**/*.bench.js\"",
     "bench:components": "jest --config jest.config.mjs --testMatch=\"**/benchmark/components/**/*.bench.js\"",
     "bench:report": "node benchmark/reports/generate-report.js",
+    "bench:baseline": "node benchmark/reports/check-thresholds.js --update",
     "bench:browser": "node benchmark/browser/browser.bench.js",
     "types:check": "tsc -p tsconfig.public-api.json",
     "package:smoke": "node scripts/package-smoke.mjs",

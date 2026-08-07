@@ -46,6 +46,66 @@ const thresholds = {
   'SSR renderToString 1,000 items': 500,
 };
 
+// Regression detection against the committed baseline. Absolute thresholds
+// above remain the hard gate; the baseline catches slower, gradual regressions
+// that never cross a loose ceiling without adding per-run flakiness.
+const REGRESSION_FAIL_FACTOR = 2.0;
+const REGRESSION_WARN_FACTOR = 1.5;
+const REGRESSION_INFO_FACTOR = 0.75;
+const BASELINE_FILE = path.join(__dirname, 'baseline.json');
+
+function loadBaseline() {
+  try {
+    return JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function writeBaseline(results) {
+  const baseline = {
+    updatedAt: new Date().toISOString(),
+    core: {},
+    components: {},
+  };
+  for (const test of results.core) {
+    baseline.core[test.test] = test.avgTime;
+  }
+  for (const test of results.components) {
+    baseline.components[test.test] = test.avgTime;
+  }
+  fs.writeFileSync(BASELINE_FILE, JSON.stringify(baseline, null, 2) + '\n');
+  return baseline;
+}
+
+function checkAgainstBaseline(test, baseline, category) {
+  const base = baseline?.[category]?.[test.test];
+  if (base === undefined || base <= 0) {return null;}
+  const ratio = test.avgTime / base;
+  if (ratio >= REGRESSION_FAIL_FACTOR) {
+    return {
+      level: 'fail',
+      message: `${test.test}: ${test.avgTime.toFixed(2)}ms is `
+        + `${(ratio * 100 - 100).toFixed(0)}% over baseline ${base.toFixed(2)}ms`,
+    };
+  }
+  if (ratio >= REGRESSION_WARN_FACTOR) {
+    return {
+      level: 'warn',
+      message: `${test.test}: ${test.avgTime.toFixed(2)}ms is `
+        + `${(ratio * 100 - 100).toFixed(0)}% over baseline ${base.toFixed(2)}ms`,
+    };
+  }
+  if (ratio <= REGRESSION_INFO_FACTOR) {
+    return {
+      level: 'info',
+      message: `${test.test}: improved ${(100 - ratio * 100).toFixed(0)}% `
+        + `vs baseline ${base.toFixed(2)}ms`,
+    };
+  }
+  return null;
+}
+
 function checkResults(results, category) {
   let passed = true;
   const failures = [];
@@ -76,21 +136,58 @@ function checkResults(results, category) {
 try {
   const coreResults = JSON.parse(fs.readFileSync(path.join(reportsDir, 'core-results.json'), 'utf8'));
   const componentsResults = JSON.parse(fs.readFileSync(path.join(reportsDir, 'components-results.json'), 'utf8'));
+  const updateBaseline = process.argv.includes('--update');
 
   console.log('🔍 Checking performance thresholds...');
 
   const coreResult = checkResults(coreResults, 'Core Engine');
   const componentsResult = checkResults(componentsResults, 'Components');
 
-  const allPassed = coreResult.passed && componentsResult.passed;
+  let baseline = loadBaseline();
+  if (updateBaseline) {
+    baseline = writeBaseline({ core: coreResults, components: componentsResults });
+    console.log('📝 Baseline updated in baseline.json');
+  }
+
+  const regressionReports = [];
+  const scan = (results, category) => {
+    for (const test of results) {
+      const report = checkAgainstBaseline(test, baseline, category);
+      if (report) {regressionReports.push(report);}
+    }
+  };
+  scan(coreResults, 'core');
+  scan(componentsResults, 'components');
+
+  const regressionFailures = regressionReports.filter(r => r.level === 'fail');
+  const warnings = regressionReports.filter(r => r.level === 'warn');
+  const improvements = regressionReports.filter(r => r.level === 'info');
+
+  if (regressionFailures.length > 0) {
+    console.log('\n❌ Performance regression vs baseline:');
+    regressionFailures.forEach(f => console.log(`  - ${f.message}`));
+  }
+  if (warnings.length > 0) {
+    console.log('\n⚠️ Above baseline (watch):');
+    warnings.forEach(w => console.log(`  - ${w.message}`));
+  }
+  if (improvements.length > 0) {
+    console.log('\n✅ Improved vs baseline:');
+    improvements.forEach(i => console.log(`  - ${i.message}`));
+  }
+
+  const allPassed = coreResult.passed && componentsResult.passed && regressionFailures.length === 0;
 
   if (allPassed) {
-    console.log('\n✅ All performance thresholds passed!');
+    console.log('\n✅ All performance thresholds and baseline checks passed!');
     process.exit(0);
   } else {
-    const totalFailures = coreResult.failures.length + componentsResult.failures.length;
-    console.log(`\n❌ ${totalFailures} performance threshold(s) exceeded. CI will fail.`);
-    console.log('\nTo fix this, optimize the failing tests or adjust thresholds in check-thresholds.js');
+    const totalFailures = coreResult.failures.length
+      + componentsResult.failures.length
+      + regressionFailures.length;
+    console.log(`\n❌ ${totalFailures} performance check(s) failed. CI will fail.`);
+    console.log('\nTo fix this, optimize the failing tests, adjust thresholds in check-thresholds.js,');
+    console.log('or refresh the baseline with: node benchmark/reports/check-thresholds.js --update');
     process.exit(1);
   }
 } catch (error) {
