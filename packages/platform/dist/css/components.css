@@ -2611,6 +2611,11 @@ body.ds-dashboard-page {
   justify-content: space-between;
 }
 
+.ds-table-pagination .ds-select__trigger {
+  min-height: 28px;
+  height: 28px;
+}
+
 .ds-table-selection-info {
   color: var(--text-secondary);
   font-size: var(--body-sm-font-size);

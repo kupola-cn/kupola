@@ -444,9 +444,20 @@ describe('Table', () => {
 
     test('shows page size selector with pageSizeOptions', () => {
       const table = Table({ data: bigData, columns, pageSize: 10, pageSizeOptions: [ 5, 10, 20 ] });
-      const select = table.element.querySelector('.ds-table-page-size');
+      const select = table.element.querySelector('.ds-table-pagination .ds-select');
       expect(select).toBeTruthy();
-      expect(select.options.length).toBe(3);
+      expect(select.querySelectorAll('.ds-select__item').length).toBe(3);
+    });
+
+    test('page size selector changes the page size', () => {
+      const table = Table({ data: bigData, columns, pageSize: 10, pageSizeOptions: [ 5, 10, 20 ] });
+      const select = table.element.querySelector('.ds-table-pagination .ds-select');
+      select.querySelector('.ds-select__trigger')
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      document.querySelectorAll('.ds-select__item')[0]
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(table.getProcessedData().length).toBe(5);
+      table.destroy();
     });
   });
 
