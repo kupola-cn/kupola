@@ -7,12 +7,18 @@ import {
   date,
   email,
   field,
+  getFormFieldRenderer,
+  number,
+  password,
   radio,
   registerFormField,
   schema,
   schemaSubmit,
   select,
+  switchField,
   text,
+  textarea,
+  time,
   validateSchema,
 } from '@kupola/components';
 import { html, render } from '@kupola/platform';
@@ -396,6 +402,147 @@ describe('SchemaForm', () => {
     expect(onInvalid).toHaveBeenCalledTimes(1);
     expect(host.querySelectorAll('.ds-form-error')).toHaveLength(2);
     expect(document.querySelector('.ds-message__content').textContent).toBe('请填写姓名');
+    view.destroy();
+  });
+});
+
+describe('SchemaForm field factories', () => {
+  test('typed factories build the expected field types and rules', () => {
+    expect(text('Name').build('name').type).toBe('text');
+    expect(email('Mail').build('mail').rules.email).toBe(true);
+    expect(password('Pwd').build('pwd').type).toBe('password');
+    expect(number('N').build('n').rules.number).toBe(true);
+    expect(date('D').build('d').type).toBe('date');
+    expect(time('T').build('t').type).toBe('time');
+    expect(textarea('A').build('a').type).toBe('textarea');
+    expect(select('S', [ { label: 'A', value: 1 } ]).build('s').options[0].value).toBe(1);
+    expect(radio('R', [ [ 'X', 'x' ] ]).build('r').options[0].domValue).toBe('0');
+    expect(checkbox('C').build('c').type).toBe('checkbox');
+    expect(switchField('W').build('w').type).toBe('switch');
+  });
+
+  test('builder chains apply name, rules, and messages', () => {
+    const built = field('text', 'Label')
+      .name('alias')
+      .required('必填')
+      .minlength(3, '太短')
+      .build();
+    expect(built.name).toBe('alias');
+    expect(built.rules.required).toBe(true);
+    expect(built.messages.required).toBe('必填');
+    expect(built.messages.minlength).toBe('太短');
+  });
+});
+
+describe('SchemaForm schema construction', () => {
+  test('rejects duplicate field names', () => {
+    expect(() => schema({ a: text('A'), b: text('B').name('a') }))
+      .toThrow('duplicate field name');
+  });
+
+  test('rejects duplicate schemaIds', () => {
+    expect(() => schema([
+      { name: 'a', type: 'text', schemaId: 'x' },
+      { name: 'b', type: 'text', schemaId: 'x' },
+    ])).toThrow('duplicate schemaId');
+  });
+
+  test('freezes the schema and exposes bind/submit/validate', () => {
+    const formSchema = schema({ name: text('Name') });
+    expect(Object.isFrozen(formSchema)).toBe(true);
+    expect(typeof formSchema.bind).toBe('function');
+    expect(typeof formSchema.submit).toBe('function');
+    expect(typeof formSchema.validate).toBe('function');
+  });
+});
+
+describe('SchemaForm validation rules', () => {
+  const formSchema = schema({
+    name: text('Name').required('请填写姓名'),
+    mail: email('邮箱'),
+    phone: field('text', 'Phone').rule('phone', true),
+    url: field('text', 'URL').rule('url', true),
+    age: number('Age'),
+    code: field('text', 'Code').rule('pattern', '^[A-Z]{3}$', '格式错'),
+    length: field('text', 'Length').rule('minlength', 4, '太短').rule('maxlength', 6, '太长'),
+    range: number('Range').rule('min', 5, '太小').rule('max', 10, '太大'),
+  });
+
+  test('passes valid data', () => {
+    const result = validateSchema(formSchema, {
+      name: 'Kupola',
+      mail: 'a@b.com',
+      phone: '13800138000',
+      url: 'https://kupola.cn',
+      age: 30,
+      code: 'ABC',
+      length: 'abcde',
+      range: 7,
+    });
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  test('reports the first failing rule per field with messages', () => {
+    const result = validateSchema(formSchema, {
+      name: ' ',
+      mail: 'nope',
+      phone: '12',
+      url: 'not-a-url',
+      age: 'x',
+      code: 'ab',
+      length: 'ab',
+      range: 2,
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBe(8);
+    expect(result.firstError.name).toBe('name');
+    expect(result.errors.find(e => e.name === 'mail').message).toBe('请输入有效邮箱');
+    expect(result.errors.find(e => e.name === 'code').message).toBe('格式错');
+  });
+
+  test('supports custom rule functions', () => {
+    const custom = schema({ n: field('text', 'N').rule('even', value => value % 2 === 0, '必须偶数') });
+    expect(validateSchema(custom, { n: 3 }).valid).toBe(false);
+    expect(validateSchema(custom, { n: 4 }).valid).toBe(true);
+  });
+
+  test('required rejects empty strings, arrays, and false', () => {
+    const s = schema({ v: field('text', 'V').required() });
+    expect(validateSchema(s, { v: 0 }).valid).toBe(true);
+    expect(validateSchema(s, { v: ' ' }).valid).toBe(false);
+    expect(validateSchema(s, { v: false }).valid).toBe(false);
+    expect(validateSchema(s, { v: [] }).valid).toBe(false);
+  });
+});
+
+describe('SchemaForm registry and scope', () => {
+  test('registerFormField returns an unregister function', () => {
+    const unregister = registerFormField('custom-sf-test', () => 'x');
+    expect(getFormFieldRenderer('custom-sf-test')).toBeDefined();
+    unregister();
+    expect(getFormFieldRenderer('custom-sf-test')).toBe(getFormFieldRenderer('text'));
+  });
+
+  test('createFormScope throws for unknown fields', () => {
+    const scope = createFormScope({ name: text('Name') });
+    expect(() => scope.field('missing')).toThrow('unknown field');
+  });
+
+  test('renders fields and actions with submit/cancel text', async () => {
+    const onSubmit = jest.fn();
+    const onCancel = jest.fn();
+    const scope = createFormScope(
+      { name: text('Name') },
+      { submitText: '保存', cancelText: '取消', onSubmit, onCancel },
+    );
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const view = render(html`<form>${scope.field('name')}${scope.actions()}</form>`, host);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(host.querySelector('input[name="name"]')).not.toBeNull();
+    expect(host.querySelector('button[type="submit"]').textContent).toBe('保存');
+    expect(host.querySelector('button[type="button"]').textContent).toBe('取消');
     view.destroy();
   });
 });
