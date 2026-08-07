@@ -77,7 +77,7 @@ function handleText(el, expr, scope, disposers) {
   disposers.push(dispose);
 }
 
-function handleOnce(el, expr, scope, disposers) {
+function handleOnce(el, expr, scope, _disposers) {
   const html = String(evaluate(expr, scope, null, { directive: 'k-once', element: el }) ?? '');
   el.textContent = html;
 }

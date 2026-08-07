@@ -16,7 +16,7 @@
 /**
  * @param {import('vscode').ExtensionContext} context
  */
-function activate(context) {
+function activate(_context) {
   // All features are declarative via package.json contributes:
   // - snippets/kupola.json    → HTML directive snippets
   // - snippets/kupola-js.json → JS API snippets

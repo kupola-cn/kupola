@@ -40,8 +40,6 @@ const VALID_DIRECTIVES = new Set([
 ]);
 
 // Shorthand patterns: :attr, @event
-const SHORTHAND_BIND = /^:[\w-]+$/;
-const SHORTHAND_ON = /^@[\w-]+$/;
 
 // ── Rules ────────────────────────────────────────────────────────────────────
 

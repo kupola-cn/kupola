@@ -32,7 +32,7 @@ describe('AIAdapter', () => {
 
     it('should route action commands to action engine', async () => {
       adapter.action.register('create', {
-        handler: async (params) => ({ created: true }),
+        handler: async (_params) => ({ created: true }),
         confirm: false,
       });
 
@@ -338,7 +338,7 @@ describe('AIAdapter', () => {
 
   describe('middleware pipeline', () => {
     it('should allow middleware to short-circuit with result', async () => {
-      adapter.use(async (ctx, next) => {
+      adapter.use(async (ctx, _next) => {
         ctx.result = { type: 'intercepted', message: 'blocked by middleware' };
         // don't call next()
       });

@@ -1,7 +1,5 @@
 import { defineConfig } from 'vite';
 import { kupola } from '@kupola/platform/vite';
-import path from 'path';
-
 export default defineConfig({
   plugins: [
     kupola({

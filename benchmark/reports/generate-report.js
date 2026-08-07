@@ -40,7 +40,7 @@ function formatTime(ms) {
 function generateChart(tests, color) {
   const maxTime = Math.max(...tests.map(t => t.avgTime));
 
-  return tests.map((test, index) => `
+  return tests.map((test, _index) => `
     <div class="chart-bar-container">
       <div class="chart-label">${test.test}</div>
       <div class="chart-bar-wrapper">
@@ -144,7 +144,7 @@ const html = `<!DOCTYPE html>
     
     ${generateSummary(allResults)}
     
-    ${Object.entries(categories).map(([ key, cat ]) => `
+    ${Object.entries(categories).map(([ _key, cat ]) => `
       <div class="section">
         <div class="section-title" style="--color: ${cat.color}">
           <span style="background: ${cat.color}; width: 4px; height: 1.25rem; border-radius: 2px; display: inline-block; margin-right: 0.5rem;"></span>

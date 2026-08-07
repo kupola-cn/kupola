@@ -19,7 +19,7 @@ class KupolaWebpackPlugin {
   }
 
   apply(compiler) {
-    const { css, theme } = this.options;
+    const { css } = this.options;
     if (!css) {return;}
 
     // Use NormalModule hook to inject CSS import
@@ -29,7 +29,7 @@ class KupolaWebpackPlugin {
       if (NormalModule && NormalModule.getCompilationHooks) {
         NormalModule.getCompilationHooks(compilation).loader.tap(
           'KupolaWebpackPlugin',
-          (loaderContext) => {
+          (_loaderContext) => {
             // No-op: we use the source hook below
           },
         );

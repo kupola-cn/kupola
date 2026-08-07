@@ -26,18 +26,6 @@ import {
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 /**
- * Check if the current position is inside an HTML opening tag.
- * @param {string[]} parts  Accumulated output parts so far.
- * @returns {boolean}
- */
-function isInTag(parts) {
-  const s = parts.join('');
-  const lo = s.lastIndexOf('<');
-  if (lo === -1) {return false;}
-  return !s.substring(lo).includes('>');
-}
-
-/**
  * Extract the attribute name for the value about to be inserted.
  * @param {string[]} parts
  * @returns {string|null}
@@ -220,49 +208,6 @@ function checkInTag(out) {
 }
 
 // ─── Hydrate Helpers ─────────────────────────────────────────────────────────
-
-/**
- * Classify template values to determine which are attribute bindings.
- * Uses the same checkInTag logic as serializeSSR for consistency.
- */
-function classifyValues(tpl) {
-  const attrBindings = [];
-  const out = [];
-
-  for (let i = 0; i < tpl.strings.length; i++) {
-    out.push(tpl.strings[i]);
-
-    if (i < tpl.values.length) {
-      const v = tpl.values[i];
-      const inTag = checkInTag(out);
-
-      if (typeof v === 'function') {
-        if (inTag) {
-          const name = attrNameAtCursor(out);
-          attrBindings.push({ valueIndex: i, type: 'e', attrName: name || '' });
-        }
-      } else if (isSignalLike(v)) {
-        if (inTag) {
-          const name = attrNameAtCursor(out);
-          attrBindings.push({ valueIndex: i, type: 'a', attrName: name || '' });
-        } else {
-          // Mirror serializeSSR: output signal value so subsequent
-          // checkInTag calls see the correct HTML structure.
-          const val = v.value;
-          out.push(val != null ? escapeHtml(val) : '');
-        }
-      } else if (isTemplateResultLike(v)) {
-        out.push(serializeNested(v));
-      } else if (Array.isArray(v) && v.length > 0 && isTemplateResultLike(v[0])) {
-        out.push(v.map(t => serializeNested(t)).join(''));
-      } else {
-        out.push(escapeHtml(v ?? ''));
-      }
-    }
-  }
-
-  return { attrBindings };
-}
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 

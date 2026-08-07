@@ -48,9 +48,8 @@ describe('High Concurrency Stress Tests', () => {
       })),
     });
 
-    let sum = 0;
     const dispose = effect(() => {
-      sum = state.data.reduce((acc, item) => acc + item.nested.deep.nestedValue, 0);
+      state.data.reduce((acc, item) => acc + item.nested.deep.nestedValue, 0);
     });
 
     const startTime = performance.now();
