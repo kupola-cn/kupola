@@ -76,6 +76,7 @@
     "braces": "^3.0.3",
     "esbuild": "^0.25.0",
     "micromatch": "^4.0.8",
+    "uuid": "^11.1.1",
     "vitepress": {
       "vite": "^7.0.0"
     }
