@@ -1,7 +1,7 @@
 # Vite 应用
 
 Kupola 支持两种互补的使用方式：服务端 HTML 使用指令运行时，前端应用使用
-Vite + ESM + JavaScript API。HIS-APP 属于后者：页面由 JavaScript 组件和模板
+Vite + ESM + JavaScript API。kupola-app 属于后者：页面由 JavaScript 组件和模板
 组织，Vite 负责模块解析、代码分割和 CSS 构建。
 
 ## 安装
