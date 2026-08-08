@@ -51,7 +51,11 @@ import { walk } from '@kupola/platform/directives';
 walk(document.body);
 ```
 
-**适合**：需要类型检查的中小型项目。
+如果页面由 TypeScript 主导，也可以在 `src/main.ts` 中使用 `createApp`、
+`defineComponent` 和 `@kupola/components` 工厂组件。Vite 应用不需要 Kupola 插件，
+入口显式引入 `@kupola/platform/css` 即可。完整示例见 [Vite 应用](/guide/vite-app)。
+
+**适合**：需要类型检查或由 JavaScript/TypeScript 管理页面状态的项目。
 
 ## Next.js（SSR）
 

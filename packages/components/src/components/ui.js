@@ -6,6 +6,9 @@
 import { setIconResolver, themePreload } from '@kupola/platform';
 import { createKupolaIconProvider } from './icons.js';
 
+// Keep the /ui runtime entry aligned with ui.d.ts and the package root export.
+export { createKupolaIconProvider };
+
 function normalizeProvider(provider) {
   if (!provider || typeof provider !== 'object'
     || typeof provider.prefix !== 'string' || provider.prefix.length === 0

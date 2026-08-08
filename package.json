@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "3.3.7",
+  "version": "3.4.0",
   "description": "A zero-framework interaction layer and optional native component library for server-rendered HTML.",
   "private": true,
   "type": "module",
@@ -26,27 +26,16 @@
       "exports",
       "types",
       "enumMembers",
-      "classMembers",
       "unlisted",
       "binaries",
       "unresolved",
       "nsExports",
-      "nsTypes",
-      "config"
+      "nsTypes"
     ],
     "workspaces": {
       ".": {
         "entry": [
-          "packages/core/src/index.js",
-          "packages/platform/src/{platform,template,render,component,directives,theme,lazy,server,i18n,errors}.js",
-          "packages/components/src/index.js",
-          "packages/components/src/components/*.js",
-          "packages/auth/src/*.js",
-          "packages/router/src/*.js",
-          "packages/ai-adapter/src/*.js",
-          "scripts/*.mjs",
-          "rollup.config.cjs",
-          "jest.config.mjs"
+          "scripts/*.mjs"
         ],
         "project": [
           "**/*.js",
@@ -59,10 +48,8 @@
           "benchmark/**",
           "docs-site/**",
           "packages/create-kupola/templates/**",
-          "stories/**",
           "vscode-kupola/**",
-          "plugins/**",
-          "coverage/**"
+          "plugins/**"
         ],
         "ignoreDependencies": [
           "@storybook/builder-vite",

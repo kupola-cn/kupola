@@ -138,6 +138,22 @@ sharedRegistry.delete(smokeRootDirective);
 
 // ── @kupola/components ──────────────────────────────────────────────────────
 const components = await testPackage('packages/components', '@kupola/components');
+const componentsIconConfig = await import(
+  pathToFileURL(resolvePackagePath('packages/components', components.pkg.exports['./icon-config'].import)).href
+);
+for (const name of [ 'registerIcons', 'getIcon', 'clearIcons' ]) {
+  if (typeof componentsIconConfig[name] !== 'function') {
+    throw new Error(`Expected @kupola/components/icon-config to export ${name} as a function.`);
+  }
+}
+const componentsUi = await import(
+  pathToFileURL(resolvePackagePath('packages/components', components.pkg.exports['./ui'].import)).href
+);
+for (const name of [ 'createIconResolver', 'createKupolaIconProvider', 'setupUi' ]) {
+  if (typeof componentsUi[name] !== 'function') {
+    throw new Error(`Expected @kupola/components/ui to export ${name} as a function.`);
+  }
+}
 const componentsViews = await readFile(
   resolvePackagePath('packages/components', components.pkg.exports['./views'].import),
   'utf8',

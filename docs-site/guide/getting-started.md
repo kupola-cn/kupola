@@ -2,10 +2,15 @@
 
 Kupola 优先用于增强已经存在的 HTML 页面。你可以先不引入构建工具，直接在服务端渲染或静态页面中添加声明式指令。
 
+如果页面由 JavaScript/TypeScript 主导，使用 Vite + ESM + `createApp` 和组件工厂，
+请先阅读 [Vite 应用](/guide/vite-app)。两种方式可以共存，但同一个 DOM 子树应由一种
+运行时负责。
+
 ## CDN 使用
 
 ```html
 <div
+  id="app"
   k-data="{
     keyword: '',
     rows: ['Alice', 'Bob', 'Carol'],
@@ -21,8 +26,8 @@ Kupola 优先用于增强已经存在的 HTML 页面。你可以先不引入构�
 </div>
 
 <script type="module">
-  import { walk } from 'https://cdn.jsdelivr.net/npm/@kupola/platform/dist/kupola-platform-directives.esm.js'
-  walk(document.body)
+  import { walkOnce } from 'https://cdn.jsdelivr.net/npm/@kupola/platform/dist/kupola-platform-directives.esm.js'
+  walkOnce(document.getElementById('app'))
 </script>
 ```
 
@@ -37,7 +42,7 @@ npm install @kupola/platform
 ## 指令系统
 
 ```html
-<div k-data="{ name: 'World', open: true }">
+<div id="app" k-data="{ name: 'World', open: true }">
   <input k-model="name" />
   <button @click="open = !open">Toggle</button>
   <h1 k-show="open" k-text="'Hello, ' + name"></h1>
@@ -45,10 +50,13 @@ npm install @kupola/platform
 ```
 
 ```js
-import { walk } from '@kupola/platform/directives'
+import { walkOnce } from '@kupola/platform/directives'
 
-walk(document.body)
+walkOnce(document.querySelector('#app'))
 ```
+
+交互岛用 `walkOnce` 初始化：重复执行会返回已有实例，不会重复绑定；若节点会被
+外部代码移除（HTMX、Turbo、弹窗库等），改用 `walkAuto` 自动清理。
 
 ## 命名 Scope
 
@@ -123,6 +131,8 @@ import '@kupola/platform/css'
 import { Modal } from '@kupola/components/modal'
 import { Table } from '@kupola/components/table'
 ```
+
+Vite 应用的完整入口、组件实例生命周期、路由和权限插件接入见：[Vite 应用](/guide/vite-app)。
 
 ## 下一步
 

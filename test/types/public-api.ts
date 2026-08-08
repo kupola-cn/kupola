@@ -14,6 +14,17 @@ import {
 } from '@kupola/platform';
 import { walkAuto } from '@kupola/platform/directives';
 import {
+  clearIcons as clearConfiguredIcons,
+  getIcon as getConfiguredIcon,
+  registerIcons as registerConfiguredIcons,
+} from '@kupola/components/icon-config';
+import {
+  createIconResolver as createSubpathIconResolver,
+  createKupolaIconProvider as createSubpathKupolaIconProvider,
+  setupUi as setupSubpathUi,
+} from '@kupola/components/ui';
+import { Panel as PanelSubpath } from '@kupola/components/panel';
+import {
   batch,
   computed,
   createScheduler,
@@ -53,6 +64,7 @@ import {
   Modal,
   Notification,
   Pagination,
+  Panel,
   Tooltip,
   VirtualList,
   Heatmap,
@@ -113,6 +125,12 @@ void createSubpathHttpGuard;
 void registerPermissionDirective;
 void PermissionDirective;
 void processPermissionDirectives;
+registerConfiguredIcons({ custom: '<svg></svg>' });
+void getConfiguredIcon('custom');
+clearConfiguredIcons();
+void createSubpathIconResolver;
+void createSubpathKupolaIconProvider;
+void setupSubpathUi;
 const typedTemplateChild: TemplateChild = [ templateHtml`<span>child</span>` ];
 const typedViewChild: ViewChild = () => typedTemplateChild;
 const typedView: View<{ title: string; content: ViewChild }> = ({ title, content }) => templateHtml`<h1>${title}</h1>${content}`;
@@ -193,6 +211,18 @@ typedDrawer.open();
 typedDrawer.isOpen();
 typedDrawer.close();
 typedDrawer.destroy();
+const typedPanel = Panel({
+  title: 'Typed panel',
+  subtitle: 'Panel body',
+  density: 'compact',
+  bodyPadding: 'none',
+  bodyScrollable: true,
+  actions: templateHtml`<button type="button">Action</button>`,
+}, templateHtml`<p>Content</p>`);
+typedPanel.update({ title: 'Updated panel' });
+typedPanel.destroy();
+const typedPanelSubpath = PanelSubpath({ title: 'Subpath panel' }, templateHtml`<p>Content</p>`);
+typedPanelSubpath.destroy();
 const typedDatePicker = DatePicker({
   value: new Date(),
   format: 'DD/MM/YYYY',

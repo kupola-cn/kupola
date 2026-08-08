@@ -104,6 +104,27 @@ import { walk } from '@kupola/platform/directives';
 walk(document.body);
 ```
 
+For a JavaScript/TypeScript-owned Vite application, use the standard Vite
+entry and mount a Kupola root view with `createApp`:
+
+```js
+import { createApp, defineComponent, html } from '@kupola/platform';
+import '@kupola/platform/css';
+import { Panel } from '@kupola/components/panel';
+
+const AppRoot = defineComponent({
+  setup() {
+    return html`${Panel({ title: 'Application content' }, html`<p>Managed by Vite.</p>`)}`;
+  },
+});
+
+await createApp(AppRoot).mountAsync('#app');
+```
+
+Install `@kupola/components` when using library components. No
+`@kupola/platform/vite` or `@kupola/platform/plugins/vite` import is required;
+the published platform package uses standard ESM and CSS entry points.
+
 ## Requirements
 
 - **Node.js** >= 18.x

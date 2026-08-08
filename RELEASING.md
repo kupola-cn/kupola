@@ -1,9 +1,10 @@
 # Releasing
 
 This project uses [standard-version](https://github.com/conventional-changelog/standard-version)
-for version bumps and changelog generation, and publishes to npm from the
-`publish` job in [.github/workflows/ci.yml](.github/workflows/ci.yml), which
-only runs when a `v*` tag is pushed.
+for version bumps and changelog generation, and publishes all public workspace
+packages to npm from the `publish` job in
+[.github/workflows/ci.yml](.github/workflows/ci.yml), which only runs when a
+`v*` tag is pushed.
 
 ## Before you start
 
@@ -58,8 +59,11 @@ only runs when a `v*` tag is pushed.
    npm view @kupola/kupola@vX.Y.Z version
    ```
 
-   The GitHub release page will show the tag; add release notes from
-   `CHANGELOG.md` if desired.
+   The tag workflow publishes `@kupola/core`, `@kupola/platform`,
+   `@kupola/components`, `@kupola/ai-adapter`, `@kupola/auth`,
+   `@kupola/router`, and `@kupola/create-kupola` via
+   `npm publish --workspaces`. The GitHub release page will show the tag; add
+   release notes from `CHANGELOG.md` if desired.
 
 ## Notes
 

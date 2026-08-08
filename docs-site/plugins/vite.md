@@ -1,48 +1,31 @@
-# Vite 插件
+# Vite 集成
 
-自动检测 Kupola 组件导入并注入 CSS tokens，无需手动 `import '@kupola/platform/css'`。
-
-## 安装
-
-插件已内置于 `@kupola/platform`，无需额外安装。
+Kupola 应用可以直接使用标准 Vite 配置，不需要额外插件。Vite 会处理 Kupola 的
+ESM 入口、动态导入和 CSS 构建。
 
 ## 配置
 
 ```js
 // vite.config.js
-import { defineConfig } from 'vite';
-import kupola from '@kupola/platform/plugins/vite';
+import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [
-    kupola({
-      css: true,    // 自动注入 CSS（默认 true）
-      theme: 'dark' // 默认主题（可选 'dark' | 'light'）
-    })
-  ]
-});
+  build: {
+    target: 'es2022',
+  },
+})
 ```
 
-## 工作原理
-
-1. 扫描源码中 `from '@kupola/...'` 的导入语句
-2. 自动在模块顶部注入 `import '@kupola/platform/css'`
-3. HMR 热更新时自动重置注入状态
-
-## 选项
-
-| 选项 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `css` | `boolean` | `true` | 是否自动注入 CSS tokens |
-| `theme` | `string` | `'dark'` | 默认主题（注入到 `document.documentElement.dataset.theme`）|
-
-## 手动引入（不使用插件）
-
-如果不想使用自动注入，可以手动引入 CSS：
+应用入口显式引入 CSS：
 
 ```js
-import '@kupola/platform/css';           // 完整样式
-import '@kupola/platform/css/tokens';    // 仅 tokens
-import '@kupola/platform/css/components'; // 仅组件样式
-import '@kupola/platform/css/responsive'; // 响应式工具类
+import '@kupola/platform/css'             // 完整样式
+// import '@kupola/platform/css/tokens'   // 仅 tokens
+// import '@kupola/platform/css/components'
+// import '@kupola/platform/css/responsive'
 ```
+
+当前发布的 `@kupola/platform` 没有 `@kupola/platform/vite` 或
+`@kupola/platform/plugins/vite` 导出入口。不要按旧文档配置这些路径。
+
+完整的 `createApp`、组件工厂、路由和权限示例见[ Vite 应用指南](/guide/vite-app)。

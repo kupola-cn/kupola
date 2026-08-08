@@ -8,16 +8,16 @@
 
 **示例应用：** [Kupola App](https://github.com/kupola-cn/kupola-app) 展示了如何基于 Kupola 构建完整的管理后台。
 
-Kupola 是面向服务端渲染 HTML 的零框架交互层。小型局部交互使用指令运行时，
-JavaScript 主导的视图使用 signal/template API，需要复用的复杂交互再选择可选
-组件库。`@kupola/router` 与 `@kupola/auth` 提供专为 SSR 应用设计的客户端
-路由与权限管理。
+Kupola 是面向服务端渲染 HTML 和 Vite 前端应用的零框架 UI 平台。小型局部交互使用
+指令运行时，JavaScript 主导的视图使用 signal/template API，需要复用的复杂交互再
+选择可选组件库。`@kupola/router` 与 `@kupola/auth` 提供客户端路由与权限管理。
 
 ## 特性
 
 - `k-*` 指令——在服务端 HTML 中嵌入响应式岛（`k-data`、`k-show`、`k-model`、`k-for` 等）
 - Signal 与模板字符串——无框架的状态驱动视图
 - 原生组件——表格、表单、树、菜单、下拉等
+- Vite + ESM——使用 `createApp`、`defineComponent` 和组件工厂构建前端应用
 - 路由与鉴权——hash/history/memory 模式、路由守卫、权限
 - SSR 友好——水合静态标记，交互岛无需构建步骤
 
@@ -43,6 +43,32 @@ npm install @kupola/platform
 > 指令表达式只适用于可信应用模板。它们基于 `new Function()`，不是沙箱。
 > 用户内容使用 `k-text`；使用 `k-html` 前请接入应用 sanitizer。
 
+## Vite 应用
+
+Vite 应用使用标准 ESM 入口，不需要 Kupola Vite 插件：
+
+```bash
+npm install @kupola/core @kupola/platform @kupola/components
+```
+
+```js
+import { createApp, defineComponent, html } from '@kupola/platform'
+import '@kupola/platform/css'
+import { Panel } from '@kupola/components/panel'
+
+const AppRoot = defineComponent({
+  setup() {
+    return html`${Panel({ title: '应用内容' }, html`<p>由 Vite 管理的页面。</p>`)}`
+  },
+})
+
+await createApp(AppRoot).mountAsync('#app')
+```
+
+组件可以从 `@kupola/components` 主入口或具体子路径按需导入。完整的 Vite 入口、
+路由/权限插件和组件生命周期请参考 [Vite 应用指南](https://kupola-cn.github.io/kupola/guide/vite-app)
+和 [组件 API](https://kupola-cn.github.io/kupola/components/api)。
+
 ## 包
 
 | 包 | 用途 |
@@ -57,6 +83,9 @@ npm install @kupola/platform
 ## 文档入口
 
 - [快速开始](https://kupola-cn.github.io/kupola/guide/getting-started)
+- [Vite 应用](https://kupola-cn.github.io/kupola/guide/vite-app)
+- [业务页面分层](https://kupola-cn.github.io/kupola/guide/page-architecture)
+- [组件 API](https://kupola-cn.github.io/kupola/components/api)
 - [指令能力矩阵](https://kupola-cn.github.io/kupola/guide/directive-matrix)
 - [表单状态策略](https://kupola-cn.github.io/kupola/guide/form-state)
 - [动态片段协议](https://kupola-cn.github.io/kupola/guide/dynamic-fragments)

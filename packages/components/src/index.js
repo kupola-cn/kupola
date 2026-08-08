@@ -29,6 +29,7 @@ export { Modal } from './components/modal.js';
 export { Notification } from './components/notification.js';
 export { NumberInput } from './components/numberinput.js';
 export { Pagination } from './components/pagination.js';
+export { Panel } from './components/panel.js';
 export { Progress } from './components/progress.js';
 export { Radio } from './components/radio.js';
 export { Select } from './components/select.js';

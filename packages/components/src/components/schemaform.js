@@ -11,7 +11,7 @@ import { html } from '@kupola/platform/template';
 import { Form } from './form.js';
 import { Message } from './message.js';
 import { FormDensity, cx, hasOwn } from './schemaform-core.js';
-import { normalizeSchema } from './schemaform-schema.js';
+import { createSchema, normalizeSchema } from './schemaform-schema.js';
 import {
   clearCustomError,
   collectErrors,
@@ -27,6 +27,8 @@ import {
   toDomData,
 } from './schemaform-binding.js';
 import { renderField } from './schemaform-render.js';
+import { bindSchemaForm, createFormScope, schemaSubmit } from './schemaform-runtime.js';
+import { validateSchema } from './schemaform-validation.js';
 
 export { FormVariant, FormDensity, registerFormField, getFormFieldRenderer } from './schemaform-core.js';
 export {
@@ -44,9 +46,23 @@ export {
   textarea,
   time,
 } from './schemaform-fields.js';
-export { schema } from './schemaform-schema.js';
-export { validateSchema } from './schemaform-validation.js';
-export { bindSchemaForm, createFormScope, schemaSubmit } from './schemaform-runtime.js';
+export function schema(definition = {}) {
+  const formSchema = createSchema(definition);
+  return Object.freeze({
+    ...formSchema,
+    bind(target, options) {
+      return bindSchemaForm(target, formSchema, options);
+    },
+    submit(onSubmit, options) {
+      return schemaSubmit(formSchema, onSubmit, options);
+    },
+    validate(data, options) {
+      return validateSchema(formSchema, data, options);
+    },
+  });
+}
+
+export { validateSchema, bindSchemaForm, createFormScope, schemaSubmit };
 
 registerDirective('k-field', { mount() {} });
 

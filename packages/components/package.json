@@ -1,6 +1,6 @@
 {
   "name": "@kupola/components",
-  "version": "3.3.7",
+  "version": "3.4.0",
   "description": "Kupola UI components — 48+ accessible, responsive components for building modern web interfaces.",
   "type": "module",
   "sideEffects": [
@@ -125,6 +125,11 @@
       "require": "./dist/kupola-components-icons.cjs",
       "types": "./src/components/types.d.ts"
     },
+    "./icon-config": {
+      "import": "./dist/kupola-components-icon-config.esm.js",
+      "require": "./dist/kupola-components-icon-config.cjs",
+      "types": "./src/components/icon-config.d.ts"
+    },
     "./ui": {
       "import": "./dist/kupola-components-ui.esm.js",
       "require": "./dist/kupola-components-ui.cjs",
@@ -178,6 +183,11 @@
     "./pagination": {
       "import": "./dist/kupola-components-pagination.esm.js",
       "require": "./dist/kupola-components-pagination.cjs",
+      "types": "./src/components/types.d.ts"
+    },
+    "./panel": {
+      "import": "./dist/kupola-components-panel.esm.js",
+      "require": "./dist/kupola-components-panel.cjs",
       "types": "./src/components/types.d.ts"
     },
     "./progress": {
@@ -301,7 +311,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@kupola/core": "^3.3.7",
-    "@kupola/platform": "^3.3.7"
+    "@kupola/core": "^3.4.0",
+    "@kupola/platform": "^3.4.0"
   }
 }

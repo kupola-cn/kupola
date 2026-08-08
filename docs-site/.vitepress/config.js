@@ -21,6 +21,8 @@ export default {
           text: '指南',
           items: [
             { text: '快速开始', link: '/guide/getting-started' },
+            { text: 'Vite 应用', link: '/guide/vite-app' },
+            { text: '业务页面分层', link: '/guide/page-architecture' },
             { text: '书写风格', link: '/guide/authoring-style' },
             { text: '场景 Recipes', link: '/guide/recipes' },
             { text: '后端模板集成', link: '/guide/backend-template' },
@@ -69,6 +71,7 @@ export default {
           text: '组件总览',
           items: [
             { text: '概览', link: '/components/overview' },
+            { text: '组件 API', link: '/components/api' },
             { text: '组件规范', link: '/components/standards' },
             { text: '覆盖层', link: '/components/overlay' },
             { text: '导航', link: '/components/navigation' },
@@ -169,7 +172,7 @@ export default {
         {
           text: '插件',
           items: [
-            { text: 'Vite 插件', link: '/plugins/vite' },
+            { text: 'Vite 集成', link: '/plugins/vite' },
             { text: 'Webpack 插件', link: '/plugins/webpack' },
             { text: 'ESLint 插件', link: '/plugins/eslint' },
           ],

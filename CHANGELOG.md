@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 3.4.0 (2026-08-08)
+
+### Features
+
+- Add the reusable `Panel` container component with typed options, lifecycle
+  management, CSS, documentation, and Storybook coverage.
+- Add the public `@kupola/components/icon-config` entry point and strengthen
+  cross-entry component and platform runtime behavior.
+
+### Documentation
+
+- Document Vite + ESM applications, component lifecycle, and the recommended
+  `pages/*.js` + `view.js` + `state.js` business-page architecture.
+- Correct stale Vite/Webpack plugin references and update the static project
+  template to use standard Vite configuration.
+
 ## 3.3.7 (2026-07-28)
 
 ### Bug Fixes

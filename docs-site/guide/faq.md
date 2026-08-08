@@ -373,19 +373,15 @@ import { Modal } from '@kupola/components'; // 只包含 Modal 相关代码
 
 ### Q: 如何在 Vite/Webpack 中使用？
 
-安装自动 CSS 注入插件：
+不需要安装 Kupola 构建插件。使用标准构建配置，并在应用入口显式引入样式：
 
 ```js
-// vite.config.js
-import { kupolaPlugin } from '@kupola/platform/plugins/vite';
-export default { plugins: [kupolaPlugin()] };
+import '@kupola/platform/css';
 ```
 
-```js
-// webpack.config.js
-const { KupolaPlugin } = require('@kupola/platform/plugins/webpack');
-module.exports = { plugins: [new KupolaPlugin()] };
-```
+Vite 应用的完整入口见[ Vite 应用指南](/guide/vite-app)。当前发布的
+`@kupola/platform` 不提供 `@kupola/platform/vite`、
+`@kupola/platform/plugins/vite` 或 `@kupola/platform/plugins/webpack` 入口。
 
 ### Q: CDN link？
 

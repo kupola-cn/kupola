@@ -19,7 +19,6 @@ import {
 } from './directives-warnings.js';
 import { createEvaluationScope, createLocalScope, evaluate, evaluateStatement } from './directives-expressions.js';
 import { isPrototypeKey, isSafeScopePropertyName } from './directives-scope.js';
-import { processSubtree } from './directives-walk.js';
 
 function handleShow(el, expr, scope, disposers) {
   const useTransition = el.hasAttribute('k-transition');
@@ -720,7 +719,14 @@ function insertNodesBefore(parent, marker, nodes) {
   parent.insertBefore(fragment, marker);
 }
 
-function processMountedNodes(nodes, scope, disposers, ctx, allowRootTransition = false) {
+function processMountedNodes(
+  nodes,
+  scope,
+  disposers,
+  ctx,
+  processSubtree,
+  allowRootTransition = false,
+) {
   for (const node of nodes) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       processSubtree(node, scope, disposers, ctx, allowRootTransition);
@@ -924,7 +930,7 @@ function handleStyle(el, expr, scope, disposers) {
 /**
  * Apply k-if/k-else-if/k-else directive chain: mount one branch with cleanup.
  */
-function handleIf(el, expr, scope, disposers, ctx) {
+function handleIf(el, expr, scope, disposers, ctx, processSubtree) {
   const parent = el.parentNode;
   if (!parent) {return;}
 
@@ -1018,6 +1024,7 @@ function handleIf(el, expr, scope, disposers, ctx) {
       scope,
       childDisposers,
       ctx,
+      processSubtree,
       withTransition || Boolean(findTransitionElement(currentNodes)),
     );
     currentBranch = branch;
@@ -1129,7 +1136,7 @@ function getForKeyExpression(el) {
   return isBlankExpression(expression) ? null : expression;
 }
 
-function handleFor(el, expr, scope, disposers, ctx) {
+function handleFor(el, expr, scope, disposers, ctx, processSubtree) {
   const parent = el.parentNode;
   if (!parent) {return;}
 
@@ -1182,7 +1189,7 @@ function handleFor(el, expr, scope, disposers, ctx) {
       const nodes = cloneTemplateNodes(template);
       currentNodes.push(...nodes);
       insertNodesBefore(marker.parentNode, marker, nodes);
-      processMountedNodes(nodes, itemScope, childDisposers, ctx);
+      processMountedNodes(nodes, itemScope, childDisposers, ctx, processSubtree);
     }
   };
 
@@ -1220,7 +1227,7 @@ function handleFor(el, expr, scope, disposers, ctx) {
         const nodes = cloneTemplateNodes(template);
         const blockDisposers = [];
         block = { nodes, disposers: blockDisposers, localScope };
-        processMountedNodes(nodes, localScope.scope, blockDisposers, ctx);
+        processMountedNodes(nodes, localScope.scope, blockDisposers, ctx, processSubtree);
       }
 
       nextBlocks.set(key, block);

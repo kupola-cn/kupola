@@ -58,19 +58,6 @@ export function flattenVisible(data, level, childrenKey, rowKey, expandedKeys) {
 }
 
 /**
- * Return flattened visible rows, or the raw data when tree mode is off.
- * @param {Array} data
- * @param {object|null} treeConfig
- * @param {string} rowKey
- * @param {Set} expandedKeys
- * @returns {Array}
- */
-function getFlatData(data, treeConfig, rowKey, expandedKeys) {
-  if (!treeConfig) {return data;}
-  return flattenVisible(data, 0, getChildrenKey(treeConfig), rowKey, expandedKeys);
-}
-
-/**
  * Filter a tree, keeping rows that match or have matching descendants.
  * Expanded keys are mutated so filtered results stay visible.
  * @param {Array} data
