@@ -49,7 +49,7 @@ const Page = defineComponent({
 })
 ```
 
-这是 Vite 应用和 HIS-APP 页面工厂最常用的组合方式：页面返回模板，Panel、Table、
+这是 Vite 应用和 kupola-app 页面工厂最常用的组合方式：页面返回模板，Panel、Table、
 SchemaForm 等组件作为模板子节点插入。
 
 ## 手动挂载

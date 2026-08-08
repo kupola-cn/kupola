@@ -92,7 +92,7 @@ src/
 
 ## Vite 业务应用
 
-对于 HIS-APP 这类由 JavaScript/TypeScript 管理状态的后台，推荐按业务 feature 组织：
+对于 kupola-app 这类由 JavaScript/TypeScript 管理状态的后台，推荐按业务 feature 组织：
 
 ```txt
 src/

@@ -1,13 +1,13 @@
 # 业务页面分层
 
 Vite 只解决模块构建和开发服务器问题，Kupola 也不会强制规定业务代码的目录结构。
-对于 HIS-APP 这类包含列表、筛选、表单、权限和异步请求的管理后台，推荐把一个业务
+对于 kupola-app 这类包含列表、筛选、表单、权限和异步请求的管理后台，推荐把一个业务
 页面拆成 `pages/*.js`、`view.js` 和 `state.js` 三层，再把 HTTP 请求放在独立的
 `api/` 模块中。
 
 ## 三层职责
 
-| 层 | HIS-APP 位置 | 负责什么 | 不负责什么 |
+| 层 | kupola-app 位置 | 负责什么 | 不负责什么 |
 | --- | --- | --- | --- |
 | 页面编排 | `features/<feature>/pages/list.js` | 创建状态、调用 API、权限判断、组装回调、打开浮层、返回页面视图 | 不承载大段 HTML 结构和复杂派生状态 |
 | 视图 | `features/<feature>/view.js` | 返回 `html` 模板、组合 Kupola 组件、绑定输入和回调、展示状态 | 不发 HTTP 请求、不创建页面级状态、不决定业务权限 |
@@ -177,5 +177,5 @@ sequenceDiagram
 - 一旦出现异步加载、列表筛选、多个操作回调、表单草稿或权限分支，就应拆出
   `state.js` 和 `view.js`。
 
-因此，HIS-APP 应把 `pages/*.js + view.js + state.js` 作为复杂业务页面的默认模板，
+因此，kupola-app 应把 `pages/*.js + view.js + state.js` 作为复杂业务页面的默认模板，
 而不是把这套目录约定误认为 Kupola 组件库的强制 API。
