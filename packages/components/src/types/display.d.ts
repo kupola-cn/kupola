@@ -115,6 +115,33 @@ export interface StatcardInstance extends Destroyable {
 }
 export function Statcard(options?: StatcardOptions): StatcardInstance;
 
+// Panel
+export type PanelDensity = 'compact' | 'default' | 'comfortable';
+export type PanelHeaderTone = 'plain' | 'muted';
+export type PanelBodyPadding = 'none' | 'compact' | 'default' | 'comfortable';
+export interface PanelOptions {
+  title?: import('@kupola/platform').ViewChild;
+  subtitle?: import('@kupola/platform').ViewChild;
+  icon?: import('@kupola/platform').ViewChild;
+  actions?: import('@kupola/platform').ViewChild;
+  header?: import('@kupola/platform').ViewChild;
+  footer?: import('@kupola/platform').ViewChild;
+  density?: PanelDensity;
+  headerTone?: PanelHeaderTone;
+  bodyScrollable?: boolean;
+  bodyPadding?: PanelBodyPadding;
+  bodyClassName?: string;
+  fill?: boolean;
+  className?: string;
+  role?: string;
+  ariaLabel?: string;
+}
+export type PanelInstance = import('@kupola/platform').ComponentInstance;
+export function Panel(
+  options?: PanelOptions,
+  children?: import('@kupola/platform').ViewChild,
+): PanelInstance;
+
 // Tree
 export interface TreeNode {
   key?: string | number;
@@ -182,4 +209,3 @@ export interface CarouselInstance {
   destroy(): void;
 }
 export function Carousel(options?: CarouselOptions): CarouselInstance;
-

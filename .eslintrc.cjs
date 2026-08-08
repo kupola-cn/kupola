@@ -55,5 +55,24 @@ module.exports = {
       files: ['benchmark/**/*.js'],
       env: { jest: true },
     },
+    {
+      // These entry points intentionally write user-facing CLI, benchmark,
+      // Storybook, or extension output to the console.
+      files: [
+        'benchmark/**/*.js',
+        'packages/create-kupola/**/*.js',
+        'release.mjs',
+        'scripts/**/*.js',
+        'scripts/**/*.mjs',
+        'stories/**/*.js',
+        'vscode-kupola/**/*.js',
+      ],
+      rules: { 'no-console': 'off' },
+    },
+    {
+      // DevTools output is the feature exposed by this module.
+      files: ['packages/core/src/devtools.js'],
+      rules: { 'no-console': 'off' },
+    },
   ],
 };

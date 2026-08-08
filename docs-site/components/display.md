@@ -13,6 +13,7 @@ import { Tag } from '@kupola/components/tag'
 | Tag | `@kupola/components/tag` | 标签 |
 | Badge | `@kupola/components/badge` | 徽标 |
 | Divider | `@kupola/components/divider` | 分割线 |
+| Panel | `@kupola/components/panel` | 通用内容容器 |
 | Collapse | `@kupola/components/collapse` | 折叠面板 |
 | Timeline | `@kupola/components/timeline` | 时间线 |
 | Kbd | `@kupola/components/kbd` | 键盘按键展示 |
@@ -23,6 +24,7 @@ import { Tag } from '@kupola/components/tag'
 
 ## 重点
 
+- `Panel` 适合承载列表、表格、表单和工作区内容。
 - `Collapse` 适合隐藏高级配置或低频内容。
 - `Statcard` 适合承载核心指标。
 - `Tree` 适合层级数据浏览和展开收起。

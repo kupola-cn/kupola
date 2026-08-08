@@ -54,7 +54,7 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
     if (isBlankExpression(expr)) {
       warnEmptyDirectiveExpression(el, 'k-for');
     } else {
-      handleFor(el, expr, scope, disposers, ctx);
+      handleFor(el, expr, scope, disposers, ctx, processSubtree);
       return true;
     }
   }
@@ -64,7 +64,7 @@ function processElement(el, scope, disposers, ctx, allowRootTransition = false) 
     if (isBlankExpression(expr)) {
       warnEmptyDirectiveExpression(el, 'k-if');
     } else {
-      handleIf(el, expr, scope, disposers, ctx);
+      handleIf(el, expr, scope, disposers, ctx, processSubtree);
       return true;
     }
   }

@@ -4,6 +4,7 @@ import {
   createKupolaIconProvider,
   setupUi,
 } from '@kupola/components';
+import { createKupolaIconProvider as createUiKupolaIconProvider } from '../src/components/ui.js';
 import { html } from '../../platform/src/template.js';
 import { render, setIconResolver } from '../../platform/src/render.js';
 
@@ -29,9 +30,11 @@ describe('UI bootstrap', () => {
 
   test('creates a Kupola provider from selected icon groups', () => {
     const provider = createKupolaIconProvider({ groups: [ 'misc' ] });
+    const uiProvider = createUiKupolaIconProvider({ groups: [ 'misc' ] });
 
     expect(provider.prefix).toBe('kupola');
     expect(provider.resolve('star', 20)).toContain('width="20"');
+    expect(uiProvider.resolve('star', 20)).toContain('width="20"');
   });
 
   test('installs the configured icon resolver for icon templates', async () => {

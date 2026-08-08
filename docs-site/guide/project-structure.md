@@ -90,6 +90,32 @@ src/
 <script type="module" src="/kupola/pages/users.js"></script>
 ```
 
+## Vite 业务应用
+
+对于 HIS-APP 这类由 JavaScript/TypeScript 管理状态的后台，推荐按业务 feature 组织：
+
+```txt
+src/
+  api/
+    client.js
+    devices.js
+  domain/
+    deviceStatuses.js
+  features/
+    devices/
+      pages/
+        list.js       # 页面编排：请求、权限、浮层、事件回调
+      state.js        # signal、computed、规范化和状态转换
+      view.js         # html 模板、组件组合和展示绑定
+  app/
+    routes.js
+  main.js
+```
+
+依赖方向是 `pages -> api/state/view`，`view -> Kupola 组件`，`state -> 响应式 API/领域
+规则`。页面文件不应复制大段 HTML，view 不应发请求，state 不应查询 DOM。完整职责、
+数据流和生命周期见[业务页面分层](/guide/page-architecture)。
+
 ## 大页面组织
 
 复杂页面推荐按业务区域拆分交互岛：

@@ -5,7 +5,13 @@ Kupola 的组件按能力分组维护，所有组件都支持主包引入和按�
 ## 安装
 
 ```bash
-npm install @kupola/core @kupola/platform
+npm install @kupola/core @kupola/platform @kupola/components
+```
+
+Vite 应用在入口显式引入样式：
+
+```js
+import '@kupola/platform/css'
 ```
 
 ## 引入方式
@@ -29,12 +35,13 @@ import { Table } from '@kupola/components/table'
 | [导航](/components/navigation) | Tabs, Pagination, Datepicker, Breadcrumb, Menu, Calendar | 页面切换、分页、日期与路径导航 |
 | [表单](/components/forms) | Form, Input, Select, Checkbox, Radio, Switch, Slider, NumberInput, Textarea, Timepicker, Validation | 输入、选择、校验和表单数据管理 |
 | [反馈](/components/feedback) | Alert, Progress, Skeleton, Spin, Empty, Countdown | 状态反馈、加载、空态和倒计时 |
-| [展示](/components/display) | Tag, Badge, Divider, Collapse, Timeline, Kbd, Avatar, Statcard, Tree, Carousel | 信息展示、数据层级、折叠面板和内容轮播 |
+| [展示](/components/display) | Tag, Badge, Divider, Panel, Collapse, Timeline, Kbd, Avatar, Statcard, Tree, Carousel | 信息展示、通用容器、数据层级、折叠面板和内容轮播 |
 | [交互](/components/interaction) | FileUpload, DynamicTags, ImagePreview, ColorPicker, VirtualList | 文件、标签、图片、颜色和大数据列表 |
 | [工具](/components/tools) | Icons, Message, Heatmap, Table | 图标、全局消息、热力图和数据表格 |
 
 ## 重点文档
 
+- [组件 API](/components/api): 导入、模板插入、挂载、更新和销毁。
 - [Modal](/components/modal): 可控模态框，支持遮罩关闭、ESC 关闭和聚焦管理。
 - [Form](/components/form): 表单字段收集、校验、数据读写和提交处理。
 - [Table](/components/table): 数据表格，支持分页、排序、筛选、选择、树表和行编辑。

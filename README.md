@@ -8,17 +8,19 @@
 
 **Example application:** [Kupola App](https://github.com/kupola-cn/kupola-app) — a complete administration console built with Kupola.
 
-Kupola is a zero-framework interaction layer for server-rendered HTML. Use the
-directive runtime for interactive islands, signal/template APIs for
-JavaScript-owned views, and the optional native component library where a
-reusable component is the better boundary. `@kupola/router` and `@kupola/auth`
-add client-side routing and permission management built for SSR apps.
+Kupola is a zero-framework UI platform for server-rendered HTML and Vite
+applications. Use the directive runtime for interactive islands, signal/template
+APIs and `createApp` for JavaScript-owned views, and the optional native
+component library where a reusable component is the better boundary.
+`@kupola/router` and `@kupola/auth` add client-side routing and permission
+management.
 
 ## Features
 
 - `k-*` directives — reactive islands in server HTML (`k-data`, `k-show`, `k-model`, `k-for`, …)
 - Signals & template literals — state-driven views without a framework
 - Native components — table, form, tree, menu, select, and more
+- Vite + ESM — `createApp`, `defineComponent`, and factory-based components
 - Router & auth — hash/history/memory modes, route guards, permissions
 - SSR-friendly — hydrates static markup; islands need no build step
 
@@ -46,6 +48,33 @@ node (e.g. HTMX, Turbo, a modal library), use `walkAuto` for automatic cleanup.
 > `new Function()` and are not a sandbox. Use `k-text` for user content, and
 > provide an application sanitizer before using `k-html`.
 
+## Vite applications
+
+Use standard Vite ESM imports for JavaScript-owned applications. No Kupola Vite
+plugin is required:
+
+```bash
+npm install @kupola/core @kupola/platform @kupola/components
+```
+
+```js
+import { createApp, defineComponent, html } from '@kupola/platform'
+import '@kupola/platform/css'
+import { Panel } from '@kupola/components/panel'
+
+const AppRoot = defineComponent({
+  setup() {
+    return html`${Panel({ title: 'Application content' }, html`<p>Managed by Vite.</p>`)}`
+  },
+})
+
+await createApp(AppRoot).mountAsync('#app')
+```
+
+See the [Vite application guide](https://kupola-cn.github.io/kupola/guide/vite-app)
+and [component API](https://kupola-cn.github.io/kupola/components/api) for
+router/auth plugins, component lifecycle, and tree-shakeable subpath imports.
+
 ## Packages
 
 | Package | Purpose |
@@ -60,6 +89,9 @@ node (e.g. HTMX, Turbo, a modal library), use `walkAuto` for automatic cleanup.
 ## Documentation
 
 - [Getting started](https://kupola-cn.github.io/kupola/guide/getting-started)
+- [Vite applications](https://kupola-cn.github.io/kupola/guide/vite-app)
+- [Business page architecture](https://kupola-cn.github.io/kupola/guide/page-architecture)
+- [Component API](https://kupola-cn.github.io/kupola/components/api)
 - [Directive capability matrix](https://kupola-cn.github.io/kupola/guide/directive-matrix)
 - [Form state strategy](https://kupola-cn.github.io/kupola/guide/form-state)
 - [Dynamic fragment protocol](https://kupola-cn.github.io/kupola/guide/dynamic-fragments)
