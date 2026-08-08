@@ -185,7 +185,7 @@ function processNestedDataChildren(children, disposers, appRefs, sanitizer, scop
   }
 }
 
-export function processSubtree(el, scope, disposers, ctx, allowRootTransition = false) {
+function processSubtree(el, scope, disposers, ctx, allowRootTransition = false) {
   if (el.hasAttribute('k-data')) {
     processDataElement(el, disposers, ctx.appRefs, ctx.sanitizer, ctx.customDirectives);
     return;
