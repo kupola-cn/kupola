@@ -4,8 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## 3.4.1 (2026-08-09)
 
-## [Unreleased]
+
+### Bug Fixes
+
+* **table:** keep portaled select menus content sized ([7d7553c](https://github.com/kupola-cn/kupola/commit/7d7553cae6ccf0b39e87612555d3c49f88d2a530))
+
+
+### Documentation
+
+* use public app name in guides ([d4c848a](https://github.com/kupola-cn/kupola/commit/d4c848a90dace188906b2dc0b8555572c1257405))
 
 ## 3.4.0 (2026-08-08)
 
