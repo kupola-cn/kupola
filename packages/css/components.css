@@ -2090,7 +2090,12 @@ body.ds-dashboard-page {
   overflow-y: auto;
 }
 
-.ds-select.is-open .ds-select__menu {
+.ds-select__menu[data-kupola-popup-portal="true"] {
+  min-width: 0;
+}
+
+.ds-select.is-open .ds-select__menu,
+.ds-select__menu.is-open {
   display: block;
 }
 
@@ -2715,6 +2720,12 @@ body.ds-dashboard-page {
 .ds-table-pagination .ds-select__trigger {
   min-height: 28px;
   height: 28px;
+}
+
+.ds-table-pagination > .ds-select {
+  width: auto;
+  min-width: max-content;
+  flex: 0 0 auto;
 }
 
 .ds-table-selection-info {
