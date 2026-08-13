@@ -41,7 +41,7 @@ function makeFetcher(value, ms = 0) {
 describe('useQuery — deduplication', () => {
   test('concurrent calls with the same key share one request', async () => {
     const fetcher = makeFetcher('data', 10);
-    const [a, b] = await Promise.all([
+    const [ a, b ] = await Promise.all([
       useQuery('k1', fetcher),
       useQuery('k1', fetcher),
     ]);
@@ -61,7 +61,7 @@ describe('useQuery — deduplication', () => {
   test('different keys fire separate requests', async () => {
     const fa = makeFetcher('a');
     const fb = makeFetcher('b');
-    const [a, b] = await Promise.all([
+    const [ a, b ] = await Promise.all([
       useQuery('key-a', fa),
       useQuery('key-b', fb),
     ]);
@@ -106,7 +106,7 @@ describe('useQuery — caching', () => {
 
   test('cache=false disables caching but still dedups concurrent calls', async () => {
     const fetcher = makeFetcher('no-cache', 10);
-    const [a, b] = await Promise.all([
+    const [ a, b ] = await Promise.all([
       useQuery('c3', fetcher, { cache: false }),
       useQuery('c3', fetcher, { cache: false }),
     ]);
@@ -129,10 +129,10 @@ describe('useQuery — caching', () => {
   test('supports async fetcher returning a Promise', async () => {
     const fetcher = async () => {
       await Promise.resolve();
-      return { items: [1, 2, 3] };
+      return { items: [ 1, 2, 3 ] };
     };
     const result = await useQuery('c5', fetcher, { staleTime: 1000 });
-    expect(result).toEqual({ items: [1, 2, 3] });
+    expect(result).toEqual({ items: [ 1, 2, 3 ] });
   });
 });
 

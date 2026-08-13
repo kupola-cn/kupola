@@ -27,6 +27,9 @@ for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     break;
   }
 
-  console.warn(`[kupola] Retrying VitePress build after transient Windows file access error (${attempt}/${maxAttempts - 1}).`);
+  console.warn(
+    '[kupola] Retrying VitePress build after transient Windows file access error ' +
+    `(${attempt}/${maxAttempts - 1}).`,
+  );
   await new Promise(resolve => setTimeout(resolve, 250 * attempt));
 }

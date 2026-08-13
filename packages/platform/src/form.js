@@ -218,7 +218,7 @@ export function useForm(initialValues, validate, options = {}) {
     const target = nextInitial || snapshot;
     if (nextInitial) {
       // Re-base the snapshot so subsequent resets restore this state.
-      for (const key of Object.keys(snapshot)) delete snapshot[key];
+      for (const key of Object.keys(snapshot)) { delete snapshot[key]; }
       Object.assign(snapshot, target);
     }
     values.value = { ...target };
@@ -291,5 +291,6 @@ export function useForm(initialValues, validate, options = {}) {
  * @property {(name: string) => void} setTouched
  * @property {() => (boolean | Promise<boolean>)} validate
  * @property {(nextInitial?: Record<string, any>) => void} reset
- * @property {(handler: (values: Record<string, any>) => void | Promise<void>) => (event?: Event) => Promise<boolean>} handleSubmit
+ * @property {(handler: (values: Record<string, any>) => void | Promise<void>)
+ *   => (event?: Event) => Promise<boolean>} handleSubmit
  */

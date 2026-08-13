@@ -311,7 +311,8 @@ const KNOWN_EVENTS = new Set([
   'contextmenu', 'wheel', 'select',
   'drag', 'dragend', 'dragenter', 'dragleave', 'dragover', 'dragstart', 'drop',
   'touchstart', 'touchend', 'touchmove', 'touchcancel',
-  'pointerdown', 'pointerup', 'pointermove', 'pointerover', 'pointerout', 'pointerenter', 'pointerleave', 'pointercancel',
+  'pointerdown', 'pointerup', 'pointermove', 'pointerover', 'pointerout',
+  'pointerenter', 'pointerleave', 'pointercancel',
   'animationstart', 'animationend', 'animationiteration',
   'transitionend', 'transitionstart',
   'compositionstart', 'compositionend', 'compositionupdate',
@@ -365,7 +366,10 @@ function validateTemplate(htmlStr) {
   while ((attrMatch = onAttrPattern.exec(htmlStr)) !== null) {
     const eventName = attrMatch[1].toLowerCase();
     if (!KNOWN_EVENTS.has(eventName)) {
-      console.warn(`[kupola W023] Unknown event handler "on${attrMatch[1]}" — did you mean "on${_closestEvent(eventName)}"?`);
+      console.warn(
+        `[kupola W023] Unknown event handler "on${attrMatch[1]}" — ` +
+        `did you mean "on${_closestEvent(eventName)}"?`,
+      );
     }
   }
 }

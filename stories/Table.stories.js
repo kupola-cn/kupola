@@ -55,7 +55,13 @@ export const WithPagination = {
     // Generate more data
     const data = [];
     for (let i = 1; i <= 50; i++) {
-      data.push({ id: i, name: `User ${i}`, email: `user${i}@example.com`, role: i % 3 === 0 ? 'Admin' : 'User', status: i % 2 === 0 ? 'Active' : 'Inactive' });
+      data.push({
+        id: i,
+        name: `User ${i}`,
+        email: `user${i}@example.com`,
+        role: i % 3 === 0 ? 'Admin' : 'User',
+        status: i % 2 === 0 ? 'Active' : 'Inactive',
+      });
     }
     const table = Table({
       columns: basicColumns,

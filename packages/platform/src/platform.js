@@ -39,7 +39,10 @@ export { html, TemplateResult, htmlString, HtmlString } from './template.js';
 export { render, mount, createApp, setIconResolver, isComponentInstanceLike } from './render.js';
 
 // ── Component System ──────────────────────────────────────────────────────────
-export { defineComponent, defineView, register, getComponent, hasComponent, clearRegistry, provide, inject } from './component.js';
+export {
+  defineComponent, defineView, register, getComponent, hasComponent, clearRegistry,
+  provide, inject,
+} from './component.js';
 export { getCurrentProvideContext, hasProvideContext, runWithProvideContext } from './context.js';
 
 // ── Directives ────────────────────────────────────────────────────────────────

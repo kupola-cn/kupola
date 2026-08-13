@@ -68,53 +68,53 @@ export function batch(fn) {
       if (callbackFailed && atomicContextStack.length > 0) {
         getBatchQueue().clear();
       } else {
-      const queue = getBatchQueue();
-      const jobs = [ ...queue ];
-      queue.clear();
-      const schedulers = new Set();
+        const queue = getBatchQueue();
+        const jobs = [ ...queue ];
+        queue.clear();
+        const schedulers = new Set();
 
-      for (const job of jobs) {
-        const scheduler = job._scheduler;
-        if (scheduler) {
-          schedulers.add(scheduler);
-          if (job._flush === 'post') {scheduler.queuePostJob(job);}
-          else {scheduler.queueJob(job);}
-        } else if (job._flush === 'post') {queuePostJob(job);}
-        else {queueJob(job);}
-      }
+        for (const job of jobs) {
+          const scheduler = job._scheduler;
+          if (scheduler) {
+            schedulers.add(scheduler);
+            if (job._flush === 'post') {scheduler.queuePostJob(job);}
+            else {scheduler.queueJob(job);}
+          } else if (job._flush === 'post') {queuePostJob(job);}
+          else {queueJob(job);}
+        }
 
-      let flushError;
-      try {
-        flushJobs();
-      } catch (error) {
-        flushError = error;
-      }
-
-      // A batch is synchronous even when its effects use isolated schedulers.
-      // Flush each involved instance independently so one failing queue does
-      // not prevent unrelated application queues from being drained.
-      for (const scheduler of schedulers) {
-        if (typeof scheduler.flushJobs !== 'function') {continue;}
+        let flushError;
         try {
-          scheduler.flushJobs();
+          flushJobs();
+        } catch (error) {
+          flushError = error;
+        }
+
+        // A batch is synchronous even when its effects use isolated schedulers.
+        // Flush each involved instance independently so one failing queue does
+        // not prevent unrelated application queues from being drained.
+        for (const scheduler of schedulers) {
+          if (typeof scheduler.flushJobs !== 'function') {continue;}
+          try {
+            scheduler.flushJobs();
+          } catch (error) {
+            if (!flushError) {flushError = error;}
+          }
+        }
+
+        // An isolated job may enqueue a default-scheduler job while running.
+        try {
+          flushJobs();
         } catch (error) {
           if (!flushError) {flushError = error;}
         }
-      }
 
-      // An isolated job may enqueue a default-scheduler job while running.
-      try {
-        flushJobs();
-      } catch (error) {
-        if (!flushError) {flushError = error;}
-      }
-
-      // Preserve an exception thrown by the batch callback when both paths
-      // fail. All independent queues have still been given a chance to drain.
-      if (!callbackFailed && flushError) {
-        callbackError = flushError;
-        callbackFailed = true;
-      }
+        // Preserve an exception thrown by the batch callback when both paths
+        // fail. All independent queues have still been given a chance to drain.
+        if (!callbackFailed && flushError) {
+          callbackError = flushError;
+          callbackFailed = true;
+        }
       }
     }
   }

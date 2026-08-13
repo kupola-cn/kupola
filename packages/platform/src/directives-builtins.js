@@ -222,7 +222,8 @@ function isDangerousBoundAttribute(el, attrName, value) {
   if (SAFE_NON_URL_ATTRIBUTES.has(name) || name.startsWith('data-')) {return false;}
   warn(
     'W020',
-    `${describeElement(el)} blocked dynamic attribute "${attrName}"; only whitelisted attributes may be bound dynamically.`,
+    `${describeElement(el)} blocked dynamic attribute "${attrName}"; ` +
+    'only whitelisted attributes may be bound dynamically.',
   );
   return true;
 }
@@ -1076,7 +1077,8 @@ function parseForExpression(expr) {
     throw new Error(
       formatDiagnostic(
         'E002',
-        `Invalid k-for expression "${expr}". Use "item in items", "(item, index) in items", or "(value, key) in object".`,
+        `Invalid k-for expression "${expr}". Use "item in items", ` +
+        '"(item, index) in items", or "(value, key) in object".',
       ),
     );
   }

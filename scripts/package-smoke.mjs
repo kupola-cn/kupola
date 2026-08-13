@@ -88,7 +88,9 @@ for (const [ name, value ] of Object.entries({
 
 // ── @kupola/platform ────────────────────────────────────────────────────────
 const platform = await testPackage('packages/platform', '@kupola/platform');
-const platformRoot = await import(pathToFileURL(resolvePackagePath('packages/platform', platform.pkg.exports['.'].import)).href);
+const platformRoot = await import(
+  pathToFileURL(resolvePackagePath('packages/platform', platform.pkg.exports['.'].import)).href
+);
 
 for (const [ name, value ] of Object.entries({
   html: platformRoot.html,
@@ -178,7 +180,9 @@ if (typeof authRoot.createAuthContext !== 'function' && typeof authRoot.getAuthC
 }
 
 const router = await testPackage('packages/router', '@kupola/router');
-const routerRoot = await import(pathToFileURL(resolvePackagePath('packages/router', router.pkg.exports['.'].import)).href);
+const routerRoot = await import(
+  pathToFileURL(resolvePackagePath('packages/router', router.pkg.exports['.'].import)).href
+);
 
 if (typeof routerRoot.createRouter !== 'function') {
   throw new Error('Expected @kupola/router to export createRouter as a function.');

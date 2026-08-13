@@ -104,7 +104,8 @@ describe('defineComponent', () => {
       props: [ 'name' ],
       setup(context) {
         setupContext = context;
-        return html`<button onclick=${() => context.emit('save', context.props.name.value)}>${context.children}</button>`;
+        return html`<button
+          onclick=${() => context.emit('save', context.props.name.value)}>${context.children}</button>`;
       },
     });
     const view = Comp({ name: 'Kupola' }, html`Save`);

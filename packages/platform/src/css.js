@@ -90,7 +90,7 @@ function scopeCss(cssText, scopeId) {
   const globalBlocks = [];
   let scoped = cssText.replace(/:global\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g, (_, content) => {
     globalBlocks.push(content);
-    return `\u0000GLOBAL${globalBlocks.length - 1}\u0000`;
+    return `\uE000GLOBAL${globalBlocks.length - 1}\uE000`;
   });
 
   // 2. Collect @keyframes names before scoping them.
@@ -117,15 +117,16 @@ function scopeCss(cssText, scopeId) {
     // property values. The name must appear as a standalone identifier
     // (preceded by a space, colon, or comma, followed by a space, semicolon,
     // or end of declaration).
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     scoped = scoped.replace(
-      new RegExp(`(animation(?:-name)?\\s*:\\s*(?:[^;]*?\\s)?)${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*[;,\\s}])`, 'g'),
+      new RegExp(`(animation(?:-name)?\\s*:\\s*(?:[^;]*?\\s)?)${escapedName}(\\s*[;,\\s}])`, 'g'),
       `$1${scopeId}-${name}$2`,
     );
   }
 
   // 7. Restore :scope and :global() blocks.
   scoped = scoped.split(SCOPE_PLACEHOLDER).join(`.${scopeId}`);
-  scoped = scoped.replace(/\u0000GLOBAL(\d+)\u0000/g, (_, idx) => {
+  scoped = scoped.replace(new RegExp('\uE000GLOBAL(\\d+)\uE000', 'g'), (_, idx) => {
     const original = globalBlocks[Number(idx)];
     return `:global(${original})`;
   });
@@ -165,7 +166,7 @@ export function css(strings, ...values) {
   }
 
   const scopeId = `k${_scopeCounter++}`;
-  const classNames = [...extractClassNames(cssText)];
+  const classNames = [ ...extractClassNames(cssText) ];
   const scopedCss = scopeCss(cssText, scopeId);
 
   /** @type {HTMLStyleElement|null} */
