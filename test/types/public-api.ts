@@ -333,12 +333,12 @@ defineScope('typedPage', ({ $, $$, on, patch, update, watch }: ScopeContext) => 
   mounted() {
     $('button');
     $$<HTMLInputElement>('input');
-    on('click', '.row', (event, element) => {
+    on('click', '.row', (event: Event, element: HTMLElement) => {
       event.preventDefault();
       element.classList.add('active');
     });
     watch(() => this.count, () => {});
-    update<number>('count', value => value + 1);
+    update<number>('count', (value: number) => value + 1);
     patch<{ query: string }>('filters', { query: 'kupola' });
   },
 }));
