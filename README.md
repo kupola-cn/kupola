@@ -1,14 +1,13 @@
-<div align="center">
 [中文文档](./README.zh-CN.md) | [Documentation](https://kupola-cn.github.io/kupola/)
 
-# Kupola 3.0
+# Kupola
 
-[![Kupola](https://img.shields.io/npm/v/@kupola/core?label=latest&color=red)](https://www.npmjs.com/package/@kupola/core)
 [![CI](https://github.com/kupola-cn/kupola/actions/workflows/ci.yml/badge.svg)](https://github.com/kupola-cn/kupola/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@kupola/platform)](https://www.npmjs.com/package/@kupola/platform)
 [![License](https://img.shields.io/npm/l/@kupola/platform)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
 
-**Example application:** [Kupola App](https://github.com/kupola-cn/kupola-app) — a complete administration console built with Kupola.
+a complete administration console built with Kupola：
+**Example application:** [Kupola App](https://github.com/kupola-cn/kupola-app) 
 
 Kupola is a lightweight reactive application platform for building modern web
 applications. It provides a complete toolbox — signals, templates, components,
@@ -16,7 +15,6 @@ directives, routing, permissions, theme, i18n, SSR, and more — without dependi
 on any major framework. Use the directive runtime for interactive islands in
 server-rendered HTML, or `createApp` for full JavaScript-owned single-page
 applications.
-</div>
 
 ## Features
 
