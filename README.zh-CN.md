@@ -6,7 +6,8 @@
 [![npm version](https://img.shields.io/npm/v/@kupola/platform)](https://www.npmjs.com/package/@kupola/platform)
 [![License](https://img.shields.io/npm/l/@kupola/platform)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
 
-**示例应用：** [Kupola App](https://github.com/kupola-cn/kupola-app) — 基于 Kupola 构建的完整管理后台。
+基于 Kupola 构建的完整管理后台：
+**示例应用：** [Kupola App](https://github.com/kupola-cn/kupola-app) 
 
 Kupola 是一个轻量级响应式应用平台，用于构建现代 Web 应用。它提供了一整套工具——
 信号、模板、组件、指令、路由、权限、主题、国际化、SSR 等——不依赖任何主流框架。
