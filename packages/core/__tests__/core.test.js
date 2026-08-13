@@ -4,7 +4,7 @@
  */
 
 import { signal, computed, effect, batch } from '../src/index.js';
-import { flushJobs, resetScheduler } from '../src/scheduler.js';
+import { flushJobs, resetScheduler, createScheduler } from '../src/scheduler.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -297,6 +297,123 @@ describe('batch', () => {
 
     expect(fn).toHaveBeenCalledTimes(1);
   });
+
+  test('batch.atomic rolls back signal writes when the callback throws', () => {
+    const a = signal(0);
+    const b = signal(0);
+    const fn = jest.fn();
+
+    effect(() => { fn(a.value, b.value); });
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    expect(() => {
+      batch.atomic(() => {
+        a.value = 10;
+        b.value = 20;
+        throw new Error('boom');
+      });
+    }).toThrow('boom');
+
+    // Both signals must be rolled back to their original values.
+    expect(a.value).toBe(0);
+    expect(b.value).toBe(0);
+    // No extra effect invocation was scheduled from the rolled-back writes.
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  test('batch.atomic does not roll back when the callback succeeds', () => {
+    const a = signal(0);
+    const fn = jest.fn();
+
+    effect(() => { fn(a.value); });
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    const result = batch.atomic(() => {
+      a.value = 42;
+      return a.value;
+    });
+
+    expect(result).toBe(42);
+    expect(a.value).toBe(42);
+    // The new value triggered exactly one effect run.
+    expect(fn).toHaveBeenCalledTimes(2);
+    expect(fn).toHaveBeenLastCalledWith(42);
+  });
+
+  test('batch.atomic preserves existing value when the same signal is rewritten', () => {
+    const a = signal(1);
+
+    expect(() => {
+      batch.atomic(() => {
+        a.value = 2;
+        a.value = 3;
+        throw new Error('fail');
+      });
+    }).toThrow('fail');
+
+    // The first write's snapshot (1) is restored, not any later write.
+    expect(a.value).toBe(1);
+  });
+
+  test('batch.atomic discards queued deferred jobs on rollback', () => {
+    const a = signal(0);
+    const fn = jest.fn();
+
+    effect(() => { fn(a.value); });
+
+    expect(() => {
+      batch.atomic(() => {
+        a.value = 1;
+        throw new Error('boom');
+      });
+    }).toThrow('boom');
+
+    flush();
+    // The mutation must not have produced a spurious deferred job.
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  test('queuePriorityJob runs before regular jobs', async () => {
+    const scheduler = createScheduler();
+    const calls = [];
+    const priorityJob = () => { calls.push('priority'); };
+    const regularJob = () => { calls.push('regular'); };
+
+    scheduler.queueJob(regularJob);
+    scheduler.queuePriorityJob(priorityJob);
+
+    // Advance one microtask to let the scheduler flush.
+    await Promise.resolve();
+
+    expect(calls).toEqual([ 'priority', 'regular' ]);
+  });
+
+  test('queueIdleJob runs after the flush completes', async () => {
+    const scheduler = createScheduler();
+    const calls = [];
+    const idleJob = () => { calls.push('idle'); };
+
+    scheduler.queueIdleJob(idleJob);
+    // Force a flush cycle.
+    scheduler.flushJobs();
+
+    // Idle jobs are scheduled asynchronously (requestIdleCallback or
+    // setTimeout) so we give it a chance to run.
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(calls).toContain('idle');
+  });
+
+  test('queueIdleJob can be cancelled before running', async () => {
+    const scheduler = createScheduler();
+    const fn = jest.fn();
+    const cancel = scheduler.queueIdleJob(fn);
+
+    cancel();
+    scheduler.flushJobs();
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fn).not.toHaveBeenCalled();
+  });
 });
 
 // ─── Integration ─────────────────────────────────────────────────────────────
@@ -355,5 +472,87 @@ describe('integration', () => {
     flush();
     expect(fn).toHaveBeenCalledTimes(4);
     expect(s.value).toBe(3);
+  });
+});
+
+// ─── signal.dispose ─────────────────────────────────────────────────────────
+
+describe('signal.dispose', () => {
+  test('dispose() ignores subsequent writes (value unchanged, no trigger)', () => {
+    const s = signal(1);
+    const fn = jest.fn();
+    effect(() => { fn(s.value); });
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    s.dispose();
+
+    s.value = 100;
+    flush();
+    // Value must remain the last value before disposal.
+    expect(s.value).toBe(1);
+    // No re-run was scheduled from the ignored write.
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  test('dispose() stops reads from registering dependencies', () => {
+    const s = signal(5);
+    s.dispose();
+
+    const fn = jest.fn();
+    effect(() => { fn(s.value); });
+    // The disposed signal still returns its value on read...
+    expect(fn).toHaveBeenCalledWith(5);
+    // ...but must not register the effect as a subscriber.
+    expect(s._subscribers.size).toBe(0);
+  });
+
+  test('dispose() clears subscribers so effects no longer run on write', () => {
+    const s = signal(0);
+    const fn = jest.fn();
+    effect(() => { fn(s.value); });
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(s._subscribers.size).toBe(1);
+
+    s.dispose();
+    // The previously-registered subscriber must be removed.
+    expect(s._subscribers.size).toBe(0);
+
+    s.value = 7;
+    flush();
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn).toHaveBeenLastCalledWith(0);
+  });
+
+  test('dispose() is idempotent (calling twice is safe)', () => {
+    const s = signal(0);
+    expect(() => {
+      s.dispose();
+      s.dispose();
+    }).not.toThrow();
+    // Disposed signal still refuses writes after the second call.
+    s.value = 5;
+    expect(s.value).toBe(0);
+  });
+});
+
+// ─── signal label option ────────────────────────────────────────────────────
+
+describe('signal label option', () => {
+  test('signal accepts a label option without throwing', () => {
+    const s = signal(0, { label: 'count' });
+    expect(s.value).toBe(0);
+    s.value = 3;
+    expect(s.value).toBe(3);
+  });
+
+  test('signal works with a label inside an effect', () => {
+    const s = signal(0, { label: 'count' });
+    const fn = jest.fn();
+    effect(() => { fn(s.value); });
+    expect(fn).toHaveBeenCalledWith(0);
+
+    s.value = 9;
+    flush();
+    expect(fn).toHaveBeenLastCalledWith(9);
   });
 });

@@ -8,6 +8,7 @@ import {
   disableProfiler,
   resetProfiler,
   isProfilerEnabled,
+  profileSignalCreation,
   profileSignalWrite,
   profileSignalRead,
   profileTrigger,
@@ -19,6 +20,7 @@ import {
   sendDevToolsMessage,
   exposeDevToolsAPI,
 } from '../src/devtools.js';
+import { signal } from '../src/index.js';
 
 describe('devtools', () => {
   beforeEach(() => {
@@ -412,5 +414,65 @@ describe('devtools', () => {
     cleanup();
     cleanup();
     expect(window.__KUPOLA__).toBeUndefined();
+  });
+
+  // ─── profileSignalCreation ──────────────────────────────────────────────────
+
+  test('profileSignalCreation captures creationStack when profiler is enabled', () => {
+    enableProfiler();
+    const sig = {};
+    profileSignalCreation(sig, 'mySignal');
+
+    const report = getProfileReport();
+    expect(report.signals.length).toBe(1);
+    const entry = report.signals[0];
+    expect(entry.label).toBe('mySignal');
+    expect(typeof entry.creationStack).toBe('string');
+    expect(entry.creationStack.length).toBeGreaterThan(0);
+  });
+
+  test('profileSignalCreation does nothing when profiler is disabled', () => {
+    disableProfiler();
+    const sig = {};
+    profileSignalCreation(sig, 'test');
+
+    const report = getProfileReport();
+    expect(report.signals.length).toBe(0);
+  });
+
+  test('getProfileReport includes creationStack in signal entries', () => {
+    enableProfiler();
+    // Use the real signal() factory so the captured stack reflects the
+    // intended call path (test -> signal factory -> profileSignalCreation).
+    const s = signal(0, { label: 'counted' });
+    // Reading the signal proves the entry maps back to a real signal while
+    // keeping the assertion focused on the creation metadata.
+    expect(s.value).toBe(0);
+
+    const report = getProfileReport();
+    expect(report.signals.length).toBe(1);
+    expect(report.signals[0].label).toBe('counted');
+    expect(report.signals[0]).toHaveProperty('creationStack');
+    expect(typeof report.signals[0].creationStack).toBe('string');
+    expect(report.signals[0].creationStack).toContain('devtools.test.js');
+  });
+});
+
+// ── Signal registry lifecycle ────────────────────────────────────────────────
+
+describe('signal registry', () => {
+  test('resetProfiler clears the signal registry', () => {
+    const s = signal(0, { label: 'test' });
+    expect(window.__KUPOLA_SIGNALS__.count()).toBeGreaterThanOrEqual(1);
+    resetProfiler();
+    expect(window.__KUPOLA_SIGNALS__.count()).toBe(0);
+    s.dispose();
+  });
+
+  test('disposed signals are removed from the registry', () => {
+    const s = signal(0, { label: 'temp' });
+    const before = window.__KUPOLA_SIGNALS__.count();
+    s.dispose();
+    expect(window.__KUPOLA_SIGNALS__.count()).toBe(before - 1);
   });
 });

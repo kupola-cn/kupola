@@ -17,15 +17,22 @@
  * resetProfiler();
  * ```
  *
+ * In dev mode, `window.__KUPOLA_SIGNALS__` provides a live signal registry
+ * for debugging: `window.__KUPOLA_SIGNALS__.list()` returns all registered
+ * signals with their labels, values, and creation stacks.
+ *
  * @module devtools
  */
+
+/* global __DEV__ */
+const _devMode = typeof __DEV__ === 'undefined' || __DEV__;
 
 // ── Profiler state ──────────────────────────────────────────────────────────
 
 let _enabled = false;
 let _startTime = 0;
 
-/** @type {Map<number, {reads: number, writes: number, triggers: number, label: string}>} */
+/** @type {Map<number, {reads: number, writes: number, triggers: number, label: string, creationStack?: string}>} */
 const _signalStats = new Map();
 
 /** @type {Map<number, {runs: number, totalTime: number, maxTime: number, label: string}>} */
@@ -52,10 +59,41 @@ let _totalComputedRecomputes = 0;
 /** @type {WeakMap<Object, number>} Maps signal/computed/effect instances to IDs. */
 let _idMap = new WeakMap();
 
+// ── Global signal registry (dev mode) ───────────────────────────────────────
+
+/**
+ * Registry of all created signals for debugging.
+ * @type {Array<{id: number, signal: Object, label: string, creationStack?: string}>}
+ */
+const _signalRegistry = [];
+
+/**
+ * Get a snapshot of all registered signals.
+ * @returns {Array<{id: number, label: string, value: any, creationStack?: string}>}
+ */
+export function getSignalRegistry() {
+  return _signalRegistry.map(entry => ({
+    id: entry.id,
+    label: entry.label,
+    value: entry.signal?.peek ? entry.signal.peek() : entry.signal?._value,
+    ...(entry.creationStack ? { creationStack: entry.creationStack } : {}),
+  }));
+}
+
+// Expose on window in dev mode for console debugging.
+if (_devMode && typeof globalThis !== 'undefined' && globalThis.window) {
+  globalThis.window.__KUPOLA_SIGNALS__ = {
+    list: getSignalRegistry,
+    findByLabel: (label) => _signalRegistry.filter(e => e.label === label),
+    count: () => _signalRegistry.length,
+  };
+}
+
 function clearProfilerData() {
   _signalStats.clear();
   _effectStats.clear();
   _computedStats.clear();
+  _signalRegistry.length = 0;
   _nextSignalId = 0;
   _nextEffectId = 0;
   _nextComputedId = 0;
@@ -121,6 +159,50 @@ export function isProfilerEnabled() {
 }
 
 // ── Tracking functions (called by signal/effect/computed internals) ──────────
+
+/**
+ * Record signal creation with a stack trace for debugging.
+ * Called from signal() factory when profiler is enabled.
+ * @param {Object} sig  The Signal instance
+ * @param {string} [label]  Optional label for the signal
+ */
+export function profileSignalCreation(sig, label) {
+  const id = getOrCreateId(sig, _nextSignalId);
+  if (id >= _nextSignalId) {_nextSignalId = id + 1;}
+
+  let creationStack;
+  // Always register in the global signal registry (dev mode).
+  if (_devMode) {
+    const stack = new Error().stack;
+    if (stack) {
+      const lines = stack.split('\n');
+      creationStack = lines.slice(3).join('\n');
+    }
+    _signalRegistry.push({ id, signal: sig, label: label || `signal#${id}`, creationStack });
+  }
+
+  // Only collect profiling stats when profiler is enabled.
+  if (!_enabled) {return;}
+  if (!_signalStats.has(id)) {
+    _signalStats.set(id, { reads: 0, writes: 0, triggers: 0, label: label || `signal#${id}` });
+    if (creationStack) {_signalStats.get(id).creationStack = creationStack;}
+  }
+}
+
+/**
+ * Remove a signal from the global registry when it is disposed.
+ * This prevents unbounded memory growth in dev mode.
+ * @param {Object} sig  The Signal instance
+ */
+export function unregisterSignal(sig) {
+  if (!_devMode) {return;}
+  for (let i = _signalRegistry.length - 1; i >= 0; i--) {
+    if (_signalRegistry[i].signal === sig) {
+      _signalRegistry.splice(i, 1);
+      break;
+    }
+  }
+}
 
 /**
  * Record a signal write (set .value).
@@ -231,7 +313,7 @@ export function profileComputedRun(comp, fn, label) {
  *   totalTriggers: number,
  *   totalEffectRuns: number,
  *   totalComputedRecomputes: number,
- *   signals: Array<{label: string, reads: number, writes: number, triggers: number}>,
+ *   signals: Array<{label: string, reads: number, writes: number, triggers: number, creationStack?: string}>,
  *   effects: Array<{label: string, runs: number, totalTime: string, maxTime: string, avgTime: string}>,
  *   computeds: Array<{label: string, recomputes: number, totalTime: string, maxTime: string, avgTime: string}>,
  * }}
@@ -241,7 +323,13 @@ export function getProfileReport() {
 
   const signals = [];
   for (const [ , s ] of _signalStats) {
-    signals.push({ label: s.label, reads: s.reads, writes: s.writes, triggers: s.triggers });
+    signals.push({
+      label: s.label,
+      reads: s.reads,
+      writes: s.writes,
+      triggers: s.triggers,
+      ...(s.creationStack ? { creationStack: s.creationStack } : {}),
+    });
   }
 
   const effects = [];

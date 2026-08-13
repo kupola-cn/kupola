@@ -25,6 +25,8 @@ export declare class Signal<T = any> {
   set value(newValue: T);
   /** Peek at the value without registering a dependency. */
   peek(): T;
+  /** Permanently dispose this signal, releasing all subscriber references. */
+  dispose(): void;
   toString(): string;
   toJSON(): T;
 }
@@ -39,16 +41,67 @@ export interface ReadonlySignal<T = any> {
   toJSON(): T;
 }
 
+/** Options for creating a signal with debugging metadata. */
+export interface SignalOptions {
+  /** Optional label for DevTools profiling. */
+  label?: string;
+}
+
 /** Create a reactive signal. */
-export declare function signal<T>(initialValue: T): Signal<T>;
+export declare function signal<T>(initialValue: T, options?: SignalOptions): Signal<T>;
+
+/**
+ * Built-in object types that `reactive()` leaves as-is (not wrapped in a Proxy).
+ * These match the runtime check in `isSupportedReactiveTarget()`.
+ */
+type ReactiveBuiltin =
+  | Function
+  | Date
+  | RegExp
+  | ArrayBuffer
+  | ArrayBufferView
+  | DataView
+  | Map<any, any>
+  | Set<any>
+  | WeakMap<any, any>
+  | WeakSet<any>;
+
+/**
+ * Recursively make all nested plain-object/array properties reactive.
+ *
+ * Only **plain objects** and **arrays** are made deeply reactive — matching
+ * the runtime behaviour of `reactive()`. All built-in types (`Map`, `Set`,
+ * `WeakMap`, `WeakSet`, `Date`, `RegExp`, `ArrayBuffer`, `TypedArray`,
+ * `DataView`, `Function`) and `Signal` instances are returned as-is.
+ *
+ * **Map/Set note**: `Map` and `Set` are NOT deeply reactive. Modifying a value
+ * object stored inside a `Map` will not trigger updates. To make the value
+ * reactive, wrap it explicitly before storing: `map.set('key', reactive(obj))`.
+ *
+ * **Readonly preservation**: Array and tuple `readonly` modifiers are preserved
+ * — `readonly string[]` stays `readonly`, `string[]` stays mutable. Tuples
+ * retain their length and per-position types. Plain objects use `-readonly`
+ * because `reactive()` makes their properties writable.
+ *
+ * @template T
+ */
+export type DeepReactive<T> =
+  T extends ReactiveBuiltin | Signal<any>
+    ? T
+    : T extends readonly any[]                              // arrays & tuples (readonly or mutable)
+      ? { [K in keyof T]: DeepReactive<T[K]> }              // preserve readonly modifier, recurse elements
+      : T extends object                                    // plain objects
+        ? { -readonly [K in keyof T]: DeepReactive<T[K]> }  // make writable, recurse properties
+        : T;
 
 /**
  * Create a deep reactive proxy over a plain object or array.
  * Property reads/writes transparently track and trigger the underlying signal.
+ * Nested objects are also wrapped — reads return reactive sub-proxies.
  */
 export declare function reactive<T extends object>(
   obj: T
-): T & {
+): DeepReactive<T> & {
   /** Clear all subscribers on the underlying signal. */
   dispose?: () => void;
   /** @internal Underlying signal. */
@@ -91,6 +144,8 @@ export type Dispose = () => void;
 export interface EffectOptions {
   /** Run once when the effect is disposed. */
   onDispose?: () => void;
+  /** Run when dependencies change, before the effect re-runs. Useful for cancelling async operations. */
+  onInvalidate?: () => void;
   /** Scheduler phase. Defaults to `pre`. */
   flush?: 'sync' | 'pre' | 'post';
   /** Optional isolated scheduler instance. */
@@ -100,6 +155,11 @@ export interface EffectOptions {
 export interface Scheduler {
   queueJob(job: () => void): void;
   queuePostJob(job: () => void): void;
+  /** Run a high-priority job ahead of regular and post queues. */
+  queuePriorityJob(job: () => void): void;
+  /** Run a low-priority job when the browser is idle. Returns a cancel function. */
+  queueIdleJob(job: () => void): () => void;
+  cancelIdleJob(job: () => void): void;
   flushJobs(): void;
   nextTick<T>(callback?: () => T): Promise<T | undefined>;
   reset(): void;
@@ -182,6 +242,17 @@ export declare function watch<T>(
  */
 export declare function batch<T>(fn: () => T): T;
 
+export declare namespace batch {
+  /**
+   * Execute a function inside an atomic batch transaction. If the function
+   * throws, all signal writes performed during the transaction are rolled
+   * back to their original values and no deferred effects are flushed.
+   *
+   * @returns The return value of `fn`.
+   */
+  function atomic<T>(fn: () => T): T;
+}
+
 // ── Scheduler (internal, used by @kupola/platform) ───────────────────────────
 
 /** Schedule a job to run in the next microtask. Duplicate references are deduplicated. */
@@ -189,6 +260,15 @@ export declare function queueJob(job: () => void): void;
 
 /** Schedule a deduplicated job after regular jobs in the current tick. */
 export declare function queuePostJob(job: () => void): void;
+
+/** Run a high-priority job ahead of regular and post queues. */
+export declare function queuePriorityJob(job: () => void): void;
+
+/** Run a low-priority job when the browser is idle. Returns a cancel function. */
+export declare function queueIdleJob(job: () => void): () => void;
+
+/** Cancel a pending idle job. */
+export declare function cancelIdleJob(job: () => void): void;
 
 /** Immediately flush all pending jobs synchronously. */
 export declare function flushJobs(): void;

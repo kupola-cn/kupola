@@ -35,6 +35,7 @@ Alert.success('Operation successful');
 - [Divider](https://kupola-cn.github.io/kupola/components/display.html) - Visual separator
 - [StatCard](https://kupola-cn.github.io/kupola/components/display.html) - Statistics card
 - [Badge](https://kupola-cn.github.io/kupola/components/display.html) - Count badge
+- **Panel** - Surface container with optional title, header, and footer
 
 ### Navigation
 - [Breadcrumb](https://kupola-cn.github.io/kupola/components/navigation.html) - Page navigation
@@ -81,6 +82,83 @@ Alert.success('Operation successful');
 - [Heatmap](https://kupola-cn.github.io/kupola/components/data.html) - Heatmap chart
 - [Empty](https://kupola-cn.github.io/kupola/components/data.html) - Empty state
 
+### SchemaForm — Declarative Form Builder
+
+Build complex forms from a JSON schema. Supports text, number, email, password,
+textarea, date, time, select, checkbox, radio, switch, and switcher field types.
+
+```js
+import { SchemaForm } from '@kupola/components/schema-form';
+
+const schema = {
+  fields: [
+    { name: 'username', type: 'text', label: 'Username', required: true },
+    { name: 'email', type: 'email', label: 'Email', required: true },
+    { name: 'role', type: 'select', label: 'Role', options: [
+      { value: 'admin', label: 'Admin' },
+      { value: 'user', label: 'User' },
+    ] },
+    { name: 'active', type: 'switch', label: 'Active' },
+  ],
+};
+
+const form = SchemaForm({
+  schema,
+  density: 'default',    // 'compact' | 'default' | 'spacious'
+  variant: 'outlined',   // 'outlined' | 'filled' | 'underlined'
+  onSubmit: (values) => console.log(values),
+});
+```
+
+Advanced APIs: `createFormScope`, `bindSchemaForm`, `registerFormField`,
+`getFormFieldRenderer`, `validateSchema`, `schemaSubmit`, `FormDensity`,
+`FormVariant`.
+
+### Overlay Management
+
+Centralized overlay (modal/dialog/drawer) instance management.
+
+```js
+import { createOverlay, createOverlayPlugin, useOverlay } from '@kupola/components/overlay';
+
+// Create overlay service
+const overlay = createOverlay();
+
+// Open a modal
+const modal = overlay.openModal({
+  title: 'Confirm',
+  content: 'Are you sure?',
+  onConfirm: () => console.log('Confirmed'),
+});
+
+// Use as a plugin
+const app = createApp(AppRoot);
+app.use(createOverlayPlugin(overlay));
+
+// In components
+const { openModal, openDrawer } = useOverlay();
+```
+
+### Declarative Views
+
+`TableView` and `FormView` provide declarative, data-driven wrappers for the
+Table and Form components.
+
+```js
+import { TableView, FormView } from '@kupola/components/views';
+
+const userTable = TableView({
+  ariaLabel: 'Users',
+  columns: [
+    { key: 'name', title: 'Name', sortable: true },
+    { key: 'email', title: 'Email' },
+    { key: 'role', title: 'Role', render: (role) => `<span class="badge">${role}</span>` },
+  ],
+  data: users,
+  options: { rowKey: 'id', showPagination: true, pageSize: 20 },
+});
+```
+
 ### Media
 - [Avatar](https://kupola-cn.github.io/kupola/components/media.html) - User avatar
 - [Carousel](https://kupola-cn.github.io/kupola/components/media.html) - Image carousel
@@ -109,6 +187,33 @@ Icons.render(document.body);
 Icons.registerIcons({
   custom: '<path d="..."/>'
 });
+
+// Register icon groups
+Icons.registerGroup('navigation', {
+  'arrow-up': '<path d="..."/>',
+  'arrow-down': '<path d="..."/>',
+});
+Icons.registerAllGroups();
+
+// Register an icon provider
+import { registerIconProvider, createKupolaIconProvider, createIconComponent, setupIconResolver } from '@kupola/components/icons';
+
+registerIconProvider('lucide', createKupolaIconProvider({
+  resolve: (name) => lucideIcons[name],
+}));
+
+// Create a custom icon component
+const MyIcon = createIconComponent('my-icon');
+
+// Set up icon resolution
+setupIconResolver((name) => customIconMap[name]);
+
+// Available icon groups
+import { iconGroups } from '@kupola/components/icons';
+console.log(iconGroups);
+
+// SVG path constants
+import { PATHS } from '@kupola/components/icons';
 ```
 
 ### Custom Icon Replacement

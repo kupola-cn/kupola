@@ -137,6 +137,92 @@ export function inject(key, defaultValue = undefined) {
 
 // ─── defineComponent ─────────────────────────────────────────────────────────
 
+/* global __DEV__ */
+const _componentDevMode = typeof __DEV__ === 'undefined' || __DEV__;
+
+/**
+ * Normalize a props definition into a list of names and a map of definitions.
+ * Supports three formats:
+ *   ['count', 'name']                              — string array (no validation)
+ *   [{ name: 'count', type: Number, default: 0 }]  — object array (with validation)
+ *   { count: { type: Number, default: 0 } }         — object map (with validation)
+ * @returns {{ names: string[], defs: Map<string, {type:Function|null, default:*, required:boolean}|null> }}
+ */
+function normalizePropDefs(props) {
+  const names = [];
+  const defs = new Map();
+  if (!props || typeof props !== 'object') {return { names, defs };}
+
+  if (Array.isArray(props)) {
+    for (const item of props) {
+      if (typeof item === 'string') {
+        names.push(item);
+        defs.set(item, null);
+      } else if (item && typeof item === 'object' && item.name) {
+        names.push(item.name);
+        defs.set(item.name, {
+          type: item.type || null,
+          default: item.default,
+          required: !!item.required,
+          validator: typeof item.validator === 'function' ? item.validator : null,
+        });
+      }
+    }
+  } else {
+    for (const [ name, def ] of Object.entries(props)) {
+      names.push(name);
+      if (def && typeof def === 'object') {
+        defs.set(name, {
+          type: def.type || null,
+          default: def.default,
+          required: !!def.required,
+          validator: typeof def.validator === 'function' ? def.validator : null,
+        });
+      } else {
+        defs.set(name, null);
+      }
+    }
+  }
+  return { names, defs };
+}
+
+function getPropDefault(def) {
+  if (!def || def.default === undefined) {return undefined;}
+  if (typeof def.default === 'function' && (def.type === Array || def.type === Object)) {
+    return def.default();
+  }
+  return def.default;
+}
+
+function validateProp(name, value, def) {
+  if (!def) {return;}
+  if (value === undefined || value === null) {
+    if (def.required) {
+      console.warn(`[kupola W030] Required prop "${name}" is missing.`);
+    }
+    return;
+  }
+  if (def.type && typeof def.type === 'function') {
+    const T = def.type;
+    if (T === Array && !Array.isArray(value)) {
+      console.warn(`[kupola W031] Prop "${name}" expected Array, got ${typeof value}.`);
+    } else if (T === Object && (typeof value !== 'object' || Array.isArray(value))) {
+      console.warn(`[kupola W031] Prop "${name}" expected Object, got ${typeof value}.`);
+    } else if (T !== Array && T !== Object && value.constructor !== T) {
+      console.warn(`[kupola W031] Prop "${name}" expected ${T.name}, got ${value?.constructor?.name || typeof value}.`);
+    }
+  }
+  if (def.validator) {
+    try {
+      if (!def.validator(value)) {
+        console.warn(`[kupola W032] Prop "${name}" failed custom validator.`);
+      }
+    } catch (err) {
+      console.warn(`[kupola W032] Prop "${name}" validator threw: ${err.message}`);
+    }
+  }
+}
+
 /**
  * Define a reusable component.
  *
@@ -203,7 +289,8 @@ export function inject(key, defaultValue = undefined) {
  * @returns {Function} Component factory: (initialProps?, children?) => ComponentInstance
  */
 export function defineComponent(definition) {
-  const { props: propNames = [], setup, created, mounted, destroyed } = definition;
+  const { setup, created, mounted, destroyed } = definition;
+  const { names: propNames, defs: propDefs } = normalizePropDefs(definition.props);
 
   /**
    * Component factory function.
@@ -218,7 +305,13 @@ export function defineComponent(definition) {
     const eventHandlers = new Map();
 
     for (const name of propNames) {
-      propSignals[name] = signal(initialProps[name]);
+      const def = propDefs.get(name);
+      let value = initialProps[name];
+      if (value === undefined && def && def.default !== undefined) {
+        value = getPropDefault(def);
+      }
+      if (_componentDevMode) {validateProp(name, value, def);}
+      propSignals[name] = signal(value);
     }
 
     const emit = (eventName, ...args) => {
@@ -463,11 +556,17 @@ export function defineComponent(definition) {
         dispose();
       },
 
+      onBeforeUnmount: fn => instance.onBeforeUnmount(fn),
+
+      onAfterUnmount: fn => instance.onAfterUnmount(fn),
+
       update(newProps) {
         if (disposed || !newProps || typeof newProps !== 'object') {return;}
         for (const name of propNames) {
           if (name in newProps && propSignals[name]) {
-            propSignals[name].value = newProps[name];
+            const value = newProps[name];
+            if (_componentDevMode) {validateProp(name, value, propDefs.get(name));}
+            propSignals[name].value = value;
           }
         }
         if (renderFactory) {
@@ -532,4 +631,33 @@ export function hasComponent(name) {
  */
 export function clearRegistry() {
   registry.clear();
+}
+
+/**
+ * Define a lightweight stateless view component.
+ *
+ * Unlike `defineComponent`, `defineView` does not create reactive prop signals
+ * or lifecycle hooks. It is a simple factory that passes props directly to a
+ * render function. Ideal for route views and presentational components.
+ *
+ * ```js
+ * const UserView = defineView((props) => html`
+ *   <h1>${props.name}</h1>
+ * `);
+ *
+ * // Usage with router:
+ * { path: '/users/:id', component: UserView }
+ * ```
+ *
+ * @template TProps
+ * @param {(props: TProps) => any} renderFn  Render function receiving props.
+ * @returns {(props?: TProps) => any} View factory function.
+ */
+export function defineView(renderFn) {
+  if (typeof renderFn !== 'function') {
+    throw new TypeError('[kupola] defineView() expects a render function.');
+  }
+  return function view(props = {}) {
+    return renderFn(props);
+  };
 }

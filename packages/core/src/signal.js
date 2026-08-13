@@ -15,7 +15,9 @@ import {
   isProfilerEnabled,
   profileSignalWrite,
   profileSignalRead,
+  profileSignalCreation,
   profileTrigger,
+  unregisterSignal,
 } from './devtools.js';
 import { reportErrors } from './errors.js';
 
@@ -27,6 +29,33 @@ const defaultTriggerMaxJobs = 10000;
 
 /** @type {import('./effect.js').EffectRecord[]} */
 const effectStack = [];
+
+// ─── Atomic batch integration (added by batch.atomic) ────────────────────
+
+/**
+ * Whether the current run is inside an atomic transaction that requires
+ * signal mutation snapshots. Set to true by {@link setAtomicTracking} when
+ * an atomic transaction is registered.
+ *
+ * The active atomic context lookup is injected lazily from batch.js via
+ * {@link setAtomicTracking} to avoid a circular import between the two
+ * modules. The hot path in `enqueueTriggerSubscribers` tests only a
+ * single boolean so the overhead is negligible.
+ */
+let _findActiveAtomicContext = () => null;
+
+/** @internal Called once by batch.js on module load to wire up atomic tracking. */
+export function setAtomicTracking(findFn) {
+  if (typeof findFn !== 'function') {
+    throw new TypeError('[kupola] setAtomicTracking expects a function.');
+  }
+  _findActiveAtomicContext = findFn;
+}
+
+/** @internal @returns {boolean} Whether an atomic transaction is active. */
+function _hasActiveAtomicContext() {
+  return _findActiveAtomicContext() !== null;
+}
 
 /** @type {{ root: Signal, pendingComputeds: Set<Object>, pendingEffects: Set<Object> }|null} */
 let activeTriggerContext = null;
@@ -242,6 +271,12 @@ export class Signal {
 
   set value(newValue) {
     if (this._disposed || Object.is(this._value, newValue)) {return;}
+    // Snapshot the original value before mutation when inside an atomic
+    // transaction so that batch.atomic can roll back on failure.
+    const snapshotCtx = _findActiveAtomicContext();
+    if (snapshotCtx && !snapshotCtx._atomicSnapshots.has(this)) {
+      snapshotCtx._atomicSnapshots.set(this, this._value);
+    }
     this._value = newValue;
     if (profilerInstrumentationEnabled && isProfilerEnabled()) {profileSignalWrite(this);}
     trigger(this);
@@ -249,6 +284,24 @@ export class Signal {
 
   peek() {
     return this._value;
+  }
+
+  /**
+   * Permanently dispose this signal, releasing all subscriber references.
+   * After disposal, reads no longer register dependencies and writes are
+   * silently ignored. Use this to free memory when a signal is no longer
+   * needed, especially for long-lived scopes that create many signals.
+   */
+  dispose() {
+    if (this._disposed) {return;}
+    this._disposed = true;
+    unregisterSignal(this);
+    for (const eff of this._subscribers) {
+      if (eff && eff._deps) {
+        eff._deps.delete(this);
+      }
+    }
+    this._subscribers.clear();
   }
 
   toString() {
@@ -260,8 +313,12 @@ export class Signal {
   }
 }
 
-export function signal(initialValue) {
-  return new Signal(initialValue);
+export function signal(initialValue, options) {
+  const sig = new Signal(initialValue);
+  if (profilerInstrumentationEnabled) {
+    profileSignalCreation(sig, options?.label);
+  }
+  return sig;
 }
 
 const REACTIVE_SYMBOL = Symbol('kupola-reactive');

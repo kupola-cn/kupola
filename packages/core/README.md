@@ -187,6 +187,30 @@ The optional profiler is available from `@kupola/core/devtools`.
 | `runWithScheduler(scheduler, fn)` | Bind a scheduler to setup-created effects |
 | `setErrorHandler(handler)` | Configure reactive error handling |
 
+## DevTools
+
+Import from `@kupola/core/devtools` for signal/effect profiling:
+
+```js
+import { enableProfiler, getProfileReport, printProfileReport, resetProfiler } from '@kupola/core/devtools';
+
+// Enable profiling
+enableProfiler();
+
+// After some interactions...
+const report = getProfileReport();
+printProfileReport();
+// Signal stats: { count, reads, writes }
+// Effect stats: { count, runs }
+// Computed stats: { count, runs, cacheHits }
+
+// Reset profiling data
+resetProfiler();
+```
+
+In development mode, `window.__KUPOLA_SIGNALS__` provides a global registry
+of all active signals, computed values, and effects for debugging.
+
 ## License
 
 MIT

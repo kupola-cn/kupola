@@ -66,6 +66,7 @@ export interface SchemaFormSchema<TData extends object = Record<string, unknown>
 export interface SchemaFormApi<TData extends object = Record<string, unknown>> {
   readonly element: HTMLFormElement | null;
   validate(): boolean;
+  validateField(name: string): boolean;
   getData(): TData;
   getRawData(): Record<string, unknown>;
   setData(data: Partial<TData> | Record<string, unknown>): void;
@@ -159,6 +160,7 @@ export interface SchemaFormOptions<TData extends object = Record<string, unknown
   values?: Partial<TData> | Record<string, unknown>;
   options?: Omit<FormOptions, 'element'>;
   feedback?: boolean | { message?: boolean };
+  validateOn?: 'submit' | 'blur' | 'change';
   onReady?: (api: SchemaFormApi<TData>) => void;
   onSubmit?: SchemaSubmit<TData>;
   onInvalid?: (

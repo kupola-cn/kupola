@@ -9,7 +9,7 @@ export interface ProfileReport {
   totalTriggers: number;
   totalEffectRuns: number;
   totalComputedRecomputes: number;
-  signals: Array<{ label: string, reads: number, writes: number, triggers: number }>;
+  signals: Array<{ label: string, reads: number, writes: number, triggers: number, creationStack?: string }>;
   effects: Array<{
     label: string;
     runs: number;

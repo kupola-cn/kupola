@@ -58,6 +58,7 @@ export function createRouteRecord(route, parentPath = '') {
     components: route.components,
     children: route.children || [],
     meta: route.meta || {},
+    paramsSchema: route.params || null,
     beforeEnter: route.beforeEnter,
     beforeLeave: route.beforeLeave,
     transition: route.transition,
@@ -78,6 +79,31 @@ function _escapeRegex(value) {
 function _decodeParam(value) {
   try {return decodeURIComponent(value);}
   catch {return value;}
+}
+
+/**
+ * Convert a raw string param according to a schema type.
+ * Supported types: 'string' (default), 'number', 'boolean', 'json',
+ * or a custom parse function `(raw: string) => any`.
+ * @param {string} raw
+ * @param {string|Function} [type]
+ * @returns {*}
+ */
+function _convertParam(raw, type) {
+  if (!type || type === 'string') {return raw;}
+  if (typeof type === 'function') {return type(raw);}
+  switch (type) {
+  case 'number': {
+    const num = Number(raw);
+    return Number.isNaN(num) ? null : num;
+  }
+  case 'boolean':
+    return raw === 'true' || raw === '1';
+  case 'json':
+    try {return JSON.parse(raw);} catch {return null;}
+  default:
+    return raw;
+  }
 }
 
 function _compareSpecificity(left, right) {
@@ -168,8 +194,12 @@ export function matchRoute(records, path, query = {}) {
     const match = path.match(record.regex);
     if (match) {
       const params = {};
+      const schema = record.paramsSchema;
       record.paramNames.forEach((name, index) => {
-        params[name] = match[index + 1] ? _decodeParam(match[index + 1]) : '';
+        const raw = match[index + 1] ? _decodeParam(match[index + 1]) : '';
+        params[name] = schema && schema[name]
+          ? _convertParam(raw, schema[name])
+          : raw;
       });
 
       let depth = 0;

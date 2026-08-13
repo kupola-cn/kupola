@@ -1,4 +1,4 @@
-# Kupola 2.0 FAQ
+# Kupola 3.0 FAQ
 
 ## 安装与使用
 
@@ -22,7 +22,7 @@ cd my-project
 npm install
 ```
 
-支持 4 种模板：`static`（纯前端）、`flask`、`fastapi`、`gin`。
+支持 7 种模板：`static`（纯前端）、`static-ts`（TypeScript 前端）、`nextjs`、`nuxt`、`flask`、`fastapi`、`gin`。
 
 ### Q: 可以在已有项目中使用吗？
 
@@ -396,21 +396,21 @@ Vite 应用的完整入口见[ Vite 应用指南](/guide/vite-app)。当前发�
 
 ## 版本与迁移
 
-### Q: 2.0 和 1.x 的主要区别？
+### Q: 3.0 和 2.x 的主要区别？
 
-| 特性 | 1.x | 2.0 |
+| 特性 | 2.x | 3.0 |
 |------|-----|-----|
-| 响应式 | DOM 轮询 | Signal-based |
-| 组件数 | 48 | 48（完全重写） |
-| 依赖 | jQuery-like | 零依赖 |
-| 大小 | ~80KB | < 5KB 核心 |
-| SSR | 简洁 | renderToString + hydrate |
-| i18n | 无 | en-US / zh-CN |
-| TypeScript | 部分 | 完整类型定义 |
+| 响应式 | Signal-based | Signal-based（增强） |
+| 组件数 | 48 | 50+（新增组件） |
+| 依赖 | 零依赖 | 零依赖 |
+| 大小 | < 5KB 核心 | < 5KB 核心 |
+| SSR | renderToString + hydrate | renderToString + hydrate（增强） |
+| i18n | en-US / zh-CN | en-US / zh-CN（增强） |
+| TypeScript | 完整类型定义 | 完整类型定义 |
 
-### Q: 如何从 1.x 升级到 2.0？
+### Q: 如何从 2.x 升级到 3.0？
 
 1. 安装：`npm install @kupola/core @kupola/platform`
 2. 指令语法基本兼容（`k-data`、`k-show`、`k-bind` 等）
-3. 组件 API 有变化，参考组件文档更新调用方式
+3. 组件 API 有新增和增强，参考组件文档更新调用方式
 4. 移除旧的 CSS 引用，使用新的 CSS 设计令牌系统

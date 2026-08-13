@@ -100,6 +100,59 @@ api.get('/api/users', { requiredPermission: 'user:read' });
 - `getPermissionHandler()` - Get current handler
 - `clearPermissionHandler()` - Clear handler
 
+### Change Listeners
+- `onAuthContextChange(callback)` - Listen for auth context changes
+- `onPermissionHandlerChange(callback)` - Listen for permission handler changes
+
+```js
+import { onAuthContextChange, onPermissionHandlerChange } from '@kupola/auth';
+
+// Listen for auth context changes
+onAuthContextChange((context) => {
+  console.log('Auth context changed:', context);
+});
+
+// Listen for permission handler changes
+onPermissionHandlerChange((handler) => {
+  console.log('Permission handler changed');
+});
+```
+
+### Component Plugin
+
+```js
+import { createAuthPlugin, useAuth, AUTH_PROVIDER_KEY } from '@kupola/auth';
+
+// Create plugin
+const authPlugin = createAuthPlugin(authContext);
+
+// Use in app
+const app = createApp(AppRoot);
+app.use(authPlugin);
+
+// In components
+const { user, permissions, isAuthenticated } = useAuth();
+```
+
+### Permission Directive Cache
+
+```js
+import { processPermissionDirectives, clearCache } from '@kupola/auth';
+
+// Manually process all k-permission directives in a container
+processPermissionDirectives(document.getElementById('app'));
+
+// Clear permission cache
+clearCache();
+```
+
+### Internal Keys
+
+```js
+import { AUTH_KEY } from '@kupola/auth';
+// Used internally for provide/inject. Applications typically don't need this directly.
+```
+
 `k-permission` refreshes after `setAuthContext()` or a permission handler
 change. Frontend checks only control the UI; every API endpoint must enforce
 authorization on the server.
