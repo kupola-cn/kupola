@@ -6,7 +6,7 @@
  * - Auto-imports CSS tokens when Kupola components are detected
  *
  * Usage (webpack.config.js):
- *   const KupolaPlugin = require('@kupola/webpack-plugin');
+ *   const KupolaPlugin = require('./plugins/webpack-plugin-kupola');
  *   module.exports = { plugins: [new KupolaPlugin({ css: true })] };
  */
 
@@ -51,7 +51,7 @@ class KupolaWebpackPlugin {
               if (source.includes('@kupola/') && !source.includes('kupola.css')) {
                 const withCSS = source.replace(
                   '</head>',
-                  '  <link rel="stylesheet" href="node_modules/@kupola/platform/dist/css/index.css">\n</head>',
+                  '  <script type="module">\n    import \'@kupola/platform/css\';\n  </script>\n</head>',
                 );
                 compilation.assets[asset] = {
                   source: () => withCSS,

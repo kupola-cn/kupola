@@ -37,6 +37,15 @@ const VALID_DIRECTIVES = new Set([
   'k-if',
   'k-else',
   'k-cloak',
+  'k-class',
+  'k-style',
+  'k-transition',
+  'k-once',
+  'k-ref',
+  'k-key',
+  'k-router-link',
+  'k-router-view',
+  'k-permission',
 ]);
 
 // Shorthand patterns: :attr, @event
