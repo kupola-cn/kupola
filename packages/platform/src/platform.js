@@ -39,7 +39,7 @@ export { html, TemplateResult, htmlString, HtmlString } from './template.js';
 export { render, mount, createApp, setIconResolver, isComponentInstanceLike } from './render.js';
 
 // ── Component System ──────────────────────────────────────────────────────────
-export { defineComponent, register, getComponent, hasComponent, clearRegistry, provide, inject } from './component.js';
+export { defineComponent, defineView, register, getComponent, hasComponent, clearRegistry, provide, inject } from './component.js';
 export { getCurrentProvideContext, hasProvideContext, runWithProvideContext } from './context.js';
 
 // ── Directives ────────────────────────────────────────────────────────────────
@@ -70,6 +70,23 @@ export {
 
 // ── Lazy Load ────────────────────────────────────────────────────────────────
 export { lazyComponent, preloadComponent } from './lazy.js';
+
+// ── CSS Modules ──────────────────────────────────────────────────────────────
+export { css } from './css.js';
+
+// ── Form State Management ────────────────────────────────────────────────────
+export { useForm } from './form.js';
+
+// ── Query (dedup + cache) ────────────────────────────────────────────────────
+export {
+  useQuery,
+  invalidateQuery,
+  invalidateQueries,
+  prefetchQuery,
+  getQueryCacheSize,
+  getPendingQueryCount,
+  resetQueryCache,
+} from './query.js';
 
 // ── Error Boundary ───────────────────────────────────────────────────────────
 export { ErrorBoundary } from './errors.js';

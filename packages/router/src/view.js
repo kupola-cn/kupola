@@ -7,6 +7,7 @@
 
 import { useRouter } from './router-context.js';
 import { applyTransition, createTransitionManager } from './transition.js';
+import { getErrorHandler } from '@kupola/core';
 import {
   getCurrentProvideContext,
   render,
@@ -123,10 +124,40 @@ export class RouterViewDirective {
 
     if (!component) {return;}
 
+    // Show loading state if configured
+    const loadingComponent = record.loading || this.router.options?.loading;
+    if (loadingComponent) {
+      const loadingResult = typeof loadingComponent === 'function'
+        ? loadingComponent()
+        : loadingComponent;
+      if (loadingResult && typeof loadingResult === 'object') {
+        runWithProvideContext(this.provideContext, () => render(loadingResult, this.el));
+      }
+    }
+
     // Resolve async components before removing the current view. A failed or
     // superseded load must not leave the outlet blank.
     const componentFn = component.default || component;
-    const templateResult = await runWithProvideContext(this.provideContext, () => componentFn());
+    let templateResult;
+    try {
+      templateResult = await runWithProvideContext(this.provideContext, () => componentFn());
+    } catch (err) {
+      const errorHandler = getErrorHandler();
+      if (errorHandler) {
+        errorHandler(err, { source: 'router', phase: 'loadComponent', path: route.path });
+      } else {
+        console.error('[kupola/router] Failed to load route component:', err);
+      }
+
+      const errorComponent = record.error || this.router.options?.error;
+      if (errorComponent) {
+        templateResult = typeof errorComponent === 'function'
+          ? errorComponent(err)
+          : errorComponent;
+      } else {
+        throw err;
+      }
+    }
     if (this.destroyed || token !== this.renderToken) {return;}
 
     const transitionController = typeof AbortController === 'function'

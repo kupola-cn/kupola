@@ -177,10 +177,27 @@ export function Tree(options = {}) {
   if (options.lined) {classes.push('ds-tree--lined');}
   if (options.compact) {classes.push('ds-tree--compact');}
 
-  const container = document.createDocumentFragment();
+  // Virtual scroll: when enabled, wrap the tree in a scrollable container and
+  // apply CSS content-visibility to skip off-screen node rendering.
+  const virtualScroll = options.virtualScroll === true
+    || (options.virtualScroll && typeof options.virtualScroll === 'object');
+  const vsMaxHeight = (typeof options.virtualScroll === 'object' && options.virtualScroll?.maxHeight)
+    || options.maxHeight || 400;
+  const vsItemHeight = (typeof options.virtualScroll === 'object' && options.virtualScroll?.itemHeight)
+    || 36;
+
+  const container = virtualScroll && typeof document !== 'undefined'
+    ? document.createElement('div')
+    : document.createDocumentFragment();
   const instance = render(html`<ul class="ds-tree" role="tree"></ul>`, container);
   const root = container.querySelector('.ds-tree');
   root.className = classes.join(' ');
+
+  if (virtualScroll && container.nodeType === 1) {
+    container.className = 'ds-tree__scroll-container';
+    container.style.maxHeight = `${vsMaxHeight}px`;
+    container.style.overflowY = 'auto';
+  }
 
   function renderRecords() {
     root.replaceChildren();
@@ -190,6 +207,10 @@ export function Tree(options = {}) {
       const childrenId = `ds-tree-${id}-group-${index}`;
       const li = document.createElement('li');
       li.setAttribute('role', 'none');
+      if (virtualScroll) {
+        li.style.contentVisibility = 'auto';
+        li.style.containIntrinsicSize = `${vsItemHeight}px`;
+      }
 
       const item = document.createElement('div');
       item.className = 'ds-tree__item';

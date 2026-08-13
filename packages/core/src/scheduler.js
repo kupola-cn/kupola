@@ -55,9 +55,11 @@ export function runWithScheduler(scheduler, fn) {
 /**
  * Create an isolated reactive job scheduler.
  *
- * @param {{ maxJobs?: number, name?: string }} [options]
+ * @param {{ maxJobs?: number, name?: string, onError?: Function }} [options]
  * @returns {{ queueJob: Function, queuePostJob: Function, flushJobs: Function,
- *   nextTick: Function, reset: Function }}
+ *   nextTick: Function, reset: Function,
+ *   queuePriorityJob: Function, queueIdleJob: Function,
+ *   cancelIdleJob: Function }}
  */
 export function createScheduler(options = {}) {
   if (options === null || typeof options !== 'object' || Array.isArray(options)) {
@@ -76,13 +78,46 @@ export function createScheduler(options = {}) {
   }
   const pendingJobs = new Set();
   const pendingPostJobs = new Set();
+  /** High-priority jobs (e.g. user interaction responses) — flushed before both post and idle queues. */
+  const pendingHighPriorityJobs = new Set();
+  /** Low-priority jobs that run only when the browser is idle, or after all higher priority queues are drained. */
+  const pendingIdleJobs = new Set();
   let isFlushScheduled = false;
   let isFlushing = false;
+  let idleCallbackScheduled = false;
 
   function scheduleFlush() {
     if (!isFlushScheduled && !isFlushing) {
       isFlushScheduled = true;
       scheduleMicrotask(flushJobs);
+    }
+  }
+
+  function scheduleIdleFlush() {
+    if (idleCallbackScheduled) {return;}
+    idleCallbackScheduled = true;
+    const runIdle = () => {
+      idleCallbackScheduled = false;
+      const work = () => {
+        if (pendingIdleJobs.size === 0) {return;}
+        const jobs = [ ...pendingIdleJobs ];
+        pendingIdleJobs.clear();
+        for (const job of jobs) {
+          try { job(); } catch { /* swallow idle job errors */ }
+        }
+      };
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(work, { timeout: 3000 });
+      } else {
+        setTimeout(work, 16);
+      }
+    };
+    // Schedule idle work after the current flush completes to avoid starving
+    // high-priority work.
+    if (isFlushing) {
+      scheduleMicrotask(runIdle);
+    } else {
+      runIdle();
     }
   }
 
@@ -102,6 +137,41 @@ export function createScheduler(options = {}) {
     scheduleFlush();
   }
 
+  /**
+   * Queue a high-priority job that runs before regular and post queues.
+   * Useful for user interaction responses that must be processed promptly.
+   *
+   * @param {Function} job
+   */
+  function queuePriorityJob(job) {
+    if (typeof job !== 'function') {
+      throw new TypeError('[kupola] queuePriorityJob() expects a function.');
+    }
+    pendingHighPriorityJobs.add(job);
+    scheduleFlush();
+  }
+
+  /**
+   * Queue a low-priority job that runs only after the browser becomes idle.
+   * Returns a cancel function.
+   *
+   * @param {Function} job
+   * @returns {() => void}
+   */
+  function queueIdleJob(job) {
+    if (typeof job !== 'function') {
+      throw new TypeError('[kupola] queueIdleJob() expects a function.');
+    }
+    pendingIdleJobs.add(job);
+    scheduleIdleFlush();
+    return () => { pendingIdleJobs.delete(job); };
+  }
+
+  function cancelIdleJob(job) {
+    if (typeof job !== 'function') {return;}
+    pendingIdleJobs.delete(job);
+  }
+
   function flushJobs() {
     if (isFlushing) {return;}
 
@@ -111,9 +181,36 @@ export function createScheduler(options = {}) {
     let jobCount = 0;
     let loopDetected = false;
     try {
-      // Regular jobs always precede post jobs. New regular jobs created by a
-      // post job are handled before the next post batch.
-      while (pendingJobs.size > 0 || pendingPostJobs.size > 0) {
+      // Drain high → regular → post queues. New high priority jobs added by
+      // post-jobs are still processed before the next post batch so that user
+      // interactions always win over bookkeeping work.
+      while (
+        pendingHighPriorityJobs.size > 0
+        || pendingJobs.size > 0
+        || pendingPostJobs.size > 0
+      ) {
+        // High priority first.
+        if (pendingHighPriorityJobs.size > 0) {
+          const jobs = [ ...pendingHighPriorityJobs ];
+          pendingHighPriorityJobs.clear();
+          for (const job of jobs) {
+            jobCount++;
+            if (jobCount > maxJobs) {
+              pendingHighPriorityJobs.clear();
+              const error = new Error(
+                `[kupola] Scheduler exceeded the maximum of ${maxJobs} jobs in one flush.`,
+              );
+              error.code = 'KUPOLA_SCHEDULER_LOOP';
+              errors.push(error);
+              loopDetected = true;
+              break;
+            }
+            try { job(); } catch (error) { errors.push(error); }
+          }
+          if (loopDetected) {break;}
+          continue;
+        }
+
         const queue = pendingJobs.size > 0 ? pendingJobs : pendingPostJobs;
         const jobs = [ ...queue ];
         queue.clear();
@@ -133,7 +230,6 @@ export function createScheduler(options = {}) {
           try {
             job();
           } catch (error) {
-            // One failing job must not block unrelated jobs in the same tick.
             errors.push(error);
           }
         }
@@ -141,8 +237,15 @@ export function createScheduler(options = {}) {
       }
     } finally {
       isFlushing = false;
-      if ((pendingJobs.size > 0 || pendingPostJobs.size > 0) && !isFlushScheduled) {
+      if ((
+        pendingJobs.size > 0
+        || pendingPostJobs.size > 0
+        || pendingHighPriorityJobs.size > 0
+      ) && !isFlushScheduled) {
         scheduleFlush();
+      }
+      if (pendingIdleJobs.size > 0) {
+        scheduleIdleFlush();
       }
     }
 
@@ -170,10 +273,22 @@ export function createScheduler(options = {}) {
   function reset() {
     pendingJobs.clear();
     pendingPostJobs.clear();
+    pendingHighPriorityJobs.clear();
+    pendingIdleJobs.clear();
     isFlushScheduled = false;
+    idleCallbackScheduled = false;
   }
 
-  return Object.freeze({ queueJob, queuePostJob, flushJobs, nextTick, reset });
+  return Object.freeze({
+    queueJob,
+    queuePostJob,
+    queuePriorityJob,
+    queueIdleJob,
+    cancelIdleJob,
+    flushJobs,
+    nextTick,
+    reset,
+  });
 }
 
 const defaultScheduler = createScheduler();
@@ -184,6 +299,37 @@ export function queueJob(job) {
 
 export function queuePostJob(job) {
   defaultScheduler.queuePostJob(job);
+}
+
+/**
+ * Queue a high-priority job that runs before regular and post queues.
+ * Prefer this for user interaction responses that must not be delayed by
+ * background bookkeeping.
+ *
+ * @param {Function} job
+ */
+export function queuePriorityJob(job) {
+  defaultScheduler.queuePriorityJob(job);
+}
+
+/**
+ * Queue a low-priority job that runs when the browser is idle.
+ * Returns a cancel function that removes the job if it has not run yet.
+ *
+ * @param {Function} job
+ * @returns {() => void}
+ */
+export function queueIdleJob(job) {
+  return defaultScheduler.queueIdleJob(job);
+}
+
+/**
+ * Cancel a pending idle job.
+ *
+ * @param {Function} job
+ */
+export function cancelIdleJob(job) {
+  defaultScheduler.cancelIdleJob(job);
 }
 
 export function flushJobs() {

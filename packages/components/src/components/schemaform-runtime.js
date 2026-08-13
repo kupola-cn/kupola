@@ -6,7 +6,7 @@
  * @module components/schemaform/runtime
  */
 
-import { KUPOLA_EVENT_MOUNT, FormDensity, cx, hasOwn } from './schemaform-core.js';
+import { KUPOLA_EVENT_MOUNT, FIELD_SELECTOR, FormDensity, cx, hasOwn } from './schemaform-core.js';
 import { normalizeSchema } from './schemaform-schema.js';
 import { html } from '@kupola/platform/template';
 import {
@@ -28,6 +28,7 @@ import {
 import { renderField } from './schemaform-render.js';
 import { Form } from './form.js';
 import { Message } from './message.js';
+import { validateSchema } from './schemaform-validation.js';
 
 function resolveFormElement(value) {
   if (typeof value === 'string') {
@@ -275,6 +276,8 @@ export function createFormScope(schemaDefinition, options = {}) {
   let message = null;
   let customControllers = new Map();
   let disconnectObserver = null;
+  const validateOn = String(options.validateOn || 'submit').toLowerCase();
+  const fieldListeners = new Set();
 
   function getMessage() {
     if (!message && typeof document !== 'undefined') {
@@ -323,6 +326,8 @@ export function createFormScope(schemaDefinition, options = {}) {
   function destroyRuntime() {
     disconnectObserver?.disconnect();
     disconnectObserver = null;
+    for (const cleanup of fieldListeners) {cleanup();}
+    fieldListeners.clear();
     destroyCustomControllers(customControllers);
     form?.destroy();
     form = null;
@@ -342,6 +347,20 @@ export function createFormScope(schemaDefinition, options = {}) {
     destroyRuntime();
     form = Form({ element: formElement, ...(options.options || {}) });
     customControllers = createCustomControllers(formElement, formSchema, api);
+
+    // Wire up per-field validation based on validateOn config.
+    if (validateOn === 'blur' || validateOn === 'change') {
+      const eventType = validateOn === 'blur' ? 'blur' : 'input';
+      const handler = event => {
+        const target = event.target;
+        if (!target || !target.name) {return;}
+        if (typeof target.matches === 'function' && !target.matches(FIELD_SELECTOR)) {return;}
+        api.validateField(target.name);
+      };
+      formElement.addEventListener(eventType, handler, validateOn === 'blur');
+      fieldListeners.add(() => formElement.removeEventListener(eventType, handler, validateOn === 'blur'));
+    }
+
     options.onReady?.(api);
     disconnectObserver = createDisconnectObserver(formElement, destroyRuntime);
     return api;
@@ -461,6 +480,23 @@ export function createFormScope(schemaDefinition, options = {}) {
       const domValid = form?.validate() || false;
       const customValid = validateCustomFields();
       return domValid && customValid;
+    },
+    validateField(name) {
+      if (!form || !formSchema.fields.some(f => f.name === name)) {return true;}
+      const data = readData();
+      const result = validateSchema(formSchema, data);
+      const fieldErrors = result.errors.filter(e => e.name === name);
+      const fieldEl = form.element?.elements?.namedItem(name);
+      if (fieldErrors.length > 0) {
+        if (fieldEl) {form.showError(fieldEl, fieldErrors[0].message);}
+        const customEntry = customControllers.get(name);
+        if (customEntry) {showCustomError(customEntry.root, fieldErrors[0].message);}
+        return false;
+      }
+      if (fieldEl) {form.clearError(fieldEl);}
+      const customEntry = customControllers.get(name);
+      if (customEntry) {clearCustomError(customEntry.root);}
+      return true;
     },
     getData() {
       return readData();

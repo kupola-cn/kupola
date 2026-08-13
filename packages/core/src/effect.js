@@ -152,6 +152,7 @@ export function effect(fn, options = {}) {
 
   const scope = activeScope && activeScope._active ? activeScope : null;
   const onDispose = options && typeof options.onDispose === 'function' ? options.onDispose : null;
+  const onInvalidate = options && typeof options.onInvalidate === 'function' ? options.onInvalidate : null;
   const flush = options && options.flush !== undefined ? options.flush : 'pre';
   if (flush !== 'sync' && flush !== 'pre' && flush !== 'post') {
     throw new TypeError('[kupola] effect() flush must be sync, pre, or post.');
@@ -173,6 +174,8 @@ export function effect(fn, options = {}) {
     _running: false,
     _cleanup: null,
     _onDispose: onDispose,
+    _onInvalidate: onInvalidate,
+    _firstRun: true,
     _scope: scope,
     _flush: flush,
     _sync: flush === 'sync',
@@ -204,6 +207,9 @@ function runEffect(eff) {
   if (eff._disposed || eff._running) {return;}
   eff._running = true;
   try {
+    if (eff._onInvalidate && !eff._firstRun) {
+      try { eff._onInvalidate(); } catch { /* swallow onInvalidate errors */ }
+    }
     cleanupDeps(eff);
     const cleanupResult = runCleanup(eff);
 
@@ -225,6 +231,7 @@ function runEffect(eff) {
     }
 
     eff._cleanup = typeof result === 'function' ? result : null;
+    eff._firstRun = false;
     if (effectFailed) {throw effectError;}
     if (cleanupResult.failed) {throw cleanupResult.error;}
   } finally {

@@ -6,6 +6,8 @@
  * @module render
  */
 
+/* global __DEV__ */
+
 import { effect, getErrorHandler, runWithScheduler } from '@kupola/core';
 import { HtmlString } from './template.js';
 import { walk } from './directives.js';
@@ -83,6 +85,65 @@ export function isHtmlString(v) {
 /** Unique marker prefix — extremely unlikely in real HTML. */
 const M = '\u0EBF';
 const marker = (i) => `${M}${i}${M}`;
+
+// ─── Template Classification Cache ──────────────────────────────────────────
+
+/**
+ * Cache marker classification results per template strings + dynamic signature.
+ * Key: strings array (WeakMap) → Map<dynamicSignature, Map<markerIndex, classification>>
+ */
+const _templateClassCache = new WeakMap();
+
+/**
+ * Compute a signature string indicating which value slots are markers ('M')
+ * vs inlined literals ('I'). Same signature means same htmlStr structure.
+ * @param {TemplateResult} tpl
+ * @returns {string}
+ */
+function computeDynamicSignature(tpl) {
+  const parts = [];
+  for (let i = 0; i < tpl.values.length; i++) {
+    const v = tpl.values[i];
+    const isDynamic = isTemplateResultLike(v)
+      || isComponentInstanceLike(v)
+      || (Array.isArray(v) && v.length > 0
+        && (isTemplateResultLike(v[0]) || isComponentInstanceLike(v[0])))
+      || typeof v === 'function'
+      || isSignalLike(v);
+    parts.push(isDynamic ? 'M' : 'I');
+  }
+  return parts.join('');
+}
+
+/**
+ * Get or create cached marker classifications for a template.
+ * @param {TemplateResult} tpl
+ * @param {string} htmlStr
+ * @returns {Map<number, {type: string, attrName?: string}>}
+ */
+function getMarkerClassifications(tpl, htmlStr) {
+  const strings = tpl.strings;
+  const signature = computeDynamicSignature(tpl);
+
+  let sigMap = _templateClassCache.get(strings);
+  if (!sigMap) {
+    sigMap = new Map();
+    _templateClassCache.set(strings, sigMap);
+  }
+
+  let classifications = sigMap.get(signature);
+  if (classifications) {return classifications;}
+
+  classifications = new Map();
+  for (let i = 0; i < tpl.values.length; i++) {
+    const m = marker(i);
+    if (htmlStr.includes(m)) {
+      classifications.set(i, classifyPosition(htmlStr, m));
+    }
+  }
+  sigMap.set(signature, classifications);
+  return classifications;
+}
 
 // ─── HTML Serialization ──────────────────────────────────────────────────────
 
@@ -162,6 +223,64 @@ function classifyPosition(htmlStr, m) {
   return { type: 'attr', attrName };
 }
 
+// ─── Template Fragment Cache (Static Hoisting) ──────────────────────────────
+
+/**
+ * Cache parsed template fragments per (strings, dynamic signature) pair.
+ * Avoids repeated HTML parsing for templates with identical structure.
+ *
+ * Key: strings array (WeakMap) → Map<dynamicSignature, DocumentFragment>
+ *
+ * When a template is rendered for the first time, we serialize and parse it,
+ * then store a cloned copy of the resulting DocumentFragment. Subsequent
+ * renders with the same strings + dynamic signature clone the cached
+ * fragment instead of parsing the HTML string from scratch, significantly
+ * reducing DOM construction overhead for large or frequently-rendered
+ * templates.
+ */
+const _templateFragmentCache = new WeakMap();
+
+/**
+ * Get or create a cached template fragment for the given template.
+ *
+ * For cache hits, returns a deep-cloned fragment ready for marker processing.
+ * For cache misses, parses the HTML string, stores a clone for future use,
+ * and returns the freshly parsed fragment.
+ *
+ * @param {TemplateResult} tpl
+ * @param {string} htmlStr  Already-serialized HTML string (used on cache miss).
+ * @returns {{ fragment: DocumentFragment, fromCache: boolean }}
+ */
+function getOrCreateFragment(tpl, htmlStr) {
+  const strings = tpl.strings;
+  const signature = computeDynamicSignature(tpl);
+
+  // Only cache templates where every value slot is dynamic ('M').
+  // Templates with inline ('I') values produce different HTML strings on each
+  // call (because the inline values are baked into the markup), so they must
+  // be parsed fresh each time. All-dynamic templates (signals, functions,
+  // nested TemplateResults) share the same marker-based HTML structure and
+  // benefit from fragment caching.
+  if (signature.includes('I')) {
+    return { fragment: parseHTML(htmlStr), fromCache: false };
+  }
+
+  let sigMap = _templateFragmentCache.get(strings);
+  if (!sigMap) {
+    sigMap = new Map();
+    _templateFragmentCache.set(strings, sigMap);
+  }
+
+  let cached = sigMap.get(signature);
+  if (cached) {
+    return { fragment: cached.cloneNode(true), fromCache: true };
+  }
+
+  const fragment = parseHTML(htmlStr);
+  sigMap.set(signature, fragment.cloneNode(true));
+  return { fragment, fromCache: false };
+}
+
 // ─── DOM Parsing ──────────────────────────────────────────────────────────────
 
 /**
@@ -175,13 +294,111 @@ function parseHTML(htmlStr) {
   return tpl.content;
 }
 
+// ─── Dev-mode template validation ───────────────────────────────────────────
+
+const _isDevMode = typeof __DEV__ === 'undefined' || __DEV__;
+const VOID_ELEMENTS = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+  'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
+
+// Common DOM event names for on* attribute validation.
+const KNOWN_EVENTS = new Set([
+  'click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout',
+  'mouseenter', 'mouseleave', 'keydown', 'keyup', 'keypress',
+  'input', 'change', 'submit', 'reset', 'focus', 'blur', 'focusin', 'focusout',
+  'load', 'error', 'abort', 'resize', 'scroll',
+  'contextmenu', 'wheel', 'select',
+  'drag', 'dragend', 'dragenter', 'dragleave', 'dragover', 'dragstart', 'drop',
+  'touchstart', 'touchend', 'touchmove', 'touchcancel',
+  'pointerdown', 'pointerup', 'pointermove', 'pointerover', 'pointerout', 'pointerenter', 'pointerleave', 'pointercancel',
+  'animationstart', 'animationend', 'animationiteration',
+  'transitionend', 'transitionstart',
+  'compositionstart', 'compositionend', 'compositionupdate',
+  'copy', 'cut', 'paste',
+  'play', 'pause', 'ended', 'timeupdate', 'volumechange', 'seeking', 'seeked',
+  'canplay', 'canplaythrough', 'waiting', 'stalled', 'suspend', 'loadeddata', 'loadedmetadata',
+  'beforeinput', 'beforetoggle',
+  'invalid', 'search', 'toggle',
+]);
+
+/**
+ * Validate a serialized HTML template string for common authoring errors.
+ * Logs warnings to the console — does not throw.
+ * @param {string} htmlStr
+ */
+function validateTemplate(htmlStr) {
+  // Quick check: skip validation for strings without any tags.
+  if (!htmlStr || htmlStr.indexOf('<') === -1) {return;}
+
+  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9-]*)(\s[^<>]*?)?\s*(\/?)>/g;
+  const stack = [];
+  let match;
+  while ((match = tagPattern.exec(htmlStr)) !== null) {
+    const [ full, tagName, , selfClose ] = match;
+    const tag = tagName.toLowerCase();
+    const isClosing = full.startsWith('</');
+
+    if (isClosing) {
+      const idx = stack.lastIndexOf(tag);
+      if (idx === -1) {
+        console.warn(`[kupola W020] Unexpected closing tag </${tag}> — no matching opening tag.`);
+      } else if (idx !== stack.length - 1) {
+        const unclosed = stack.slice(idx + 1);
+        console.warn(`[kupola W021] </${tag}> closed before: </${unclosed.join('>, </')}>.`);
+        stack.length = idx;
+      } else {
+        stack.pop();
+      }
+    } else if (!selfClose && !VOID_ELEMENTS.has(tag)) {
+      stack.push(tag);
+    }
+  }
+
+  if (stack.length > 0) {
+    console.warn(`[kupola W022] Unclosed tag(s): <${stack.join('>, <')}>.`);
+  }
+
+  // Check for suspicious on* event handler attributes (typos like onClcik).
+  const onAttrPattern = /\son([a-z]+)\s*=/gi;
+  let attrMatch;
+  while ((attrMatch = onAttrPattern.exec(htmlStr)) !== null) {
+    const eventName = attrMatch[1].toLowerCase();
+    if (!KNOWN_EVENTS.has(eventName)) {
+      console.warn(`[kupola W023] Unknown event handler "on${attrMatch[1]}" — did you mean "on${_closestEvent(eventName)}"?`);
+    }
+  }
+}
+
+/** Find the closest matching known event name for a typo suggestion. */
+function _closestEvent(input) {
+  let best = null;
+  let bestDist = Infinity;
+  for (const evt of KNOWN_EVENTS) {
+    // Compute simple edit distance (Damerau-Levenshtein without transposition).
+    const lenDiff = Math.abs(evt.length - input.length);
+    let dist = lenDiff;
+    const minLen = Math.min(evt.length, input.length);
+    for (let i = 0; i < minLen; i++) {
+      if (evt[i] !== input[i]) {dist++;}
+    }
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = evt;
+    }
+  }
+  return best || 'click';
+}
+
 function createMountedTemplate(tpl) {
   const htmlStr = serialize(tpl);
-  const fragment = parseHTML(htmlStr);
+  if (_isDevMode) {validateTemplate(htmlStr);}
+  const { fragment } = getOrCreateFragment(tpl, htmlStr);
   const instance = new TemplateInstance();
   instance.fragment = fragment;
+  const cachedClassifications = getMarkerClassifications(tpl, htmlStr);
   try {
-    _processNode(fragment, tpl.values, htmlStr, instance);
+    _processNode(fragment, tpl.values, htmlStr, instance, cachedClassifications);
     for (const part of instance.parts) {
       part.mount();
     }
@@ -242,6 +459,7 @@ export class TextPart {
     this._childInstances = [];
     this._anchor = null;
     this._provideContext = getCurrentProvideContext();
+    this._lastSetValue = Symbol('unset');
   }
 
   /** Create the initial DOM and bind the reactive effect. */
@@ -268,6 +486,8 @@ export class TextPart {
   }
 
   _setValue(value) {
+    if (Object.is(value, this._lastSetValue)) {return;}
+    this._lastSetValue = value;
     if (isTemplateResultLike(value) || isComponentInstanceLike(value)) {
       this._setRenderable(value);
     } else if (Array.isArray(value) && value.length > 0
@@ -409,6 +629,8 @@ export class AttrPart {
     this.rawValue = rawValue;
     this._dispose = null;
     this._provideContext = getCurrentProvideContext();
+    this._lastAppliedValue = Symbol('unset');
+    this._lastAppliedRemove = Symbol('unset');
   }
 
   _readValue() {
@@ -437,6 +659,9 @@ export class AttrPart {
 
   _applyValue() {
     const { remove, value } = this._readValue();
+    if (Object.is(value, this._lastAppliedValue) && Object.is(remove, this._lastAppliedRemove)) {return;}
+    this._lastAppliedValue = value;
+    this._lastAppliedRemove = remove;
     const attrName = this.attrName.toLowerCase();
     const booleanProperty = {
       allowfullscreen: 'allowFullscreen',
@@ -986,6 +1211,8 @@ export class IconPart {
     this._activeRequest = null;
     this._isDestroyed = false;
     this._provideContext = getCurrentProvideContext();
+    this._lastName = Symbol('unset');
+    this._lastSize = Symbol('unset');
   }
 
   mount() {
@@ -998,6 +1225,10 @@ export class IconPart {
       try {
         const name = isSignalLike(this.nameValue) ? this.nameValue.value : this.nameValue;
         const size = isSignalLike(this.sizeValue) ? this.sizeValue.value : this.sizeValue;
+
+        if (Object.is(name, this._lastName) && Object.is(size, this._lastSize)) {return;}
+        this._lastName = name;
+        this._lastSize = size;
 
         if (!name || !resolveIcon) {
           this._activeRequest = null;
@@ -1053,11 +1284,57 @@ export class TemplateInstance {
     this.parts = [];
     /** @type {DocumentFragment|null} */
     this.fragment = null;
+    /** @type {Set<Function>} Hooks invoked before parts are destroyed. */
+    this._beforeUnmount = new Set();
+    /** @type {Set<Function>} Hooks invoked after parts are destroyed. */
+    this._afterUnmount = new Set();
+    /** @type {boolean} */
+    this._destroyed = false;
+  }
+
+  /**
+   * Register a callback invoked *before* the template parts are destroyed.
+   * Use this to cancel pending work (timers, fetches, subscriptions) while
+   * the DOM and reactive graph are still intact.
+   *
+   * @param {Function} fn
+   * @returns {() => void} Unsubscribe function.
+   */
+  onBeforeUnmount(fn) {
+    if (typeof fn !== 'function') {
+      throw new TypeError('[kupola] onBeforeUnmount expects a function.');
+    }
+    this._beforeUnmount.add(fn);
+    return () => {this._beforeUnmount.delete(fn);};
+  }
+
+  /**
+   * Register a callback invoked *after* the template parts are destroyed.
+   * Use this to release resources that must not run while parts are being
+   * torn down (e.g. final analytics, cleanup references).
+   *
+   * @param {Function} fn
+   * @returns {() => void} Unsubscribe function.
+   */
+  onAfterUnmount(fn) {
+    if (typeof fn !== 'function') {
+      throw new TypeError('[kupola] onAfterUnmount expects a function.');
+    }
+    this._afterUnmount.add(fn);
+    return () => {this._afterUnmount.delete(fn);};
   }
 
   /** Remove all reactive effects and event listeners. */
   destroy() {
+    if (this._destroyed) {return;}
+    this._destroyed = true;
+
     let firstError;
+    for (const hook of this._beforeUnmount) {
+      try { hook(); } catch (error) { if (!firstError) {firstError = error;} }
+    }
+    this._beforeUnmount.clear();
+
     for (const part of this.parts) {
       try {
         part.destroy();
@@ -1066,6 +1343,12 @@ export class TemplateInstance {
       }
     }
     this.parts.length = 0;
+
+    for (const hook of this._afterUnmount) {
+      try { hook(); } catch (error) { if (!firstError) {firstError = error;} }
+    }
+    this._afterUnmount.clear();
+
     if (firstError) {throw firstError;}
   }
 }
@@ -1128,14 +1411,14 @@ export function render(tpl, container, options = {}) {
  * @param {string}            htmlStr  Full HTML string (for classification)
  * @param {TemplateInstance}  instance
  */
-function _processNode(node, values, htmlStr, instance) {
+function _processNode(node, values, htmlStr, instance, cachedClassifications) {
   // Process child nodes (snapshot first — we mutate the list)
   const children = [ ...node.childNodes ];
   for (const child of children) {
     if (child.nodeType === 3 /* TEXT_NODE */) {
-      _processTextNode(child, values, htmlStr, instance, node);
+      _processTextNode(child, values, htmlStr, instance, node, cachedClassifications);
     } else if (child.nodeType === 1 /* ELEMENT_NODE */) {
-      _processElement(child, values, htmlStr, instance);
+      _processElement(child, values, htmlStr, instance, cachedClassifications);
     }
   }
 }
@@ -1143,16 +1426,15 @@ function _processNode(node, values, htmlStr, instance) {
 /**
  * Check a text node for markers. If found, replace with a TextPart.
  */
-function _processTextNode(textNode, values, htmlStr, instance, parent) {
+function _processTextNode(textNode, values, htmlStr, instance, parent, cachedClassifications) {
   const text = textNode.textContent || '';
   for (let i = 0; i < values.length; i++) {
     const m = marker(i);
     const idx = text.indexOf(m);
     if (idx === -1) {continue;}
 
-    // Only create a Part if this marker is for TEXT content
-    // (attribute markers are handled in _processElement)
-    const cls = classifyPosition(htmlStr, m);
+    // Use cached classification if available, otherwise compute
+    const cls = cachedClassifications?.get(i) || classifyPosition(htmlStr, m);
     if (cls.type !== 'text') {continue;}
 
     const before = text.substring(0, idx);
@@ -1186,7 +1468,7 @@ function _processTextNode(textNode, values, htmlStr, instance, parent) {
 
     // Recursively check the "after" text for more markers
     if (after) {
-      _processTextNode(afterNode, values, htmlStr, instance, parent);
+      _processTextNode(afterNode, values, htmlStr, instance, parent, cachedClassifications);
     }
     return; // Only handle one marker per call; recursion handles the rest
   }
@@ -1195,7 +1477,7 @@ function _processTextNode(textNode, values, htmlStr, instance, parent) {
 /**
  * Check an element's attributes for markers.
  */
-function _processElement(element, values, htmlStr, instance) {
+function _processElement(element, values, htmlStr, instance, cachedClassifications) {
   if (element.tagName.toLowerCase() === 'icon') {
     const nameAttr = element.getAttribute('name');
     const sizeAttr = element.getAttribute('size');
@@ -1227,7 +1509,7 @@ function _processElement(element, values, htmlStr, instance) {
       const m = marker(i);
       if (!attr.value.includes(m)) {continue;}
 
-      const cls = classifyPosition(htmlStr, m);
+      const cls = cachedClassifications?.get(i) || classifyPosition(htmlStr, m);
 
       if (cls.type === 'event' && cls.attrName === attr.name) {
         // Event handler
@@ -1245,7 +1527,7 @@ function _processElement(element, values, htmlStr, instance) {
         for (let valueIndex = 0; valueIndex < values.length; valueIndex++) {
           const valueMarker = marker(valueIndex);
           if (!attr.value.includes(valueMarker)) {continue;}
-          const valueClass = classifyPosition(htmlStr, valueMarker);
+          const valueClass = cachedClassifications?.get(valueIndex) || classifyPosition(htmlStr, valueMarker);
           if (valueClass.type === 'attr' && valueClass.attrName === attr.name) {
             bindings.push({
               index: valueIndex,
@@ -1274,5 +1556,5 @@ function _processElement(element, values, htmlStr, instance) {
   }
 
   // Recurse into children
-  _processNode(element, values, htmlStr, instance);
+  _processNode(element, values, htmlStr, instance, cachedClassifications);
 }

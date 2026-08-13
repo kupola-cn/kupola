@@ -286,6 +286,59 @@ export function renderTable(ctx) {
   // Post-render
   if (resizable) {initColumnResize(ctx);}
   if (draggable) {initRowDrag(ctx);}
+
+  // Keyboard navigation: arrow keys to move focus between rows, Enter/Space
+  // to select the focused row, Home/End to jump to first/last row.
+  interactionListeners.on(refs.tableElement, 'keydown', event => {
+    const { selection, selectRow, deselectRow } = ctx;
+    const rows = [ ...refs.tableElement.querySelectorAll('tbody tr[data-row-key]') ];
+    if (rows.length === 0) {return;}
+    const currentRow = event.target.closest?.('tr[data-row-key]');
+    if (!currentRow) {return;}
+    const currentIndex = rows.indexOf(currentRow);
+    if (currentIndex === -1) {return;}
+    const key = currentRow.getAttribute('data-row-key');
+
+    switch (event.key) {
+    case 'ArrowUp':
+      if (currentIndex > 0) {
+        event.preventDefault();
+        rows[currentIndex - 1].focus();
+      }
+      break;
+    case 'ArrowDown':
+      if (currentIndex < rows.length - 1) {
+        event.preventDefault();
+        rows[currentIndex + 1].focus();
+      }
+      break;
+    case 'Home':
+      event.preventDefault();
+      rows[0].focus();
+      break;
+    case 'End':
+      event.preventDefault();
+      rows[rows.length - 1].focus();
+      break;
+    case 'Enter':
+    case ' ':
+      if (selection) {
+        event.preventDefault();
+        if (selection === 'radio') {
+          selectRow(key);
+        } else if (state.selectedKeys.has(key)) {
+          deselectRow(key);
+        } else {
+          selectRow(key);
+        }
+      } else if (options.onRowClick) {
+        event.preventDefault();
+        const rowData = pageData.find(r => String(r[ctx.rowKey]) === key);
+        options.onRowClick(rowData, key);
+      }
+      break;
+    }
+  });
 }
 
 /**
@@ -542,6 +595,7 @@ function renderTbody(ctx, data, virtualState = null) {
       }
       if (virtualState) {nextVirtualRowElements.set(key, tr);}
       tr.setAttribute('data-row-key', key);
+      tr.setAttribute('tabindex', '0');
       if (isSelected) {tr.classList.add('ds-table-row-selected');}
       if (draggable) { tr.draggable = true; tr.classList.add('ds-table-draggable'); }
 

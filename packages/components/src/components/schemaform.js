@@ -10,7 +10,7 @@ import { registerDirective } from '@kupola/platform/directives';
 import { html } from '@kupola/platform/template';
 import { Form } from './form.js';
 import { Message } from './message.js';
-import { FormDensity, cx, hasOwn } from './schemaform-core.js';
+import { FIELD_SELECTOR, FormDensity, cx, hasOwn } from './schemaform-core.js';
 import { createSchema, normalizeSchema } from './schemaform-schema.js';
 import {
   clearCustomError,
@@ -82,6 +82,7 @@ export const SchemaForm = defineComponent({
     'values',
     'options',
     'feedback',
+    'validateOn',
     'onReady',
     'onSubmit',
     'onInvalid',
@@ -103,6 +104,8 @@ export const SchemaForm = defineComponent({
     let form = null;
     let message = null;
     let customControllers = new Map();
+    const validateOn = String(props.validateOn.value || 'submit').toLowerCase();
+    const fieldListeners = new Set();
 
     function readData() {
       const data = form ? fromDomData(form.getData(), formSchema) : {};
@@ -141,6 +144,23 @@ export const SchemaForm = defineComponent({
         const domValid = form?.validate() || false;
         const customValid = validateCustomFields();
         return domValid && customValid;
+      },
+      validateField(name) {
+        if (!form || !formSchema.fields.some(f => f.name === name)) {return true;}
+        const data = readData();
+        const result = validateSchema(formSchema, data);
+        const fieldErrors = result.errors.filter(e => e.name === name);
+        const fieldEl = form.element?.elements?.namedItem(name);
+        if (fieldErrors.length > 0) {
+          if (fieldEl) {form.showError(fieldEl, fieldErrors[0].message);}
+          const customEntry = customControllers.get(name);
+          if (customEntry) {showCustomError(customEntry.root, fieldErrors[0].message);}
+          return false;
+        }
+        if (fieldEl) {form.clearError(fieldEl);}
+        const customEntry = customControllers.get(name);
+        if (customEntry) {clearCustomError(customEntry.root);}
+        return true;
       },
       getData() {
         return readData();
@@ -213,8 +233,26 @@ export const SchemaForm = defineComponent({
       if (props.values.value) {
         api.setData(props.values.value);
       }
+
+      // Wire up per-field validation based on validateOn config.
+      // 'blur' validates when a field loses focus; 'change' validates on
+      // every input event; 'submit' (default) only validates on submit.
+      if (validateOn === 'blur' || validateOn === 'change') {
+        const eventType = validateOn === 'blur' ? 'blur' : 'input';
+        const handler = event => {
+          const target = event.target;
+          if (!target || !target.name) {return;}
+          if (typeof target.matches === 'function' && !target.matches(FIELD_SELECTOR)) {return;}
+          api.validateField(target.name);
+        };
+        element.addEventListener(eventType, handler, validateOn === 'blur');
+        fieldListeners.add(() => element.removeEventListener(eventType, handler, validateOn === 'blur'));
+      }
+
       props.onReady.value?.(api);
       onCleanup(() => {
+        for (const cleanup of fieldListeners) {cleanup();}
+        fieldListeners.clear();
         destroyCustomControllers(customControllers);
         form?.destroy();
         form = null;

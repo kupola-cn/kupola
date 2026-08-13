@@ -153,4 +153,53 @@ describe('matcher', () => {
       expect(path).toBe('/users/456');
     });
   });
+
+  describe('params type conversion', () => {
+    it('converts a param to a number via the "number" schema', () => {
+      const routes = [ { path: '/users/:id', name: 'user', params: { id: 'number' } } ];
+      const records = flattenRoutes(routes);
+      const match = matchRoute(records, '/users/42');
+      expect(match).not.toBeNull();
+      expect(match.params.id).toBe(42);
+      expect(typeof match.params.id).toBe('number');
+    });
+
+    it('converts a param to a boolean via the "boolean" schema', () => {
+      const routes = [ { path: '/flags/:active', name: 'flag', params: { active: 'boolean' } } ];
+      const records = flattenRoutes(routes);
+      const match = matchRoute(records, '/flags/true');
+      expect(match).not.toBeNull();
+      expect(match.params.active).toBe(true);
+    });
+
+    it('converts a param via the "json" schema', () => {
+      const routes = [ { path: '/data/:data', name: 'data', params: { data: 'json' } } ];
+      const records = flattenRoutes(routes);
+      const match = matchRoute(records, '/data/{"a":1}');
+      expect(match).not.toBeNull();
+      expect(match.params.data).toEqual({ a: 1 });
+    });
+
+    it('converts a param using a custom function', () => {
+      const routes = [ {
+        path: '/items/:id',
+        name: 'item',
+        params: { id: (v) => parseInt(v, 10) },
+      } ];
+      const records = flattenRoutes(routes);
+      const match = matchRoute(records, '/items/42');
+      expect(match).not.toBeNull();
+      expect(match.params.id).toBe(42);
+      expect(typeof match.params.id).toBe('number');
+    });
+
+    it('keeps params as strings when no schema is defined (backward compat)', () => {
+      const routes = [ { path: '/users/:id', name: 'user' } ];
+      const records = flattenRoutes(routes);
+      const match = matchRoute(records, '/users/42');
+      expect(match).not.toBeNull();
+      expect(match.params.id).toBe('42');
+      expect(typeof match.params.id).toBe('string');
+    });
+  });
 });

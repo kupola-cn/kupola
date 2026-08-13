@@ -54,6 +54,12 @@ export function computed(fn) {
   /** @type {Set<Signal>} Signals this computed depends on. */
   let deps = new Set();
   let computing = false;
+  let hasRun = false;
+
+  /** @type {number} Invalidation generation — increments on each dep change. */
+  let invalidGen = 0;
+  /** @type {number} Last generation that was actually recomputed. */
+  let computedGen = -1;
 
   /**
    * Internal tracking record for dependency collection.
@@ -72,15 +78,19 @@ export function computed(fn) {
   // downstream effect is notified only when the derived value changed.
   tracker._run = () => {
     if (tracker._disposed) {return;}
-    // A failed recomputation leaves the value dirty. Consumers still need a
-    // later source change to retry it; only unobserved computeds can defer
-    // repeated invalidations until their next read.
-    if (dirty && sig._subscribers.size === 0) {return;}
-    dirty = true;
-    if (sig._subscribers.size === 0) {return;}
+    invalidGen++;
+    // Already recomputed for this invalidation batch — skip
+    if (invalidGen === computedGen) {return;}
+    // No subscribers — just mark dirty and defer recomputation
+    if (sig._subscribers.size === 0) {
+      dirty = true;
+      return;
+    }
 
+    dirty = true;
     const previous = sig._value;
     recompute();
+    computedGen = invalidGen;
     if (!Object.is(previous, sig._value)) {
       trigger(sig, getTriggerContext());
     }
@@ -119,6 +129,18 @@ export function computed(fn) {
     }
 
     dirty = false;
+
+    // Warn if the computed function didn't read any reactive values.
+    if (!hasRun) {
+      hasRun = true;
+      if (deps.size === 0 && profilerInstrumentationEnabled) {
+        console.warn(
+          '[kupola W040] computed() function did not read any signals — '
+          + 'its value will never update. If this is intentional (constant '
+          + 'derivation), consider using a plain variable instead.',
+        );
+      }
+    }
   }
 
   const result = {

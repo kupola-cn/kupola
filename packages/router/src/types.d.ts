@@ -7,6 +7,10 @@ export type RouteRedirect = { path: string; query?: RouteQuery };
 export type NavigationGuardResult = boolean | void | RouteRedirect;
 export type MaybePromise<T> = T | Promise<T>;
 
+/** Type-safe route parameter converter. */
+export type RouteParamType = 'string' | 'number' | 'boolean' | 'json' | ((raw: string) => unknown);
+export type RouteParamsSchema = Record<string, RouteParamType>;
+
 export interface RouteLocationInput {
   path?: string;
   name?: string;
@@ -21,6 +25,7 @@ export interface RouteConfig {
   components?: Record<string, RouteComponent>;
   children?: RouteConfig[];
   meta?: RouteMeta;
+  params?: RouteParamsSchema;
   beforeEnter?: NavigationGuard;
   beforeLeave?: NavigationGuard;
   transition?: TransitionConfig;
@@ -33,6 +38,7 @@ export interface RouteRecord {
   components: Record<string, RouteComponent> | undefined;
   children: RouteConfig[];
   meta: RouteMeta;
+  paramsSchema: RouteParamsSchema | null;
   beforeEnter?: NavigationGuard;
   beforeLeave?: NavigationGuard;
   transition?: TransitionConfig;
