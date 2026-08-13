@@ -10,17 +10,21 @@ description: Kupola UI framework development standards and best practices. Enfor
 Kupola is a zero-dependency UI framework with modular architecture, split into a pure reactivity core and a platform layer:
 
 ### Core Package (`@kupola/core`)
-- **Pure reactivity (仅 4.4KB)**: `signal`, `computed`, `effect`, `batch`, `reactive`, `watch`, `withoutTracking`, `flushJobs`, `queueJob`
+- **Pure reactivity (约 5.5KB gzip)**: `signal`, `computed`, `effect`, `batch`, `batch.atomic`, `reactive`, `watch`, `effectScope`, `onScopeDispose`, `withoutTracking`, `flushJobs`, `queueJob`, `nextTick`
+- **DevTools**: `enableProfiler`, `getProfileReport`, `printProfileReport`, `resetProfiler` (via `@kupola/core/devtools`)
 
 ### Platform Package (`@kupola/platform`, 按需加载)
 - **Template literals**: `html` tagged template
-- **Render**: `render()` for DOM rendering
-- **Declarative directives**: `k-data`, `k-show`, `k-bind`, `k-on`, `k-model`, `k-for`
-- **Components**: `defineComponent`, `provide`, `inject`
-- **Theme**: `themePreload`, `setTheme`, `toggleTheme`
+- **Render**: `render()`, `mount()`, `createApp()` for DOM rendering
+- **Declarative directives**: `k-data`, `k-show`, `k-bind`, `k-on`, `k-model`, `k-for`, `k-if`, `k-cloak`, `k-class`, `k-style`, `k-transition`, `k-once`, `k-ref`, `k-key`
+- **Components**: `defineComponent`, `defineView`, `provide`, `inject`, `register`, `getComponent`, `hasComponent`, `clearRegistry`
+- **Theme**: `themePreload`, `setTheme`, `toggleTheme`, `getBrandColors`, `setBrandColor`, `onThemeChange`, `attachBrandColorPicker` (18 APIs)
+- **CSS Modules**: `css` tagged template for scoped styles with `:global()` support
+- **Form state**: `useForm` with reactive validation, dirty/touched tracking, async submit
+- **Query cache**: `useQuery`, `invalidateQuery`, `invalidateQueries`, `prefetchQuery` for request dedup + caching
 - **Lazy**: `lazyComponent`, `preloadComponent`
 - **SSR support**: `renderToString` + `hydrate`
-- **i18n & errors**: `setLocale`, `t`, `ErrorBoundary`
+- **i18n & errors**: `setLocale`, `t`, `formatDate`, `formatNumber`, `ErrorBoundary`
 
 ### Router Package (`@kupola/router`, 独立可选)
 - **Three modes**: Hash / History / Memory
@@ -121,6 +125,89 @@ batch(() => {
   count.value++;
   name.value = 'new';
 });
+
+// Atomic batch — rollback all signals on error
+batch.atomic(() => {
+  count.value = 10;
+  if (someCondition) throw new Error('rollback');
+  name.value = 'updated';
+});
+```
+
+### useQuery — Request Dedup + Cache
+
+```javascript
+import { useQuery, invalidateQuery, invalidateQueries } from '@kupola/platform';
+
+// Auto-dedup concurrent calls, cache for 30s (default)
+const patients = await useQuery('patients:list',
+  () => api.listPatients(),
+  { staleTime: 60_000 },
+);
+
+// Invalidate after mutation
+await api.createPatient(data);
+invalidateQuery('patients:list');
+
+// Batch invalidate by pattern
+invalidateQueries(key => key.startsWith('patients:'));
+```
+
+### useForm — Reactive Form State
+
+```javascript
+import { useForm } from '@kupola/platform';
+
+const form = useForm(
+  { name: '', age: 0 },
+  (values) => {
+    const errors = {};
+    if (!values.name) errors.name = 'Required';
+    if (values.age < 0) errors.age = 'Invalid';
+    return errors;
+  },
+);
+
+// Reactive signals: form.values, form.errors, form.touched, form.isDirty, form.isValid
+// Submit: form.handleSubmit(async (values) => { await api.save(values); });
+```
+
+### CSS Modules — Scoped Styles
+
+```javascript
+import { css } from '@kupola/platform';
+
+const styles = css`
+  .card { padding: 16px; border-radius: 8px; }
+  .card:hover { background: var(--k-color-bg-hover); }
+  :global(.dark) .card { background: #1a1a2e; }
+`;
+// Generates unique class names, supports :global() and @keyframes scoping
+```
+
+### DevTools — Signal Profiler
+
+```javascript
+import { enableProfiler, getProfileReport, printProfileReport } from '@kupola/core/devtools';
+
+enableProfiler();
+// ... run your app ...
+printProfileReport();
+// Signal stats: { count, reads, writes }
+// Effect stats: { count, runs }
+// Computed stats: { count, runs, cacheHits }
+```
+
+### effectScope — Explicit Lifecycle
+
+```javascript
+import { effectScope, onScopeDispose } from '@kupola/core';
+
+const scope = effectScope(() => {
+  effect(() => { /* tracked */ });
+  onScopeDispose(() => { /* cleanup */ });
+});
+scope.stop(); // Dispose all effects in scope
 ```
 
 ## Template & Render
@@ -176,19 +263,23 @@ render(view(), document.getElementById('app'));
 ## Import Paths
 
 ```javascript
-// Core reactivity (仅 4.4KB)
-import { signal, computed, effect, batch } from '@kupola/core';
+// Core reactivity (约 5.5KB gzip)
+import { signal, computed, effect, batch, reactive, watch, effectScope, onScopeDispose } from '@kupola/core';
+
+// Core DevTools (subpath)
+import { enableProfiler, getProfileReport, printProfileReport } from '@kupola/core/devtools';
 
 // Platform module - 一次性导入所有平台功能
-import { signal, html, render, defineComponent, walk, $, $$ } from '@kupola/platform';
+import { signal, html, render, defineComponent, useQuery, useForm, css, walk, $, $$ } from '@kupola/platform';
 
 // 按需导入各模块
 import { html } from '@kupola/platform/template';
 import { render } from '@kupola/platform/render';
-import { defineComponent, provide, inject } from '@kupola/platform/component';
+import { defineComponent, defineView, provide, inject } from '@kupola/platform/component';
 import { walk, $$, $, defineScope } from '@kupola/platform/directives';
-import { themePreload, setTheme, toggleTheme } from '@kupola/platform/theme';
+import { themePreload, setTheme, toggleTheme, getBrandColors, setBrandColor } from '@kupola/platform/theme';
 import { lazyComponent, preloadComponent } from '@kupola/platform/lazy';
+import { ErrorBoundary } from '@kupola/platform/errors';
 
 // Components - each independently bundled
 import { Modal } from '@kupola/components/modal';
@@ -271,7 +362,7 @@ CSS: `[k-cloak] { display: none !important; }` — hides elements until JS remov
 When creating a new component, update these files:
 
 1. **Source**: `packages/components/src/components/{name}.js`
-2. **Test**: `packages/core/__tests__/components/{name}.test.js`
+2. **Test**: `packages/components/__tests__/{name}.test.js`
 3. **Build entry**: `rollup.config.cjs` — add input entry
 4. **Exports**: `packages/components/package.json` — add to `exports`
 5. **Size limit**: `.size-limit.json` — add limit entry
@@ -280,31 +371,34 @@ When creating a new component, update these files:
 ## File Structure
 
 ```
-packages/core/                  # @kupola/core — pure reactivity (~4.4KB)
+packages/core/                  # @kupola/core — pure reactivity (约 5.5KB gzip)
 ├── src/
 │   ├── signal.js       # signal, reactive, withoutTracking
 │   ├── computed.js     # computed values
-│   ├── effect.js       # effect, watch
-│   ├── batch.js        # batch updates
+│   ├── effect.js       # effect, effectScope, watch
+│   ├── batch.js        # batch, batch.atomic updates
 │   ├── scheduler.js    # flushJobs, queueJob, nextTick
 │   ├── devtools.js     # Signal profiler
 │   └── index.js        # Public API entry
 └── __tests__/
 
-packages/platform/              # @kupola/platform — template/render/component/directives/theme/lazy/server/i18n/errors
+packages/platform/              # @kupola/platform — template/render/component/directives/theme/lazy/server/i18n/errors/query/form/css
 ├── src/
 │   ├── template.js     # html`` template
-│   ├── render.js       # DOM renderer (render, hydrate)
-│   ├── component.js    # defineComponent, provide, inject
+│   ├── render.js       # DOM renderer (render, mount, createApp)
+│   ├── component.js    # defineComponent, defineView, provide, inject, register
 │   ├── directives.js   # k-* directive system (walk, defineScope, ...)
-│   ├── theme.js        # Theme utilities (anti-FOUC)
+│   ├── theme.js        # Theme utilities (18 APIs: anti-FOUC, brand colors)
 │   ├── lazy.js         # Lazy component loading
 │   ├── server.js       # SSR (renderToString + hydrate)
-│   ├── i18n.js         # Internationalization
+│   ├── i18n.js         # Internationalization (setLocale, t, formatDate, formatNumber)
 │   ├── errors.js       # ErrorBoundary
+│   ├── query.js        # useQuery, invalidateQuery, prefetchQuery
+│   ├── form.js         # useForm — reactive form state
+│   ├── css.js          # css tagged template — scoped styles
 │   └── platform.js     # Aggregated entry (re-exports core + all modules)
 
-packages/components/            # @kupola/components — 48+ UI components (one file each)
+packages/components/            # @kupola/components — 50+ UI components (one file each)
 ├── src/
 │   ├── components/
 │   │   ├── modal.js
@@ -354,7 +448,7 @@ packages/auth/            # @kupola/auth — Permission guards (~9KB)
 ## Testing
 
 ```bash
-npm run test          # Run all 1019 tests
+npm run test          # Run all 1888 tests
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report
 ```
@@ -386,7 +480,7 @@ Avoid wasting tokens/credits:
 | Need | Read |
 |------|------|
 | Component source | `packages/components/src/components/{name}.js` |
-| Component test | `packages/core/__tests__/components/{name}.test.js` |
+| Component test | `packages/components/__tests__/{name}.test.js` |
 | Build config | `rollup.config.cjs` (line ~1600-1800 for component entries) |
 | Type definitions | `packages/components/src/components/types.d.ts` |
 | Core API | `packages/core/src/index.js` (55 lines) |
