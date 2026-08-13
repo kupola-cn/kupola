@@ -7,7 +7,7 @@
  * - Optional: inject theme configuration
  *
  * Usage (vite.config.js):
- *   import kupola from '@kupola/vite-plugin';
+ *   import kupola from './plugins/vite-plugin-kupola.js';
  *   export default { plugins: [kupola({ css: true })] };
  */
 

@@ -1,18 +1,20 @@
 # ESLint 插件
 
-`@kupola/eslint-plugin` 提供 3 条规则，防止 Kupola 开发中的常见错误。
+`eslint-plugin-kupola` 提供 3 条规则，防止 Kupola 开发中的常见错误。
 
 ## 配置
 
 ```js
 // .eslintrc.cjs
+const kupolaPlugin = require('./plugins/eslint-plugin-kupola');
+
 module.exports = {
-  plugins: ['@kupola'],
+  plugins: ['kupola'],
   rules: {
-    '@kupola/no-invalid-directives': 'error',
-    '@kupola/prefer-t-function': 'warn',
-    '@kupola/no-innerhtml-user-input': 'error',
-  }
+    'kupola/no-invalid-directives': 'error',
+    'kupola/prefer-t-function': 'warn',
+    'kupola/no-innerhtml-user-input': 'error',
+  },
 };
 ```
 
@@ -20,7 +22,9 @@ module.exports = {
 
 ### `no-invalid-directives`
 
-禁止使用未注册的 `k-*` 指令，防止拼写错误导致的静默失败。
+禁止使用未注册的 `k-*` 指令，防止拼写错误导致的静默失败。已注册的指令：
+
+`k-data` `k-show` `k-text` `k-html` `k-bind` `k-on` `k-model` `k-for` `k-if` `k-else` `k-cloak` `k-class` `k-style` `k-transition` `k-once` `k-ref` `k-key` `k-router-link` `k-router-view` `k-permission`
 
 ```html
 <!-- ❌ 错误 -->
