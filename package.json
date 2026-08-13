@@ -20,6 +20,7 @@
     "node": ">=20.0.0"
   },
   "knip": {
+    "ignoreExportsUsedInFile": true,
     "include": [
       "files",
       "dependencies",
@@ -49,7 +50,9 @@
           "docs-site/**",
           "packages/create-kupola/templates/**",
           "vscode-kupola/**",
-          "plugins/**"
+          "plugins/**",
+          "packages/platform/src/*.d.ts",
+          "packages/core/src/scheduler.js"
         ],
         "ignoreDependencies": [
           "@storybook/builder-vite",
