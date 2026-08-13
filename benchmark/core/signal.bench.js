@@ -46,7 +46,7 @@ describe('Core Benchmark: Signal', () => {
         signals.push(signal(i));
       }
     });
-    expect(time).toBeLessThan(1500);
+    expect(time).toBeLessThan(200);
   });
 
   test('update single signal 100,000 times', () => {
