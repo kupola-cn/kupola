@@ -6,7 +6,8 @@
 [![npm version](https://img.shields.io/npm/v/@kupola/platform)](https://www.npmjs.com/package/@kupola/platform)
 [![License](https://img.shields.io/npm/l/@kupola/platform)](https://github.com/kupola-cn/kupola/blob/main/LICENSE)
 
-**Example application:** [Kupola App](https://github.com/kupola-cn/kupola-app) — a complete administration console built with Kupola.
+a complete administration console built with Kupola：
+**Example application:** [Kupola App](https://github.com/kupola-cn/kupola-app) 
 
 Kupola is a lightweight reactive application platform for building modern web
 applications. It provides a complete toolbox — signals, templates, components,
