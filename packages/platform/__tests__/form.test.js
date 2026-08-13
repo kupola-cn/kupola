@@ -4,11 +4,6 @@
  */
 
 import { useForm } from '../src/form.js';
-import { flushJobs } from '@kupola/core';
-
-function flush() {
-  flushJobs();
-}
 
 describe('useForm — initialization', () => {
   test('throws on non-object initial values', () => {

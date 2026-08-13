@@ -52,16 +52,18 @@ export const LeftDrawer = {
     btn.className = 'ds-btn ds-btn-primary';
     btn.textContent = 'Navigation Menu';
 
+    const navLinkStyle = 'display:block; padding:10px; text-decoration:none; color:inherit; border-radius:6px;';
+
     const drawer = Drawer({
       title: 'Navigation',
       placement: 'left',
       width: '280px',
     }, html`
       <nav style="padding: 8px;">
-        <a href="#" style="display:block; padding:10px; text-decoration:none; color:inherit; border-radius:6px;">Dashboard</a>
-        <a href="#" style="display:block; padding:10px; text-decoration:none; color:inherit; border-radius:6px;">Users</a>
-        <a href="#" style="display:block; padding:10px; text-decoration:none; color:inherit; border-radius:6px;">Settings</a>
-        <a href="#" style="display:block; padding:10px; text-decoration:none; color:inherit; border-radius:6px;">Help</a>
+        <a href="#" style="${navLinkStyle}">Dashboard</a>
+        <a href="#" style="${navLinkStyle}">Users</a>
+        <a href="#" style="${navLinkStyle}">Settings</a>
+        <a href="#" style="${navLinkStyle}">Help</a>
       </nav>
     `);
 

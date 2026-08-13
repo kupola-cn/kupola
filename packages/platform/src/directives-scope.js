@@ -128,7 +128,10 @@ function isSafeScopePropertyName(name) {
   if (typeof name !== 'string') {return false;}
   if (/^[A-Za-z_$][\w$]*$/.test(name)) {return !isPrototypeKey(name);}
   const safePattern = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\[\d+\]|\[\w+\])*$/;
-  return safePattern.test(name) && !name.includes('__proto__') && !name.includes('constructor') && !name.includes('prototype');
+  return safePattern.test(name) &&
+    !name.includes('__proto__') &&
+    !name.includes('constructor') &&
+    !name.includes('prototype');
 }
 
 function createDomContext(

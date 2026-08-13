@@ -270,7 +270,8 @@ export function onBrandColorChange(callback) {
 /**
  * Attach a default brand color picker popover to a trigger button.
  * @param {HTMLElement} trigger
- * @param {{ colors?: Array<{ id?: string, label?: string, color: string }>, title?: string, custom?: boolean, customLabel?: string }} [options]
+ * @param {{ colors?: Array<{ id?: string, label?: string, color: string }>,
+ *   title?: string, custom?: boolean, customLabel?: string }} [options]
  * @returns {{ open: Function, close: Function, toggle: Function, destroy: Function }}
  */
 export function attachBrandColorPicker(trigger, options = {}) {
@@ -296,7 +297,11 @@ export function attachBrandColorPicker(trigger, options = {}) {
       <button class="ds-brand-picker__close" type="button" aria-label="Close">x</button>
     </div>
     <div class="ds-brand-picker__grid"></div>
-    ${custom ? `<label class="ds-brand-picker__custom"><span>${_escapeHtml(customLabel)}</span><input class="ds-brand-picker__input" type="color"></label>` : ''}
+    ${custom
+    ? '<label class="ds-brand-picker__custom">' +
+      `<span>${_escapeHtml(customLabel)}</span>` +
+      '<input class="ds-brand-picker__input" type="color"></label>'
+    : ''}
   `;
   document.body.appendChild(panel);
 
@@ -459,7 +464,15 @@ export function stopThemePreload() {
  * @returns {string} HTML `<script>` tag content.
  */
 export function getThemeInlineScript() {
-  return '<script>(function(){var d=document.documentElement,t=localStorage.getItem(\'kupola-theme\');if(!t){t=window.matchMedia&&window.matchMedia(\'(prefers-color-scheme:light)\').matches?\'light\':\'dark\';}d.dataset.theme=t;try{var b=localStorage.getItem(\'kupola-brand-color\');if(b){b=JSON.parse(b);var c=b.color||b;if(c){d.dataset.brand=b.id||\'custom\';d.style.setProperty(\'--bg-brand\',c);d.style.setProperty(\'--text-brand\',c);d.style.setProperty(\'--icon-brand\',c);d.style.setProperty(\'--border-brand\',c);}}}catch(e){}})()</script>';
+  return '<script>(function(){var d=document.documentElement,' +
+    't=localStorage.getItem(\'kupola-theme\');' +
+    'if(!t){t=window.matchMedia&&' +
+    'window.matchMedia(\'(prefers-color-scheme:light)\').matches?\'light\':\'dark\';}' +
+    'd.dataset.theme=t;try{var b=localStorage.getItem(\'kupola-brand-color\');' +
+    'if(b){b=JSON.parse(b);var c=b.color||b;if(c){d.dataset.brand=b.id||\'custom\';' +
+    'd.style.setProperty(\'--bg-brand\',c);d.style.setProperty(\'--text-brand\',c);' +
+    'd.style.setProperty(\'--icon-brand\',c);d.style.setProperty(\'--border-brand\',c);}}}' +
+    'catch(e){}})()</script>';
 }
 
 function _applyBrandColor(brand, target) {
@@ -536,7 +549,9 @@ function _mix(hex, target, amount) {
   const a = _hexToRgb(hex);
   const b = _hexToRgb(target);
   const mix = (from, to) => Math.round(from + (to - from) * amount);
-  return `#${[ mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b) ].map(v => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+  return `#${[ mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b) ]
+    .map(v => v.toString(16).padStart(2, '0'))
+    .join('')}`.toUpperCase();
 }
 
 function _isDark(hex) {

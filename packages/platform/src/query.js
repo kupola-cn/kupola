@@ -59,7 +59,7 @@ function _evictStale() {
   // Remove explicitly expired entries first.
   const now = Date.now();
   const stale = [];
-  for (const [key, entry] of _cache) {
+  for (const [ key, entry ] of _cache) {
     if (entry.expireAt <= now) {stale.push(key);}
   }
   for (const key of stale) {_cache.delete(key);}
@@ -69,7 +69,7 @@ function _evictStale() {
     const entries = Array.from(_cache.entries());
     entries.sort((a, b) => a[1].expireAt - b[1].expireAt);
     const toRemove = entries.slice(0, _cache.size - MAX_CACHE_SIZE);
-    for (const [key] of toRemove) {_cache.delete(key);}
+    for (const [ key ] of toRemove) {_cache.delete(key);}
   }
 }
 

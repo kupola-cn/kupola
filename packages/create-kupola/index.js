@@ -164,7 +164,7 @@ async function main() {
       message: 'Backend framework:',
       choices: [
         { title: 'Static (HTML only)', value: 'static', description: 'No backend, pure static HTML + Kupola' },
-        { title: 'Static + TypeScript', value: 'static-ts', description: 'TypeScript + Vite, type-safe Kupola project' },
+        { title: 'Static + TypeScript', value: 'static-ts', description: 'TypeScript + Vite, type-safe project' },
         { title: 'Next.js (SSR)', value: 'nextjs', description: 'Next.js App Router + Kupola client hydration' },
         { title: 'Nuxt (Hybrid)', value: 'nuxt', description: 'Nuxt 3 + Kupola directives via ClientOnly' },
         { title: 'Flask', value: 'flask', description: 'Python Flask with Jinja2 templates' },
