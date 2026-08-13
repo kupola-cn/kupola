@@ -3,88 +3,88 @@
     "category": "core",
     "test": "create 10,000 signals",
     "iterations": 1,
-    "totalTime": 3.6147000000000844,
-    "avgTime": 3.6147000000000844,
-    "timestamp": 1784958001008
+    "totalTime": 3.3209999999999127,
+    "avgTime": 3.3209999999999127,
+    "timestamp": 1786618075560
   },
   {
     "category": "core",
     "test": "update signal 100,000 times",
     "iterations": 100000,
-    "totalTime": 239.35089999999946,
-    "avgTime": 0.0023935089999999946,
-    "timestamp": 1784958001416
+    "totalTime": 143.67150000000038,
+    "avgTime": 0.0014367150000000038,
+    "timestamp": 1786618075719
   },
   {
     "category": "core",
     "test": "batch update 10,000 signals",
     "iterations": 1,
-    "totalTime": 2.5606000000007043,
-    "avgTime": 2.5606000000007043,
-    "timestamp": 1784958001471
+    "totalTime": 7.795500000000175,
+    "avgTime": 7.795500000000175,
+    "timestamp": 1786618075742
   },
   {
     "category": "core",
     "test": "signal nested reads 100,000 times",
     "iterations": 100000,
-    "totalTime": 6.602300000000469,
-    "avgTime": 0.00006602300000000469,
-    "timestamp": 1784958001479
+    "totalTime": 2.6467000000011467,
+    "avgTime": 0.000026467000000011468,
+    "timestamp": 1786618075748
   },
   {
     "category": "core",
     "test": "create 1,000 computed",
     "iterations": 1,
-    "totalTime": 2.180500000000393,
-    "avgTime": 2.180500000000393,
-    "timestamp": 1784958001483
+    "totalTime": 1.494700000002922,
+    "avgTime": 1.494700000002922,
+    "timestamp": 1786618075751
   },
   {
     "category": "core",
     "test": "3-level computed chain update 10,000 times",
     "iterations": 10000,
-    "totalTime": 43.54910000000018,
-    "avgTime": 0.004354910000000018,
-    "timestamp": 1784958001529
+    "totalTime": 33.15690000000177,
+    "avgTime": 0.003315690000000177,
+    "timestamp": 1786618075786
   },
   {
     "category": "core",
     "test": "100 computed sharing signal update",
     "iterations": 1,
-    "totalTime": 0.03320000000167056,
-    "avgTime": 0.03320000000167056,
-    "timestamp": 1784958001532
+    "totalTime": 0.028800000000046566,
+    "avgTime": 0.028800000000046566,
+    "timestamp": 1786618075787
   },
   {
     "category": "core",
     "test": "computed with array filter/map/reduce",
     "iterations": 1,
-    "totalTime": 1.0491000000001804,
-    "avgTime": 1.0491000000001804,
-    "timestamp": 1784958001535
+    "totalTime": 0.15839999999661813,
+    "avgTime": 0.15839999999661813,
+    "timestamp": 1786618075788
   },
   {
     "category": "core",
     "test": "create 1,000 effects",
     "iterations": 1,
-    "totalTime": 2.3127000000004045,
-    "avgTime": 2.3127000000004045,
-    "timestamp": 1784958001541
+    "totalTime": 1.304100000001199,
+    "avgTime": 1.304100000001199,
+    "timestamp": 1786618075791
   },
   {
     "category": "core",
     "test": "effect reaction latency 10,000 times",
     "iterations": 10000,
-    "totalTime": 19.527799999999843,
-    "avgTime": 0.0019527799999999843,
-    "timestamp": 1784958001564
+    "totalTime": 11.211600000002363,
+    "avgTime": 0.0011211600000002363,
+    "timestamp": 1786618075803
   },
   {
     "category": "core",
     "test": "effect cleanup 1,000 times",
     "iterations": 1000,
-    "totalTime": 12.412899999999354,
-    "avgTime": 0.012412899999999354,
-    "timestamp": 1784958001580
+    "totalTime": 3.985499999998865,
+    "avgTime": 0.003985499999998865,
+    "timestamp": 1786618075809
   }
 ]
