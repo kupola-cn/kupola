@@ -1,6 +1,7 @@
 import {
   $, $$, createApp, defineScope, destroyWalk, mount, setHtmlSanitizer, walkOnce,
   type AsyncEventHandler,
+  type DirectiveBinding,
   type DirectiveDefinition,
   type EventHandler,
   type MaybePromise,
@@ -8,6 +9,7 @@ import {
   type MountOptions,
   type PageView,
   type ReactiveValue,
+  type ScopeContext,
   type TemplateChild,
   type View,
   type ViewChild,
@@ -308,7 +310,7 @@ typedScheduler.reset();
 
 const root = document.createElement('section');
 const typedDirective: DirectiveDefinition = {
-  mount(element, binding) {
+  mount(element: Element, binding: DirectiveBinding) {
     element.setAttribute('data-binding', binding.value);
   },
 };
@@ -319,13 +321,13 @@ const typedMountOptions: MountOptions = {
 mount(templateHtml`<div k-typed="value"></div>`, root, typedMountOptions).destroy();
 createApp(templateHtml`<div k-typed="value"></div>`, typedMountOptions).destroy();
 
-setHtmlSanitizer((html, element) => {
+setHtmlSanitizer((html: string, element: Element) => {
   element.setAttribute('data-sanitized', 'true');
   return html;
 });
 setHtmlSanitizer(null);
 
-defineScope('typedPage', ({ $, $$, on, patch, update, watch }) => ({
+defineScope('typedPage', ({ $, $$, on, patch, update, watch }: ScopeContext) => ({
   count: 0,
   filters: { query: '' },
   mounted() {
