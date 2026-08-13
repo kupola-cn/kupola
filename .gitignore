@@ -36,3 +36,6 @@ docs-site/.vitepress/cache/
 
 # Release scripts
 release.mjs
+
+# npm configuration (local only)
+.npmrc

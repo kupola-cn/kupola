@@ -4,7 +4,7 @@
   "private": true,
   "description": "FastAPI + Kupola UI project",
   "dependencies": {
-    "@kupola/core": "^3.4.0",
-    "@kupola/platform": "^3.4.0"
+    "@kupola/core": "^3.5.0",
+    "@kupola/platform": "^3.5.0"
   }
 }
