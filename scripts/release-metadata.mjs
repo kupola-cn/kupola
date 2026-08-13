@@ -28,10 +28,10 @@ for (const [ source, version ] of versions) {
   }
 }
 
-const releaseHeadings = [ `## ${pkg.version}`, `## v${pkg.version}` ];
+const releaseHeadings = [ `## ${pkg.version}`, `## v${pkg.version}`, `## [${pkg.version}]` ];
 const hasChangelogEntry = changelog
   .split(/\r?\n/)
-  .some(line => releaseHeadings.some(heading => line === heading || line.startsWith(`${heading} (`)));
+  .some(line => releaseHeadings.some(heading => line === heading || line.startsWith(`${heading}(`) || line.startsWith(`${heading} (`)));
 if (!hasChangelogEntry) {
   throw new Error(`CHANGELOG.md has no release heading for ${pkg.version}.`);
 }
