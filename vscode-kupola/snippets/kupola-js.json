@@ -93,7 +93,7 @@
   "Kupola: provide": {
     "prefix": "kprovide",
     "body": [
-      "import { provide } from '@kupola/core';",
+      "import { provide } from '@kupola/platform';",
       "",
       "provide('${1:key}', ${2:value});"
     ],
@@ -135,7 +135,7 @@
   "Kupola: lazyComponent": {
     "prefix": "klazy",
     "body": [
-      "import { lazyComponent } from '@kupola/core';",
+      "import { lazyComponent } from '@kupola/platform';",
       "",
       "const ${1:Component} = lazyComponent(() => import('${2:./path}'));"
     ],
@@ -229,10 +229,76 @@
   "Kupola: theme setup": {
     "prefix": "ktheme",
     "body": [
-      "import '@kupola/platform/css/tokens.css';",
-      "import '@kupola/platform/css/components.css';",
-      "import '@kupola/platform/css/theme.css';"
+      "import '@kupola/platform/css';"
     ],
     "description": "Import Kupola CSS design system"
+  },
+  "Kupola: useQuery": {
+    "prefix": "kquery",
+    "body": [
+      "import { useQuery, invalidateQuery } from '@kupola/platform';",
+      "",
+      "const ${1:data} = await useQuery('${2:key}',",
+      "  () => ${3:fetcher},",
+      "  { staleTime: ${4:30_000} },",
+      ");"
+    ],
+    "description": "Use Kupola useQuery for request deduplication and caching"
+  },
+  "Kupola: useForm": {
+    "prefix": "kform",
+    "body": [
+      "import { useForm } from '@kupola/platform';",
+      "",
+      "const form = useForm(",
+      "  { ${1:field}: '${2:}' },",
+      "  (values) => {",
+      "    const errors = {};",
+      "    if (!values.${1:field}) errors.${1:field} = '${3:Required}';",
+      "    return errors;",
+      "  },",
+      ");",
+      "",
+      "// form.values, form.errors, form.isDirty, form.isValid",
+      "// form.handleSubmit(async (values) => { ... })"
+    ],
+    "description": "Create a reactive form with Kupola useForm"
+  },
+  "Kupola: css tagged template": {
+    "prefix": "kcss",
+    "body": [
+      "import { css } from '@kupola/platform';",
+      "",
+      "const styles = css`",
+      "  .${1:container} {",
+      "    padding: ${2:16}px;",
+      "  }",
+      "`;"
+    ],
+    "description": "Create scoped CSS with Kupola css tagged template"
+  },
+  "Kupola: devtools profiler": {
+    "prefix": "kdevtools",
+    "body": [
+      "import { enableProfiler, getProfileReport, printProfileReport } from '@kupola/core/devtools';",
+      "",
+      "enableProfiler();",
+      "// ... run your app ...",
+      "printProfileReport();"
+    ],
+    "description": "Enable Kupola devtools signal/effect profiler"
+  },
+  "Kupola: defineComponent": {
+    "prefix": "kcomponent",
+    "body": [
+      "import { defineComponent, html } from '@kupola/platform';",
+      "",
+      "const ${1:Component} = defineComponent({",
+      "  setup() {",
+      "    return html`<div>${2:content}</div>`;",
+      "  },",
+      "});"
+    ],
+    "description": "Define a Kupola component"
   }
 }

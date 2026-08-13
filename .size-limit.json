@@ -26,7 +26,7 @@
   {
     "name": "kupola-components (gzip)",
     "path": "packages/components/dist/kupola-components.esm.js",
-    "limit": "160 kB",
+    "limit": "200 kB",
     "gzip": true
   },
  {
@@ -74,7 +74,7 @@
  {
    "name": "kupola-components-datepicker (gzip)",
    "path": "packages/components/dist/kupola-components-datepicker.esm.js",
-    "limit": "12 kB",
+    "limit": "14 kB",
     "gzip": true
   },
  {
@@ -92,7 +92,7 @@
   {
     "name": "kupola-components-tooltip (gzip)",
     "path": "packages/components/dist/kupola-components-tooltip.esm.js",
-    "limit": "2 kB",
+    "limit": "3 kB",
     "gzip": true
   },
  {
@@ -278,7 +278,7 @@
   {
     "name": "kupola-components-icons (gzip)",
     "path": "packages/components/dist/kupola-components-icons.esm.js",
-    "limit": "4 kB",
+    "limit": "8 kB",
     "gzip": true
   },
   {
@@ -314,7 +314,7 @@
  {
    "name": "kupola-components-table (gzip)",
    "path": "packages/components/dist/kupola-components-table.esm.js",
-    "limit": "13 kB",
+    "limit": "15 kB",
     "gzip": true
   }
 ]

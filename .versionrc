@@ -4,15 +4,18 @@
     { "type": "fix", "section": "Bug Fixes" },
     { "type": "docs", "section": "Documentation" },
     { "type": "style", "section": "Styles" },
-    { "type": "refactor", "section": "Refactor" },
-    { "type": "perf", "section": "Performance" },
+    { "type": "refactor", "section": "Code Refactoring" },
+    { "type": "perf", "section": "Performance Improvements" },
     { "type": "test", "section": "Tests" },
     { "type": "chore", "section": "Chore" },
-    { "type": "revert", "section": "Reverts" }
+    { "type": "revert", "section": "Reverts" },
+    { "type": "internal", "hidden": true },
+    { "type": "ci", "hidden": true }
   ],
   "commitUrlFormat": "https://github.com/kupola-cn/kupola/commit/{{hash}}",
   "compareUrlFormat": "https://github.com/kupola-cn/kupola/compare/{{previousTag}}...{{currentTag}}",
   "issueUrlFormat": "https://github.com/kupola-cn/kupola/issues/{{id}}",
+  "issuePrefixes": ["#", "gh-"],
   "header": "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).",
-  "releaseCommitMessageFormat": "chore(release): {{currentTag}} [skip ci]"
+  "releaseCommitMessageFormat": "chore(release): {{currentTag}}"
 }

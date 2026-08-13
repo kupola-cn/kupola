@@ -1,7 +1,7 @@
 {
-  "version": "3.4.1",
+  "version": "3.5.0",
   "name": "Kupola",
-  "description": "A lightweight, dependency-free declarative UI component system for any server-side rendered web application",
+  "description": "Kupola is a lightweight reactive application platform for building modern web applications. Kupola 是一个轻量级的响应式应用平台，用于构建现代化的 Web 应用。",
   "author": "Kupola Team",
   "license": "MIT",
   "homepage": "https://github.com/kupola-cn/kupola",
