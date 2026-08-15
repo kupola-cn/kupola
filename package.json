@@ -1,6 +1,6 @@
 {
   "name": "@kupola/kupola",
-  "version": "3.5.1",
+  "version": "3.5.2",
   "description": "Kupola is a lightweight reactive application platform for building modern web applications. Kupola 是一个轻量级的响应式应用平台，用于构建现代化 Web 应用",
   "private": true,
   "type": "module",
@@ -52,7 +52,9 @@
           "vscode-kupola/**",
           "plugins/**",
           "packages/platform/src/*.d.ts",
-          "packages/core/src/scheduler.js"
+          "packages/core/src/scheduler.js",
+          "packages/platform/test-directives.mjs",
+          "packages/platform/test-store.mjs"
         ],
         "ignoreDependencies": [
           "@storybook/builder-vite",

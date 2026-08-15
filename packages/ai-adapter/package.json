@@ -1,7 +1,7 @@
 {
   "name": "@kupola/ai-adapter",
-  "version": "3.5.1",
-  "description": "AI operation engine for Kupola â€?natural language â†?structured commands with Query/Action/Flow engines",
+  "version": "3.5.2",
+  "description": "AI operation engine for Kupola ï¿½?natural language ï¿½?structured commands with Query/Action/Flow engines",
   "type": "module",
   "main": "dist/ai-adapter.cjs",
   "module": "dist/ai-adapter.esm.js",
