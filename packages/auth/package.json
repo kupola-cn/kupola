@@ -1,7 +1,7 @@
 {
   "name": "@kupola/auth",
-  "version": "3.5.0",
-  "description": "Kupola auth â€” RBAC-based permission guard system with ABAC attribute filtering support.",
+  "version": "3.5.1",
+  "description": "Kupola auth â€?RBAC-based permission guard system with ABAC attribute filtering support.",
   "type": "module",
   "sideEffects": false,
   "main": "dist/kupola-auth.cjs",

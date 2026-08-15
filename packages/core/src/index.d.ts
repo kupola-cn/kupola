@@ -108,6 +108,17 @@ export declare function reactive<T extends object>(
   _signal?: Signal<T>;
 };
 
+/**
+ * Create a shallow reactive proxy over a plain object or array.
+ *
+ * Only the first-level properties are reactive — nested objects are NOT wrapped
+ * and remain plain objects. This is useful for state objects with nested
+ * signals or computed values where deep reactivity is unnecessary and wasteful.
+ *
+ * @template T
+ */
+export declare function shallowReactive<T extends object>(obj: T): T;
+
 /** Check whether an object is a reactive proxy created by `reactive()`. */
 export declare function isReactive(obj: any): boolean;
 

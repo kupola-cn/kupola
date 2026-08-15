@@ -33,6 +33,7 @@ export default {
             { text: 'Computed', link: '/guide/computed' },
             { text: 'Effect', link: '/guide/effect' },
             { text: 'Reactive', link: '/guide/reactive' },
+            { text: 'Store 状态管理', link: '/guide/store' },
             { text: 'Watch', link: '/guide/watch' },
             { text: 'Batch', link: '/guide/batch' },
             { text: '国际化', link: '/guide/i18n' },

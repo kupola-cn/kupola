@@ -30,6 +30,7 @@ export {
   onScopeDispose,
   reactive,
   runWithScheduler,
+  shallowReactive,
   signal,
   Signal,
   toRaw,
@@ -551,3 +552,65 @@ export declare function getPendingQueryCount(): number;
 
 /** Clear all cache entries and cancel dedup tracking. */
 export declare function resetQueryCache(): void;
+
+// ── Store (State Management) ─────────────────────────────────────────────────
+
+/** Context provided to the `defineStore` factory function. */
+export interface StoreContext {
+  /** Create a reactive signal. */
+  signal: <T>(initialValue: T, options?: import('@kupola/core').SignalOptions) => Signal<T>;
+  /** Create a computed (derived) signal. */
+  computed: <T>(fn: () => T) => ReadonlySignal<T>;
+  /** Create a reactive effect. */
+  effect: (fn: () => (void | (() => void)), options?: import('@kupola/core').EffectOptions) => () => void;
+  /** Watch a signal or computed value and call a callback when it changes. */
+  watch: <T>(
+    getter: () => T,
+    callback: (newValue: T, oldValue: T | undefined, onCleanup: (fn: () => void) => void) => (void | (() => void)),
+    options?: import('@kupola/core').WatchOptions
+  ) => () => void;
+}
+
+/**
+ * The store object returned by `defineStore()`.
+ *
+ * Signal and computed values in the returned object are kept as-is
+ * (no `.value` auto-unwrapping). Methods are bound to the store proxy.
+ * The store provides `$reset()` and `$dispose()` for lifecycle management.
+ */
+export type Store<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R
+    ? (...args: A) => R
+    : T[K];
+} & {
+  /** Reset all signals to their initial values. */
+  $reset(): void;
+  /** Dispose all effects and cleanup resources created inside the store. */
+  $dispose(): void;
+};
+
+/**
+ * Define a reactive store with grouped state, derived values, and methods.
+ *
+ * Signals and computed values are organized in nested groups — the framework
+ * imposes no structure; the developer decides the grouping.
+ *
+ * @example
+ * ```ts
+ * const store = defineStore(({ signal, computed }) => ({
+ *   filters: {
+ *     shift: signal<'all' | 'morning'>('all'),
+ *     status: signal('active'),
+ *   },
+ *   items: computed(() => []),
+ *   reset() { this.$reset(); },
+ * }));
+ *
+ * // Template: ${store.filters.shift} → Signal, auto-subscribes
+ * // JS:        store.filters.shift.value = 'morning'
+ * // Reset:     store.$reset()
+ * ```
+ */
+export declare function defineStore<T extends Record<string, any>>(
+  factory: (ctx: StoreContext) => T
+): Store<T>;
