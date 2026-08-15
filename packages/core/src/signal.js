@@ -460,7 +460,7 @@ function getReactiveMutationContext(meta, key) {
   );
 }
 
-function createReactiveHandler(meta) {
+function createReactiveHandler(meta, { shallow = false } = {}) {
   const { target } = meta;
   return {
     get(currentTarget, key, receiver) {
@@ -495,6 +495,8 @@ function createReactiveHandler(meta) {
           return runTriggerTransaction(context, () => Reflect.apply(value, receiver, args));
         };
       }
+      // Shallow mode: return nested values as-is instead of wrapping them.
+      if (shallow) {return value;}
       if (!isSupportedReactiveTarget(value)) {return value;}
       const proxy = wrapReactive(value, meta.root);
       linkReactiveChild(meta, key, proxy);
@@ -592,18 +594,22 @@ function createReactiveHandler(meta) {
   };
 }
 
-function wrapReactive(value, root) {
+function wrapReactive(value, root, { shallow = false } = {}) {
   if (!isSupportedReactiveTarget(value)) {return value;}
-  const existing = root && root.proxies.get(value);
-  if (existing) {return existing;}
-  const globallyCached = rawToProxy.get(value);
-  if (globallyCached) {
-    const meta = proxyToMeta.get(globallyCached);
-    if (meta && !meta.disposed) {
-      if (root) {root.proxies.set(value, globallyCached);}
-      return globallyCached;
+  // Shallow proxies are never globally cached — each call produces a fresh
+  // proxy so nested values stay unwrapped even when shared across scopes.
+  if (!shallow) {
+    const existing = root && root.proxies.get(value);
+    if (existing) {return existing;}
+    const globallyCached = rawToProxy.get(value);
+    if (globallyCached) {
+      const meta = proxyToMeta.get(globallyCached);
+      if (meta && !meta.disposed) {
+        if (root) {root.proxies.set(value, globallyCached);}
+        return globallyCached;
+      }
+      rawToProxy.delete(value);
     }
-    rawToProxy.delete(value);
   }
 
   const meta = {
@@ -617,8 +623,9 @@ function wrapReactive(value, root) {
     disposed: false,
     signals: new Map(),
     proxy: null,
+    shallow,
   };
-  const proxy = new Proxy(value, createReactiveHandler(meta));
+  const proxy = new Proxy(value, createReactiveHandler(meta, { shallow }));
   meta.proxy = proxy;
   if (root) {root.proxies.set(value, proxy);}
   rawToProxy.set(value, proxy);
@@ -743,5 +750,40 @@ export function reactive(obj) {
   addRootOwner(meta, root);
   // `_signal` and `dispose` are virtual properties handled by the proxy. The
   // underlying signal always retains the root target as its stable value.
+  return reactiveObj;
+}
+
+/**
+ * Create a shallow reactive proxy over a plain object.
+ *
+ * Unlike `reactive`, only top-level property access is tracked. Nested
+ * objects and arrays are returned as-is, without being wrapped in their
+ * own proxies. This significantly reduces memory overhead when you only
+ * need to observe the top-level reference (e.g., replacing an entire
+ * `medicalOrders` array) rather than deeply nested mutations.
+ *
+ * ```js
+ * const state = shallowReactive({ name: 'Alice', items: [{ id: 1 }] });
+ * state.name = 'Bob';          // triggers reactivity
+ * state.items = [{ id: 2 }];   // triggers reactivity
+ * state.items[0].id = 3;       // does NOT trigger reactivity (nested)
+ * ```
+ *
+ * @template T
+ * @param {T} obj
+ * @returns {T}
+ */
+export function shallowReactive(obj) {
+  if (!isObject(obj) || obj instanceof Signal) {return obj;}
+  if (isReactive(obj)) {return obj;}
+  if (!isSupportedReactiveTarget(obj)) {return obj;}
+
+  const root = createRoot(obj);
+  const reactiveObj = wrapReactive(obj, root, { shallow: true });
+  const meta = proxyToMeta.get(reactiveObj);
+  root.proxies.set(obj, reactiveObj);
+  root.rootMeta = meta;
+  meta.rootOwners.add(root);
+  addRootOwner(meta, root);
   return reactiveObj;
 }

@@ -9,7 +9,7 @@
  */
 
 // ── Signal ───────────────────────────────────────────────────────────────────
-export { signal, Signal, reactive, isReactive, toRaw, withoutTracking } from './signal.js';
+export { signal, Signal, reactive, shallowReactive, isReactive, toRaw, withoutTracking } from './signal.js';
 
 // ── Computed ─────────────────────────────────────────────────────────────────
 export { computed } from './computed.js';

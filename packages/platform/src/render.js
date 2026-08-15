@@ -11,6 +11,7 @@
 import { effect, getErrorHandler, runWithScheduler } from '@kupola/core';
 import { HtmlString } from './template.js';
 import { walk } from './directives.js';
+import { ClassDirectivePart, IfDirectivePart, ShowDirectivePart, StyleDirectivePart } from './directives-template.js';
 import {
   createProvideContext,
   disposeProvideContext,
@@ -1507,7 +1508,41 @@ function _processElement(element, values, htmlStr, instance, cachedClassificatio
   }
 
   const attrs = [ ...element.attributes ];
+
+  // ── k-* directive processing ──────────────────────────────────────────────
   for (const attr of attrs) {
+    if (!attr.name.startsWith('k-')) {continue;}
+    const directiveName = attr.name.slice(2);
+
+    // Resolve marker-based value
+    let resolvedValue = undefined;
+    let hasMarker = false;
+    for (let i = 0; i < values.length; i++) {
+      const m = marker(i);
+      if (attr.value.includes(m)) {
+        resolvedValue = values[i];
+        hasMarker = true;
+        break;
+      }
+    }
+    if (!hasMarker) {continue;}
+
+    let part = null;
+    switch (directiveName) {
+    case 'class': part = new ClassDirectivePart(element, resolvedValue); break;
+    case 'if': part = new IfDirectivePart(element, resolvedValue); break;
+    case 'show': part = new ShowDirectivePart(element, resolvedValue); break;
+    case 'style': part = new StyleDirectivePart(element, resolvedValue); break;
+    }
+    if (part) {
+      element.removeAttribute(attr.name);
+      instance.parts.push(part);
+    }
+  }
+
+  for (const attr of attrs) {
+    // Skip k-* directives (already handled above)
+    if (attr.name.startsWith('k-')) {continue;}
     let handled = false;
     for (let i = 0; i < values.length; i++) {
       const m = marker(i);

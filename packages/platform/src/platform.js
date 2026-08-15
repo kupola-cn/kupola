@@ -27,6 +27,7 @@ export {
   onScopeDispose,
   reactive,
   runWithScheduler,
+  shallowReactive,
   signal,
   Signal,
   toRaw,
@@ -79,6 +80,9 @@ export { css } from './css.js';
 
 // ── Form State Management ────────────────────────────────────────────────────
 export { useForm } from './form.js';
+
+// ── Store (defineStore) ──────────────────────────────────────────────────────
+export { defineStore } from './store.js';
 
 // ── Query (dedup + cache) ────────────────────────────────────────────────────
 export {

@@ -121,6 +121,42 @@ const state = new DeepReactive({
 })
 ```
 
+## shallowReactive
+
+`shallowReactive` 是 `reactive` 的浅层版本——只追踪对象第一层属性的读写，嵌套对象保持原始引用：
+
+```js
+import { shallowReactive, effect } from '@kupola/core'
+
+const state = shallowReactive({
+  user: { name: 'John', age: 30 },
+  theme: 'dark',
+})
+
+effect(() => {
+  console.log(state.user.name, state.theme)
+})
+
+state.theme = 'light'          // 触发 effect（第一层）
+state.user = { name: 'Jane' }   // 触发 effect（替换整个对象）
+state.user.name = 'Jane'        // 不触发 effect（深层属性）
+```
+
+**使用场景：**
+
+- 状态对象的第一层属性本身就是 signal/computed 时，不需要深层追踪
+- 与 `defineStore` 配合，store 的嵌套分组不需要深层响应式
+- 大型列表数据，只需要追踪列表本身（替换、追加），不需要追踪每个元素的属性
+
+**与 reactive 的对比：**
+
+| 特性 | `reactive` | `shallowReactive` |
+|------|-----------|-------------------|
+| 第一层属性 | 响应式 | 响应式 |
+| 深层嵌套属性 | 响应式 | 不追踪 |
+| 内存开销 | 较高 | 较低 |
+| 适用场景 | 表单、配置对象 | store 分组、列表容器 |
+
 ## 与 Signal 的选择
 
 | 场景 | 推荐 |

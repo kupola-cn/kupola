@@ -1,7 +1,7 @@
 {
   "name": "@kupola/kupola",
-  "version": "3.5.0",
-  "description": "Kupola is a lightweight reactive application platform for building modern web applications. Kupola 是一个轻量级的响应式应用平台，用于构建现代化的 Web 应用",
+  "version": "3.5.1",
+  "description": "Kupola is a lightweight reactive application platform for building modern web applications. Kupola 是一个轻量级的响应式应用平台，用于构建现代化 Web 应用",
   "private": true,
   "type": "module",
   "workspaces": [
