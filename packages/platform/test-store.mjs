@@ -1,4 +1,4 @@
-import { signal, computed, nextTick, effect, Signal } from '@kupola/core';
+import { effect, Signal } from '@kupola/core';
 import { defineStore } from './src/store.js';
 import { isSignalLike } from './src/render.js';
 
@@ -110,7 +110,7 @@ async function run() {
     }));
     store.filters.shift.value = 'morning';
     store.filters.status.value = 'done';
-    store.items.value = [1, 2, 3];
+    store.items.value = [ 1, 2, 3 ];
     store.$reset();
     assert(store.filters.shift.value === 'all', 'nested shift reset');
     assert(store.filters.status.value === 'active', 'nested status reset');
@@ -215,7 +215,7 @@ async function run() {
 
   // ── Summary ──
   console.log(`\n=== Results: ${passed} passed, ${failed} failed ===`);
-  if (failed > 0) process.exit(1);
+  if (failed > 0) { process.exit(1); }
 }
 
 run().catch(e => { console.error(e); process.exit(1); });

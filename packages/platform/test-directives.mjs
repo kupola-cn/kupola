@@ -376,7 +376,7 @@ async function run() {
 
   // ── Summary ──
   console.log(`\n=== Results: ${passed} passed, ${failed} failed ===`);
-  if (failed > 0) process.exit(1);
+  if (failed > 0) { process.exit(1); }
 }
 
 run().catch(e => { console.error(e); process.exit(1); });
